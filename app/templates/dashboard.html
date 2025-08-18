@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
+        <p class="text-muted">Pregled aktivnosti i statistika sistema</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Ukupno članovi</h5>
+                        <h3 class="mb-0">--</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-people-fill fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Publikacije</h5>
+                        <h3 class="mb-0">--</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-journal-text fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">DOI Draft-ovi</h5>
+                        <h3 class="mb-0">--</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-file-earmark-code fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Generisani XML</h5>
+                        <h3 class="mb-0">--</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-filetype-xml fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-clock-history"></i> Poslednje aktivnosti</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Implementirati kada budu modeli...</p>
+                <!-- TODO: Lista poslednih aktivnosti iz ActivityLog modela -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-exclamation-triangle"></i> Upozorenja</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Implementirati kada budu validacije...</p>
+                <!-- TODO: Lista upozorenja za nepotpune draft-ove -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-list-task"></i> Brze akcije</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('members.create') }}" class="btn btn-primary w-100">
+                            <i class="bi bi-person-plus"></i> Novi član
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('publications.create') }}" class="btn btn-success w-100">
+                            <i class="bi bi-journal-plus"></i> Nova publikacija
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('drafts.index') }}" class="btn btn-warning w-100">
+                            <i class="bi bi-file-earmark-plus"></i> Novi DOI draft
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="#" class="btn btn-info w-100">
+                            <i class="bi bi-download"></i> Izvezi podatke
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

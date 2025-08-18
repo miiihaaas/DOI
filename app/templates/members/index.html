@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-people-fill"></i> Članovi</h2>
+    <a href="{{ url_for('members.create') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> Novi član
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <p class="text-muted">Lista članova će biti implementirana kada bude Member model...</p>
+        <!-- TODO: Implementirati sa Member modelom -->
+    </div>
+</div>
+{% endblock %}

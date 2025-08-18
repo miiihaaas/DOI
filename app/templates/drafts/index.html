@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-file-earmark-code"></i> DOI Draft-ovi</h2>
+    <a href="{{ url_for('publications.index') }}" class="btn btn-warning">
+        <i class="bi bi-file-earmark-plus"></i> Novi DOI draft
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <p class="text-muted">Lista DOI draft-ova će biti implementirana kada bude DOIDraft model...</p>
+        <!-- TODO: Implementirati sa DOIDraft modelom -->
+    </div>
+</div>
+{% endblock %}

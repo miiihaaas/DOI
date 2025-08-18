@@ -1,0 +1,85 @@
+"""
+Tests for blueprint routes and basic functionality
+"""
+
+import pytest
+
+
+def test_main_index_route(client):
+    """Test the main index route."""
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "Dobrodošli u DOI Management System".encode("utf-8") in response.data
+
+
+def test_dashboard_route(client):
+    """Test the dashboard route."""
+    response = client.get("/dashboard")
+    assert response.status_code == 200
+    assert "Dashboard".encode("utf-8") in response.data
+
+
+def test_auth_login_route(client):
+    """Test the auth login route."""
+    response = client.get("/auth/login")
+    assert response.status_code == 200
+    assert "Prijava".encode("utf-8") in response.data
+
+
+def test_auth_register_route(client):
+    """Test the auth register route."""
+    response = client.get("/auth/register")
+    assert response.status_code == 200
+    assert "Registracija".encode("utf-8") in response.data
+
+
+def test_members_index_route(client):
+    """Test the members index route."""
+    response = client.get("/members/")
+    assert response.status_code == 200
+    assert "Članovi".encode("utf-8") in response.data
+
+
+def test_publications_index_route(client):
+    """Test the publications index route."""
+    response = client.get("/publications/")
+    assert response.status_code == 200
+    assert "Publikacije".encode("utf-8") in response.data
+
+
+def test_drafts_index_route(client):
+    """Test the drafts index route."""
+    response = client.get("/drafts/")
+    assert response.status_code == 200
+    assert "DOI Draft-ovi".encode("utf-8") in response.data
+
+
+def test_404_error(client):
+    """Test 404 error handling."""
+    response = client.get("/nonexistent-page")
+    assert response.status_code == 404
+    assert "Stranica nije pronađena".encode("utf-8") in response.data
+
+
+def test_login_post_placeholder(client):
+    """Test login POST route placeholder."""
+    response = client.post(
+        "/auth/login", data={"email": "test@example.com", "password": "password"}
+    )
+    # Should redirect to main page since login isn't implemented yet
+    assert response.status_code == 302
+
+
+def test_register_post_placeholder(client):
+    """Test register POST route placeholder."""
+    response = client.post(
+        "/auth/register",
+        data={
+            "full_name": "Test User",
+            "email": "test@example.com",
+            "password": "password",
+            "password_confirm": "password",
+        },
+    )
+    # Should redirect to login page since registration isn't implemented yet
+    assert response.status_code == 302

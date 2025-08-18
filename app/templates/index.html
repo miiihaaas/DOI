@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2 text-center">
+        <h1 class="display-4 mb-4">
+            <i class="bi bi-journal-bookmark text-primary"></i>
+            Dobrodošli u DOI Management System
+        </h1>
+        
+        <p class="lead mb-4">
+            Kompletno rešenje za upravljanje DOI registracijama kroz Crossref API.
+            Jednostavno kreirajte, upravlja i generiši DOI brojeve za vaše publikacije.
+        </p>
+        
+        <div class="row mt-5">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people-fill text-primary display-6 mb-3"></i>
+                        <h5 class="card-title">Upravljanje članovima</h5>
+                        <p class="card-text">
+                            Dodajte i upravljate članovima vaše organizacije koji mogu kreirati publikacije.
+                        </p>
+                        <a href="{{ url_for('members.index') }}" class="btn btn-outline-primary">
+                            Vidi članove
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-journal-text text-success display-6 mb-3"></i>
+                        <h5 class="card-title">Publikacije</h5>
+                        <p class="card-text">
+                            Registrujte nove publikacije i pripremite ih za DOI kreiranje.
+                        </p>
+                        <a href="{{ url_for('publications.index') }}" class="btn btn-outline-success">
+                            Vidi publikacije
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-file-earmark-code text-warning display-6 mb-3"></i>
+                        <h5 class="card-title">DOI Draft-ovi</h5>
+                        <p class="card-text">
+                            Kreirajte DOI draft-ove i generiši Crossref XML fajlove za registraciju.
+                        </p>
+                        <a href="{{ url_for('drafts.index') }}" class="btn btn-outline-warning">
+                            Vidi draft-ove
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-5">
+            <h3>Početak rada</h3>
+            <p class="text-muted">
+                Za početak rada sa sistemom, prvo se 
+                <a href="{{ url_for('auth.register') }}">registrujte</a> ili 
+                <a href="{{ url_for('auth.login') }}">prijavite</a> ako već imate nalog.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
