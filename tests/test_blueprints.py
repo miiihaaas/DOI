@@ -12,11 +12,11 @@ def test_main_index_route(client):
     assert "Dobrodošli u DOI Management System".encode("utf-8") in response.data
 
 
-def test_dashboard_route(client):
-    """Test the dashboard route."""
+def test_dashboard_route_requires_login(client):
+    """Test that dashboard route requires login."""
     response = client.get("/dashboard")
-    assert response.status_code == 200
-    assert "Dashboard".encode("utf-8") in response.data
+    assert response.status_code == 302  # Redirect to login
+    assert "/auth/login" in response.location
 
 
 def test_auth_login_route(client):
@@ -33,25 +33,25 @@ def test_auth_register_route(client):
     assert "Registracija".encode("utf-8") in response.data
 
 
-def test_members_index_route(client):
-    """Test the members index route."""
+def test_members_index_route_requires_login(client):
+    """Test that members index route requires login."""
     response = client.get("/members/")
-    assert response.status_code == 200
-    assert "Članovi".encode("utf-8") in response.data
+    assert response.status_code == 302  # Redirect to login
+    assert "/auth/login" in response.location
 
 
-def test_publications_index_route(client):
-    """Test the publications index route."""
+def test_publications_index_route_requires_login(client):
+    """Test that publications index route requires login."""
     response = client.get("/publications/")
-    assert response.status_code == 200
-    assert "Publikacije".encode("utf-8") in response.data
+    assert response.status_code == 302  # Redirect to login
+    assert "/auth/login" in response.location
 
 
-def test_drafts_index_route(client):
-    """Test the drafts index route."""
+def test_drafts_index_route_requires_login(client):
+    """Test that drafts index route requires login."""
     response = client.get("/drafts/")
-    assert response.status_code == 200
-    assert "DOI Draft-ovi".encode("utf-8") in response.data
+    assert response.status_code == 302  # Redirect to login
+    assert "/auth/login" in response.location
 
 
 def test_404_error(client):
@@ -61,13 +61,14 @@ def test_404_error(client):
     assert "Stranica nije pronađena".encode("utf-8") in response.data
 
 
-def test_login_post_placeholder(client):
-    """Test login POST route placeholder."""
+def test_login_post_with_invalid_credentials(client):
+    """Test login POST route with invalid credentials."""
     response = client.post(
         "/auth/login", data={"email": "test@example.com", "password": "password"}
     )
-    # Should redirect to main page since login isn't implemented yet
-    assert response.status_code == 302
+    # Should return 200 with error message since credentials are invalid
+    assert response.status_code == 200
+    assert "Neispravni podaci za prijavu.".encode("utf-8") in response.data
 
 
 def test_register_post_placeholder(client):

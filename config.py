@@ -22,6 +22,11 @@ class Config:
     # WTF Forms configuration
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = None
+    
+    # Session security configuration
+    SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
 
 
 class DevelopmentConfig(Config):
@@ -45,6 +50,9 @@ class ProductionConfig(Config):
 
     DEBUG = False
     TESTING = False
+    
+    # Secure session cookies for production (HTTPS required)
+    SESSION_COOKIE_SECURE = True
 
     # Override with environment variables in production
     SECRET_KEY = os.environ.get("SECRET_KEY")

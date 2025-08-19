@@ -46,13 +46,32 @@
                 </ul>
                 
                 <ul class="navbar-nav">
-                    <!-- Auth links - implementirati kada bude User model -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}">Prijava</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.register') }}">Registracija</a>
-                    </li>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> {{ current_user.full_name }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><span class="dropdown-item-text">{{ current_user.email }}</span></li>
+                                <li><span class="dropdown-item-text text-muted">{{ current_user.role.title() }}</span></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="POST" action="{{ url_for('auth.logout') }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="bi bi-box-arrow-right"></i> Odjavi se
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="bi bi-box-arrow-in-right"></i> Prijava
+                            </a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

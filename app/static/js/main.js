@@ -35,17 +35,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Loading state for buttons
     const submitButtons = document.querySelectorAll('button[type="submit"]');
     submitButtons.forEach(function(button) {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
             const form = button.closest('form');
             if (form && form.checkValidity()) {
-                button.classList.add('loading');
-                button.disabled = true;
-                
-                // Remove loading state after 10 seconds (fallback)
+                // Delay button disable to allow form submission
                 setTimeout(function() {
-                    button.classList.remove('loading');
-                    button.disabled = false;
-                }, 10000);
+                    button.classList.add('loading');
+                    button.disabled = true;
+                    
+                    // Remove loading state after 10 seconds (fallback)
+                    setTimeout(function() {
+                        button.classList.remove('loading');
+                        button.disabled = false;
+                    }, 10000);
+                }, 100);
             }
         });
     });

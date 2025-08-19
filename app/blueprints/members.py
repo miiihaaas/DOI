@@ -1,11 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
-# from flask_login import login_required, current_user
+from flask_login import login_required, current_user
 
 members_bp = Blueprint("members", __name__)
 
 
 @members_bp.route("/")
+@login_required
 def index():
     """Lista svih članова organizacije."""
     # TODO: Implementirati sa Member modelom
@@ -13,6 +14,7 @@ def index():
 
 
 @members_bp.route("/create", methods=["GET", "POST"])
+@login_required
 def create():
     """Kreiranje novog člana."""
     if request.method == "POST":
@@ -24,6 +26,7 @@ def create():
 
 
 @members_bp.route("/<int:member_id>")
+@login_required
 def detail(member_id):
     """Detalji o članu."""
     # TODO: Implementirati sa Member modelom
@@ -31,6 +34,7 @@ def detail(member_id):
 
 
 @members_bp.route("/<int:member_id>/edit", methods=["GET", "POST"])
+@login_required
 def edit(member_id):
     """Uređivanje člana."""
     if request.method == "POST":

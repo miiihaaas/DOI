@@ -1,11 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
-# from flask_login import login_required, current_user
+from flask_login import login_required, current_user
 
 drafts_bp = Blueprint("drafts", __name__)
 
 
 @drafts_bp.route("/")
+@login_required
 def index():
     """Lista svih DOI draft-ova."""
     # TODO: Implementirati sa DOIDraft modelom
@@ -13,6 +14,7 @@ def index():
 
 
 @drafts_bp.route("/create/<int:publication_id>", methods=["GET", "POST"])
+@login_required
 def create(publication_id):
     """Kreiranje novog DOI draft-a za publikaciju."""
     if request.method == "POST":
@@ -24,6 +26,7 @@ def create(publication_id):
 
 
 @drafts_bp.route("/<int:draft_id>")
+@login_required
 def detail(draft_id):
     """Detalji o DOI draft-u."""
     # TODO: Implementirati sa DOIDraft modelom
@@ -31,6 +34,7 @@ def detail(draft_id):
 
 
 @drafts_bp.route("/<int:draft_id>/edit", methods=["GET", "POST"])
+@login_required
 def edit(draft_id):
     """Uređivanje DOI draft-a."""
     if request.method == "POST":
@@ -42,6 +46,7 @@ def edit(draft_id):
 
 
 @drafts_bp.route("/<int:draft_id>/generate-xml")
+@login_required
 def generate_xml(draft_id):
     """Generisanje Crossref XML fajla za DOI draft."""
     # TODO: Implementirati XML generisanje sa CrossrefXMLGenerator servisom

@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request
+from flask_login import login_required
 
 main_bp = Blueprint("main", __name__)
 
@@ -10,6 +11,7 @@ def index():
 
 
 @main_bp.route("/dashboard")
+@login_required
 def dashboard():
-    """Dashboard stranica - potrebna autentifikacija u budućnosti."""
+    """Dashboard stranica - zaštićena autentifikacijom."""
     return render_template("dashboard.html", title="Dashboard")

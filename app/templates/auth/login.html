@@ -1,31 +1,56 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4 offset-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0"><i class="bi bi-box-arrow-in-right"></i> Prijava</h4>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+<div class="login-container">
+    <div class="login-card card">
+        <div class="card-header text-center">
+            <h4 class="mb-0"><i class="bi bi-box-arrow-in-right"></i> Prijava</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('auth.login') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email adresa</label>
+                    <input type="email" 
+                           class="form-control" 
+                           id="email" 
+                           name="email" 
+                           value="{{ request.form.email if request.form.email else '' }}"
+                           required 
+                           autocomplete="email"
+                           placeholder="vasa@organizacija.rs">
+                    <div class="invalid-feedback">
+                        Molimo unesite validnu email adresu.
                     </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Lozinka</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Lozinka</label>
+                    <input type="password" 
+                           class="form-control" 
+                           id="password" 
+                           name="password" 
+                           required 
+                           autocomplete="current-password"
+                           minlength="6"
+                           placeholder="Unesite vašu lozinku">
+                    <div class="invalid-feedback">
+                        Lozinka je obavezna i mora imati najmanje 6 karaktera.
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Prijavite se</button>
-                </form>
-                
-                <hr>
-                <p class="text-center mb-0">
-                    Nemate nalog? <a href="{{ url_for('auth.register') }}">Registrujte se</a>
-                </p>
-            </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-box-arrow-in-right"></i> Prijavite se
+                </button>
+            </form>
+            
+            <hr>
+            <p class="text-center mb-0 text-muted">
+                <small><i class="bi bi-info-circle"></i> Kontaktirajte administratora za kreiranje naloga</small>
+            </p>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+
 {% endblock %}
