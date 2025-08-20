@@ -13,7 +13,7 @@ class Sponsor(BaseModel):
     Sponsor model - represents the single DOI sponsor organization.
     This is a singleton model - only one record should exist in the database.
     """
-    
+
     __tablename__ = 'sponsors'
 
     # Core fields
@@ -78,7 +78,7 @@ class Sponsor(BaseModel):
             crossref_member_id=crossref_member_id,
             is_active=is_active
         )
-        
+
         return sponsor.save()
 
     @staticmethod
@@ -95,7 +95,7 @@ class Sponsor(BaseModel):
         """
         if not member_id or len(member_id.strip()) == 0:
             return False
-        
+
         # Basic validation - alphanumeric characters
         return re.match(r'^[a-zA-Z0-9]+$', member_id.strip()) is not None
 

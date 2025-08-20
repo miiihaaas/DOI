@@ -15,7 +15,7 @@ class User(BaseModel, UserMixin):
     User model - represents admin users of the DOI management system.
     All users are admin-level users of the single sponsor organization.
     """
-    
+
     __tablename__ = 'users'
 
     # Core fields
@@ -53,7 +53,7 @@ class User(BaseModel, UserMixin):
         """Set password hash from plain text password."""
         if not password or len(password.strip()) < 6:
             raise ValueError("Password must be at least 6 characters long")
-        
+
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
@@ -96,16 +96,22 @@ class User(BaseModel, UserMixin):
             full_name=full_name.strip(),
             role=role
         )
-        
+
         # Set password (will validate length)
         user.set_password(password)
-        
+
         return user.save()
 
     @classmethod
     def get_by_email(cls, email):
         """Get user by email address."""
         return cls.query.filter_by(email=email.lower().strip()).first()
+
+    @classmethod
+    def get_by_id(cls, user_id):
+        """Get user by ID."""
+        from app import db
+        return db.session.get(cls, user_id)
 
     @classmethod
     def get_admins(cls):
@@ -122,7 +128,7 @@ class User(BaseModel, UserMixin):
         """Validate email format using regex."""
         if not email:
             return False
-        
+
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         return re.match(email_pattern, email.strip()) is not None
 
@@ -144,7 +150,7 @@ class User(BaseModel, UserMixin):
         """Change user role with validation."""
         if new_role not in ['admin', 'operator']:
             raise ValueError("Role must be 'admin' or 'operator'")
-        
+
         self.role = new_role
         return self.save()
 

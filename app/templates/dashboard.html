@@ -4,7 +4,11 @@
 <div class="row">
     <div class="col-12">
         <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
+        {% if user %}
+        <p class="text-muted">Dobrodošli, <strong>{{ user.full_name }}</strong>! Pregled aktivnosti i statistika sistema.</p>
+        {% else %}
         <p class="text-muted">Pregled aktivnosti i statistika sistema</p>
+        {% endif %}
     </div>
 </div>
 
@@ -15,7 +19,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h5 class="card-title">Ukupno članovi</h5>
-                        <h3 class="mb-0">--</h3>
+                        <h3 class="mb-0">{{ statistics.total_members }}</h3>
                     </div>
                     <div class="align-self-center">
                         <i class="bi bi-people-fill fs-1"></i>
@@ -31,7 +35,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h5 class="card-title">Publikacije</h5>
-                        <h3 class="mb-0">--</h3>
+                        <h3 class="mb-0">{{ statistics.total_publications }}</h3>
                     </div>
                     <div class="align-self-center">
                         <i class="bi bi-journal-text fs-1"></i>
@@ -47,7 +51,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h5 class="card-title">DOI Draft-ovi</h5>
-                        <h3 class="mb-0">--</h3>
+                        <h3 class="mb-0">{{ statistics.total_drafts }}</h3>
                     </div>
                     <div class="align-self-center">
                         <i class="bi bi-file-earmark-code fs-1"></i>
@@ -63,7 +67,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h5 class="card-title">Generisani XML</h5>
-                        <h3 class="mb-0">--</h3>
+                        <h3 class="mb-0">{{ statistics.drafts_by_status.xml_generated + statistics.drafts_by_status.xml_sent + statistics.drafts_by_status.confirmed }}</h3>
                     </div>
                     <div class="align-self-center">
                         <i class="bi bi-filetype-xml fs-1"></i>

@@ -1,0 +1,32 @@
+[Unit]
+Description=DOI Management Application
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+Type=exec
+User=doi-app
+Group=doi-app
+WorkingDirectory=/opt/doi-app
+Environment=PATH=/opt/doi-app/venv/bin
+EnvironmentFile=/opt/doi-app/.env
+ExecStart=/opt/doi-app/venv/bin/gunicorn --config /opt/doi-app/gunicorn_config.py app:create_app()
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/doi-app/logs /opt/doi-app/uploads /tmp
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+
+[Install]
+WantedBy=multi-user.target

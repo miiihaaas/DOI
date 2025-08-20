@@ -25,8 +25,32 @@ def create_app(config_name="default"):
 
     # Load configuration
     from config import config
+    config_class = config[config_name]
+    config_instance = config_class()
+    
+    # Set configuration - instance attributes have priority
+    # First set defaults from class
+    app.config.from_object(config_class)
+    # Then override with instance attributes (this handles environment variables)
+    # But skip certain attributes that shouldn't be copied to Flask config
+    skip_attrs = {'get_engine_options'}  # Skip methods that shouldn't be copied
+    
+    for attr in dir(config_instance):
+        if (not attr.startswith('_') and 
+            not callable(getattr(config_instance, attr)) and
+            attr not in skip_attrs and
+            hasattr(config_instance, attr)):
+            # Special handling for SQLALCHEMY_ENGINE_OPTIONS
+            if attr == 'SQLALCHEMY_ENGINE_OPTIONS':
+                # Only set if not empty (SQLite returns empty dict)
+                engine_options = getattr(config_instance, attr)
+                if engine_options:
+                    app.config[attr] = engine_options
+            else:
+                app.config[attr] = getattr(config_instance, attr)
 
-    app.config.from_object(config[config_name])
+    # Initialize configuration-specific setup (includes logging)
+    config_class.init_app(app)
 
     # Initialize extensions with app
     db.init_app(app)
@@ -42,7 +66,7 @@ def create_app(config_name="default"):
     login_manager.login_message_category = "info"
 
     # Import models so Flask-Migrate can discover them
-    from app.models import Sponsor, User
+    from app.models import User
 
     # User loader for Flask-Login
     @login_manager.user_loader
@@ -52,12 +76,14 @@ def create_app(config_name="default"):
     # Register blueprints
     from app.blueprints.main import main_bp
     from app.blueprints.auth import auth_bp
+    from app.blueprints.admin import admin_bp
     from app.blueprints.members import members_bp
     from app.blueprints.publications import publications_bp
     from app.blueprints.drafts import drafts_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(members_bp, url_prefix="/members")
     app.register_blueprint(publications_bp, url_prefix="/publications")
     app.register_blueprint(drafts_bp, url_prefix="/drafts")
@@ -74,6 +100,12 @@ def create_app(config_name="default"):
         """500 error handler."""
         from flask import render_template
         return render_template("errors/500.html"), 500
+
+    # Setup production logging and request tracking
+    if config_name == 'production':
+        from app.utils.logging import setup_request_logging, setup_security_logging
+        setup_request_logging(app)
+        setup_security_logging(app)
 
     # Security headers
     @app.after_request

@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Uredi korisnika - {{ user.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>
+                        Uredi korisnika
+                    </h5>
+                    <a href="{{ url_for('admin.users_list') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Nazad na listu
+                    </a>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                Email adresa <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   value="{{ user.email }}"
+                                   required
+                                   placeholder="korisnik@example.com">
+                            <div class="invalid-feedback">
+                                Molimo unesite validnu email adresu.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="full_name" class="form-label">
+                                Puno ime <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="full_name" 
+                                   name="full_name" 
+                                   value="{{ user.full_name }}"
+                                   required
+                                   minlength="2"
+                                   placeholder="Ime i prezime">
+                            <div class="invalid-feedback">
+                                Puno ime mora imati najmanje 2 karaktera.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="role" class="form-label">
+                                Uloga <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="role" name="role" required
+                                    {% if user.id == current_user.id %}disabled{% endif %}>
+                                <option value="operator" {% if user.role == 'operator' %}selected{% endif %}>
+                                    Operator
+                                </option>
+                                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>
+                                    Administrator
+                                </option>
+                            </select>
+                            {% if user.id == current_user.id %}
+                                <div class="form-text text-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Ne možete promeniti svoju ulogu.
+                                </div>
+                                <input type="hidden" name="role" value="{{ user.role }}">
+                            {% else %}
+                                <div class="form-text">
+                                    <strong>Operator:</strong> Može upravljati članovima, publikacijama i DOI draft-ovima.<br>
+                                    <strong>Administrator:</strong> Ima sve Operator privilegije plus upravljanje korisnicima.
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('admin.users_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                Otkaži
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                Sačuvaj izmene
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- User Info Card -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        Informacije o korisniku
+                    </h6>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <strong>ID:</strong> {{ user.id }}<br>
+                            <strong>Kreiran:</strong> {{ user.created_at.strftime('%d.%m.%Y %H:%M') }}<br>
+                            <strong>Ažuriran:</strong> {{ user.updated_at.strftime('%d.%m.%Y %H:%M') }}
+                        </div>
+                        <div class="col-sm-6">
+                            {% if user.last_login %}
+                                <strong>Poslednja prijava:</strong> {{ user.last_login.strftime('%d.%m.%Y %H:%M') }}
+                            {% else %}
+                                <strong>Poslednja prijava:</strong> <span class="text-muted">Nikad</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password Reset Card -->
+            {% if user.id != current_user.id %}
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-key text-warning me-2"></i>
+                        Resetovanje lozinke
+                    </h6>
+                    <p class="text-muted mb-3">
+                        Koristite ovu opciju da resetujete lozinku korisnika. Korisnik će moći da se prijavi sa novom lozinkom odmah.
+                    </p>
+                    <button type="button" 
+                            class="btn btn-outline-warning btn-sm"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#resetPasswordModal">
+                        <i class="fas fa-key me-1"></i>
+                        Resetuj lozinku
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+{% if user.id != current_user.id %}
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resetPasswordModalLabel">
+                    <i class="fas fa-key me-2"></i>
+                    Resetuj lozinku za {{ user.full_name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('admin.reset_password', user_id=user.id) }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <p>Unesite novu lozinku za korisnika <strong>{{ user.full_name }}</strong>:</p>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Nova lozinka</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required minlength="6">
+                        <div class="form-text">Lozinka mora imati najmanje 6 karaktera.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkaži</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-key me-1"></i>
+                        Resetuj lozinku
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form validation
+(function() {
+    'use strict';
+    
+    // Add Bootstrap validation classes
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+        
+        // Real-time validation
+        const inputs = form.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.checkValidity()) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            });
+        });
+    }
+})();
+</script>
+{% endblock %}

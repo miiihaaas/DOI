@@ -10,6 +10,21 @@ body {
     font-weight: bold;
 }
 
+.navbar-nav .nav-link.active {
+    font-weight: 600;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 0.375rem;
+}
+
+.navbar-nav .nav-link {
+    border-radius: 0.375rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
 /* Card hover effects */
 .card {
     transition: transform 0.2s ease-in-out;

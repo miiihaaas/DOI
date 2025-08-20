@@ -6,10 +6,10 @@ import pytest
 
 
 def test_main_index_route(client):
-    """Test the main index route."""
+    """Test the main index route redirects to login."""
     response = client.get("/")
-    assert response.status_code == 200
-    assert "Dobrodošli u DOI Management System".encode("utf-8") in response.data
+    assert response.status_code == 302  # Redirect to login
+    assert "/auth/login" in response.location
 
 
 def test_dashboard_route_requires_login(client):

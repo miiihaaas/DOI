@@ -193,7 +193,7 @@ class TestSessionManagement:
 
     def test_dashboard_requires_login(self, client):
         """Test that dashboard requires login."""
-        response = client.get('/dashboard')
+        response = client.get('/')
         assert response.status_code == 302
         assert '/auth/login' in response.location
 
@@ -224,7 +224,7 @@ class TestSessionManagement:
         })
         
         # Access dashboard
-        response = client.get('/dashboard')
+        response = client.get('/')
         assert response.status_code == 200
 
     def test_authenticated_user_can_access_protected_routes(self, client, test_user):
@@ -251,7 +251,7 @@ class TestSessionManagement:
         
         # Make multiple requests to protected routes
         for _ in range(3):
-            response = client.get('/dashboard')
+            response = client.get('/')
             assert response.status_code == 200
 
     def test_last_login_updated_on_successful_login(self, client, test_user, app):

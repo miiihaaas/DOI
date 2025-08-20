@@ -34,7 +34,7 @@ def test_static_js_accessible(client):
 
 def test_template_inheritance(client):
     """Test that template inheritance works."""
-    response = client.get("/")
+    response = client.get("/auth/login")
     assert response.status_code == 200
 
     # Check for elements from base template
@@ -45,7 +45,7 @@ def test_template_inheritance(client):
 
 def test_responsive_layout(client):
     """Test that responsive layout elements are present."""
-    response = client.get("/")
+    response = client.get("/auth/login")
     assert response.status_code == 200
 
     # Check for Bootstrap responsive classes

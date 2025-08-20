@@ -1,8 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from app import db, limiter
+from app import limiter
 from app.models.user import User
-from app.models.sponsor import Sponsor
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -14,26 +13,26 @@ def login():
     # Redirect if already logged in
     if current_user.is_authenticated:
         return redirect(url_for("main.dashboard"))
-    
+
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
-        
+
         # Validate input
         if not email or not password:
             flash("Email i lozinka su obavezni.", "error")
             return render_template("auth/login.html", title="Prijava")
-        
+
         # Find user by email
         user = User.get_by_email(email)
-        
+
         if user and user.check_password(password):
             # Successful login
             login_user(user)
             user.update_last_login()
-            
+
             flash(f"Dobrodošli, {user.full_name}!", "success")
-            
+
             # Redirect to next page or dashboard
             next_page = request.args.get('next')
             if next_page:
@@ -42,7 +41,7 @@ def login():
         else:
             # Failed login
             flash("Neispravni podaci za prijavu.", "error")
-    
+
     return render_template("auth/login.html", title="Prijava")
 
 
