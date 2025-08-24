@@ -173,6 +173,9 @@ class ProductionConfig(Config):
         self.SECRET_KEY = os.environ.get("SECRET_KEY")
         self.SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
 
+        # Force secure cookies in production regardless of environment variable
+        self.SESSION_COOKIE_SECURE = True
+
         if not self.SECRET_KEY:
             raise ValueError("SECRET_KEY environment variable must be set in production")
         if not self.SQLALCHEMY_DATABASE_URI:

@@ -8,6 +8,30 @@ import os
 from app import create_app, db
 
 
+@pytest.fixture(autouse=True)
+def clean_environment():
+    """Clean up environment variables between tests to prevent isolation issues."""
+    # Store original environment state
+    original_env = dict(os.environ)
+    
+    # Keep essential Windows environment variables
+    essential_vars = {
+        'PATH', 'PATHEXT', 'SYSTEMROOT', 'USERNAME', 'USERPROFILE', 
+        'TEMP', 'TMP', 'COMPUTERNAME', 'PROCESSOR_ARCHITECTURE'
+    }
+    
+    yield  # Run the test
+    
+    # Restore original environment, but be careful with essential variables
+    for key in list(os.environ.keys()):
+        if key not in essential_vars and key not in original_env:
+            # Remove variables that were added during test
+            os.environ.pop(key, None)
+        elif key in original_env:
+            # Restore original values
+            os.environ[key] = original_env[key]
+
+
 @pytest.fixture
 def app():
     """Create and configure a test application instance."""

@@ -1,0 +1,139 @@
+<doi_batch xmlns="http://www.crossref.org/schema/4.3.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.crossref.org/schema/4.3.7 http://www.crossref.org/schemas/crossref4.3.7.xsd" version="4.3.7">
+    <head>
+        <doi_batch_id>1234</doi_batch_id>
+        <timestamp>20010910040315</timestamp>
+        <depositor>
+            <depositor_name>Sample Master</depositor_name>
+            <email_address>support@crossref.org</email_address>
+        </depositor>
+        <registrant>Association of Computing Machinery</registrant>
+    </head>
+    <body>
+        <conference>
+            <contributors>
+                <person_name sequence="first" contributor_role="chair">
+                    <given_name>Peter</given_name>
+                    <surname>Lee</surname>
+                </person_name>
+                <person_name sequence="additional" contributor_role="chair">
+                    <given_name>Fritz</given_name>
+                    <surname>Henglein</surname>
+                </person_name>
+                <person_name sequence="additional" contributor_role="chair">
+                    <given_name>Neil D.</given_name>
+                    <surname>Jones</surname>
+                </person_name>
+            </contributors>
+            <event_metadata>
+                <conference_name>24th ACM SIGPLAN-SIGACT symposium</conference_name>
+                <conference_theme>Algorithms & Computation Theory</conference_theme>
+                <conference_acronym>POPL '97</conference_acronym>
+                <conference_sponsor>L'École des Mines de Paris</conference_sponsor>
+                <conference_number>24</conference_number>
+                <conference_location>Paris, France</conference_location>
+                <conference_date start_month="01" start_year="1997" start_day="15" end_year="1997" end_month="01" end_day="17"/>
+            </event_metadata>
+            <proceedings_metadata language="en">
+                <proceedings_title>
+                    Proceedings of the 24th ACM SIGPLAN-SIGACT symposium on Principles of programming languages - POPL '97
+                </proceedings_title>
+                <proceedings_subject>Principles of programming languages</proceedings_subject>
+                <publisher>
+                    <publisher_name>ACM Press</publisher_name>
+                    <publisher_place>New York</publisher_place>
+                </publisher>
+                <publication_date>
+                    <year>1997</year>
+                </publication_date>
+                <isbn>0-89791-853-3</isbn>
+                <doi_data>
+                    <doi>10.1145/263699</doi>
+                    <timestamp>20010910040315</timestamp>
+                    <resource>http://portal.acm.org/citation.cfm?doid=263699</resource>
+                </doi_data>
+            </proceedings_metadata>
+            <conference_paper publication_type="full_text">
+                <contributors>
+                    <person_name sequence="first" contributor_role="author">
+                        <given_name>Marc</given_name>
+                        <surname>Shapiro</surname>
+                    </person_name>
+                    <person_name sequence="additional" contributor_role="author">
+                        <given_name>Susan</given_name>
+                        <surname>Horwitz</surname>
+                    </person_name>
+                </contributors>
+                <titles>
+                    <title>
+                        Fast and accurate flow-insensitive points-to analysis
+                    </title>
+                </titles>
+                <publication_date>
+                    <year>1997</year>
+                </publication_date>
+                <pages>
+                    <first_page>1</first_page>
+                    <last_page>14</last_page>
+                </pages>
+                <doi_data>
+                    <doi>10.1145/263699.263703</doi>
+                    <resource>
+                        http://portal.acm.org/citation.cfm?doid=263699.263703
+                    </resource>
+                </doi_data>
+            </conference_paper>
+            <conference_paper publication_type="full_text">
+                <contributors>
+                    <person_name sequence="first" contributor_role="author">
+                        <given_name>Erik</given_name>
+                        <surname>Ruf</surname>
+                    </person_name>
+                </contributors>
+                <titles>
+                    <title>Partitioning dataflow analyses using types</title>
+                </titles>
+                <publication_date>
+                    <year>1997</year>
+                </publication_date>
+                <pages>
+                    <first_page>15</first_page>
+                    <last_page>26</last_page>
+                </pages>
+                <doi_data>
+                    <doi>10.1145/263699.263705</doi>
+                    <resource>
+                        http://portal.acm.org/citation.cfm?doid=263699.263705
+                    </resource>
+                </doi_data>
+            </conference_paper>
+            <conference_paper publication_type="full_text">
+                <contributors>
+                    <person_name sequence="first" contributor_role="author">
+                        <given_name>Pascal</given_name>
+                        <surname>Fradet</surname>
+                    </person_name>
+                    <person_name sequence="additional" contributor_role="author">
+                        <given_name>Daniel</given_name>
+                        <surname>Le M&étayer</surname>
+                    </person_name>
+                </contributors>
+                <titles>
+                    <title>Shape types</title>
+                </titles>
+                <publication_date>
+                    <year>1997</year>
+                </publication_date>
+                <pages>
+                    <first_page>27</first_page>
+                    <last_page>39</last_page>
+                </pages>
+                <doi_data>
+                    <doi>10.1145/263699.263706</doi>
+                    <resource>
+                        http://portal.acm.org/citation.cfm?doid=263699.263706
+                    </resource>
+                </doi_data>
+            </conference_paper>
+        </conference>
+    </body>
+</doi_batch>

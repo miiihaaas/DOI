@@ -317,13 +317,17 @@ class TestEnvironmentVariableValidation:
 
     def test_boolean_environment_variable_parsing(self):
         """Test parsing of boolean environment variables."""
+        # Keep USERNAME for Windows compatibility with PyMySQL
+        username = os.environ.get('USERNAME', 'testuser')
         with patch.dict(os.environ, {
+            'USERNAME': username,
             'SECRET_KEY': 'test-secret',
+            'DATABASE_URL': 'mysql+pymysql://user:pass@localhost/testdb',
             'SESSION_COOKIE_SECURE': 'True',
             'SESSION_COOKIE_HTTPONLY': 'False',
             'HEALTH_CHECK_DATABASE': 'true',
             'WTF_CSRF_ENABLED': 'false'
-        }):
+        }, clear=True):
             app = create_app('production')
             
             assert app.config['SESSION_COOKIE_SECURE'] is True
@@ -332,12 +336,16 @@ class TestEnvironmentVariableValidation:
 
     def test_integer_environment_variable_parsing(self):
         """Test parsing of integer environment variables."""
+        # Keep USERNAME for Windows compatibility with PyMySQL
+        username = os.environ.get('USERNAME', 'testuser')
         with patch.dict(os.environ, {
+            'USERNAME': username,
             'SECRET_KEY': 'test-secret',
+            'DATABASE_URL': 'mysql+pymysql://user:pass@localhost/testdb',
             'PERMANENT_SESSION_LIFETIME': '7200',
             'HEALTH_CHECK_TIMEOUT': '10',
             'LOG_MAX_BYTES': '10485760'
-        }):
+        }, clear=True):
             app = create_app('production')
             
             # Check session lifetime (should be timedelta)
@@ -347,10 +355,14 @@ class TestEnvironmentVariableValidation:
 
     def test_list_environment_variable_parsing(self):
         """Test parsing of list-like environment variables."""
+        # Keep USERNAME for Windows compatibility with PyMySQL
+        username = os.environ.get('USERNAME', 'testuser')
         with patch.dict(os.environ, {
+            'USERNAME': username,
             'SECRET_KEY': 'test-secret',
+            'DATABASE_URL': 'mysql+pymysql://user:pass@localhost/testdb',
             'ALLOWED_EXTENSIONS': 'xml,pdf,doc,docx,txt'
-        }):
+        }, clear=True):
             app = create_app('production')
             
             allowed_extensions = app.config['ALLOWED_EXTENSIONS']
@@ -384,20 +396,28 @@ class TestConfigurationSecurity:
             assert len(app.config['SECRET_KEY']) < 32
 
         # Test with strong secret key
+        # Keep USERNAME for Windows compatibility with PyMySQL
+        username = os.environ.get('USERNAME', 'testuser')
         with patch.dict(os.environ, {
-            'SECRET_KEY': 'very-strong-secret-key-with-32-chars-or-more'
-        }):
+            'USERNAME': username,
+            'SECRET_KEY': 'very-strong-secret-key-with-32-chars-or-more',
+            'DATABASE_URL': 'mysql+pymysql://user:pass@localhost/testdb'
+        }, clear=True):
             app = create_app('production')
             assert len(app.config['SECRET_KEY']) >= 32
 
     def test_security_headers_configuration(self):
         """Test security headers are properly configured."""
+        # Keep USERNAME for Windows compatibility with PyMySQL
+        username = os.environ.get('USERNAME', 'testuser')
         with patch.dict(os.environ, {
+            'USERNAME': username,
             'SECRET_KEY': 'test-secret',
+            'DATABASE_URL': 'mysql+pymysql://user:pass@localhost/testdb',
             'SESSION_COOKIE_SECURE': 'True',
             'SESSION_COOKIE_HTTPONLY': 'True',
             'SESSION_COOKIE_SAMESITE': 'Strict'
-        }):
+        }, clear=True):
             app = create_app('production')
             
             assert app.config['SESSION_COOKIE_SECURE'] is True

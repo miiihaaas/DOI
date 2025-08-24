@@ -1,0 +1,68 @@
+<doi_batch xmlns="http://www.crossref.org/schema/4.3.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.crossref.org/schema/4.3.7 http://www.crossref.org/schemas/crossref4.3.7.xsd" version="4.3.7">
+    <head>
+        <doi_batch_id>111111</doi_batch_id>
+        <timestamp>200503161011</timestamp>
+        <depositor>
+            <depositor_name>Sample Master</depositor_name>
+            <email_address>support@crossref.org</email_address>
+        </depositor>
+        <registrant>CrossRef</registrant>
+    </head>
+    <body>
+        <conference>
+            <event_metadata>
+                <conference_name>Crossref Annual Meeting</conference_name>
+                <conference_acronym>cam2005</conference_acronym>
+                <conference_date>Nov. 13, 2005</conference_date>
+            </event_metadata>
+            <proceedings_series_metadata>
+                <series_metadata>
+                    <titles>
+                        <title>CrossRef Annual Meeting Dummy Proceedings</title>
+                    </titles>
+                    <issn>5555-5555</issn>
+                </series_metadata>
+                <proceedings_title>Annual Meeting of PILA</proceedings_title>
+                <volume>3</volume>
+                <publisher>
+                    <publisher_name>Crossref</publisher_name>
+                </publisher>
+                <publication_date media_type="print">
+                    <month>11</month>
+                    <day>23</day>
+                    <year>2004</year>
+                </publication_date>
+                <isbn>5555555555</isbn>
+                <doi_data>
+                    <doi>10.5555/cram05</doi>
+                    <resource>http://www.crossref.org/cram05</resource>
+                </doi_data>
+            </proceedings_series_metadata>
+            <!-- ============== -->
+            <conference_paper>
+                <contributors>
+                    <person_name sequence="first" contributor_role="author">
+                        <given_name>Jim</given_name>
+                        <surname>Jones</surname>
+                    </person_name>
+                </contributors>
+                <titles>
+                    <title>Crossref Sample Title</title>
+                </titles>
+                <publication_date media_type="print">
+                    <month>12</month>
+                    <day>31</day>
+                    <year>2003</year>
+                </publication_date>
+                <pages>
+                    <first_page>3</first_page>
+                    <last_page>4</last_page>
+                </pages>
+                <doi_data>
+                    <doi>10.5555/cdp0001</doi>
+                    <resource>http://www.crossref.org/pubs/cdp0001</resource>
+                </doi_data>
+            </conference_paper>
+        </conference>
+    </body>
+</doi_batch>

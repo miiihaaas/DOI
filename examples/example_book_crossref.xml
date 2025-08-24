@@ -1,0 +1,79 @@
+<doi_batch xmlns="http://www.crossref.org/schema/4.3.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="4.3.7" xsi:schemaLocation="http://www.crossref.org/schema/4.3.7 http://www.crossref.org/schemas/crossref4.3.7.xsd">
+    <head>
+        <doi_batch_id>2004-10-19-10-04-31-1016001</doi_batch_id>
+        <timestamp>20082117100522</timestamp>
+        <depositor>
+            <depositor_name>Sample Master</depositor_name>
+            <email_address>support@crossref.org</email_address>
+        </depositor>
+        <registrant>CrossRef</registrant>
+    </head>
+    <body>
+        <book book_type="edited_book">
+            <book_metadata language="en">
+                <titles>
+                    <title>Use of Recycled Materials</title>
+                </titles>
+                <publication_date>
+                    <year>2005</year>
+                </publication_date>
+                <isbn media_type="electronic">2912143691</isbn>
+                <publisher>
+                    <publisher_name>RILEM Publications SARL</publisher_name>
+                </publisher>
+                <doi_data>
+                    <doi>10.50505/book</doi>
+                    <resource>http://www.crossref.org/hello</resource>
+                </doi_data>
+            </book_metadata>
+            <content_item component_type="chapter" publication_type="full_text">
+                <contributors>
+                    <person_name sequence="first" contributor_role="author">
+                        <given_name>E.</given_name>
+                        <surname>Vázquez</surname>
+                    </person_name>
+                </contributors>
+                <titles>
+                    <title>Miscellaneous</title>
+                </titles>
+                <pages>
+                    <first_page>53</first_page>
+                    <last_page>55</last_page>
+                </pages>
+                <publisher_item>
+                    <item_number>rep030-006</item_number>
+                </publisher_item>
+                <doi_data>
+                    <doi>10.50505/m4</doi>
+                    <resource>
+                        https://www.rilem.net/boutique/fiche.php?cat=book&reference=rep030-006
+                    </resource>
+                </doi_data>
+            </content_item>
+            <content_item component_type="chapter" publication_type="full_text">
+                <contributors>
+                    <person_name sequence="first" contributor_role="author">
+                        <given_name>L.</given_name>
+                        <surname>De Bock</surname>
+                    </person_name>
+                </contributors>
+                <titles>
+                    <title>Recycled asphalt pavement</title>
+                </titles>
+                <pages>
+                    <first_page>45</first_page>
+                    <last_page>51</last_page>
+                </pages>
+                <publisher_item>
+                    <item_number>rep030-005</item_number>
+                </publisher_item>
+                <doi_data>
+                    <doi>10.50505/m5</doi>
+                    <resource>
+                        https://www.rilem.net/boutique/fiche.php?cat=book&reference=rep030-005
+                    </resource>
+                </doi_data>
+            </content_item>
+        </book>
+    </body>
+</doi_batch>

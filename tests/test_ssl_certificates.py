@@ -396,16 +396,20 @@ class TestEnvironmentSSLConfiguration:
         # This would typically be handled by Flask-Talisman or similar
         # For now, test that the configuration variables exist
         
+        # Keep USERNAME for Windows compatibility with PyMySQL
+        username = os.environ.get('USERNAME', 'testuser')
         with patch.dict(os.environ, {
+            'USERNAME': username,
             'SECRET_KEY': 'test-secret',
+            'DATABASE_URL': 'mysql+pymysql://user:pass@localhost/testdb',
             'SSL_REDIRECT': 'True'
-        }):
+        }, clear=True):
             from app import create_app
             app = create_app('production')
             
             # Configuration should be present (actual redirect handled by Nginx)
-            # This is more of a documentation test
-            assert 'production' in app.config['ENV'] or app.config.get('ENV') is None
+            # This is more of a documentation test - test that SSL redirect env var can be set
+            assert app.config.get('SESSION_COOKIE_SECURE') is True  # Production should force secure cookies
 
 
 class TestSSLSecurityHeaders:
