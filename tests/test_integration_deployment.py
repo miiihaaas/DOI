@@ -401,7 +401,11 @@ class TestProductionReadiness:
 
     def test_debug_mode_disabled_in_production(self):
         """Test that debug mode is disabled in production config."""
-        with patch.dict(os.environ, {'FLASK_ENV': 'production'}):
+        with patch.dict(os.environ, {
+            'FLASK_ENV': 'production',
+            'SECRET_KEY': 'test-secret-key-for-production',
+            'DATABASE_URL': 'sqlite:///:memory:'
+        }):
             app = create_app('production')
             assert app.config['DEBUG'] is False
 

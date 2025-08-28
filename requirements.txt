@@ -29,6 +29,7 @@ python-decouple==3.8
 # Security
 cryptography==42.0.5
 Flask-Limiter==3.5.0
+email-validator==2.2.0
 
 # MySQL Database Driver (for production use)
 PyMySQL==1.1.0

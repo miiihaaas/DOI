@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>
+                        {% if publication.publication_type.value == 'journal' %}
+                            <i class="bi bi-journal-richtext text-primary"></i>
+                        {% elif publication.publication_type.value == 'book_series' %}
+                            <i class="bi bi-collection text-info"></i>
+                        {% elif publication.publication_type.value == 'book_set' %}
+                            <i class="bi bi-box-seam text-warning"></i>
+                        {% elif publication.publication_type.value == 'book' %}
+                            <i class="bi bi-book text-success"></i>
+                        {% endif %}
+                        {{ publication.title }}
+                    </h2>
+                    {% if publication.subtitle %}
+                        <p class="lead text-muted">{{ publication.subtitle }}</p>
+                    {% endif %}
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('members.index') }}">Članovi</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('members.detail', member_id=publication.member.id) }}">{{ publication.member.name }}</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('publications.list_by_member', member_id=publication.member.id) }}">Publikacije</a></li>
+                            <li class="breadcrumb-item active">{{ publication.title[:50] }}{% if publication.title|length > 50 %}...{% endif %}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="btn-group">
+                    <a href="{{ url_for('publications.edit', publication_id=publication.id) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Izmeni
+                    </a>
+                    <button type="button" 
+                            class="btn btn-{% if publication.is_active %}danger{% else %}success{% endif %}" 
+                            onclick="toggleStatus({{ publication.id }}, '{{ publication.is_active }}')"
+                            title="{% if publication.is_active %}Deaktiviraj{% else %}Aktiviraj{% endif %}">
+                        <i class="bi bi-{% if publication.is_active %}x-circle{% else %}check-circle{% endif %}"></i>
+                        {% if publication.is_active %}Deaktiviraj{% else %}Aktiviraj{% endif %}
+                    </button>
+                    <a href="{{ url_for('publications.list_by_member', member_id=publication.member.id) }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Nazad na listu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Main Publication Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle"></i> Detalji publikacije
+                        </h5>
+                        <div>
+                            {% if publication.publication_type.value == 'journal' %}
+                                <span class="badge bg-primary fs-6">Časopis</span>
+                            {% elif publication.publication_type.value == 'book_series' %}
+                                <span class="badge bg-info fs-6">Serija knjiga</span>
+                            {% elif publication.publication_type.value == 'book_set' %}
+                                <span class="badge bg-warning fs-6">Komplet knjiga</span>
+                            {% elif publication.publication_type.value == 'book' %}
+                                <span class="badge bg-success fs-6">Knjiga</span>
+                            {% endif %}
+                            
+                            {% if publication.is_active %}
+                                <span class="badge bg-success fs-6">Aktivna</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">Neaktivna</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Osnovni podaci</h6>
+                            <table class="table table-borderless table-sm">
+                                <tr>
+                                    <td class="fw-bold">Tip:</td>
+                                    <td>{{ publication.publication_type.value.replace('_', ' ').title() }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Naziv:</td>
+                                    <td>{{ publication.title }}</td>
+                                </tr>
+                                {% if publication.subtitle %}
+                                <tr>
+                                    <td class="fw-bold">Podnaslov:</td>
+                                    <td>{{ publication.subtitle }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td class="fw-bold">Jezik:</td>
+                                    <td>{{ publication.language_code.upper() }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Metapodaci</h6>
+                            <table class="table table-borderless table-sm">
+                                <tr>
+                                    <td class="fw-bold">Kreirana:</td>
+                                    <td>{{ publication.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Poslednja izmena:</td>
+                                    <td>{{ publication.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Status:</td>
+                                    <td>
+                                        {% if publication.is_active %}
+                                            <span class="text-success">✓ Aktivna</span>
+                                        {% else %}
+                                            <span class="text-danger">✗ Neaktivna</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Type-specific Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        {% if publication.publication_type.value == 'journal' %}
+                            <i class="bi bi-journal-richtext text-primary"></i> Podaci o časopisu
+                        {% elif publication.publication_type.value == 'book_series' %}
+                            <i class="bi bi-collection text-info"></i> Podaci o seriji knjiga
+                        {% elif publication.publication_type.value == 'book_set' %}
+                            <i class="bi bi-box-seam text-warning"></i> Podaci o kompletu knjiga
+                        {% elif publication.publication_type.value == 'book' %}
+                            <i class="bi bi-book text-success"></i> Podaci o knjizi
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if publication.publication_type.value == 'journal' %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    {% if publication.journal_abbreviated_title %}
+                                    <tr>
+                                        <td class="fw-bold">Skraćeni naziv:</td>
+                                        <td>{{ publication.journal_abbreviated_title }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.journal_issn %}
+                                    <tr>
+                                        <td class="fw-bold">ISSN:</td>
+                                        <td><span class="badge bg-light text-dark">{{ publication.journal_issn }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.journal_electronic_issn %}
+                                    <tr>
+                                        <td class="fw-bold">E-ISSN:</td>
+                                        <td><span class="badge bg-light text-dark">{{ publication.journal_electronic_issn }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.journal_coden %}
+                                    <tr>
+                                        <td class="fw-bold">CODEN:</td>
+                                        <td><span class="badge bg-light text-dark">{{ publication.journal_coden }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    {% elif publication.publication_type.value == 'book_series' %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    {% if publication.series_title %}
+                                    <tr>
+                                        <td class="fw-bold">Naziv serije:</td>
+                                        <td>{{ publication.series_title }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.series_subtitle %}
+                                    <tr>
+                                        <td class="fw-bold">Podnaslov serije:</td>
+                                        <td>{{ publication.series_subtitle }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.series_issn %}
+                                    <tr>
+                                        <td class="fw-bold">ISSN serije:</td>
+                                        <td><span class="badge bg-light text-dark">{{ publication.series_issn }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    {% if publication.series_electronic_issn %}
+                                    <tr>
+                                        <td class="fw-bold">E-ISSN serije:</td>
+                                        <td><span class="badge bg-light text-dark">{{ publication.series_electronic_issn }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.series_coden %}
+                                    <tr>
+                                        <td class="fw-bold">CODEN serije:</td>
+                                        <td><span class="badge bg-light text-dark">{{ publication.series_coden }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.series_number %}
+                                    <tr>
+                                        <td class="fw-bold">Broj u seriji:</td>
+                                        <td>{{ publication.series_number }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    {% elif publication.publication_type.value == 'book_set' %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    {% if publication.set_title %}
+                                    <tr>
+                                        <td class="fw-bold">Naziv kompleta:</td>
+                                        <td>{{ publication.set_title }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.set_subtitle %}
+                                    <tr>
+                                        <td class="fw-bold">Podnaslov kompleta:</td>
+                                        <td>{{ publication.set_subtitle }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.set_isbn %}
+                                    <tr>
+                                        <td class="fw-bold">ISBN kompleta:</td>
+                                        <td><span class="badge bg-light text-dark">{{ publication.set_isbn }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    {% if publication.set_electronic_isbn %}
+                                    <tr>
+                                        <td class="fw-bold">E-ISBN kompleta:</td>
+                                        <td><span class="badge bg-light text-dark">{{ publication.set_electronic_isbn }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.set_part_number %}
+                                    <tr>
+                                        <td class="fw-bold">Broj dela:</td>
+                                        <td>{{ publication.set_part_number }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    {% elif publication.publication_type.value == 'book' %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    {% if publication.book_type %}
+                                    <tr>
+                                        <td class="fw-bold">Tip knjige:</td>
+                                        <td>{{ publication.book_type }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.edition_number %}
+                                    <tr>
+                                        <td class="fw-bold">Broj izdanja:</td>
+                                        <td>{{ publication.edition_number }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.isbn %}
+                                    <tr>
+                                        <td class="fw-bold">ISBN:</td>
+                                        <td><span class="badge bg-light text-dark">{{ publication.isbn }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    {% if publication.electronic_isbn %}
+                                    <tr>
+                                        <td class="fw-bold">E-ISBN:</td>
+                                        <td><span class="badge bg-light text-dark">{{ publication.electronic_isbn }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if publication.noisbn_reason %}
+                                    <tr>
+                                        <td class="fw-bold">Razlog bez ISBN:</td>
+                                        <td>{{ publication.noisbn_reason }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- DOI Drafts Section (Future) -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-file-text"></i> DOI Draft-ovi
+                            <span class="badge bg-secondary">{{ draft_count }}</span>
+                        </h5>
+                        {% if publication.is_active %}
+                        <button class="btn btn-success btn-sm" disabled>
+                            <i class="bi bi-plus-circle"></i> Kreiraj Draft
+                            <small>(Soon)</small>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if draft_count == 0 %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-file-plus display-4 text-muted"></i>
+                            <h6 class="mt-3">Nema kreiranih draft-ova</h6>
+                            <p class="text-muted">
+                                {% if workflow_info.is_single_draft_type %}
+                                    Ova publikacija podržava samo jedan DOI draft.
+                                {% else %}
+                                    Ova publikacija može imati više DOI draft-ova.
+                                {% endif %}
+                            </p>
+                            {% if publication.is_active %}
+                                <button class="btn btn-outline-primary" disabled>
+                                    <i class="bi bi-plus"></i> Kreiraj prvi draft (Coming Soon)
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <!-- Future: List of DOI drafts will be displayed here -->
+                        <p class="text-muted">Lista draft-ova će biti implementirana kada bude DOIDraft model.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Member Information -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-person"></i> Podaci o članu</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            {{ publication.member.name }}
+                        </div>
+                        <div>
+                            <h6 class="mb-0">{{ publication.member.name }}</h6>
+                            <small class="text-muted">{{ publication.member.email }}</small>
+                        </div>
+                    </div>
+                    <table class="table table-borderless table-sm">
+                        {% if publication.member.orcid %}
+                        <tr>
+                            <td class="fw-bold">ORCID:</td>
+                            <td>
+                                <a href="https://orcid.org/{{ publication.member.orcid }}" target="_blank" class="text-decoration-none">
+                                    {{ publication.member.orcid }} <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td class="fw-bold">Ukupno publikacija:</td>
+                            <td>{{ publication.member.publications.count() }}</td>
+                        </tr>
+                    </table>
+                    <div class="d-grid">
+                        <a href="{{ url_for('members.detail', member_id=publication.member.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> Vidi profil člana
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Information -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-diagram-3"></i> Workflow informacije</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless table-sm">
+                        <tr>
+                            <td class="fw-bold">Tip veze:</td>
+                            <td>{{ workflow_info.relationship_type }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Više draft-ova:</td>
+                            <td>
+                                {% if workflow_info.supports_multiple_drafts %}
+                                    <span class="text-success">✓ Da</span>
+                                {% else %}
+                                    <span class="text-warning">✗ Ne</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+
+                    {% if workflow_info.is_single_draft_type %}
+                        <div class="alert alert-info small">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Jedinstven draft:</strong> Ova publikacija može imati samo jedan DOI draft.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success small">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Više draft-ova:</strong> Možete kreirati više DOI draft-ova za ovu publikaciju (npr. različiti brojevi časopisa).
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Publication Statistics -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-bar-chart"></i> Statistike</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h4 class="text-primary mb-0">{{ draft_count }}</h4>
+                                <small class="text-muted">Draft-ovi</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success mb-0">0</h4>
+                            <small class="text-muted">DOI registrovani</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleStatus(publicationId, currentStatus) {
+    const isActive = currentStatus === 'True';
+    const action = isActive ? 'deaktivaciju' : 'aktivaciju';
+    
+    if (confirm(`Da li ste sigurni da želite ${action} ove publikacije?`)) {
+        fetch(`/publications/${publicationId}/toggle-status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload page to reflect changes
+                window.location.reload();
+            } else {
+                alert('Greška: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Greška:', error);
+            alert('Došlo je do greške prilikom izmene statusa.');
+        });
+    }
+}
+</script>
+{% endblock %}

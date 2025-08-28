@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>
+                    <i class="bi bi-person-circle text-primary"></i> 
+                    {{ member.name }}
+                    {% if not member.is_active %}
+                    <span class="badge bg-warning ms-2">
+                        <i class="bi bi-pause-circle"></i> Neaktivan
+                    </span>
+                    {% else %}
+                    <span class="badge bg-success ms-2">
+                        <i class="bi bi-check-circle"></i> Aktivan
+                    </span>
+                    {% endif %}
+                </h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{{ url_for('main.index') }}">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{{ url_for('members.index') }}">Članovi</a>
+                        </li>
+                        <li class="breadcrumb-item active">{{ member.name }}</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('members.edit', member_id=member.id) }}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Uredi
+                </a>
+                <form method="POST" action="{{ url_for('members.toggle_status', member_id=member.id) }}" 
+                      class="d-inline"
+                      onsubmit="return confirmStatusToggle('{{ member.name }}', {{ member.is_active|tojson }});">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-{% if member.is_active %}warning{% else %}success{% endif %}">
+                        <i class="bi bi-{% if member.is_active %}pause{% else %}play{% endif %}-circle"></i> 
+                        {% if member.is_active %}Deaktiviraj{% else %}Aktiviraj{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Member Information Cards -->
+        <div class="row">
+            <!-- Basic Information -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle text-primary"></i> Osnovni podaci
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Naziv člana:</dt>
+                            <dd class="col-sm-8">{{ member.name }}</dd>
+                            
+                            <dt class="col-sm-4">Institucija:</dt>
+                            <dd class="col-sm-8">{{ member.institution }}</dd>
+                            
+                            <dt class="col-sm-4">Email:</dt>
+                            <dd class="col-sm-8">
+                                <a href="mailto:{{ member.contact_email }}" class="text-decoration-none">
+                                    <i class="bi bi-envelope me-1"></i>{{ member.contact_email }}
+                                </a>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Telefon:</dt>
+                            <dd class="col-sm-8">
+                                <a href="tel:{{ member.telefon }}" class="text-decoration-none">
+                                    <i class="bi bi-telephone me-1"></i>{{ member.telefon }}
+                                </a>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Osoba za kontakt:</dt>
+                            <dd class="col-sm-8">
+                                <i class="bi bi-person me-1"></i>{{ member.osoba_za_kontakt }}
+                            </dd>
+                            
+                            {% if member.website_url %}
+                            <dt class="col-sm-4">Web sajt:</dt>
+                            <dd class="col-sm-8">
+                                <a href="{{ member.website_url }}" target="_blank" class="text-decoration-none">
+                                    <i class="bi bi-globe me-1"></i>{{ member.website_url }}
+                                    <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                </a>
+                            </dd>
+                            {% endif %}
+                            
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                {% if member.is_active %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Aktivan član
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="bi bi-pause-circle"></i> Neaktivan član
+                                </span>
+                                {% endif %}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Information -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-building text-success"></i> Poslovni podaci
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">PIB broj:</dt>
+                            <dd class="col-sm-8"><code>{{ member.pib }}</code></dd>
+                            
+                            <dt class="col-sm-4">Matični broj:</dt>
+                            <dd class="col-sm-8"><code>{{ member.matični_broj }}</code></dd>
+                            
+                            {% if member.jmbg_lk %}
+                            <dt class="col-sm-4">JMBG/LK:</dt>
+                            <dd class="col-sm-8"><code>{{ member.jmbg_lk }}</code></dd>
+                            {% endif %}
+                            
+                            <dt class="col-sm-4">Šifra delatnosti:</dt>
+                            <dd class="col-sm-8"><code>{{ member.šifra_delatnosti }}</code></dd>
+                            
+                            <dt class="col-sm-4">PDV status:</dt>
+                            <dd class="col-sm-8">
+                                {% if member.pdv_status == 'obveznik_pdv' %}
+                                <span class="badge bg-info">Obveznik PDV-a</span>
+                                {% elif member.pdv_status == 'nije_obveznik_pdv' %}
+                                <span class="badge bg-secondary">Nije obveznik PDV-a</span>
+                                {% elif member.pdv_status == 'oslobodjen_pdv' %}
+                                <span class="badge bg-warning">Oslobođen PDV-a</span>
+                                {% elif member.pdv_status == 'paušalni_obveznik' %}
+                                <span class="badge bg-primary">Paušalni obveznik</span>
+                                {% else %}
+                                {{ member.pdv_status }}
+                                {% endif %}
+                            </dd>
+                            
+                            <dt class="col-sm-4">Država obveznika:</dt>
+                            <dd class="col-sm-8">
+                                <i class="bi bi-flag me-1"></i>{{ member.država_obveznika }}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Information -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-geo-alt text-warning"></i> Adresa za naplatu
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <address class="mb-0">
+                            {{ member.billing_address|nl2br|safe }}
+                        </address>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banking Information -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bank text-info"></i> Bankarski podaci
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">IBAN:</dt>
+                            <dd class="col-sm-8">
+                                <code class="user-select-all">{{ member.iban }}</code>
+                                <button class="btn btn-sm btn-outline-secondary ms-2" 
+                                        onclick="copyToClipboard('{{ member.iban }}')" 
+                                        title="Kopiraj IBAN">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Banka:</dt>
+                            <dd class="col-sm-8">{{ member.naziv_banke }}</dd>
+                            
+                            <dt class="col-sm-4">SWIFT/BIC:</dt>
+                            <dd class="col-sm-8">
+                                <code class="user-select-all">{{ member.swift_bic }}</code>
+                                <button class="btn btn-sm btn-outline-secondary ms-2" 
+                                        onclick="copyToClipboard('{{ member.swift_bic }}')" 
+                                        title="Kopiraj SWIFT/BIC">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Publications Information -->
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-journal-text text-primary"></i> 
+                            Publikacije 
+                            <span class="badge bg-primary">{{ member.publications.count() }}</span>
+                        </h5>
+                        <div class="btn-group">
+                            <a href="{{ url_for('publications.list_by_member', member_id=member.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Prikaži sve publikacije
+                            </a>
+                            <a href="{{ url_for('publications.create_for_member', member_id=member.id) }}" class="btn btn-sm btn-success">
+                                <i class="bi bi-plus-circle"></i> Nova publikacija
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if member.publications.count() > 0 %}
+                        <div class="row mb-4">
+                            <!-- Publication Type Statistics -->
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-journal-richtext text-primary display-4"></i>
+                                    <h4>{{ member.publications.filter_by(publication_type='journal').count() }}</h4>
+                                    <p class="text-muted">Časopisi</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-collection text-info display-4"></i>
+                                    <h4>{{ member.publications.filter_by(publication_type='book_series').count() }}</h4>
+                                    <p class="text-muted">Serije knjiga</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-box-seam text-warning display-4"></i>
+                                    <h4>{{ member.publications.filter_by(publication_type='book_set').count() }}</h4>
+                                    <p class="text-muted">Kompleti knjiga</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-book text-success display-4"></i>
+                                    <h4>{{ member.publications.filter_by(publication_type='book').count() }}</h4>
+                                    <p class="text-muted">Knjige</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Publications -->
+                        <h6>Poslednje publikacije:</h6>
+                        <div class="list-group list-group-flush">
+                            {% for publication in member.publications.limit(3) %}
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">
+                                        {% if publication.publication_type.value == 'journal' %}
+                                            <i class="bi bi-journal-richtext text-primary me-1"></i>
+                                        {% elif publication.publication_type.value == 'book_series' %}
+                                            <i class="bi bi-collection text-info me-1"></i>
+                                        {% elif publication.publication_type.value == 'book_set' %}
+                                            <i class="bi bi-box-seam text-warning me-1"></i>
+                                        {% elif publication.publication_type.value == 'book' %}
+                                            <i class="bi bi-book text-success me-1"></i>
+                                        {% endif %}
+                                        {{ publication.title }}
+                                    </div>
+                                    {% if publication.subtitle %}
+                                        <small class="text-muted">{{ publication.subtitle }}</small>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">
+                                        Kreirana: {{ publication.created_at.strftime('%d.%m.%Y') }} | 
+                                        Jezik: {{ publication.language_code.upper() }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-light text-dark">{{ publication.publication_type.value.replace('_', ' ').title() }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if member.publications.count() > 3 %}
+                            <div class="text-center mt-3">
+                                <a href="{{ url_for('publications.list_by_member', member_id=member.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-three-dots"></i> Prikaži sve ({{ member.publications.count() }})
+                                </a>
+                            </div>
+                        {% endif %}
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-journal-x display-4 text-muted"></i>
+                            <h4 class="text-muted">Nema publikacija</h4>
+                            <p class="text-muted">
+                                Ovaj član još uvek nema kreiranih publikacionih template-a.<br>
+                                <small>Template-i sadrže nepromenjive podatke koji se koriste za kreiranje DOI draft-ova.</small>
+                            </p>
+                            <a href="{{ url_for('publications.create_for_member', member_id=member.id) }}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Kreiraj prvi template
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history text-secondary"></i> Sistemski podaci
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-6">Kreiran:</dt>
+                                    <dd class="col-sm-6">
+                                        <i class="bi bi-calendar-plus me-1"></i>
+                                        {{ member.created_at.strftime('%d.%m.%Y u %H:%M') }}
+                                    </dd>
+                                    
+                                    <dt class="col-sm-6">Poslednja izmena:</dt>
+                                    <dd class="col-sm-6">
+                                        <i class="bi bi-pencil me-1"></i>
+                                        {{ member.updated_at.strftime('%d.%m.%Y u %H:%M') }}
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-6">ID člana:</dt>
+                                    <dd class="col-sm-6"><code>#{{ member.id }}</code></dd>
+                                    
+                                    <dt class="col-sm-6">Sponsor ID:</dt>
+                                    <dd class="col-sm-6"><code>#{{ member.sponsor_id }}</code></dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex gap-2 justify-content-end">
+                    <a href="{{ url_for('members.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Nazad na listu
+                    </a>
+                    <a href="{{ url_for('members.edit', member_id=member.id) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Uredi člana
+                    </a>
+                    <button class="btn btn-outline-info" onclick="printMemberInfo()">
+                        <i class="bi bi-printer"></i> Štampaj
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmStatusToggle(memberName, isActive) {
+    const action = isActive ? 'deaktiviraj' : 'aktiviraj';
+    const message = `Da li ste sigurni da želite da ${action}te člana "${memberName}"?`;
+    
+    if (isActive) {
+        return confirm(message + '\n\nNapomena: Deaktivacija će onemogućiti kreiranje novih publikacija za ovog člana.');
+    } else {
+        return confirm(message);
+    }
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success message
+        const toast = document.createElement('div');
+        toast.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        toast.innerHTML = `
+            <div class="toast show" role="alert">
+                <div class="toast-header">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                    <strong class="me-auto">Kopirano</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    Tekst je kopiran u clipboard.
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 3000);
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+        alert('Greška pri kopiranju teksta.');
+    });
+}
+
+function printMemberInfo() {
+    // Simple print functionality
+    window.print();
+}
+
+// Add print styles
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @media print {
+            .btn, .card-header .btn, nav, .breadcrumb {
+                display: none !important;
+            }
+            .card {
+                border: 1px solid #dee2e6 !important;
+                box-shadow: none !important;
+            }
+            .card-header {
+                background-color: #f8f9fa !important;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

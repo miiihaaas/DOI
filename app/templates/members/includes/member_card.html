@@ -1,0 +1,142 @@
+<!-- Member Card Component -->
+<div class="card h-100 {% if not member.is_active %}border-warning{% endif %}">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-building me-2 text-primary"></i>
+            <strong class="text-truncate">{{ member.name }}</strong>
+        </div>
+        <div>
+            {% if member.is_active %}
+            <span class="badge bg-success">
+                <i class="bi bi-check-circle"></i> Aktivan
+            </span>
+            {% else %}
+            <span class="badge bg-warning">
+                <i class="bi bi-pause-circle"></i> Neaktivan
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="row g-2">
+            <!-- Institution -->
+            <div class="col-12">
+                <small class="text-muted d-flex align-items-center">
+                    <i class="bi bi-bank me-1"></i>
+                    <span class="text-truncate">{{ member.institution }}</span>
+                </small>
+            </div>
+            
+            <!-- Contact Email -->
+            <div class="col-12">
+                <small class="text-muted d-flex align-items-center">
+                    <i class="bi bi-envelope me-1"></i>
+                    <a href="mailto:{{ member.contact_email }}" class="text-decoration-none text-truncate">
+                        {{ member.contact_email }}
+                    </a>
+                </small>
+            </div>
+            
+            <!-- Contact Person -->
+            <div class="col-12">
+                <small class="text-muted d-flex align-items-center">
+                    <i class="bi bi-person me-1"></i>
+                    <span class="text-truncate">{{ member.osoba_za_kontakt }}</span>
+                </small>
+            </div>
+            
+            <!-- Phone -->
+            <div class="col-12">
+                <small class="text-muted d-flex align-items-center">
+                    <i class="bi bi-telephone me-1"></i>
+                    <a href="tel:{{ member.telefon }}" class="text-decoration-none">
+                        {{ member.telefon }}
+                    </a>
+                </small>
+            </div>
+            
+            {% if member.website_url %}
+            <!-- Website -->
+            <div class="col-12">
+                <small class="text-muted d-flex align-items-center">
+                    <i class="bi bi-globe me-1"></i>
+                    <a href="{{ member.website_url }}" target="_blank" class="text-decoration-none text-truncate">
+                        {{ member.website_url.replace('https://', '').replace('http://', '').replace('www.', '') }}
+                        <i class="bi bi-box-arrow-up-right ms-1"></i>
+                    </a>
+                </small>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Business Information -->
+        <hr class="my-2">
+        <div class="row g-1">
+            <div class="col-6">
+                <small class="text-muted">
+                    <strong>PIB:</strong> {{ member.pib }}
+                </small>
+            </div>
+            <div class="col-6">
+                <small class="text-muted">
+                    <strong>Matični:</strong> {{ member.matični_broj }}
+                </small>
+            </div>
+        </div>
+        
+        <!-- Publications Count -->
+        {% set pub_count = member.publications.count() if member.publications else 0 %}
+        <div class="mt-2">
+            <small class="text-muted">
+                <i class="bi bi-journal-text me-1"></i>
+                <strong>{{ pub_count }}</strong> publikacija{{ 'a' if pub_count != 1 else '' }}
+            </small>
+        </div>
+    </div>
+    
+    <div class="card-footer bg-transparent">
+        <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                <i class="bi bi-calendar me-1"></i>
+                Kreiran: {{ member.created_at.strftime('%d.%m.%Y') }}
+            </small>
+            
+            <div class="btn-group btn-group-sm" role="group">
+                <!-- View Details -->
+                <a href="{{ url_for('members.detail', member_id=member.id) }}" 
+                   class="btn btn-outline-primary" 
+                   title="Prikaži detalje">
+                    <i class="bi bi-eye"></i>
+                </a>
+                
+                <!-- Edit Member -->
+                <a href="{{ url_for('members.edit', member_id=member.id) }}" 
+                   class="btn btn-outline-secondary"
+                   title="Uredi člana">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                
+                <!-- Toggle Status -->
+                <form method="POST" action="{{ url_for('members.toggle_status', member_id=member.id) }}" 
+                      class="d-inline"
+                      onsubmit="return confirmStatusToggle(this, '{{ member.name }}', {{ member.is_active|tojson }});">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" 
+                            class="btn btn-outline-{% if member.is_active %}warning{% else %}success{% endif %}"
+                            title="{% if member.is_active %}Deaktiviraj člana{% else %}Aktiviraj člana{% endif %}">
+                        <i class="bi bi-{% if member.is_active %}pause{% else %}play{% endif %}-circle"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmStatusToggle(form, memberName, isActive) {
+    const action = isActive ? 'deaktiviraj' : 'aktiviraj';
+    const message = `Da li ste sigurni da želite da ${action}te člana "${memberName}"?`;
+    return confirm(message);
+}
+</script>

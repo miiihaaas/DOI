@@ -382,6 +382,7 @@ class TestEnvironmentSSLConfiguration:
         """Test Flask SSL configuration."""
         with patch.dict(os.environ, {
             'SECRET_KEY': 'test-secret',
+            'DATABASE_URL': 'sqlite:///:memory:',
             'SESSION_COOKIE_SECURE': 'True',
             'FORCE_HTTPS': 'True'
         }):

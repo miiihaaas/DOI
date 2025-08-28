@@ -1,17 +1,66 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-journal-text"></i> Publikacije</h2>
-    <a href="{{ url_for('publications.create') }}" class="btn btn-success">
-        <i class="bi bi-journal-plus"></i> Nova publikacija
-    </a>
-</div>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-journal-text"></i> Publikacije</h2>
+            <p class="text-muted">Upravljanje publikacionim template-ima po članovima</p>
+        </div>
+    </div>
 
-<div class="card">
-    <div class="card-body">
-        <p class="text-muted">Lista publikacija će biti implementirana kada bude Publication model...</p>
-        <!-- TODO: Implementirati sa Publication modelom -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle"></i> Kako raditi sa publikacijama
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <p>Publikacije su organizovane po članovima. Da biste kreirali ili upravljali publikacijama:</p>
+                    <ol>
+                        <li>Idite na <strong>Članovi</strong> stranu</li>
+                        <li>Izaberite člana za kojeg želite da kreirate publikaciju</li>
+                        <li>U profilu člana kliknite na <strong>"Publikacije"</strong></li>
+                        <li>Kreirajte novi template publikacije</li>
+                    </ol>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-lightbulb"></i>
+                        <strong>Napomena:</strong> Template publikacije sadrži samo nepromenjive podatke (identifikatori, nazivi). 
+                        Konkretni podaci (datum, publisher, DOI) se dodaju kroz DOI draft-ove.
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h6>Tipovi publikacija</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-journal-richtext text-primary"></i>
+                            <strong>Časopis</strong> - 1:N veza (više brojeva)
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-collection text-info"></i>
+                            <strong>Serija knjiga</strong> - 1:N veza (više knjiga)
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-box-seam text-warning"></i>
+                            <strong>Komplet knjiga</strong> - 1:N veza (više delova)
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-book text-success"></i>
+                            <strong>Knjiga</strong> - 1:1 veza (jedan draft)
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-center mt-4">
+                <a href="{{ url_for('members.index') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-people"></i> Idite na članove
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

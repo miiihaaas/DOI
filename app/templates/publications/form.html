@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-journal-{{ 'pencil' if publication else 'plus' }}"></i> {{ action }} publikaciju</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('members.index') }}">Članovi</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('members.detail', member_id=member.id) }}">{{ member.name }}</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('publications.list_by_member', member_id=member.id) }}">Publikacije</a></li>
+                            <li class="breadcrumb-item active">{{ action }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <a href="{{ url_for('publications.list_by_member', member_id=member.id) }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Nazad na listu
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Main Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-form"></i> Osnovni podaci</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Publication Type -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.publication_type.id }}" class="form-label">
+                                    {{ form.publication_type.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.publication_type(class="form-select" + (" is-invalid" if form.publication_type.errors else "")) }}
+                                {% if form.publication_type.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.publication_type.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Title and Subtitle -->
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="{{ form.title.id }}" class="form-label">
+                                    {{ form.title.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                                {% if form.title.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.title.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.language_code.id }}" class="form-label">
+                                    {{ form.language_code.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.language_code(class="form-select" + (" is-invalid" if form.language_code.errors else "")) }}
+                                {% if form.language_code.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.language_code.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label for="{{ form.subtitle.id }}" class="form-label">{{ form.subtitle.label.text }}</label>
+                                {{ form.subtitle(class="form-control" + (" is-invalid" if form.subtitle.errors else "")) }}
+                                {% if form.subtitle.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.subtitle.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Type-specific Fields -->
+                        
+                        <!-- Journal Fields -->
+                        <div id="journal-fields" class="type-specific-fields" style="display: none;">
+                            <div class="card mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="bi bi-journal-richtext"></i> Podaci o časopisu</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="{{ form.journal_abbreviated_title.id }}" class="form-label">
+                                                {{ form.journal_abbreviated_title.label.text }}
+                                            </label>
+                                            {{ form.journal_abbreviated_title(class="form-control") }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="{{ form.journal_issn.id }}" class="form-label">
+                                                {{ form.journal_issn.label.text }} <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.journal_issn(class="form-control", placeholder="0000-0000") }}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="{{ form.journal_electronic_issn.id }}" class="form-label">
+                                                {{ form.journal_electronic_issn.label.text }}
+                                            </label>
+                                            {{ form.journal_electronic_issn(class="form-control", placeholder="0000-0000") }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="{{ form.journal_coden.id }}" class="form-label">
+                                                {{ form.journal_coden.label.text }}
+                                            </label>
+                                            {{ form.journal_coden(class="form-control", placeholder="ABCDEF") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Book Series Fields -->
+                        <div id="book_series-fields" class="type-specific-fields" style="display: none;">
+                            <div class="card mb-3">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="bi bi-collection"></i> Podaci o seriji knjiga</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="{{ form.series_title.id }}" class="form-label">
+                                                {{ form.series_title.label.text }} <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.series_title(class="form-control") }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="{{ form.series_subtitle.id }}" class="form-label">
+                                                {{ form.series_subtitle.label.text }}
+                                            </label>
+                                            {{ form.series_subtitle(class="form-control") }}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="{{ form.series_issn.id }}" class="form-label">
+                                                {{ form.series_issn.label.text }} <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.series_issn(class="form-control", placeholder="0000-0000") }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="{{ form.series_electronic_issn.id }}" class="form-label">
+                                                {{ form.series_electronic_issn.label.text }}
+                                            </label>
+                                            {{ form.series_electronic_issn(class="form-control", placeholder="0000-0000") }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="{{ form.series_coden.id }}" class="form-label">
+                                                {{ form.series_coden.label.text }}
+                                            </label>
+                                            {{ form.series_coden(class="form-control", placeholder="ABCDEF") }}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="{{ form.series_number.id }}" class="form-label">
+                                                {{ form.series_number.label.text }}
+                                            </label>
+                                            {{ form.series_number(class="form-control", placeholder="Volume 1") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Book Set Fields -->
+                        <div id="book_set-fields" class="type-specific-fields" style="display: none;">
+                            <div class="card mb-3">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="bi bi-box-seam"></i> Podaci o kompletu knjiga</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="{{ form.set_title.id }}" class="form-label">
+                                                {{ form.set_title.label.text }} <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.set_title(class="form-control") }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="{{ form.set_subtitle.id }}" class="form-label">
+                                                {{ form.set_subtitle.label.text }}
+                                            </label>
+                                            {{ form.set_subtitle(class="form-control") }}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="{{ form.set_isbn.id }}" class="form-label">
+                                                {{ form.set_isbn.label.text }} <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.set_isbn(class="form-control", placeholder="978-0-123456-78-9") }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="{{ form.set_electronic_isbn.id }}" class="form-label">
+                                                {{ form.set_electronic_isbn.label.text }}
+                                            </label>
+                                            {{ form.set_electronic_isbn(class="form-control", placeholder="978-0-123456-78-9") }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="{{ form.set_part_number.id }}" class="form-label">
+                                                {{ form.set_part_number.label.text }}
+                                            </label>
+                                            {{ form.set_part_number(class="form-control", placeholder="Deo 1") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Book Fields -->
+                        <div id="book-fields" class="type-specific-fields" style="display: none;">
+                            <div class="card mb-3">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="bi bi-book"></i> Podaci o knjizi</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="{{ form.book_type.id }}" class="form-label">
+                                                {{ form.book_type.label.text }}
+                                            </label>
+                                            {{ form.book_type(class="form-control") }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="{{ form.edition_number.id }}" class="form-label">
+                                                {{ form.edition_number.label.text }}
+                                            </label>
+                                            {{ form.edition_number(class="form-control", type="number", min="1") }}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="{{ form.isbn.id }}" class="form-label">
+                                                {{ form.isbn.label.text }}
+                                            </label>
+                                            {{ form.isbn(class="form-control", placeholder="978-0-123456-78-9") }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="{{ form.electronic_isbn.id }}" class="form-label">
+                                                {{ form.electronic_isbn.label.text }}
+                                            </label>
+                                            {{ form.electronic_isbn(class="form-control", placeholder="978-0-123456-78-9") }}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-12">
+                                            <label for="{{ form.noisbn_reason.id }}" class="form-label">
+                                                {{ form.noisbn_reason.label.text }}
+                                            </label>
+                                            {{ form.noisbn_reason(class="form-control") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('publications.list_by_member', member_id=member.id) }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Otkaži
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> {{ submit_text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Help Panel -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Pomoć</h6>
+                </div>
+                <div class="card-body">
+                    <div id="help-general" class="help-section">
+                        <h6>Kreiranje publikacije</h6>
+                        <p class="small">Publikacija predstavlja template (šablon) koji sadrži nepromenjive podatke o vašoj publikaciji. Ovaj template ćete koristiti za kreiranje DOI draft-ova.</p>
+                    </div>
+
+                    <div id="help-journal" class="help-section" style="display: none;">
+                        <h6><i class="bi bi-journal-richtext text-primary"></i> Časopis</h6>
+                        <ul class="small">
+                            <li><strong>ISSN:</strong> Obavezan identifikator za časopis</li>
+                            <li><strong>E-ISSN:</strong> Za elektronske verzije</li>
+                            <li><strong>CODEN:</strong> Opcioni 6-karakterni kod</li>
+                        </ul>
+                        <div class="alert alert-info small mt-2">
+                            <i class="bi bi-lightbulb"></i> Časopisi imaju 1:N vezu sa draft-ovima - jedan časopis može imati više brojeva.
+                        </div>
+                    </div>
+
+                    <div id="help-book_series" class="help-section" style="display: none;">
+                        <h6><i class="bi bi-collection text-info"></i> Serija knjiga</h6>
+                        <ul class="small">
+                            <li><strong>Naziv serije:</strong> Obavezan naziv</li>
+                            <li><strong>ISSN serije:</strong> Identifikator serije</li>
+                            <li><strong>Broj serije:</strong> Pozicija u seriji</li>
+                        </ul>
+                        <div class="alert alert-info small mt-2">
+                            <i class="bi bi-lightbulb"></i> Serije imaju 1:N vezu - jedna serija može imati više knjiga.
+                        </div>
+                    </div>
+
+                    <div id="help-book_set" class="help-section" style="display: none;">
+                        <h6><i class="bi bi-box-seam text-warning"></i> Komplet knjiga</h6>
+                        <ul class="small">
+                            <li><strong>Naziv kompleta:</strong> Obavezan naziv</li>
+                            <li><strong>ISBN kompleta:</strong> Identifikator celog kompleta</li>
+                            <li><strong>Broj dela:</strong> Pozicija u kompletu</li>
+                        </ul>
+                        <div class="alert alert-info small mt-2">
+                            <i class="bi bi-lightbulb"></i> Kompleti imaju 1:N vezu - jedan komplet može imati više delova.
+                        </div>
+                    </div>
+
+                    <div id="help-book" class="help-section" style="display: none;">
+                        <h6><i class="bi bi-book text-success"></i> Knjiga</h6>
+                        <ul class="small">
+                            <li><strong>Tip knjige:</strong> Monografija, udžbenik, itd.</li>
+                            <li><strong>ISBN:</strong> Standardni identifikator</li>
+                            <li><strong>Izdanje:</strong> Broj izdanja</li>
+                        </ul>
+                        <div class="alert alert-warning small mt-2">
+                            <i class="bi bi-exclamation-triangle"></i> Knjige imaju 1:1 vezu - jedna knjiga = jedan draft.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member Info -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-person"></i> Informacije o članu</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Ime:</strong> {{ member.name }}</p>
+                    <p><strong>Email:</strong> {{ member.contact_email }}</p>
+                    <p><strong>Institucija:</strong> {{ member.institution }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const publicationTypeField = document.getElementById('publication_type');
+    const typeSpecificFields = document.querySelectorAll('.type-specific-fields');
+    const helpSections = document.querySelectorAll('.help-section');
+    
+    // Function to show/hide fields based on publication type
+    function updateFields() {
+        const selectedType = publicationTypeField.value;
+        
+        // Hide all type-specific fields and help sections
+        typeSpecificFields.forEach(field => {
+            field.style.display = 'none';
+        });
+        helpSections.forEach(section => {
+            if (section.id !== 'help-general') {
+                section.style.display = 'none';
+            }
+        });
+        
+        // Show relevant fields and help for selected type
+        if (selectedType) {
+            const selectedFields = document.getElementById(selectedType + '-fields');
+            const selectedHelp = document.getElementById('help-' + selectedType);
+            
+            if (selectedFields) {
+                selectedFields.style.display = 'block';
+            }
+            if (selectedHelp) {
+                selectedHelp.style.display = 'block';
+            }
+        }
+        
+        // Update required field validation
+        updateRequiredFields(selectedType);
+    }
+    
+    // Function to update required field validation
+    function updateRequiredFields(type) {
+        // Remove all required attributes first
+        document.querySelectorAll('.type-specific-fields input, .type-specific-fields select').forEach(input => {
+            input.removeAttribute('required');
+        });
+        
+        // Add required attributes based on type
+        if (type === 'journal') {
+            document.getElementById('journal_issn').setAttribute('required', '');
+        } else if (type === 'book_series') {
+            document.getElementById('series_title').setAttribute('required', '');
+            document.getElementById('series_issn').setAttribute('required', '');
+        } else if (type === 'book_set') {
+            document.getElementById('set_title').setAttribute('required', '');
+            document.getElementById('set_isbn').setAttribute('required', '');
+        }
+        // Book type has no required fields beyond the base ones
+    }
+    
+    // Initial load - show fields for current value
+    updateFields();
+    
+    // Listen for changes
+    publicationTypeField.addEventListener('change', updateFields);
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const selectedType = publicationTypeField.value;
+        let isValid = true;
+        let errorMessages = [];
+        
+        // Type-specific validation
+        if (selectedType === 'journal') {
+            const journalIssn = document.getElementById('journal_issn').value;
+            if (!journalIssn) {
+                errorMessages.push('ISSN časopisa je obavezan za tip "Časopis"');
+                isValid = false;
+            }
+        } else if (selectedType === 'book_series') {
+            const seriesTitle = document.getElementById('series_title').value;
+            const seriesIssn = document.getElementById('series_issn').value;
+            if (!seriesTitle) {
+                errorMessages.push('Naziv serije je obavezan za tip "Serija knjiga"');
+                isValid = false;
+            }
+            if (!seriesIssn) {
+                errorMessages.push('ISSN serije je obavezan za tip "Serija knjiga"');
+                isValid = false;
+            }
+        } else if (selectedType === 'book_set') {
+            const setTitle = document.getElementById('set_title').value;
+            const setIsbn = document.getElementById('set_isbn').value;
+            if (!setTitle) {
+                errorMessages.push('Naziv kompleta je obavezan za tip "Komplet knjiga"');
+                isValid = false;
+            }
+            if (!setIsbn) {
+                errorMessages.push('ISBN kompleta je obavezan za tip "Komplet knjiga"');
+                isValid = false;
+            }
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Greške u validaciji:\n' + errorMessages.join('\n'));
+        }
+    });
+    
+    // ISSN/ISBN format validation helpers
+    function validateISSN(issn) {
+        const issnPattern = /^\d{4}-\d{3}[\dX]$/;
+        return issnPattern.test(issn);
+    }
+    
+    function validateISBN(isbn) {
+        const isbn13Pattern = /^978-\d{1,5}-\d{1,7}-\d{1,7}-\d$/;
+        const isbn10Pattern = /^\d{1,5}-\d{1,7}-\d{1,7}-[\dX]$/;
+        return isbn13Pattern.test(isbn) || isbn10Pattern.test(isbn);
+    }
+    
+    // Add real-time validation for ISSN fields
+    document.querySelectorAll('input[id*="issn"]').forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value && !validateISSN(this.value)) {
+                this.classList.add('is-invalid');
+                // You could add custom error message here
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
+    
+    // Add real-time validation for ISBN fields  
+    document.querySelectorAll('input[id*="isbn"]').forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value && !validateISBN(this.value)) {
+                this.classList.add('is-invalid');
+                // You could add custom error message here
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

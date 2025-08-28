@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>
+                    <i class="bi bi-people text-primary"></i> Članovi
+                </h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{{ url_for('main.index') }}">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item active">Članovi</li>
+                    </ol>
+                </nav>
+            </div>
+            <div>
+                <a href="{{ url_for('members.create') }}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Dodaj člana
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people fs-1 text-primary"></i>
+                        <h5 class="card-title">{{ stats.total }}</h5>
+                        <p class="card-text text-muted">Ukupno članovi</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-check fs-1 text-success"></i>
+                        <h5 class="card-title">{{ stats.active }}</h5>
+                        <p class="card-text text-muted">Aktivni</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-dash fs-1 text-warning"></i>
+                        <h5 class="card-title">{{ stats.inactive }}</h5>
+                        <p class="card-text text-muted">Neaktivni</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-info">
+                    <div class="card-body text-center">
+                        <i class="bi bi-journal-text fs-1 text-info"></i>
+                        <h5 class="card-title">{{ stats.with_publications }}</h5>
+                        <p class="card-text text-muted">Sa publikacijama</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-search"></i> Pretraga i filtriranje
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('members.index') }}" class="row g-3">
+                    <div class="col-md-6">
+                        {{ search_form.search(class="form-control", value=search) }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ search_form.status(class="form-select", onchange="this.form.submit()") }}
+                        {% for choice in search_form.status.choices %}
+                            {% if choice[0] == status %}
+                                <script>
+                                    document.querySelector('select[name="status"]').value = "{{ status }}";
+                                </script>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Pretraži
+                            </button>
+                            <a href="{{ url_for('members.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Očisti
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Info -->
+        {% if search or status != 'all' %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            Prikazano {{ members_pagination.total }} rezultata
+            {% if search %}za pretragu "<strong>{{ search }}</strong>"{% endif %}
+            {% if status != 'all' %}
+                {% if status == 'active' %}samo aktivni članovi{% endif %}
+                {% if status == 'inactive' %}samo neaktivni članovi{% endif %}
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Members List -->
+        {% if members_pagination.items %}
+        <div class="row" id="members-list">
+            {% for member in members_pagination.items %}
+            <div class="col-lg-6 mb-4">
+                {% include 'members/includes/member_card.html' %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if members_pagination.pages > 1 %}
+        <nav aria-label="Member pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <!-- Previous Page -->
+                {% if members_pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('members.index', page=members_pagination.prev_num, search=search, status=status) }}">
+                        <i class="bi bi-chevron-left"></i> Prethodna
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="bi bi-chevron-left"></i> Prethodna
+                    </span>
+                </li>
+                {% endif %}
+
+                <!-- Page Numbers -->
+                {% set start_page = [1, members_pagination.page - 2] | max %}
+                {% set end_page = [members_pagination.pages, members_pagination.page + 2] | min %}
+                
+                {% if start_page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('members.index', page=1, search=search, status=status) }}">1</a>
+                </li>
+                {% if start_page > 2 %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+                {% endif %}
+
+                {% for page_num in range(start_page, end_page + 1) %}
+                <li class="page-item {% if page_num == members_pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('members.index', page=page_num, search=search, status=status) }}">
+                        {{ page_num }}
+                    </a>
+                </li>
+                {% endfor %}
+
+                {% if end_page < members_pagination.pages %}
+                {% if end_page < members_pagination.pages - 1 %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('members.index', page=members_pagination.pages, search=search, status=status) }}">
+                        {{ members_pagination.pages }}
+                    </a>
+                </li>
+                {% endif %}
+
+                <!-- Next Page -->
+                {% if members_pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('members.index', page=members_pagination.next_num, search=search, status=status) }}">
+                        Sledeća <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        Sledeća <i class="bi bi-chevron-right"></i>
+                    </span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+
+        <!-- Pagination Info -->
+        <div class="text-center text-muted mt-3">
+            Prikazano {{ members_pagination.per_page * (members_pagination.page - 1) + 1 }} - 
+            {{ members_pagination.per_page * (members_pagination.page - 1) + members_pagination.items|length }} 
+            od {{ members_pagination.total }} članovi
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- No Members Found -->
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-people display-1 text-muted mb-3"></i>
+                {% if search or status != 'all' %}
+                <h4>Nema rezultata</h4>
+                <p class="text-muted">
+                    Nije pronađen nijedan član za zadati kriterijum pretrage.
+                </p>
+                <a href="{{ url_for('members.index') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Pokaži sve članove
+                </a>
+                {% else %}
+                <h4>Nema članova</h4>
+                <p class="text-muted">
+                    Još uvek nema kreiranih članova. Dodajte prvi član da biste počeli.
+                </p>
+                <a href="{{ url_for('members.create') }}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Dodaj prvog člana
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Real-time search functionality
+let searchTimeout;
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[name="search"]');
+    const searchForm = searchInput.closest('form');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.length >= 2 || this.value.length === 0) {
+                    // Auto-submit form after 500ms delay
+                    searchForm.submit();
+                }
+            }, 500);
+        });
+    }
+    
+    // Auto-focus search if there's a search parameter
+    {% if search %}
+    if (searchInput) {
+        searchInput.focus();
+        searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+    }
+    {% endif %}
+});
+
+// AJAX search enhancement (optional enhancement)
+function performAjaxSearch(query) {
+    if (query.length < 2) return;
+    
+    fetch(`{{ url_for('members.search') }}?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.members) {
+                updateMembersList(data.members, data.has_more, data.total);
+            }
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+        });
+}
+
+function updateMembersList(members, hasMore, total) {
+    const membersList = document.getElementById('members-list');
+    if (!membersList) return;
+    
+    if (members.length === 0) {
+        membersList.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-search"></i> Nije pronađen nijedan član.
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    // This would require more complex implementation to render cards via JS
+    // For now, we'll use the form submission approach
+}
+</script>
+{% endblock %}

@@ -121,8 +121,15 @@ class TestSessionSecurity:
     def test_session_cookie_secure_in_production(self):
         """Test that session cookies are secure in production config."""
         from config import ProductionConfig
-        prod_config = ProductionConfig()
-        assert prod_config.SESSION_COOKIE_SECURE is True
+        from unittest.mock import patch
+        import os
+        
+        with patch.dict(os.environ, {
+            'SECRET_KEY': 'test-secret-key-for-production',
+            'DATABASE_URL': 'sqlite:///:memory:'
+        }):
+            prod_config = ProductionConfig()
+            assert prod_config.SESSION_COOKIE_SECURE is True
 
     def test_session_cookie_not_secure_in_development(self):
         """Test that session cookies are not secure in development (no HTTPS)."""

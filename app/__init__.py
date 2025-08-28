@@ -53,6 +53,11 @@ def create_app(config_name="default"):
     config_class.init_app(app)
 
     # Initialize extensions with app
+    # Special handling for SQLAlchemy to avoid pool parameter issues with SQLite
+    if app.config.get('SQLALCHEMY_DATABASE_URI', '').startswith('sqlite'):
+        # Ensure no pool parameters are set for SQLite
+        app.config.pop('SQLALCHEMY_ENGINE_OPTIONS', None)
+    
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
@@ -114,5 +119,14 @@ def create_app(config_name="default"):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         return response
+    
+    # Add custom Jinja2 filters
+    @app.template_filter('nl2br')
+    def nl2br_filter(text):
+        """Convert newlines to HTML line breaks."""
+        from markupsafe import Markup
+        if text is None:
+            return ''
+        return Markup(text.replace('\n', '<br>'))
 
     return app

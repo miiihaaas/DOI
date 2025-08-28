@@ -1,0 +1,544 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>
+                    <i class="bi bi-{% if mode == 'create' %}person-plus{% else %}pencil-square{% endif %} text-primary"></i>
+                    {% if mode == 'create' %}
+                        Novi član
+                    {% else %}
+                        Uredi člana: {{ member.name }}
+                    {% endif %}
+                </h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{{ url_for('main.index') }}">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{{ url_for('members.index') }}">Članovi</a>
+                        </li>
+                        {% if mode == 'edit' %}
+                        <li class="breadcrumb-item">
+                            <a href="{{ url_for('members.detail', member_id=member.id) }}">{{ member.name }}</a>
+                        </li>
+                        <li class="breadcrumb-item active">Uredi</li>
+                        {% else %}
+                        <li class="breadcrumb-item active">Novi član</li>
+                        {% endif %}
+                    </ol>
+                </nav>
+            </div>
+            <div>
+                <a href="{% if mode == 'edit' %}{{ url_for('members.detail', member_id=member.id) }}{% else %}{{ url_for('members.index') }}{% endif %}" 
+                   class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Nazad
+                </a>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form method="POST" id="member-form" novalidate>
+            {{ form.hidden_tag() }}
+            
+            <!-- Progress Indicator -->
+            <div class="progress mb-4" style="height: 6px;">
+                <div class="progress-bar" role="progressbar" style="width: 0%" 
+                     aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="form-progress"></div>
+            </div>
+
+            <div class="row">
+                <!-- Basic Information -->
+                <div class="col-lg-6">
+                    <div class="card mb-4" id="basic-info-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-info-circle text-primary"></i> 
+                                Osnovni podaci
+                                <span class="text-danger">*</span>
+                            </h5>
+                            <small class="text-muted">Osnovne informacije o članoj organizaciji</small>
+                        </div>
+                        <div class="card-body">
+                            <!-- Member Name -->
+                            <div class="mb-3">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.name.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Puni naziv članove organizacije</div>
+                            </div>
+
+                            <!-- Institution -->
+                            <div class="mb-3">
+                                {{ form.institution.label(class="form-label") }}
+                                {{ form.institution(class="form-control" + (" is-invalid" if form.institution.errors else "")) }}
+                                {% if form.institution.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.institution.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Oficijalni naziv institucije</div>
+                            </div>
+
+                            <!-- Contact Email -->
+                            <div class="mb-3">
+                                {{ form.contact_email.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-envelope"></i>
+                                    </span>
+                                    {{ form.contact_email(class="form-control" + (" is-invalid" if form.contact_email.errors else "")) }}
+                                    {% if form.contact_email.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.contact_email.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-text">Glavni email za kontakt</div>
+                            </div>
+
+                            <!-- Website URL -->
+                            <div class="mb-3">
+                                {{ form.website_url.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-globe"></i>
+                                    </span>
+                                    {{ form.website_url(class="form-control" + (" is-invalid" if form.website_url.errors else "")) }}
+                                    {% if form.website_url.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.website_url.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-text">Web sajt organizacije (opciono)</div>
+                            </div>
+
+                            <!-- Status -->
+                            {% if mode == 'edit' %}
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    {{ form.is_active(class="form-check-input") }}
+                                    <label class="form-check-label" for="{{ form.is_active.id }}">
+                                        Aktivan član
+                                    </label>
+                                </div>
+                                <div class="form-text">Neaktivni članovi ne mogu kreirati nove publikacije</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="col-lg-6">
+                    <div class="card mb-4" id="contact-info-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person text-success"></i> 
+                                Kontakt informacije
+                                <span class="text-danger">*</span>
+                            </h5>
+                            <small class="text-muted">Podaci za komunikaciju</small>
+                        </div>
+                        <div class="card-body">
+                            <!-- Contact Person -->
+                            <div class="mb-3">
+                                {{ form.osoba_za_kontakt.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-person"></i>
+                                    </span>
+                                    {{ form.osoba_za_kontakt(class="form-control" + (" is-invalid" if form.osoba_za_kontakt.errors else "")) }}
+                                    {% if form.osoba_za_kontakt.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.osoba_za_kontakt.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="mb-3">
+                                {{ form.telefon.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-telephone"></i>
+                                    </span>
+                                    {{ form.telefon(class="form-control" + (" is-invalid" if form.telefon.errors else "")) }}
+                                    {% if form.telefon.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.telefon.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-text">Format: +381 11 123-4567</div>
+                            </div>
+
+                            <!-- Billing Address -->
+                            <div class="mb-3">
+                                {{ form.billing_address.label(class="form-label") }}
+                                {{ form.billing_address(class="form-control" + (" is-invalid" if form.billing_address.errors else ""), rows="3") }}
+                                {% if form.billing_address.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.billing_address.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Kompletna adresa za naplatu</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Information -->
+                <div class="col-lg-6">
+                    <div class="card mb-4" id="business-info-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-building text-warning"></i> 
+                                Poslovni podaci
+                                <span class="text-danger">*</span>
+                            </h5>
+                            <small class="text-muted">Podaci o registraciji i poreskim obavezama</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- PIB -->
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.pib.label(class="form-label") }}
+                                        {{ form.pib(class="form-control" + (" is-invalid" if form.pib.errors else "")) }}
+                                        {% if form.pib.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.pib.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <div class="form-text">Poreski identifikacioni broj</div>
+                                    </div>
+                                </div>
+
+                                <!-- Matični broj -->
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.matični_broj.label(class="form-label") }}
+                                        {{ form.matični_broj(class="form-control" + (" is-invalid" if form.matični_broj.errors else "")) }}
+                                        {% if form.matični_broj.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.matični_broj.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <div class="form-text">Matični broj privrednog subjekta</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- JMBG/LK -->
+                            <div class="mb-3">
+                                {{ form.jmbg_lk.label(class="form-label") }}
+                                {{ form.jmbg_lk(class="form-control" + (" is-invalid" if form.jmbg_lk.errors else "")) }}
+                                {% if form.jmbg_lk.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.jmbg_lk.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Za fizička lica (opciono)</div>
+                            </div>
+
+                            <!-- Šifra delatnosti -->
+                            <div class="mb-3">
+                                {{ form.šifra_delatnosti.label(class="form-label") }}
+                                {{ form.šifra_delatnosti(class="form-control" + (" is-invalid" if form.šifra_delatnosti.errors else "")) }}
+                                {% if form.šifra_delatnosti.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.šifra_delatnosti.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Npr. 7220 (naučna istraživanja)</div>
+                            </div>
+
+                            <div class="row">
+                                <!-- PDV Status -->
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.pdv_status.label(class="form-label") }}
+                                        {{ form.pdv_status(class="form-select" + (" is-invalid" if form.pdv_status.errors else "")) }}
+                                        {% if form.pdv_status.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.pdv_status.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Država obveznika -->
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.država_obveznika.label(class="form-label") }}
+                                        {{ form.država_obveznika(class="form-select" + (" is-invalid" if form.država_obveznika.errors else "")) }}
+                                        {% if form.država_obveznika.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.država_obveznika.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banking Information -->
+                <div class="col-lg-6">
+                    <div class="card mb-4" id="banking-info-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-bank text-info"></i> 
+                                Bankarski podaci
+                                <span class="text-danger">*</span>
+                            </h5>
+                            <small class="text-muted">Podaci o bankovnom računu</small>
+                        </div>
+                        <div class="card-body">
+                            <!-- IBAN -->
+                            <div class="mb-3">
+                                {{ form.iban.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-credit-card"></i>
+                                    </span>
+                                    {{ form.iban(class="form-control" + (" is-invalid" if form.iban.errors else "")) }}
+                                    {% if form.iban.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.iban.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-text">Format: RS35260005601001611379</div>
+                            </div>
+
+                            <!-- Bank Name -->
+                            <div class="mb-3">
+                                {{ form.naziv_banke.label(class="form-label") }}
+                                {{ form.naziv_banke(class="form-control" + (" is-invalid" if form.naziv_banke.errors else "")) }}
+                                {% if form.naziv_banke.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.naziv_banke.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Puni naziv banke</div>
+                            </div>
+
+                            <!-- SWIFT/BIC -->
+                            <div class="mb-3">
+                                {{ form.swift_bic.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-globe"></i>
+                                    </span>
+                                    {{ form.swift_bic(class="form-control" + (" is-invalid" if form.swift_bic.errors else "")) }}
+                                    {% if form.swift_bic.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.swift_bic.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-text">Format: BKAUTWW1 (8 ili 11 karaktera)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-0">
+                                <i class="bi bi-info-circle"></i>
+                                Polja označena sa <span class="text-danger">*</span> su obavezna.
+                            </p>
+                            <small class="text-muted">
+                                Svi podaci se čuvaju u skladu sa zaštitom privatnosti.
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <div class="d-flex gap-2 justify-content-md-end">
+                                <a href="{% if mode == 'edit' %}{{ url_for('members.detail', member_id=member.id) }}{% else %}{{ url_for('members.index') }}{% endif %}" 
+                                   class="btn btn-secondary" id="cancel-btn">
+                                    <i class="bi bi-x-circle"></i> Otkaži
+                                </a>
+                                <button type="submit" class="btn btn-{% if mode == 'create' %}primary{% else %}success{% endif %}" id="submit-btn">
+                                    <i class="bi bi-{% if mode == 'create' %}check-circle{% else %}save{% endif %}"></i> 
+                                    {% if mode == 'create' %}Kreiraj člana{% else %}Sačuvaj izmene{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('member-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const progressBar = document.getElementById('form-progress');
+    
+    // Form validation and progress tracking
+    const requiredCards = ['basic-info-card', 'contact-info-card', 'business-info-card', 'banking-info-card'];
+    
+    function updateProgress() {
+        let completed = 0;
+        const totalCards = requiredCards.length;
+        
+        requiredCards.forEach(cardId => {
+            const card = document.getElementById(cardId);
+            const inputs = card.querySelectorAll('input[required], select[required], textarea[required]');
+            let cardCompleted = true;
+            
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    cardCompleted = false;
+                }
+            });
+            
+            const cardHeader = card.querySelector('.card-header h5');
+            const checkIcon = cardHeader.querySelector('.bi-check-circle-fill');
+            
+            if (cardCompleted) {
+                completed++;
+                if (!checkIcon) {
+                    const icon = document.createElement('i');
+                    icon.className = 'bi bi-check-circle-fill text-success ms-2';
+                    cardHeader.appendChild(icon);
+                }
+            } else {
+                if (checkIcon) {
+                    checkIcon.remove();
+                }
+            }
+        });
+        
+        const progress = (completed / totalCards) * 100;
+        progressBar.style.width = progress + '%';
+        progressBar.setAttribute('aria-valuenow', progress);
+        
+        if (progress === 100) {
+            progressBar.classList.add('bg-success');
+        } else {
+            progressBar.classList.remove('bg-success');
+        }
+    }
+    
+    // Listen for input changes
+    form.addEventListener('input', updateProgress);
+    form.addEventListener('change', updateProgress);
+    
+    // Initial progress check
+    updateProgress();
+    
+    // Form submission handling
+    let isSubmitting = false;
+    
+    form.addEventListener('submit', function(e) {
+        if (isSubmitting) {
+            e.preventDefault();
+            return;
+        }
+        
+        isSubmitting = true;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Čuvanje...';
+        
+        // Re-enable after 5 seconds in case of issues
+        setTimeout(() => {
+            isSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '{% if mode == "create" %}<i class="bi bi-check-circle"></i> Kreiraj člana{% else %}<i class="bi bi-save"></i> Sačuvaj izmene{% endif %}';
+        }, 5000);
+    });
+    
+    // Unsaved changes warning
+    let formChanged = false;
+    let originalFormData = new FormData(form);
+    
+    form.addEventListener('input', function() {
+        formChanged = true;
+    });
+    
+    form.addEventListener('change', function() {
+        formChanged = true;
+    });
+    
+    cancelBtn.addEventListener('click', function(e) {
+        if (formChanged) {
+            if (!confirm('Imate nesačuvane izmene. Da li ste sigurni da želite da odustanete?')) {
+                e.preventDefault();
+            }
+        }
+    });
+    
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged && !isSubmitting) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+    
+    // Auto-uppercase for certain fields
+    const uppercaseFields = ['iban', 'swift_bic'];
+    uppercaseFields.forEach(fieldName => {
+        const field = form.querySelector(`input[name="${fieldName}"]`);
+        if (field) {
+            field.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+            });
+        }
+    });
+    
+    // IBAN formatting
+    const ibanField = form.querySelector('input[name="iban"]');
+    if (ibanField) {
+        ibanField.addEventListener('input', function() {
+            // Remove spaces and convert to uppercase
+            let value = this.value.replace(/\s/g, '').toUpperCase();
+            
+            // Add spaces every 4 characters for readability
+            if (value.length > 4) {
+                value = value.replace(/(.{4})/g, '$1 ').trim();
+            }
+            
+            this.value = value;
+        });
+    }
+    
+    // Real-time validation feedback
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            this.classList.remove('is-invalid', 'is-valid');
+            
+            if (this.checkValidity()) {
+                this.classList.add('is-valid');
+            } else {
+                this.classList.add('is-invalid');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

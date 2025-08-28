@@ -6,6 +6,9 @@ import pytest
 import tempfile
 import os
 from app import create_app, db
+from app.models.user import User
+from app.models.sponsor import Sponsor
+from app.models.member import Member
 
 
 @pytest.fixture(autouse=True)
@@ -71,3 +74,91 @@ def client(app):
 def runner(app):
     """Create a test CLI runner for the Flask application."""
     return app.test_cli_runner()
+
+
+@pytest.fixture
+def db_session(app):
+    """Create a database session for tests."""
+    with app.app_context():
+        yield db.session
+        db.session.rollback()
+
+
+@pytest.fixture
+def sponsor(app, db_session):
+    """Create a singleton sponsor for tests."""
+    with app.app_context():
+        sponsor = Sponsor.create_instance(
+            name='Test Sponsor Organization',
+            email='sponsor@test.com',
+            crossref_member_id='TEST001',
+            is_active=True
+        )
+        db_session.commit()
+        yield sponsor
+
+
+@pytest.fixture
+def auth_user(app, db_session, sponsor):
+    """Create an authenticated user for tests."""
+    with app.app_context():
+        user = User.create_user(
+            email='test@example.com',
+            password='password123',
+            full_name='Test User',
+            role='operator'
+        )
+        db_session.commit()
+        yield user
+
+
+@pytest.fixture
+def admin_user(app, db_session, sponsor):
+    """Create an admin user for tests."""
+    with app.app_context():
+        user = User.create_user(
+            email='admin@example.com',
+            password='password123',
+            full_name='Admin User',
+            role='admin'
+        )
+        db_session.commit()
+        yield user
+
+
+@pytest.fixture
+def test_member(app, db_session, sponsor):
+    """Create a test member for tests."""
+    with app.app_context():
+        member = Member.create_member(
+            sponsor_id=sponsor.id,
+            name='Test Member Organization',
+            institution='Test Institution',
+            contact_email='member@test.com',
+            website_url='https://www.testmember.com',
+            billing_address='Test Address 123\n11000 Belgrade\nSerbia',
+            pib='123456789',
+            matični_broj='12345678',
+            jmbg_lk='1234567890123',
+            šifra_delatnosti='7220',
+            telefon='+381 11 123-4567',
+            osoba_za_kontakt='Test Contact Person',
+            iban='RS35260005601001611379',
+            naziv_banke='Test Bank',
+            swift_bic='TESTRS22',
+            pdv_status='obveznik_pdv',
+            država_obveznika='Srbija',
+            is_active=True
+        )
+        db_session.commit()
+        yield member
+
+
+@pytest.fixture
+def login_user(client):
+    """Helper fixture to log in users during tests."""
+    def _login_user(user):
+        with client.session_transaction() as sess:
+            sess['_user_id'] = user.get_id()
+            sess['_fresh'] = True
+    return _login_user
