@@ -119,8 +119,8 @@ class TestPublicationCountsByType:
             counts = PublicationService.get_publication_counts_by_type(test_member.id)
             initial_journal_count = counts['journal']
             
-            # Deactivate publication
-            test_journal_publication.deactivate()
+            # Deactivate publication using service instead of model method to avoid session issues
+            PublicationService.toggle_publication_status(test_journal_publication.id)
             
             # Counts should decrease
             counts = PublicationService.get_publication_counts_by_type(test_member.id)
@@ -150,7 +150,7 @@ class TestPublicationCreation:
             
             assert publication is not None
             assert publication.title == 'Service Test Journal'
-            assert publication.publication_type == PublicationType.JOURNAL
+            assert publication.publication_type == PublicationType.journal
             assert publication.journal_issn == '9999-8888'
             assert publication.member_id == test_member.id
             assert publication.is_active == True
@@ -173,7 +173,7 @@ class TestPublicationCreation:
             
             assert publication is not None
             assert publication.title == 'Service Test Series'
-            assert publication.publication_type == PublicationType.BOOK_SERIES
+            assert publication.publication_type == PublicationType.book_series
             assert publication.series_title == 'Academic Book Series'
             assert publication.series_issn == '7777-6666'
     
@@ -260,7 +260,7 @@ class TestPublicationUpdates:
                 test_journal_publication.id, publication_data
             )
             
-            assert updated_publication.publication_type == PublicationType.BOOK
+            assert updated_publication.publication_type == PublicationType.book
             assert updated_publication.book_type == 'monograph'
             # Old journal fields should be cleared
             assert updated_publication.journal_issn is None
@@ -307,10 +307,12 @@ class TestPublicationStatusToggle:
     def test_toggle_inactive_to_active(self, app, test_journal_publication):
         """Test toggling inactive publication to active."""
         with app.app_context():
-            # First deactivate
-            test_journal_publication.deactivate()
-            assert test_journal_publication.is_active == False
+            # First deactivate using service to avoid session issues
+            pub_after_deactivate, action1 = PublicationService.toggle_publication_status(test_journal_publication.id)
+            assert pub_after_deactivate.is_active == False
+            assert action1 == 'deactivated'
             
+            # Now test toggling back to active
             publication, action = PublicationService.toggle_publication_status(
                 test_journal_publication.id
             )

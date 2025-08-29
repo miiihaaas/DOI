@@ -4,6 +4,7 @@ Tests for members blueprint - route and view logic testing.
 
 import pytest
 from flask import url_for
+from app import db
 from app.models.member import Member
 from app.models.sponsor import Sponsor
 from app.models.user import User
@@ -173,7 +174,7 @@ class TestMembersBlueprint:
         assert response.status_code == 302 or response.status_code == 200
         
         # Verify member was updated
-        updated_member = Member.query.get(test_member.id)
+        updated_member = db.session.get(Member, test_member.id)
         assert updated_member.name == 'Updated Member Name'
 
     def test_members_toggle_status(self, client, auth_user, login_user, test_member):
@@ -187,7 +188,7 @@ class TestMembersBlueprint:
         assert response.status_code == 302
         
         # Verify status was toggled
-        updated_member = Member.query.get(test_member.id)
+        updated_member = db.session.get(Member, test_member.id)
         assert updated_member.is_active != original_status
 
     def test_members_search_ajax(self, client, auth_user, login_user, test_member):

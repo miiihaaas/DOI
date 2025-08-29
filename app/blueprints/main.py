@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, jsonify, current_app
+from flask import Blueprint, render_template, redirect, url_for, jsonify, current_app, request, make_response
 from flask_login import login_required, current_user
 from app import db
 import time
@@ -7,6 +7,10 @@ import os
 from datetime import datetime
 from app.models.member import Member
 from app.models.publication import Publication
+from app.models.activity_log import ActivityLog
+from app.models.sponsor import Sponsor
+from app.services.dashboard_service import DashboardService
+from app.services.export_service import ExportService
 
 main_bp = Blueprint("main", __name__)
 
@@ -15,23 +19,47 @@ main_bp = Blueprint("main", __name__)
 @login_required
 def index():
     """Glavna stranica aplikacije - Dashboard."""
-    # Gather statistics data (placeholder until models are implemented)
-    statistics = {
-        'total_members': Member.query.count(),  # Member.query.count() kada bude implementiran
-        'total_publications': Publication.query.count(),  # Publication.query.count() kada bude implementiran
-        'total_drafts': 0,  # DOIDraft.query.count() kada bude implementiran
-        'drafts_by_status': {
-            'draft': 0,  # DOIDraft.query.filter_by(status='draft').count()
-            'xml_generated': 0,  # DOIDraft.query.filter_by(status='xml_generated').count()
-            'xml_sent': 0,  # DOIDraft.query.filter_by(status='xml_sent').count()
-            'confirmed': 0  # DOIDraft.query.filter_by(status='confirmed').count()
+    # Get sponsor from singleton pattern
+    sponsor = Sponsor.get_instance()
+    
+    if sponsor:
+        # Use DashboardService to get comprehensive statistics
+        dashboard_stats = DashboardService.get_sponsor_statistics(sponsor.id)
+        
+        # Format statistics for template compatibility
+        statistics = {
+            'total_members': dashboard_stats['members']['total'],
+            'total_publications': dashboard_stats['publications']['total'],
+            'total_drafts': dashboard_stats['drafts']['total'],
+            'members': dashboard_stats['members'],
+            'publications': dashboard_stats['publications'],
+            'drafts': dashboard_stats['drafts'],
+            'drafts_by_status': dashboard_stats['drafts']['by_status']
         }
-    }
+        
+        # Get recent activities using existing ActivityLog method
+        recent_activities = ActivityLog.get_recent_activities(
+            limit=10, 
+            sponsor_id=sponsor.id
+        )
+    else:
+        # Fallback for no sponsor (shouldn't happen in production)
+        statistics = {
+            'total_members': 0,
+            'total_publications': 0,
+            'total_drafts': 0,
+            'members': {'total': 0, 'active': 0, 'inactive': 0, 'percentage_active': 0},
+            'publications': {'total': 0, 'active': 0, 'inactive': 0, 'by_type': {}},
+            'drafts': {'total': 0, 'by_status': {}},
+            'drafts_by_status': {}
+        }
+        recent_activities = []
 
     return render_template("dashboard.html",
                            title="Dashboard",
                            user=current_user,
-                           statistics=statistics)
+                           statistics=statistics,
+                           recent_activities=recent_activities)
 
 
 @main_bp.route("/dashboard")
@@ -228,3 +256,143 @@ def health_logs():
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "error": "Failed to retrieve log statistics"
         }), 500
+
+
+@main_bp.route("/export")
+@login_required
+def export_index():
+    """Stranica za upravljanje izvozom podataka."""
+    sponsor = Sponsor.get_instance()
+    if not sponsor:
+        return redirect(url_for('main.index'))
+    
+    # Dobij metadata za filtere
+    filters_metadata = ExportService.get_export_filters_metadata(sponsor.id)
+    
+    return render_template('export/export_index.html',
+                           title='Izvoz podataka',
+                           filters_metadata=filters_metadata)
+
+
+@main_bp.route("/export/members")
+@login_required
+def export_members():
+    """Izvoz članova u CSV format."""
+    sponsor = Sponsor.get_instance()
+    if not sponsor:
+        return redirect(url_for('main.index'))
+    
+    # Dobij filtere iz query parametara
+    filters = {
+        'active_only': request.args.get('active_only') == 'true',
+        'search_query': request.args.get('search_query', '').strip() or None,
+        'date_from': None,
+        'date_to': None
+    }
+    
+    # Parse date filters if provided
+    if request.args.get('date_from'):
+        try:
+            filters['date_from'] = datetime.strptime(request.args.get('date_from'), '%Y-%m-%d')
+        except ValueError:
+            pass
+    
+    if request.args.get('date_to'):
+        try:
+            filters['date_to'] = datetime.strptime(request.args.get('date_to'), '%Y-%m-%d')
+        except ValueError:
+            pass
+    
+    # Generate CSV
+    csv_content, filename = ExportService.export_members_csv(sponsor.id, filters)
+    
+    # Create response
+    response = make_response(csv_content)
+    response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@main_bp.route("/export/publications")
+@login_required
+def export_publications():
+    """Izvoz publikacija u CSV format."""
+    sponsor = Sponsor.get_instance()
+    if not sponsor:
+        return redirect(url_for('main.index'))
+    
+    # Dobij filtere iz query parametara
+    filters = {
+        'active_only': request.args.get('active_only') == 'true',
+        'publication_type': request.args.get('publication_type') or None,
+        'member_id': request.args.get('member_id', type=int),
+        'search_query': request.args.get('search_query', '').strip() or None,
+        'date_from': None,
+        'date_to': None
+    }
+    
+    # Parse date filters if provided
+    if request.args.get('date_from'):
+        try:
+            filters['date_from'] = datetime.strptime(request.args.get('date_from'), '%Y-%m-%d')
+        except ValueError:
+            pass
+    
+    if request.args.get('date_to'):
+        try:
+            filters['date_to'] = datetime.strptime(request.args.get('date_to'), '%Y-%m-%d')
+        except ValueError:
+            pass
+    
+    # Generate CSV
+    csv_content, filename = ExportService.export_publications_csv(sponsor.id, filters)
+    
+    # Create response
+    response = make_response(csv_content)
+    response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+
+@main_bp.route("/export/drafts")
+@login_required
+def export_drafts():
+    """Izvoz DOI draftova u CSV format."""
+    sponsor = Sponsor.get_instance()
+    if not sponsor:
+        return redirect(url_for('main.index'))
+    
+    # Dobij filtere iz query parametara
+    filters = {
+        'status': request.args.get('status') or None,
+        'publication_id': request.args.get('publication_id', type=int),
+        'member_id': request.args.get('member_id', type=int),
+        'search_query': request.args.get('search_query', '').strip() or None,
+        'date_from': None,
+        'date_to': None
+    }
+    
+    # Parse date filters if provided
+    if request.args.get('date_from'):
+        try:
+            filters['date_from'] = datetime.strptime(request.args.get('date_from'), '%Y-%m-%d')
+        except ValueError:
+            pass
+    
+    if request.args.get('date_to'):
+        try:
+            filters['date_to'] = datetime.strptime(request.args.get('date_to'), '%Y-%m-%d')
+        except ValueError:
+            pass
+    
+    # Generate CSV
+    csv_content, filename = ExportService.export_doi_drafts_csv(sponsor.id, filters)
+    
+    # Create response
+    response = make_response(csv_content)
+    response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response

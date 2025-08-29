@@ -1,0 +1,292 @@
+<!-- Activity Timeline Component Template -->
+<!-- Reusable component for displaying activity logs with pagination and filtering -->
+
+{% from 'activity/includes/activity_item.html' import render_activity_item, get_activity_icon_class, get_activity_bg_class %}
+
+<!-- Helper macro for activity badge classes -->
+{% macro get_activity_badge_class(action) -%}
+{% if action == 'create' -%}bg-success
+{% elif action == 'update' -%}bg-primary  
+{% elif action == 'delete' -%}bg-danger
+{% elif action == 'activate' -%}bg-success
+{% elif action == 'deactivate' -%}bg-warning
+{% elif action == 'user' -%}bg-info
+{% else -%}bg-secondary
+{% endif -%}
+{%- endmacro %}
+
+{% macro render_activity_timeline(activities, title="Recent Activity", show_filters=true, show_pagination=true, pagination_obj=none, entity_type=none, entity_id=none) %}
+
+<div class="activity-timeline-component">
+    <!-- Timeline Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">
+            <i class="fas fa-history text-primary me-2"></i>
+            {{ title }}
+        </h4>
+        
+        {% if show_filters %}
+        <div class="activity-filters d-flex align-items-center">
+            <!-- Action Type Filter -->
+            <div class="me-3">
+                <select class="form-select form-select-sm" id="actionFilter" onchange="filterActivities()">
+                    <option value="all">All Actions</option>
+                    <option value="create">Create</option>
+                    <option value="update">Update</option>
+                    <option value="activate">Activate</option>
+                    <option value="deactivate">Deactivate</option>
+                    <option value="delete">Delete</option>
+                    <option value="user_login">Login</option>
+                    <option value="user_logout">Logout</option>
+                </select>
+            </div>
+            
+            <!-- Time Range Filter -->
+            <div class="me-3">
+                <select class="form-select form-select-sm" id="timeFilter" onchange="filterActivities()">
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                </select>
+            </div>
+            
+            <!-- Refresh Button -->
+            <button class="btn btn-outline-secondary btn-sm" onclick="refreshActivities()" title="Refresh Activity Log">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Activity Statistics (if applicable) -->
+    {% if activities %}
+    <div class="activity-stats mb-4">
+        <div class="row g-2">
+            <div class="col-auto">
+                <span class="badge bg-primary">{{ activities|length }} 
+                    {% if activities|length == 1 %}activity{% else %}activities{% endif %}
+                </span>
+            </div>
+            
+            {% set action_counts = {} %}
+            {% for activity in activities %}
+                {% set action_prefix = activity.action.split('_')[0] %}
+                {% set _ = action_counts.update({action_prefix: action_counts.get(action_prefix, 0) + 1}) %}
+            {% endfor %}
+            
+            {% for action, count in action_counts.items() %}
+                {% set badge_class = get_activity_badge_class(action) %}
+                <div class="col-auto">
+                    <span class="badge {{ badge_class }}">{{ count }} {{ action }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Activity Timeline -->
+    <div class="activity-timeline" id="activityTimeline">
+        {% if activities %}
+            <!-- Timeline Items -->
+            <div class="timeline-items">
+                {% for activity in activities %}
+                    {{ render_activity_item(activity) }}
+                {% endfor %}
+            </div>
+            
+            <!-- Load More Button (for AJAX pagination) -->
+            {% if show_pagination and pagination_obj and pagination_obj.has_next %}
+            <div class="text-center mt-4">
+                <button class="btn btn-outline-primary" onclick="loadMoreActivities({{ pagination_obj.next_num }})"
+                        id="loadMoreBtn">
+                    <i class="fas fa-chevron-down me-2"></i>Load More Activities
+                </button>
+            </div>
+            {% endif %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-history text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="text-muted">No Activities Found</h5>
+                <p class="text-muted mb-0">
+                    {% if entity_type %}
+                        No activities recorded for this {{ entity_type }} yet.
+                    {% else %}
+                        No activities have been recorded yet.
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Classic Pagination (if needed) -->
+    {% if show_pagination and pagination_obj and pagination_obj.pages > 1 %}
+    <div class="activity-pagination mt-4">
+        <nav aria-label="Activity pagination">
+            <ul class="pagination pagination-sm justify-content-center">
+                {% if pagination_obj.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ request.url_for(request.endpoint, page=pagination_obj.prev_num, **request.args) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in pagination_obj.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != pagination_obj.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ request.url_for(request.endpoint, page=page_num, **request.args) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ request.url_for(request.endpoint, page=pagination_obj.next_num, **request.args) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- JavaScript for activity timeline functionality -->
+<script>
+// Filter activities by action type and time range
+function filterActivities() {
+    const actionFilter = document.getElementById('actionFilter').value;
+    const timeFilter = document.getElementById('timeFilter').value;
+    const activities = document.querySelectorAll('.activity-item');
+    
+    activities.forEach(activity => {
+        let showActivity = true;
+        
+        // Filter by action type
+        if (actionFilter !== 'all') {
+            const activityAction = activity.dataset.action;
+            if (!activityAction.startsWith(actionFilter)) {
+                showActivity = false;
+            }
+        }
+        
+        // Filter by time range (basic client-side filtering)
+        if (timeFilter !== 'all' && showActivity) {
+            const activityTime = activity.querySelector('.activity-timestamp');
+            // Note: More sophisticated time filtering would require server-side implementation
+            // For now, this is a placeholder for future enhancement
+        }
+        
+        // Show/hide activity
+        activity.style.display = showActivity ? 'block' : 'none';
+    });
+}
+
+// Refresh activity timeline
+function refreshActivities() {
+    // Reload current page to refresh activities
+    window.location.reload();
+}
+
+// Load more activities (AJAX pagination)
+function loadMoreActivities(nextPage) {
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const timelineItems = document.querySelector('.timeline-items');
+    
+    if (!loadMoreBtn || !timelineItems) return;
+    
+    // Show loading state
+    loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+    loadMoreBtn.disabled = true;
+    
+    // Build URL for next page
+    const url = new URL(window.location);
+    url.searchParams.set('page', nextPage);
+    
+    // Make AJAX request
+    fetch(url.toString(), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.html) {
+            // Append new activities to timeline
+            timelineItems.insertAdjacentHTML('beforeend', data.html);
+            
+            // Update or hide load more button
+            if (data.has_next) {
+                loadMoreBtn.innerHTML = '<i class="fas fa-chevron-down me-2"></i>Load More Activities';
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.setAttribute('onclick', `loadMoreActivities(${data.next_page})`);
+            } else {
+                loadMoreBtn.style.display = 'none';
+            }
+        } else {
+            loadMoreBtn.style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading more activities:', error);
+        loadMoreBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Error Loading';
+        loadMoreBtn.disabled = true;
+    });
+}
+
+// Auto-refresh activities (optional)
+{% if show_filters %}
+let autoRefreshInterval;
+
+function startAutoRefresh(intervalMs = 30000) { // 30 seconds default
+    stopAutoRefresh(); // Clear any existing interval
+    
+    autoRefreshInterval = setInterval(() => {
+        // Only refresh if page is visible
+        if (!document.hidden) {
+            refreshActivities();
+        }
+    }, intervalMs);
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+}
+
+// Start auto-refresh on page load (uncomment if desired)
+// document.addEventListener('DOMContentLoaded', () => startAutoRefresh());
+
+// Stop auto-refresh when page is hidden
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        stopAutoRefresh();
+    } else {
+        // Optionally restart auto-refresh when page becomes visible
+        // startAutoRefresh();
+    }
+});
+{% endif %}
+</script>
+
+{% endmacro %}

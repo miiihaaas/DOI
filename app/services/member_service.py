@@ -9,6 +9,7 @@ from flask import current_app
 from app import db
 from app.models.member import Member
 from app.models.publication import Publication
+from app.services.activity_logger import ActivityLogger
 
 
 class MemberService:
@@ -124,6 +125,9 @@ class MemberService:
                 is_active=form_data.get('is_active', True)
             )
             
+            # Log member creation activity
+            ActivityLogger.log_member_action('create', member)
+            
             current_app.logger.info(f"Member created: {member.name} (ID: {member.id}) for sponsor {sponsor_id}")
             return member
             
@@ -167,6 +171,23 @@ class MemberService:
             if existing_member:
                 raise ValueError("Član sa ovim email adresom već postoji.")
             
+            # Track changes for activity logging
+            changes = {}
+            if member.name != form_data['name'].strip():
+                changes['name'] = form_data['name'].strip()
+            if member.institution != form_data['institution'].strip():
+                changes['institution'] = form_data['institution'].strip()
+            if member.contact_email != form_data['contact_email'].lower().strip():
+                changes['contact_email'] = form_data['contact_email'].lower().strip()
+            if member.billing_address != form_data['billing_address'].strip():
+                changes['billing_address'] = form_data['billing_address'].strip()
+            if member.pib != form_data['pib'].strip():
+                changes['pib'] = form_data['pib'].strip()
+            if member.matični_broj != form_data['matični_broj'].strip():
+                changes['matični_broj'] = form_data['matični_broj'].strip()
+            if member.is_active != form_data.get('is_active', True):
+                changes['is_active'] = form_data.get('is_active', True)
+            
             # Update member fields
             member.name = form_data['name'].strip()
             member.institution = form_data['institution'].strip()
@@ -188,6 +209,10 @@ class MemberService:
             
             # Save changes
             member = member.save()
+            
+            # Log member update activity (only if there were actual changes)
+            if changes:
+                ActivityLogger.log_member_action('update', member, changes=changes)
             
             current_app.logger.info(f"Member updated: {member.name} (ID: {member.id}) for sponsor {sponsor_id}")
             return member
@@ -225,8 +250,10 @@ class MemberService:
             old_status = member.is_active
             if member.is_active:
                 member = member.deactivate()
+                ActivityLogger.log_member_action('deactivate', member)
             else:
                 member = member.activate()
+                ActivityLogger.log_member_action('activate', member)
             
             status_change = f"{'active' if member.is_active else 'inactive'} (was {'active' if old_status else 'inactive'})"
             current_app.logger.info(f"Member status toggled: {member.name} (ID: {member.id}) -> {status_change}")

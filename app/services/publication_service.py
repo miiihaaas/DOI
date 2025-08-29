@@ -10,6 +10,7 @@ from app import db
 from app.models.publication import Publication, PublicationType
 from app.models.member import Member
 from app.utils.pagination import paginate_query
+from app.services.activity_logger import ActivityLogger
 
 
 class PublicationService:
@@ -85,7 +86,7 @@ class PublicationService:
             ValueError: If validation fails
         """
         # Validate member exists
-        member = Member.query.get(member_id)
+        member = db.session.get(Member, member_id)
         if not member:
             raise ValueError(f"Member with ID {member_id} not found")
         
@@ -111,6 +112,9 @@ class PublicationService:
             **publication_data
         )
         
+        # Log publication creation activity
+        ActivityLogger.log_publication_action('create', publication)
+        
         current_app.logger.info(
             f"Created publication '{publication.title}' (ID: {publication.id}) "
             f"for member {member.name} (ID: {member_id})"
@@ -133,13 +137,23 @@ class PublicationService:
         Raises:
             ValueError: If validation fails or publication not found
         """
-        publication = Publication.query.get(publication_id)
+        publication = db.session.get(Publication, publication_id)
         if not publication:
             raise ValueError(f"Publication with ID {publication_id} not found")
         
         # Store old values for logging
         old_title = publication.title
         old_type = publication.publication_type.value
+        
+        # Track changes for activity logging
+        changes = {}
+        for field, new_value in publication_data.items():
+            if hasattr(publication, field):
+                current_value = getattr(publication, field)
+                if field == 'publication_type' and hasattr(current_value, 'value'):
+                    current_value = current_value.value
+                if current_value != new_value:
+                    changes[field] = new_value
         
         # Validate required fields
         if 'title' in publication_data and not publication_data['title']:
@@ -156,18 +170,22 @@ class PublicationService:
         # Type-specific validation
         PublicationService._validate_type_specific_fields(publication_data)
         
-        # Update fields
-        for field, value in publication_data.items():
-            if hasattr(publication, field):
-                setattr(publication, field, value)
-        
-        # Clear type-specific fields if type changed
+        # Clear type-specific fields if type changed (do this before setting new values)
         if 'publication_type' in publication_data:
             new_type = publication_data['publication_type']
             if new_type != old_type:
                 PublicationService._clear_type_specific_fields(publication, new_type)
         
+        # Update fields (after clearing old type-specific fields)
+        for field, value in publication_data.items():
+            if hasattr(publication, field):
+                setattr(publication, field, value)
+        
         publication.save()
+        
+        # Log publication update activity (only if there were actual changes)
+        if changes:
+            ActivityLogger.log_publication_action('update', publication, changes=changes)
         
         current_app.logger.info(
             f"Updated publication '{publication.title}' (ID: {publication_id}) "
@@ -190,16 +208,18 @@ class PublicationService:
         Raises:
             ValueError: If publication not found
         """
-        publication = Publication.query.get(publication_id)
+        publication = db.session.get(Publication, publication_id)
         if not publication:
             raise ValueError(f"Publication with ID {publication_id} not found")
         
         if publication.is_active:
             publication.deactivate()
             action = "deactivated"
+            ActivityLogger.log_publication_action('deactivate', publication)
         else:
             publication.activate()
             action = "activated"
+            ActivityLogger.log_publication_action('activate', publication)
         
         current_app.logger.info(
             f"Publication '{publication.title}' (ID: {publication_id}) {action} "
@@ -219,7 +239,7 @@ class PublicationService:
         Returns:
             Publication instance or None if not found
         """
-        return Publication.query.get(publication_id)
+        return db.session.get(Publication, publication_id)
 
     @staticmethod
     def search_publications(

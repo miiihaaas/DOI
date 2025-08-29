@@ -1,0 +1,6 @@
+<!-- Multiple Activity Items Template for AJAX Pagination -->
+{% from 'activity/includes/activity_item.html' import render_activity_item %}
+
+{% for activity in activities %}
+    {{ render_activity_item(activity) }}
+{% endfor %}

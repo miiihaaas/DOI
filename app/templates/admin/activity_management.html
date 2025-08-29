@@ -1,0 +1,509 @@
+<!-- Admin Activity Management Interface -->
+{% extends "base.html" %}
+{% from 'activity/activity_timeline.html' import render_activity_timeline %}
+
+{% block title %}Activity Log Management - Admin Panel - DOI Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.users_list') }}">Admin</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Activity Management</li>
+                </ol>
+            </nav>
+            
+            <h1 class="h3 mb-0">
+                <i class="fas fa-cogs text-primary me-2"></i>
+                Activity Log Management
+            </h1>
+            <p class="text-muted mb-0">
+                Comprehensive system activity monitoring and management
+            </p>
+        </div>
+        
+        <!-- Header Actions -->
+        <div class="d-flex align-items-center">
+            <button class="btn btn-warning me-2" onclick="showCleanupModal()">
+                <i class="fas fa-broom me-1"></i>
+                Cleanup Old Logs
+            </button>
+            
+            <button class="btn btn-success" onclick="showAdminExportModal()">
+                <i class="fas fa-download me-1"></i>
+                Admin Export
+            </button>
+        </div>
+    </div>
+    
+    <!-- System Statistics Overview -->
+    <div class="row g-3 mb-4">
+        <!-- Total Activities -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="card-title h4">{{ "{:,}".format(statistics.total_activities) }}</div>
+                            <div class="small">Total Activity Records</div>
+                            <div class="text-primary-light small">System-wide</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-database fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Database Size -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="card-title h4">{{ "%.1f"|format(statistics.database_stats.table_size_mb) }} MB</div>
+                            <div class="small">Database Size</div>
+                            <div class="text-info-light small">Activity logs table</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hdd fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Most Active Action -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            {% set max_action = statistics.action_stats.items()|list|sort(attribute=1, reverse=true)|first if statistics.action_stats else ('none', 0) %}
+                            <div class="card-title h4">{{ max_action[1] }}</div>
+                            <div class="small">{{ max_action[0].title() }} Actions</div>
+                            <div class="text-success-light small">Most frequent</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-bar fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Active Users (Last 30 Days) -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="card-title h4">{{ statistics.most_active_users|length }}</div>
+                            <div class="small">Active Users</div>
+                            <div class="text-warning-light small">Last 30 days</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detailed Analytics -->
+    <div class="row mb-4">
+        <!-- Activity Breakdown -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Action Type Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if statistics.action_stats %}
+                        {% for action, count in statistics.action_stats.items()|sort(attribute=1, reverse=true) %}
+                            {% set percentage = (count / statistics.total_activities * 100) if statistics.total_activities > 0 else 0 %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-sm font-weight-bold">{{ action.title() }}</span>
+                                    <span class="text-xs text-muted">{{ count }} ({{ "%.1f"|format(percentage) }}%)</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar 
+                                        {% if action == 'create' %}bg-success
+                                        {% elif action == 'update' %}bg-primary
+                                        {% elif action == 'delete' %}bg-danger
+                                        {% elif action == 'user' %}bg-info
+                                        {% else %}bg-secondary
+                                        {% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {{ percentage }}%" 
+                                         aria-valuenow="{{ percentage }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No activity data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Most Active Users -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-friends me-2"></i>Most Active Users (30 Days)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if statistics.most_active_users %}
+                        <div class="list-group list-group-flush">
+                            {% for user_name, user_id, activity_count in statistics.most_active_users %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        <div class="fw-bold">{{ user_name }}</div>
+                                        <small class="text-muted">User ID: {{ user_id }}</small>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">{{ activity_count }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No user activity data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Common IP Addresses -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-network-wired me-2"></i>Common IP Addresses
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if statistics.common_ips %}
+                        <div class="list-group list-group-flush">
+                            {% for ip_address, count in statistics.common_ips %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        <div class="fw-bold font-monospace">{{ ip_address }}</div>
+                                        <small class="text-muted">{{ count }} activities</small>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-info" onclick="filterByIP('{{ ip_address }}')">
+                                        <i class="fas fa-filter"></i>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No IP address data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Advanced Filtering Panel -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <button class="btn btn-link text-decoration-none p-0" type="button" 
+                        data-bs-toggle="collapse" data-bs-target="#adminFilterPanel" 
+                        aria-expanded="false" aria-controls="adminFilterPanel">
+                    <i class="fas fa-filter me-2"></i>Administrative Filters
+                    <i class="fas fa-chevron-down ms-2"></i>
+                </button>
+            </h5>
+        </div>
+        <div class="collapse" id="adminFilterPanel">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('admin.activity_management') }}">
+                    <div class="row g-3">
+                        <!-- Date Range -->
+                        <div class="col-md-2">
+                            <label for="date_from" class="form-label">From Date</label>
+                            <input type="date" class="form-control" id="date_from" name="date_from" 
+                                   value="{{ request.args.get('date_from', '') }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="date_to" class="form-label">To Date</label>
+                            <input type="date" class="form-control" id="date_to" name="date_to" 
+                                   value="{{ request.args.get('date_to', '') }}">
+                        </div>
+                        
+                        <!-- User Filter -->
+                        <div class="col-md-2">
+                            <label for="user_id" class="form-label">User</label>
+                            <select class="form-select" id="user_id" name="user_id">
+                                <option value="">All Users</option>
+                                {% for user in all_users %}
+                                <option value="{{ user.id }}" 
+                                        {% if request.args.get('user_id') == user.id|string %}selected{% endif %}>
+                                    {{ user.full_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Action Type -->
+                        <div class="col-md-2">
+                            <label for="action_type" class="form-label">Action</label>
+                            <select class="form-select" id="action_type" name="action_type">
+                                <option value="">All Actions</option>
+                                {% for action in ['create', 'update', 'activate', 'deactivate', 'delete', 'user', 'admin', 'system'] %}
+                                <option value="{{ action }}" {% if request.args.get('action_type') == action %}selected{% endif %}>
+                                    {{ action.title() }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- IP Address -->
+                        <div class="col-md-2">
+                            <label for="ip_address" class="form-label">IP Address</label>
+                            <input type="text" class="form-control" id="ip_address" name="ip_address" 
+                                   placeholder="192.168.1.1" value="{{ request.args.get('ip_address', '') }}">
+                        </div>
+                        
+                        <!-- Per Page -->
+                        <div class="col-md-2">
+                            <label for="per_page" class="form-label">Per Page</label>
+                            <select class="form-select" id="per_page" name="per_page">
+                                {% for size in [10, 25, 50, 100] %}
+                                <option value="{{ size }}" {% if request.args.get('per_page', '25') == size|string %}selected{% endif %}>
+                                    {{ size }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter Actions -->
+                    <div class="row g-2 mt-3">
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i>Apply Filters
+                            </button>
+                        </div>
+                        <div class="col-auto">
+                            <a href="{{ url_for('admin.activity_management') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Clear All
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Activity Log Results -->
+    <div class="row">
+        <div class="col-12">
+            {{ render_activity_timeline(
+                activities=activities,
+                title="Administrative Activity Log",
+                show_filters=false,
+                show_pagination=true,
+                pagination_obj=pagination
+            ) }}
+        </div>
+    </div>
+</div>
+
+<!-- Cleanup Modal -->
+<div class="modal fade" id="cleanupModal" tabindex="-1" aria-labelledby="cleanupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cleanupModalLabel">
+                    <i class="fas fa-broom me-2"></i>Cleanup Old Activity Logs
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action will permanently delete old activity log entries. This cannot be undone.
+                </div>
+                
+                <div class="mb-3">
+                    <label for="retention_days" class="form-label">Retention Period (Days)</label>
+                    <input type="number" class="form-control" id="retention_days" 
+                           min="30" max="7300" value="365" 
+                           placeholder="Number of days to keep logs">
+                    <div class="form-text">
+                        Activity logs older than this many days will be deleted. Minimum: 30 days.
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirm_cleanup">
+                        <label class="form-check-label" for="confirm_cleanup">
+                            I understand this action cannot be undone
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="confirmCleanup" disabled>
+                    <i class="fas fa-broom me-1"></i>Cleanup Logs
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Export Modal -->
+<div class="modal fade" id="adminExportModal" tabindex="-1" aria-labelledby="adminExportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adminExportModalLabel">
+                    <i class="fas fa-download me-2"></i>Administrative Export
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="adminExportForm" action="{{ url_for('admin.export_all_activities') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="admin_export_format" class="form-label">Export Format</label>
+                        <select class="form-select" id="admin_export_format" name="format">
+                            <option value="csv">CSV (Enhanced)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Additional Information</label>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="include_system_info" 
+                                   name="include_system_info" checked>
+                            <label class="form-check-label" for="include_system_info">
+                                Include System Information (Entity IDs, UTC Timestamps)
+                            </label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="include_user_details" 
+                                   name="include_user_details" checked>
+                            <label class="form-check-label" for="include_user_details">
+                                Include User Details (Roles, Sponsors)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> This export includes up to 50,000 most recent activity records 
+                        with enhanced administrative information.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="adminExportForm" class="btn btn-success">
+                    <i class="fas fa-download me-1"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show cleanup modal
+function showCleanupModal() {
+    const modal = new bootstrap.Modal(document.getElementById('cleanupModal'));
+    modal.show();
+}
+
+// Show admin export modal
+function showAdminExportModal() {
+    const modal = new bootstrap.Modal(document.getElementById('adminExportModal'));
+    modal.show();
+}
+
+// Enable cleanup button when checkbox is checked
+document.getElementById('confirm_cleanup').addEventListener('change', function() {
+    const confirmButton = document.getElementById('confirmCleanup');
+    confirmButton.disabled = !this.checked;
+});
+
+// Handle cleanup confirmation
+document.getElementById('confirmCleanup').addEventListener('click', function() {
+    const retentionDays = parseInt(document.getElementById('retention_days').value);
+    
+    if (retentionDays < 30) {
+        alert('Retention period must be at least 30 days');
+        return;
+    }
+    
+    // Disable button and show loading
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Cleaning...';
+    
+    // Send cleanup request
+    fetch('{{ url_for("admin.cleanup_activities") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            retention_days: retentionDays
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Success: ${data.message}`);
+            location.reload(); // Refresh page to update statistics
+        } else {
+            alert(`Error: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Cleanup failed:', error);
+        alert('Cleanup failed. Please try again.');
+    })
+    .finally(() => {
+        // Hide modal
+        bootstrap.Modal.getInstance(document.getElementById('cleanupModal')).hide();
+    });
+});
+
+// Filter by IP address
+function filterByIP(ipAddress) {
+    const url = new URL(window.location);
+    url.searchParams.set('ip_address', ipAddress);
+    window.location.href = url.toString();
+}
+
+// Auto-refresh statistics every 5 minutes
+setInterval(function() {
+    if (!document.hidden) {
+        // Only refresh if no filters are applied
+        if (!window.location.search) {
+            window.location.reload();
+        }
+    }
+}, 5 * 60 * 1000); // 5 minutes
+</script>
+
+{% endblock %}

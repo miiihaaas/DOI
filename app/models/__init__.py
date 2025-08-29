@@ -8,6 +8,7 @@ from app.models.sponsor import Sponsor
 from app.models.user import User
 from app.models.member import Member
 from app.models.publication import Publication, PublicationType
+from app.models.activity_log import ActivityLog
 
 # Import all models here so Flask-Migrate can discover them
 
@@ -17,5 +18,6 @@ __all__ = [
     'User',
     'Member',
     'Publication',
-    'PublicationType'
+    'PublicationType',
+    'ActivityLog'
 ]

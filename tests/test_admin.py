@@ -207,7 +207,7 @@ class TestUserEditing:
         assert response.status_code == 302  # Redirect after successful update
         
         with app.app_context():
-            updated_user = User.query.get(auth_user_operator.id)
+            updated_user = db.session.get(User, auth_user_operator.id)
             assert updated_user.email == 'updated@test.com'
             assert updated_user.full_name == 'Updated Name'
             assert updated_user.role == 'admin'
@@ -243,7 +243,7 @@ class TestPasswordReset:
         assert response.status_code == 302  # Redirect after successful reset
         
         with app.app_context():
-            updated_user = User.query.get(auth_user_operator.id)
+            updated_user = db.session.get(User, auth_user_operator.id)
             assert updated_user.check_password('newpassword123')
             assert not updated_user.check_password('testpassword')  # Old password should not work
     

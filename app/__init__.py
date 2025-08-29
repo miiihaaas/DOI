@@ -85,6 +85,8 @@ def create_app(config_name="default"):
     from app.blueprints.members import members_bp
     from app.blueprints.publications import publications_bp
     from app.blueprints.drafts import drafts_bp
+    from app.blueprints.activity import activity_bp
+    from app.blueprints.search import search_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
@@ -92,6 +94,8 @@ def create_app(config_name="default"):
     app.register_blueprint(members_bp, url_prefix="/members")
     app.register_blueprint(publications_bp, url_prefix="/publications")
     app.register_blueprint(drafts_bp, url_prefix="/drafts")
+    app.register_blueprint(activity_bp, url_prefix="/activity")
+    app.register_blueprint(search_bp)
 
     # Error handlers
     @app.errorhandler(404)

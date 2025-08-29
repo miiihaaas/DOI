@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="bi bi-search"></i> {{ title }}</h2>
+        <p class="text-muted">Pretraživanje kroz članove i publikacije</p>
+    </div>
+</div>
+
+<!-- Search Form -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('search.search_index') }}">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="q" 
+                                       value="{{ query }}" 
+                                       placeholder="Pretraživanje po imenu, naslovu, instituciji..."
+                                       id="search-input"
+                                       autocomplete="off">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-search"></i> Pretraži
+                                </button>
+                            </div>
+                            
+                            <!-- Autocomplete suggestions container -->
+                            <div id="search-suggestions" class="position-absolute w-100 bg-white border rounded shadow-sm" 
+                                 style="z-index: 1000; display: none; max-height: 300px; overflow-y: auto;">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2">
+                                <!-- Entity Type Filters -->
+                                <div class="btn-group" role="group" aria-label="Tip pretrage">
+                                    <input type="radio" class="btn-check" name="entity_filter" id="filter-all" 
+                                           {% if not entity_types or ('member' in entity_types and 'publication' in entity_types) %}checked{% endif %}>
+                                    <label class="btn btn-outline-secondary btn-sm" for="filter-all">Sve</label>
+                                    
+                                    <input type="radio" class="btn-check" name="entity_filter" id="filter-members" 
+                                           {% if entity_types and entity_types == ['member'] %}checked{% endif %}>
+                                    <label class="btn btn-outline-primary btn-sm" for="filter-members">Članovi</label>
+                                    
+                                    <input type="radio" class="btn-check" name="entity_filter" id="filter-publications" 
+                                           {% if entity_types and entity_types == ['publication'] %}checked{% endif %}>
+                                    <label class="btn btn-outline-success btn-sm" for="filter-publications">Publikacije</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if query %}
+<!-- Search Results -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Rezultati pretrage za: "<span class="text-primary">{{ query }}</span>"</h4>
+            {% if results.total_results %}
+            <small class="text-muted">
+                Ukupno {{ results.total_results }} rezultata 
+                ({{ results.members_count }} članova, {{ results.publications_count }} publikacija)
+            </small>
+            {% endif %}
+        </div>
+        
+        {% if results.total_results %}
+            <!-- Results List -->
+            <div class="search-results">
+                {% for result in results.results %}
+                <div class="card mb-3 search-result-item" data-type="{{ result.type }}">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-1 text-center">
+                                <!-- Result Type Icon -->
+                                {% if result.type == 'member' %}
+                                <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white" 
+                                     style="width: 40px; height: 40px;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                {% elif result.type == 'publication' %}
+                                <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center text-white" 
+                                     style="width: 40px; height: 40px;">
+                                    <i class="bi bi-journal-text"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-9">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 class="mb-1">
+                                            <a href="{{ result.url }}" class="text-decoration-none">
+                                                {{ result.title }}
+                                            </a>
+                                            {% if not result.is_active %}
+                                            <span class="badge bg-warning text-dark ms-2">Neaktivni</span>
+                                            {% endif %}
+                                        </h5>
+                                        <p class="text-muted mb-1">{{ result.subtitle }}</p>
+                                        <p class="text-muted small mb-0">{{ result.description }}</p>
+                                    </div>
+                                    
+                                    <div class="text-end">
+                                        <small class="text-muted d-block">
+                                            {% if result.type == 'member' %}
+                                            <i class="bi bi-person"></i> Član
+                                            {% else %}
+                                            <i class="bi bi-book"></i> Publikacija
+                                            {% endif %}
+                                        </small>
+                                        {% if result.created_at %}
+                                        <small class="text-muted d-block">
+                                            <i class="bi bi-calendar3"></i> {{ result.created_at.strftime('%d.%m.%Y') }}
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-2 text-end">
+                                <a href="{{ result.url }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i> Prikaži
+                                </a>
+                                {% if result.type == 'member' %}
+                                <a href="/publications?member_id={{ result.id }}" class="btn btn-outline-secondary btn-sm mt-1 d-block">
+                                    <i class="bi bi-journal-plus"></i> Publikacije
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if results.total_pages > 1 %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <nav aria-label="Search results pagination">
+                        <ul class="pagination justify-content-center">
+                            <!-- Previous page -->
+                            <li class="page-item {% if results.page <= 1 %}disabled{% endif %}">
+                                <a class="page-link" 
+                                   href="{% if results.page > 1 %}{{ url_for('search.search_index', q=query, page=results.page-1, types=entity_types) }}{% else %}#{% endif %}">
+                                    Prethodna
+                                </a>
+                            </li>
+                            
+                            <!-- Page numbers -->
+                            {% for page_num in range(1, results.total_pages + 1) %}
+                                {% if page_num <= 3 or page_num > results.total_pages - 3 or (page_num >= results.page - 1 and page_num <= results.page + 1) %}
+                                <li class="page-item {% if page_num == results.page %}active{% endif %}">
+                                    <a class="page-link" 
+                                       href="{{ url_for('search.search_index', q=query, page=page_num, types=entity_types) }}">
+                                        {{ page_num }}
+                                    </a>
+                                </li>
+                                {% elif page_num == 4 and results.page > 5 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% elif page_num == results.total_pages - 3 and results.page < results.total_pages - 4 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            <!-- Next page -->
+                            <li class="page-item {% if results.page >= results.total_pages %}disabled{% endif %}">
+                                <a class="page-link" 
+                                   href="{% if results.page < results.total_pages %}{{ url_for('search.search_index', q=query, page=results.page+1, types=entity_types) }}{% else %}#{% endif %}">
+                                    Sledeća
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            {% endif %}
+            
+        {% else %}
+            <!-- No results -->
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h4>Nema rezultata</h4>
+                <p class="text-muted mb-3">
+                    Nismo pronašli ništa za "<strong>{{ query }}</strong>".
+                </p>
+                <div class="text-muted">
+                    <p class="mb-1"><strong>Predlozi:</strong></p>
+                    <ul class="list-unstyled">
+                        <li>• Proverite da li ste dobro ukucali pretraživani termin</li>
+                        <li>• Probajte sa kraćim terminima</li>
+                        <li>• Probajte sa sinonimima ili sličnim rečima</li>
+                        <li>• Uklonite filtere ako ste ih koristili</li>
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<!-- Empty Search State -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+            </div>
+            <h4>Pretraživanje sistema</h4>
+            <p class="text-muted mb-4">
+                Unesite termin za pretraživanje članova i publikacija u vašoj organizaciji.
+            </p>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="text-muted">
+                        <p class="mb-2"><strong>Možete pretraživati:</strong></p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled text-start">
+                                    <li><i class="bi bi-person text-primary me-2"></i>Imena članova</li>
+                                    <li><i class="bi bi-building text-primary me-2"></i>Institucije</li>
+                                    <li><i class="bi bi-envelope text-primary me-2"></i>Email adrese</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled text-start">
+                                    <li><i class="bi bi-journal-text text-success me-2"></i>Naslove publikacija</li>
+                                    <li><i class="bi bi-building text-success me-2"></i>Izdavače</li>
+                                    <li><i class="bi bi-hash text-success me-2"></i>ISSN/ISBN brojeve</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search autocomplete functionality
+    const searchInput = document.getElementById('search-input');
+    const suggestionsContainer = document.getElementById('search-suggestions');
+    let debounceTimer;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
+        
+        debounceTimer = setTimeout(() => {
+            fetchSuggestions(query);
+        }, 300);
+    });
+    
+    function fetchSuggestions(query) {
+        fetch(`{{ url_for('search.search_suggestions') }}?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(suggestions => {
+                displaySuggestions(suggestions);
+            })
+            .catch(error => {
+                console.error('Error fetching suggestions:', error);
+                suggestionsContainer.style.display = 'none';
+            });
+    }
+    
+    function displaySuggestions(suggestions) {
+        if (suggestions.length === 0) {
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
+        
+        const html = suggestions.map(suggestion => `
+            <div class="suggestion-item p-2 border-bottom cursor-pointer hover-bg-light" 
+                 data-text="${suggestion.text}">
+                <i class="bi bi-${suggestion.type === 'member' ? 'person' : 'journal-text'} me-2"></i>
+                ${suggestion.label}
+            </div>
+        `).join('');
+        
+        suggestionsContainer.innerHTML = html;
+        suggestionsContainer.style.display = 'block';
+        
+        // Add click handlers to suggestions
+        suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+            item.addEventListener('click', function() {
+                searchInput.value = this.dataset.text;
+                suggestionsContainer.style.display = 'none';
+                // Optionally trigger search
+                searchInput.form.submit();
+            });
+        });
+    }
+    
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+            suggestionsContainer.style.display = 'none';
+        }
+    });
+    
+    // Handle entity filter radio buttons
+    const filterRadios = document.querySelectorAll('input[name="entity_filter"]');
+    filterRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const form = this.closest('form');
+            
+            // Remove existing types inputs
+            form.querySelectorAll('input[name="types"]').forEach(input => input.remove());
+            
+            // Add appropriate types inputs based on selection
+            if (this.id === 'filter-members') {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'types';
+                input.value = 'member';
+                form.appendChild(input);
+            } else if (this.id === 'filter-publications') {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'types';
+                input.value = 'publication';
+                form.appendChild(input);
+            }
+            // For 'all', we don't add any types inputs
+        });
+    });
+});
+
+// Add hover effects
+const style = document.createElement('style');
+style.textContent = `
+    .hover-bg-light:hover {
+        background-color: #f8f9fa !important;
+    }
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    .search-result-item:hover {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

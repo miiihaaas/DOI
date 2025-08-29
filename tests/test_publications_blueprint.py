@@ -4,6 +4,7 @@ Tests for Publications Blueprint - routes and view testing.
 
 import pytest
 from flask import url_for
+from app import db
 from app.models.publication import Publication, PublicationType
 from app.models.member import Member
 from app.models.sponsor import Sponsor
@@ -149,7 +150,7 @@ class TestPublicationCreate:
         
         response = client.get(f'/publications/member/{test_member.id}/create')
         assert response.status_code == 200
-        assert b'Nova publikacija' in response.data
+        assert b'Nova publikaciju' in response.data
         assert b'publication_type' in response.data
     
     def test_create_post_journal(self, client, auth_user, test_member):
@@ -184,7 +185,7 @@ class TestPublicationCreate:
             title='Test Journal Creation'
         ).first()
         assert publication is not None
-        assert publication.publication_type == PublicationType.JOURNAL
+        assert publication.publication_type == PublicationType.journal
         assert publication.journal_issn == '1234-5678'
     
     def test_create_post_book_series(self, client, auth_user, test_member):
@@ -214,7 +215,7 @@ class TestPublicationCreate:
             title='Test Series'
         ).first()
         assert publication is not None
-        assert publication.publication_type == PublicationType.BOOK_SERIES
+        assert publication.publication_type == PublicationType.book_series
         assert publication.series_title == 'Academic Book Series'
 
 
@@ -296,7 +297,7 @@ class TestPublicationEdit:
         assert response.status_code == 302
         
         # Verify update
-        updated_publication = Publication.query.get(test_journal_publication.id)
+        updated_publication = db.session.get(Publication, test_journal_publication.id)
         assert updated_publication.title == 'Updated Journal Title'
         assert updated_publication.journal_issn == '9999-8888'
         assert updated_publication.title != original_title
@@ -330,7 +331,7 @@ class TestPublicationToggleStatus:
         assert data['status'] == 'deactivated'
         
         # Verify database change
-        updated_publication = Publication.query.get(test_journal_publication.id)
+        updated_publication = db.session.get(Publication, test_journal_publication.id)
         assert updated_publication.is_active == False
 
 

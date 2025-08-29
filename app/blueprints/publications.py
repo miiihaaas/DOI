@@ -166,8 +166,8 @@ def create_for_member(member_id):
         'publications/form.html',
         form=form,
         member=member,
-        action='Create',
-        submit_text='Create Publication Template'
+        action='Nova',
+        submit_text='Kreiran template publikacije'
     )
 
 
@@ -290,8 +290,8 @@ def edit(publication_id):
         form=form,
         member=publication.member,
         publication=publication,
-        action='Edit',
-        submit_text='Update Publication Template'
+        action='Izmeni',
+        submit_text='Ažuriraj template publikacije'
     )
 
 

@@ -52,6 +52,11 @@
                             <i class="bi bi-file-earmark-code"></i> DOI Draft-ovi
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link{% if request.endpoint and 'activity' in request.endpoint %} active{% endif %}" href="{{ url_for('activity.activity_log') }}">
+                            <i class="bi bi-clock-history"></i> Activity Log
+                        </a>
+                    </li>
                     {% if current_user.is_authenticated and current_user.is_admin() %}
                     <li class="nav-item">
                         <a class="nav-link{% if request.endpoint and 'admin' in request.endpoint %} active{% endif %}" href="{{ url_for('admin.users_list') }}">
@@ -60,6 +65,29 @@
                     </li>
                     {% endif %}
                 </ul>
+                
+                <!-- Global Search Form -->
+                {% if current_user.is_authenticated %}
+                <div class="d-flex me-3">
+                    <form method="GET" action="{{ url_for('search.search_index') }}" class="d-flex position-relative">
+                        <input type="text" 
+                               class="form-control form-control-sm me-2" 
+                               name="q" 
+                               placeholder="Pretraži..."
+                               id="navbar-search"
+                               autocomplete="off"
+                               style="min-width: 200px;">
+                        <button class="btn btn-outline-light btn-sm" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        <!-- Autocomplete suggestions for navbar search -->
+                        <div id="navbar-search-suggestions" 
+                             class="position-absolute bg-white border rounded shadow-sm" 
+                             style="top: 100%; left: 0; right: 40px; z-index: 2000; display: none; max-height: 300px; overflow-y: auto;">
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
                 
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
@@ -152,6 +180,81 @@
     
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Global Search Autocomplete JS -->
+    {% if current_user.is_authenticated %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Navbar search autocomplete
+        const navbarSearchInput = document.getElementById('navbar-search');
+        const navbarSuggestionsContainer = document.getElementById('navbar-search-suggestions');
+        let navbarDebounceTimer;
+        
+        if (navbarSearchInput && navbarSuggestionsContainer) {
+            navbarSearchInput.addEventListener('input', function() {
+                clearTimeout(navbarDebounceTimer);
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    navbarSuggestionsContainer.style.display = 'none';
+                    return;
+                }
+                
+                navbarDebounceTimer = setTimeout(() => {
+                    fetchNavbarSuggestions(query);
+                }, 300);
+            });
+            
+            function fetchNavbarSuggestions(query) {
+                fetch(`{{ url_for('search.search_suggestions') }}?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(suggestions => {
+                        displayNavbarSuggestions(suggestions);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching navbar suggestions:', error);
+                        navbarSuggestionsContainer.style.display = 'none';
+                    });
+            }
+            
+            function displayNavbarSuggestions(suggestions) {
+                if (suggestions.length === 0) {
+                    navbarSuggestionsContainer.style.display = 'none';
+                    return;
+                }
+                
+                const html = suggestions.map(suggestion => `
+                    <div class="suggestion-item p-2 border-bottom text-dark cursor-pointer hover-bg-light" 
+                         data-text="${suggestion.text}">
+                        <i class="bi bi-${suggestion.type === 'member' ? 'person text-primary' : 'journal-text text-success'} me-2"></i>
+                        <small>${suggestion.label}</small>
+                    </div>
+                `).join('');
+                
+                navbarSuggestionsContainer.innerHTML = html;
+                navbarSuggestionsContainer.style.display = 'block';
+                
+                // Add click handlers to navbar suggestions
+                navbarSuggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        navbarSearchInput.value = this.dataset.text;
+                        navbarSuggestionsContainer.style.display = 'none';
+                        // Trigger search
+                        navbarSearchInput.form.submit();
+                    });
+                });
+            }
+            
+            // Hide navbar suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!navbarSearchInput.contains(e.target) && !navbarSuggestionsContainer.contains(e.target)) {
+                    navbarSuggestionsContainer.style.display = 'none';
+                }
+            });
+        }
+    });
+    </script>
+    {% endif %}
     
     {% block scripts %}{% endblock %}
 </body>

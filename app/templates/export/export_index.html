@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="bi bi-download"></i> {{ title }}</h2>
+        <p class="text-muted">Izvoz podataka u CSV format sa opcionalnim filterima</p>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="row mt-4">
+    
+    <!-- Members Export -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Izvoz članova</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Izvezite sve članove sa statistikama publikacija i DOI draftova.</p>
+                
+                <form id="members-export-form" method="GET" action="{{ url_for('main.export_members') }}">
+                    <!-- Active Only Filter -->
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="members-active-only" name="active_only" value="true">
+                        <label class="form-check-label" for="members-active-only">
+                            Samo aktivni članovi
+                        </label>
+                    </div>
+                    
+                    <!-- Search Query -->
+                    <div class="mb-3">
+                        <label class="form-label">Pretraživanje</label>
+                        <input type="text" class="form-control form-control-sm" name="search_query" 
+                               placeholder="Ime, institucija, email...">
+                        <small class="form-text text-muted">Opciono - filtriranje po tekstu</small>
+                    </div>
+                    
+                    <!-- Date Range -->
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Od datuma</label>
+                            <input type="date" class="form-control form-control-sm" name="date_from">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Do datuma</label>
+                            <input type="date" class="form-control form-control-sm" name="date_to">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-download"></i> Izvezi članove
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Publications Export -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-journal-text"></i> Izvoz publikacija</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Izvezite publikacije sa informacijama o članovima i DOI statusu.</p>
+                
+                <form id="publications-export-form" method="GET" action="{{ url_for('main.export_publications') }}">
+                    <!-- Active Only Filter -->
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="publications-active-only" name="active_only" value="true">
+                        <label class="form-check-label" for="publications-active-only">
+                            Samo aktivne publikacije
+                        </label>
+                    </div>
+                    
+                    <!-- Publication Type -->
+                    <div class="mb-3">
+                        <label class="form-label">Tip publikacije</label>
+                        <select class="form-select form-select-sm" name="publication_type">
+                            <option value="">Svi tipovi</option>
+                            {% for pub_type in filters_metadata.publication_types %}
+                            <option value="{{ pub_type.value }}">{{ pub_type.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Member Filter -->
+                    <div class="mb-3">
+                        <label class="form-label">Član</label>
+                        <select class="form-select form-select-sm" name="member_id">
+                            <option value="">Svi članovi</option>
+                            {% for member in filters_metadata.members %}
+                            <option value="{{ member.value }}">{{ member.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Search Query -->
+                    <div class="mb-3">
+                        <label class="form-label">Pretraživanje</label>
+                        <input type="text" class="form-control form-control-sm" name="search_query" 
+                               placeholder="Naslov, izdavač, ISSN/ISBN...">
+                    </div>
+                    
+                    <!-- Date Range -->
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Od datuma</label>
+                            <input type="date" class="form-control form-control-sm" name="date_from">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Do datuma</label>
+                            <input type="date" class="form-control form-control-sm" name="date_to">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-download"></i> Izvezi publikacije
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- DOI Drafts Export -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-code"></i> Izvoz DOI draftova</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Izvezite DOI draftove sa detaljnim informacijama o statusu i autorima.</p>
+                
+                <form id="drafts-export-form" method="GET" action="{{ url_for('main.export_drafts') }}">
+                    <!-- Status Filter -->
+                    <div class="mb-3">
+                        <label class="form-label">Status drafta</label>
+                        <select class="form-select form-select-sm" name="status">
+                            <option value="">Svi statusi</option>
+                            {% for status in filters_metadata.draft_statuses %}
+                            <option value="{{ status.value }}">{{ status.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Member Filter -->
+                    <div class="mb-3">
+                        <label class="form-label">Član</label>
+                        <select class="form-select form-select-sm" name="member_id">
+                            <option value="">Svi članovi</option>
+                            {% for member in filters_metadata.members %}
+                            <option value="{{ member.value }}">{{ member.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Publication Filter -->
+                    <div class="mb-3">
+                        <label class="form-label">Publikacija</label>
+                        <select class="form-select form-select-sm" name="publication_id">
+                            <option value="">Sve publikacije</option>
+                            {% for publication in filters_metadata.publications %}
+                            <option value="{{ publication.value }}">{{ publication.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">Pretraživanje samo u okviru određene publikacije</small>
+                    </div>
+                    
+                    <!-- Search Query -->
+                    <div class="mb-3">
+                        <label class="form-label">Pretraživanje</label>
+                        <input type="text" class="form-control form-control-sm" name="search_query" 
+                               placeholder="Naslov drafta, DOI broj...">
+                    </div>
+                    
+                    <!-- Date Range -->
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Od datuma</label>
+                            <input type="date" class="form-control form-control-sm" name="date_from">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Do datuma</label>
+                            <input type="date" class="form-control form-control-sm" name="date_to">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="bi bi-download"></i> Izvezi draftove
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Export Information -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informacije o izvozu</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="bi bi-file-earmark-spreadsheet"></i> Format fajlova</h6>
+                        <ul class="list-unstyled small">
+                            <li>• CSV format sa UTF-8 enkodiranjem</li>
+                            <li>• Kompatibilno sa Excel, LibreOffice</li>
+                            <li>• Separator: zarez (,)</li>
+                            <li>• Automatsko ime fajla sa timestamp</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6><i class="bi bi-filter"></i> Filtriranje</h6>
+                        <ul class="list-unstyled small">
+                            <li>• Svi filteri su opcioni</li>
+                            <li>• Kombinovanje više filtera je moguće</li>
+                            <li>• Datum filteri koriste kreiranje entiteta</li>
+                            <li>• Pretraživanje radi kao LIKE search</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6><i class="bi bi-database"></i> Sadržaj izvoza</h6>
+                        <ul class="list-unstyled small">
+                            <li>• Osnovni podaci + agregacije</li>
+                            <li>• Članovi: publikacije, DOI statistike</li>
+                            <li>• Publikacije: članovi, draft statistike</li>
+                            <li>• Draftovi: autori, status, timeline</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3" role="alert">
+                    <i class="bi bi-lightbulb"></i>
+                    <strong>Saveti:</strong> 
+                    Koristite datum filtere za izdvojenje aktivnosti iz određenog perioda. 
+                    Za velike količine podataka, koristite specifične filtere za brži izvoz.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add loading states to export buttons
+    const exportForms = document.querySelectorAll('[id$="-export-form"]');
+    
+    exportForms.forEach(form => {
+        form.addEventListener('submit', function() {
+            const button = this.querySelector('button[type="submit"]');
+            const originalHtml = button.innerHTML;
+            
+            button.disabled = true;
+            button.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>Generiše se...';
+            
+            // Re-enable button after a delay (in case user stays on page)
+            setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+            }, 3000);
+        });
+    });
+    
+    // Set default date to today for "to" fields
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelectorAll('input[name="date_to"]').forEach(input => {
+        if (!input.value) {
+            input.max = today;
+        }
+    });
+    
+    // Set reasonable default for "from" fields (30 days ago)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const defaultFrom = thirtyDaysAgo.toISOString().split('T')[0];
+    
+    document.querySelectorAll('input[name="date_from"]').forEach(input => {
+        input.max = today;
+    });
+});
+</script>
+{% endblock %}
