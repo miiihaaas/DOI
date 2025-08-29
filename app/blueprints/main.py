@@ -5,6 +5,8 @@ import time
 import psutil
 import os
 from datetime import datetime
+from app.models.member import Member
+from app.models.publication import Publication
 
 main_bp = Blueprint("main", __name__)
 
@@ -15,8 +17,8 @@ def index():
     """Glavna stranica aplikacije - Dashboard."""
     # Gather statistics data (placeholder until models are implemented)
     statistics = {
-        'total_members': 0,  # Member.query.count() kada bude implementiran
-        'total_publications': 0,  # Publication.query.count() kada bude implementiran
+        'total_members': Member.query.count(),  # Member.query.count() kada bude implementiran
+        'total_publications': Publication.query.count(),  # Publication.query.count() kada bude implementiran
         'total_drafts': 0,  # DOIDraft.query.count() kada bude implementiran
         'drafts_by_status': {
             'draft': 0,  # DOIDraft.query.filter_by(status='draft').count()

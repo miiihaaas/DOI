@@ -429,6 +429,48 @@
                 </div>
             </div>
 
+            <!-- Activity History -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-clock-history"></i> Istorija aktivnosti</h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Kreirana publikacija</h6>
+                                <p class="timeline-text small">{{ publication.created_at.strftime('%d.%m.%Y u %H:%M') }}</p>
+                                <small class="text-muted">Sistem</small>
+                            </div>
+                        </div>
+                        {% if publication.updated_at != publication.created_at %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Poslednja izmena</h6>
+                                <p class="timeline-text small">{{ publication.updated_at.strftime('%d.%m.%Y u %H:%M') }}</p>
+                                <small class="text-muted">Sistem</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if not publication.is_active %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Deaktivirana</h6>
+                                <p class="timeline-text small">Publikacija je označena kao neaktivna</p>
+                                <small class="text-muted">Sistem</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> Detaljniji activity log biće implementiran u budućnosti.
+                    </small>
+                </div>
+            </div>
+
             <!-- Publication Statistics -->
             <div class="card">
                 <div class="card-header">

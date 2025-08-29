@@ -397,7 +397,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show relevant fields and help for selected type
         if (selectedType) {
-            const selectedFields = document.getElementById(selectedType + '-fields');
+            // Handle underscore in book_series and book_set IDs
+            let fieldId = selectedType;
+            if (selectedType === 'book_series') {
+                fieldId = 'book_series';
+            } else if (selectedType === 'book_set') {
+                fieldId = 'book_set';
+            }
+            
+            const selectedFields = document.getElementById(fieldId + '-fields');
             const selectedHelp = document.getElementById('help-' + selectedType);
             
             if (selectedFields) {
@@ -420,16 +428,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Add required attributes based on type
-        if (type === 'journal') {
-            document.getElementById('journal_issn').setAttribute('required', '');
-        } else if (type === 'book_series') {
-            document.getElementById('series_title').setAttribute('required', '');
-            document.getElementById('series_issn').setAttribute('required', '');
+        if (type === 'book_series') {
+            const seriesTitle = document.getElementById('series_title');
+            if (seriesTitle) seriesTitle.setAttribute('required', '');
         } else if (type === 'book_set') {
-            document.getElementById('set_title').setAttribute('required', '');
-            document.getElementById('set_isbn').setAttribute('required', '');
+            const setTitle = document.getElementById('set_title');
+            if (setTitle) setTitle.setAttribute('required', '');
+        } else if (type === 'book') {
+            const bookType = document.getElementById('book_type');
+            if (bookType) bookType.setAttribute('required', '');
         }
-        // Book type has no required fields beyond the base ones
+        // Note: We don't set required for journal fields as they're all optional
     }
     
     // Initial load - show fields for current value
@@ -446,31 +455,25 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Type-specific validation
         if (selectedType === 'journal') {
-            const journalIssn = document.getElementById('journal_issn').value;
-            if (!journalIssn) {
-                errorMessages.push('ISSN časopisa je obavezan za tip "Časopis"');
-                isValid = false;
-            }
+            // Journal validation - no specific requirements beyond base fields
         } else if (selectedType === 'book_series') {
             const seriesTitle = document.getElementById('series_title').value;
-            const seriesIssn = document.getElementById('series_issn').value;
             if (!seriesTitle) {
                 errorMessages.push('Naziv serije je obavezan za tip "Serija knjiga"');
                 isValid = false;
             }
-            if (!seriesIssn) {
-                errorMessages.push('ISSN serije je obavezan za tip "Serija knjiga"');
-                isValid = false;
-            }
+            // Note: series_issn is not required, only series_title
         } else if (selectedType === 'book_set') {
             const setTitle = document.getElementById('set_title').value;
-            const setIsbn = document.getElementById('set_isbn').value;
             if (!setTitle) {
                 errorMessages.push('Naziv kompleta je obavezan za tip "Komplet knjiga"');
                 isValid = false;
             }
-            if (!setIsbn) {
-                errorMessages.push('ISBN kompleta je obavezan za tip "Komplet knjiga"');
+            // Note: set_isbn is not required, only set_title
+        } else if (selectedType === 'book') {
+            const bookType = document.getElementById('book_type').value;
+            if (!bookType) {
+                errorMessages.push('Tip knjige je obavezan za tip "Knjiga"');
                 isValid = false;
             }
         }
@@ -488,9 +491,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function validateISBN(isbn) {
-        const isbn13Pattern = /^978-\d{1,5}-\d{1,7}-\d{1,7}-\d$/;
-        const isbn10Pattern = /^\d{1,5}-\d{1,7}-\d{1,7}-[\dX]$/;
-        return isbn13Pattern.test(isbn) || isbn10Pattern.test(isbn);
+        // Remove hyphens and spaces for validation
+        const cleanIsbn = isbn.replace(/[-\s]/g, '');
+        
+        // Check for ISBN-13 (starts with 978 or 979)
+        if (cleanIsbn.length === 13) {
+            const isbn13Pattern = /^97[89]\d{10}$/;
+            return isbn13Pattern.test(cleanIsbn);
+        }
+        
+        // Check for ISBN-10
+        if (cleanIsbn.length === 10) {
+            const isbn10Pattern = /^\d{9}[\dX]$/;
+            return isbn10Pattern.test(cleanIsbn);
+        }
+        
+        return false;
     }
     
     // Add real-time validation for ISSN fields

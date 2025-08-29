@@ -9,6 +9,7 @@ from app import create_app, db
 from app.models.user import User
 from app.models.sponsor import Sponsor
 from app.models.member import Member
+from app.models.publication import Publication
 
 
 @pytest.fixture(autouse=True)
@@ -162,3 +163,74 @@ def login_user(client):
             sess['_user_id'] = user.get_id()
             sess['_fresh'] = True
     return _login_user
+
+
+@pytest.fixture
+def test_journal_publication(app, db_session, test_member):
+    """Create a test journal publication for tests."""
+    with app.app_context():
+        publication = Publication.create_publication(
+            member_id=test_member.id,
+            publication_type='journal',
+            title='Test Journal Publication',
+            subtitle='Journal for Testing',
+            language_code='en',
+            journal_abbreviated_title='Test J.',
+            journal_issn='1234-5678',
+            journal_electronic_issn='1234-5679',
+            journal_coden='TESTJX'
+        )
+        db_session.commit()
+        yield publication
+
+
+@pytest.fixture  
+def test_book_publication(app, db_session, test_member):
+    """Create a test book publication for tests."""
+    with app.app_context():
+        publication = Publication.create_publication(
+            member_id=test_member.id,
+            publication_type='book',
+            title='Test Book Publication',
+            subtitle='Book for Testing',
+            language_code='en',
+            book_type='monograph',
+            edition_number=1,
+            isbn='9781234567890'
+        )
+        db_session.commit()
+        yield publication
+
+
+@pytest.fixture
+def test_book_series_publication(app, db_session, test_member):
+    """Create a test book series publication for tests."""
+    with app.app_context():
+        publication = Publication.create_publication(
+            member_id=test_member.id,
+            publication_type='book_series',
+            title='Test Book Series',
+            language_code='en',
+            series_title='Academic Book Series',
+            series_issn='9876-5432',
+            series_number='Volume 1'
+        )
+        db_session.commit()
+        yield publication
+
+
+@pytest.fixture
+def test_book_set_publication(app, db_session, test_member):
+    """Create a test book set publication for tests."""
+    with app.app_context():
+        publication = Publication.create_publication(
+            member_id=test_member.id,
+            publication_type='book_set',
+            title='Test Book Set',
+            language_code='en',
+            set_title='Academic Book Set',
+            set_isbn='9781111111111',
+            set_part_number='Part 1'
+        )
+        db_session.commit()
+        yield publication

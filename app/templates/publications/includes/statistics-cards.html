@@ -1,0 +1,52 @@
+<div class="col-md-3">
+    <div class="card bg-primary text-white">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="card-title">Časopisi</h6>
+                    <h3>{{ type_counts.get('journal', 0) }}</h3>
+                </div>
+                <i class="bi bi-journal-richtext fa-2x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-3">
+    <div class="card bg-info text-white">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="card-title">Serije knjiga</h6>
+                    <h3>{{ type_counts.get('book_series', 0) }}</h3>
+                </div>
+                <i class="bi bi-collection fa-2x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-3">
+    <div class="card bg-warning text-white">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="card-title">Kompleti knjiga</h6>
+                    <h3>{{ type_counts.get('book_set', 0) }}</h3>
+                </div>
+                <i class="bi bi-box-seam fa-2x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-3">
+    <div class="card bg-success text-white">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="card-title">Knjige</h6>
+                    <h3>{{ type_counts.get('book', 0) }}</h3>
+                </div>
+                <i class="bi bi-book fa-2x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</div>

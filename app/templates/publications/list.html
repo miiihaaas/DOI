@@ -20,68 +20,17 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Časopisi</h6>
-                            <h3>{{ type_counts.get('journal', 0) }}</h3>
-                        </div>
-                        <i class="bi bi-journal-richtext fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Serije knjiga</h6>
-                            <h3>{{ type_counts.get('book_series', 0) }}</h3>
-                        </div>
-                        <i class="bi bi-collection fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Kompleti knjiga</h6>
-                            <h3>{{ type_counts.get('book_set', 0) }}</h3>
-                        </div>
-                        <i class="bi bi-box-seam fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h6 class="card-title">Knjige</h6>
-                            <h3>{{ type_counts.get('book', 0) }}</h3>
-                        </div>
-                        <i class="bi bi-book fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="row mb-4" id="statistics-cards">
+        {% include 'publications/includes/statistics-cards.html' %}
     </div>
 
     <!-- Filters -->
     <div class="card mb-4">
         <div class="card-body">
-            <form method="GET" class="row g-3 align-items-center">
+            <form method="GET" class="row g-3 align-items-center" id="filter-form">
                 <div class="col-md-4">
                     <label for="type" class="form-label">Filter po tipu</label>
-                    <select name="type" id="type" class="form-select" onchange="this.form.submit()">
+                    <select name="type" id="type" class="form-select">
                         <option value="">Svi tipovi</option>
                         {% for value, label in publication_types %}
                             <option value="{{ value }}" {% if current_filter == value %}selected{% endif %}>{{ label }}</option>
@@ -89,9 +38,14 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <a href="{{ url_for('publications.list_by_member', member_id=member.id) }}" class="btn btn-outline-secondary">
+                    <button type="button" id="reset-filter" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-clockwise"></i> Reset
-                    </a>
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <div id="loading-spinner" class="spinner-border spinner-border-sm text-primary" style="display: none;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
                 </div>
             </form>
         </div>
@@ -102,148 +56,15 @@
         <div class="card-header">
             <h5 class="mb-0">
                 <i class="bi bi-list"></i> Lista publikacija
-                {% if current_filter %}
-                    <small class="text-muted">- {{ current_filter.replace('_', ' ').title() }}</small>
-                {% endif %}
+                <span id="filter-label">
+                    {% if current_filter %}
+                        <small class="text-muted">- {{ current_filter.replace('_', ' ').title() }}</small>
+                    {% endif %}
+                </span>
             </h5>
         </div>
-        <div class="card-body">
-            {% if publications.items %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Tip</th>
-                                <th>Naziv</th>
-                                <th>Identifikator</th>
-                                <th>Jezik</th>
-                                <th>Status</th>
-                                <th>Kreirana</th>
-                                <th>Akcije</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for publication in publications.items %}
-                                <tr class="{% if not publication.is_active %}table-secondary{% endif %}">
-                                    <td>
-                                        {% if publication.publication_type.value == 'journal' %}
-                                            <span class="badge bg-primary"><i class="bi bi-journal-richtext"></i> Časopis</span>
-                                        {% elif publication.publication_type.value == 'book_series' %}
-                                            <span class="badge bg-info"><i class="bi bi-collection"></i> Serija</span>
-                                        {% elif publication.publication_type.value == 'book_set' %}
-                                            <span class="badge bg-warning"><i class="bi bi-box-seam"></i> Komplet</span>
-                                        {% elif publication.publication_type.value == 'book' %}
-                                            <span class="badge bg-success"><i class="bi bi-book"></i> Knjiga</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <strong>{{ publication.title }}</strong>
-                                        {% if publication.subtitle %}
-                                            <br><small class="text-muted">{{ publication.subtitle }}</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if publication.publication_type.value == 'journal' and publication.journal_issn %}
-                                            <span class="badge bg-light text-dark">ISSN: {{ publication.journal_issn }}</span>
-                                        {% elif publication.publication_type.value == 'book_series' and publication.series_issn %}
-                                            <span class="badge bg-light text-dark">ISSN: {{ publication.series_issn }}</span>
-                                        {% elif publication.publication_type.value == 'book_set' and publication.set_isbn %}
-                                            <span class="badge bg-light text-dark">ISBN: {{ publication.set_isbn }}</span>
-                                        {% elif publication.publication_type.value == 'book' and publication.isbn %}
-                                            <span class="badge bg-light text-dark">ISBN: {{ publication.isbn }}</span>
-                                        {% else %}
-                                            <span class="text-muted">N/A</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ publication.language_code.upper() }}</td>
-                                    <td>
-                                        {% if publication.is_active %}
-                                            <span class="badge bg-success">Aktivna</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">Neaktivna</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ publication.created_at.strftime('%d.%m.%Y') }}</td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ url_for('publications.detail', publication_id=publication.id) }}" 
-                                               class="btn btn-sm btn-outline-primary" title="Prikaži detalje">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ url_for('publications.edit', publication_id=publication.id) }}" 
-                                               class="btn btn-sm btn-outline-secondary" title="Izmeni">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" 
-                                                    class="btn btn-sm btn-outline-{% if publication.is_active %}danger{% else %}success{% endif %}" 
-                                                    onclick="toggleStatus({{ publication.id }}, '{{ publication.is_active }}')"
-                                                    title="{% if publication.is_active %}Deaktiviraj{% else %}Aktiviraj{% endif %}">
-                                                <i class="bi bi-{% if publication.is_active %}x-circle{% else %}check-circle{% endif %}"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                {% if publications.pages > 1 %}
-                    <nav aria-label="Publikacije paginacija">
-                        <ul class="pagination justify-content-center">
-                            {% if publications.has_prev %}
-                                <li class="page-item">
-                                    <a class="page-link" href="{{ url_for('publications.list_by_member', member_id=member.id, page=publications.prev_num, type=current_filter) }}">
-                                        <i class="bi bi-chevron-left"></i>
-                                    </a>
-                                </li>
-                            {% endif %}
-
-                            {% for page_num in publications.iter_pages() %}
-                                {% if page_num %}
-                                    {% if page_num != publications.page %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="{{ url_for('publications.list_by_member', member_id=member.id, page=page_num, type=current_filter) }}">{{ page_num }}</a>
-                                        </li>
-                                    {% else %}
-                                        <li class="page-item active">
-                                            <span class="page-link">{{ page_num }}</span>
-                                        </li>
-                                    {% endif %}
-                                {% else %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link">…</span>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
-
-                            {% if publications.has_next %}
-                                <li class="page-item">
-                                    <a class="page-link" href="{{ url_for('publications.list_by_member', member_id=member.id, page=publications.next_num, type=current_filter) }}">
-                                        <i class="bi bi-chevron-right"></i>
-                                    </a>
-                                </li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                {% endif %}
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="bi bi-journal-x display-1 text-muted"></i>
-                    <h4 class="mt-3">Nema publikacija</h4>
-                    <p class="text-muted">
-                        {% if current_filter %}
-                            Nema publikacija tipa "{{ current_filter.replace('_', ' ').title() }}" za ovog člana.
-                        {% else %}
-                            Ovaj član još uvek nema kreirana template-a za publikacije.
-                        {% endif %}
-                    </p>
-                    <a href="{{ url_for('publications.create_for_member', member_id=member.id) }}" class="btn btn-primary">
-                        <i class="bi bi-journal-plus"></i> Kreiraj prvu publikaciju
-                    </a>
-                </div>
-            {% endif %}
+        <div class="card-body" id="publications-table-container">
+            {% include 'publications/includes/publications-table.html' %}
         </div>
     </div>
 </div>
@@ -251,9 +72,117 @@
 
 {% block scripts %}
 <script>
+// Global variables
+const memberId = {{ member.id }};
+let currentFilter = '{{ current_filter }}';
+let currentPage = 1;
+
+// DOM elements
+const typeSelect = document.getElementById('type');
+const resetButton = document.getElementById('reset-filter');
+const loadingSpinner = document.getElementById('loading-spinner');
+const tableContainer = document.getElementById('publications-table-container');
+const statsCards = document.getElementById('statistics-cards');
+const filterLabel = document.getElementById('filter-label');
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter change event
+    typeSelect.addEventListener('change', function() {
+        const selectedType = this.value;
+        filterPublications(selectedType, 1);
+    });
+    
+    // Reset filter event
+    resetButton.addEventListener('click', function() {
+        typeSelect.value = '';
+        filterPublications('', 1);
+    });
+    
+    // Pagination click events (delegated)
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('#ajax-pagination a[data-page]')) {
+            e.preventDefault();
+            const page = parseInt(e.target.closest('a').getAttribute('data-page'));
+            filterPublications(currentFilter, page);
+        }
+    });
+});
+
+// Main filter function
+function filterPublications(type, page) {
+    // Show loading spinner
+    loadingSpinner.style.display = 'inline-block';
+    
+    // Build URL parameters
+    const params = new URLSearchParams();
+    if (type) params.append('type', type);
+    if (page && page > 1) params.append('page', page);
+    
+    // Make AJAX request
+    fetch(`/publications/api/member/${memberId}/filter?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update table content
+                tableContainer.innerHTML = data.publications_html;
+                
+                // Update statistics cards
+                statsCards.innerHTML = data.stats_html;
+                
+                // Update filter label
+                updateFilterLabel(type);
+                
+                // Update current state
+                currentFilter = type;
+                currentPage = page;
+                
+                // Update URL without reload
+                updateURL(type, page);
+                
+            } else {
+                alert('Greška: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Greška:', error);
+            alert('Došlo je do greške prilikom filtriranja.');
+        })
+        .finally(() => {
+            // Hide loading spinner
+            loadingSpinner.style.display = 'none';
+        });
+}
+
+// Update filter label
+function updateFilterLabel(type) {
+    if (type) {
+        const typeLabels = {
+            'journal': 'Časopis',
+            'book_series': 'Serija Knjiga', 
+            'book_set': 'Komplet Knjiga',
+            'book': 'Knjiga'
+        };
+        filterLabel.innerHTML = `<small class="text-muted">- ${typeLabels[type]}</small>`;
+    } else {
+        filterLabel.innerHTML = '';
+    }
+}
+
+// Update browser URL without reload
+function updateURL(type, page) {
+    const params = new URLSearchParams();
+    if (type) params.append('type', type);
+    if (page && page > 1) params.append('page', page);
+    
+    const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+    window.history.replaceState({}, '', newUrl);
+}
+
+// Toggle status function (existing)
 function toggleStatus(publicationId, currentStatus) {
     const isActive = currentStatus === 'True';
-    const action = isActive ? 'deaktivacija' : 'aktivacija';
+    const action = isActive ? 'deaktivaciju' : 'aktivaciju';
     
     if (confirm(`Da li ste sigurni da želite ${action} ove publikacije?`)) {
         fetch(`/publications/${publicationId}/toggle-status`, {
@@ -266,8 +195,8 @@ function toggleStatus(publicationId, currentStatus) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Reload page to reflect changes
-                window.location.reload();
+                // Refresh current view instead of full reload
+                filterPublications(currentFilter, currentPage);
             } else {
                 alert('Greška: ' + data.error);
             }

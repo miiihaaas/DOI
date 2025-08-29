@@ -573,9 +573,9 @@ class UniversalPublicationForm(FlaskForm):
         }
     )
     
-    def validate(self, **kwargs):
+    def validate(self, extra_validators=None):
         """Custom validation based on publication type."""
-        result = super().validate(**kwargs)
+        result = super().validate(extra_validators)
         
         # Type-specific validation
         pub_type = self.publication_type.data
