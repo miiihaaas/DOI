@@ -310,24 +310,57 @@
                 </div>
             </div>
 
-            <!-- DOI Drafts Section (Future) -->
+            <!-- Publication Statistics Overview -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart text-info"></i> Pregled statistika publikacije
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <i class="bi bi-info-circle text-primary display-4"></i>
+                            <h4>{{ publication_stats.publication_info.type|title }}</h4>
+                            <p class="text-muted">Tip publikacije</p>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="bi bi-{% if publication_stats.publication_info.is_active %}check-circle text-success{% else %}pause-circle text-warning{% endif %} display-4"></i>
+                            <h4>{% if publication_stats.publication_info.is_active %}Aktivna{% else %}Neaktivna{% endif %}</h4>
+                            <p class="text-muted">Status publikacije</p>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="bi bi-person text-secondary display-4"></i>
+                            <h4>{{ publication_stats.publication_info.member_name }}</h4>
+                            <p class="text-muted">Član izdavač</p>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="bi bi-file-text text-info display-4"></i>
+                            <h4>{{ publication_stats.drafts.total }}</h4>
+                            <p class="text-muted">DOI Draft-ova</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DOI Drafts Section -->
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
                             <i class="bi bi-file-text"></i> DOI Draft-ovi
-                            <span class="badge bg-secondary">{{ draft_count }}</span>
+                            <span class="badge bg-secondary">{{ publication_stats.drafts.total }}</span>
                         </h5>
                         {% if publication.is_active %}
                         <button class="btn btn-success btn-sm" disabled>
                             <i class="bi bi-plus-circle"></i> Kreiraj Draft
-                            <small>(Soon)</small>
+                            <small>(Wating for DOIDraft Model)</small>
                         </button>
                         {% endif %}
                     </div>
                 </div>
                 <div class="card-body">
-                    {% if draft_count == 0 %}
+                    {% if publication_stats.drafts.total == 0 %}
                         <div class="text-center py-4">
                             <i class="bi bi-file-plus display-4 text-muted"></i>
                             <h6 class="mt-3">Nema kreiranih draft-ova</h6>
@@ -340,13 +373,63 @@
                             </p>
                             {% if publication.is_active %}
                                 <button class="btn btn-outline-primary" disabled>
-                                    <i class="bi bi-plus"></i> Kreiraj prvi draft (Coming Soon)
+                                    <i class="bi bi-plus"></i> Kreiraj prvi draft (Waiting for DOIDraft Model)
                                 </button>
                             {% endif %}
                         </div>
                     {% else %}
-                        <!-- Future: List of DOI drafts will be displayed here -->
-                        <p class="text-muted">Lista draft-ova će biti implementirana kada bude DOIDraft model.</p>
+                        <!-- Draft Statistics Breakdown -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-pencil text-warning display-4"></i>
+                                    <h4>{{ publication_stats.drafts.by_status.get('draft', 0) }}</h4>
+                                    <p class="text-muted">U izradi</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-code-square text-info display-4"></i>
+                                    <h4>{{ publication_stats.drafts.by_status.get('xml_generated', 0) }}</h4>
+                                    <p class="text-muted">XML generisan</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-send text-primary display-4"></i>
+                                    <h4>{{ publication_stats.drafts.by_status.get('xml_sent', 0) }}</h4>
+                                    <p class="text-muted">XML poslat</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-check2-square text-success display-4"></i>
+                                    <h4>{{ publication_stats.drafts.by_status.get('confirmed', 0) }}</h4>
+                                    <p class="text-muted">Potvrđeni</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Drafts List -->
+                        {% if publication_stats.drafts.recent %}
+                        <h6>Poslednji draft-ovi:</h6>
+                        <div class="list-group list-group-flush">
+                            {% for draft in publication_stats.drafts.recent %}
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">{{ draft.title }}</div>
+                                    <small class="text-muted">DOI: {{ draft.doi_number }}</small><br>
+                                    <small class="text-muted">Kreiran: {{ draft.created_at.strftime('%d.%m.%Y') }}</small>
+                                </div>
+                                <span class="badge bg-{{ 'success' if draft.status == 'confirmed' else ('info' if draft.status == 'xml_generated' else 'warning') }}">
+                                    {{ draft.status|title }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted">Lista draft-ova će biti prikazana kada se implementira DOIDraft model.</p>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>

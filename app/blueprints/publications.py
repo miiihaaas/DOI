@@ -191,8 +191,9 @@ def detail(publication_id):
         flash('Nemate dozvolu da pristupite ovoj publikaciji.', 'error')
         return redirect(url_for('main.dashboard'))
     
-    # Get draft count (placeholder - will be implemented when DOIDraft model exists)
-    draft_count = 0  # TODO: Replace with actual DOIDraft count query
+    # Get detailed statistics through DashboardService
+    from app.services.dashboard_service import DashboardService
+    publication_stats = DashboardService.get_publication_detail_statistics(publication_id)
     
     # Get workflow type for display using service
     workflow_info = PublicationService.get_workflow_info(publication)
@@ -200,7 +201,8 @@ def detail(publication_id):
     return render_template(
         'publications/detail.html',
         publication=publication,
-        draft_count=draft_count,
+        publication_stats=publication_stats,
+        draft_count=publication_stats['drafts']['total'],
         workflow_info=workflow_info
     )
 

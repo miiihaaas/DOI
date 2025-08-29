@@ -84,7 +84,7 @@ def create():
 @members_bp.route("/<int:member_id>")
 @login_required
 def detail(member_id):
-    """Detalji o članu."""
+    """Detalji o članu sa statistikama."""
     # Get the singleton sponsor
     sponsor = Sponsor.get_instance()
     if not sponsor:
@@ -94,13 +94,15 @@ def detail(member_id):
     if not member:
         abort(404)
     
-    # member.publications je lazy='dynamic' pa ne možemo eager loading
-    # Template će koristiti member.publications direktno što je efikasniji pristup za dynamic relationship
+    # Get member statistics through DashboardService
+    from app.services.dashboard_service import DashboardService
+    member_stats = DashboardService.get_member_detail_statistics(member_id)
     
     return render_template(
         "members/detail.html", 
         title=f"Član: {member.name}",
-        member=member
+        member=member,
+        member_stats=member_stats
     )
 
 

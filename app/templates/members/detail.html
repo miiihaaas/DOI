@@ -232,34 +232,72 @@
                     </div>
                     <div class="card-body">
                         {% if member.publications.count() > 0 %}
+                        <!-- Publication Statistics from DashboardService -->
                         <div class="row mb-4">
-                            <!-- Publication Type Statistics -->
-                            <div class="col-md-3">
-                                <div class="text-center">
-                                    <i class="bi bi-journal-richtext text-primary display-4"></i>
-                                    <h4>{{ member.publications.filter_by(publication_type='journal').count() }}</h4>
-                                    <p class="text-muted">Časopisi</p>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="text-center">
-                                    <i class="bi bi-collection text-info display-4"></i>
-                                    <h4>{{ member.publications.filter_by(publication_type='book_series').count() }}</h4>
-                                    <p class="text-muted">Serije knjiga</p>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="text-center">
-                                    <i class="bi bi-box-seam text-warning display-4"></i>
-                                    <h4>{{ member.publications.filter_by(publication_type='book_set').count() }}</h4>
-                                    <p class="text-muted">Kompleti knjiga</p>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="text-center">
-                                    <i class="bi bi-book text-success display-4"></i>
-                                    <h4>{{ member.publications.filter_by(publication_type='book').count() }}</h4>
-                                    <p class="text-muted">Knjige</p>
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Pregled publikacija</h6>
+                                        <div class="row text-center">
+                                            <div class="col-md-2">
+                                                <i class="bi bi-files text-primary display-4"></i>
+                                                <h4>{{ member_stats.publications.total }}</h4>
+                                                <p class="text-muted">Ukupno</p>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <i class="bi bi-check-circle text-success display-4"></i>
+                                                <h4>{{ member_stats.publications.active }}</h4>
+                                                <p class="text-muted">Aktivnih</p>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <i class="bi bi-journal-richtext text-primary display-4"></i>
+                                                <h4>{{ member_stats.publications.by_type.get('journal', 0) }}</h4>
+                                                <p class="text-muted">Časopisi</p>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <i class="bi bi-book text-success display-4"></i>
+                                                <h4>{{ member_stats.publications.by_type.get('book', 0) }}</h4>
+                                                <p class="text-muted">Knjige</p>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <i class="bi bi-collection text-info display-4"></i>
+                                                <h4>{{ member_stats.publications.by_type.get('book_series', 0) }}</h4>
+                                                <p class="text-muted">Serije knjiga</p>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <i class="bi bi-box-seam text-warning display-4"></i>
+                                                <h4>{{ member_stats.publications.by_type.get('book_set', 0) }}</h4>
+                                                <p class="text-muted">Kompleti knjiga</p>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if member_stats.drafts.total > 0 %}
+                                        <hr>
+                                        <h6>DOI Draftovi</h6>
+                                        <div class="row text-center">
+                                            <div class="col-md-3">
+                                                <i class="bi bi-file-text text-secondary display-4"></i>
+                                                <h4>{{ member_stats.drafts.total }}</h4>
+                                                <p class="text-muted">Ukupno draftova</p>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <i class="bi bi-pencil text-warning display-4"></i>
+                                                <h4>{{ member_stats.drafts.by_status.get('draft', 0) }}</h4>
+                                                <p class="text-muted">U izradi</p>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <i class="bi bi-code-square text-info display-4"></i>
+                                                <h4>{{ member_stats.drafts.by_status.get('xml_generated', 0) }}</h4>
+                                                <p class="text-muted">XML generisan</p>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <i class="bi bi-check2-square text-success display-4"></i>
+                                                <h4>{{ member_stats.drafts.by_status.get('confirmed', 0) }}</h4>
+                                                <p class="text-muted">Potvrđeni</p>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -315,6 +353,57 @@
                             </a>
                         </div>
                         {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member Activity Timeline -->
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-activity text-info"></i> Aktivnost člana
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="activity-timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-success">
+                                    <i class="bi bi-person-plus text-white"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Član kreiran</h6>
+                                    <p class="text-muted mb-1">{{ member.created_at.strftime('%d.%m.%Y u %H:%M') }}</p>
+                                    <small class="text-muted">Registrovan u sistemu DOI agencije</small>
+                                </div>
+                            </div>
+                            
+                            {% if member.updated_at != member.created_at %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-info">
+                                    <i class="bi bi-pencil text-white"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Poslednja izmena</h6>
+                                    <p class="text-muted mb-1">{{ member.updated_at.strftime('%d.%m.%Y u %H:%M') }}</p>
+                                    <small class="text-muted">Ažurirani podaci o članu</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if member_stats.publications.total > 0 %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-primary">
+                                    <i class="bi bi-journal-plus text-white"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Publikacije</h6>
+                                    <p class="text-muted mb-1">{{ member_stats.publications.total }} ukupno</p>
+                                    <small class="text-muted">{{ member_stats.publications.active }} aktivnih publikacija</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -429,6 +518,45 @@ function printMemberInfo() {
 document.addEventListener('DOMContentLoaded', function() {
     const style = document.createElement('style');
     style.innerHTML = `
+        .activity-timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .activity-timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: -23px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .timeline-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
         @media print {
             .btn, .card-header .btn, nav, .breadcrumb {
                 display: none !important;

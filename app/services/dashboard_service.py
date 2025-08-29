@@ -144,15 +144,14 @@ class DashboardService:
         """
         member = Member.query.get_or_404(member_id)
         
-        # Publication statistike za member
-        publications = member.publications
-        total_publications = len(publications)
-        active_publications = len([p for p in publications if p.is_active])
+        # Publication statistike za member (publications je dynamic relationship)
+        total_publications = member.publications.count()
+        active_publications = member.publications.filter_by(is_active=True).count()
         
         # Publication breakdown po tipovima
         type_breakdown = {}
         for pub_type in PublicationType:
-            count = len([p for p in publications if p.publication_type == pub_type])
+            count = member.publications.filter_by(publication_type=pub_type).count()
             type_breakdown[pub_type.value] = count
         
         # Draft statistike za member publications
