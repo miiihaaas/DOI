@@ -1,0 +1,166 @@
+# ============================================================================
+# DOI Portal - Git Ignore Configuration
+# ============================================================================
+
+# ============================================================================
+# BMAD Framework (tooling - reinstallable via CLI)
+# ============================================================================
+_bmad/
+
+# Keep _bmad-output/ - contains project artifacts (PRD, architecture, stories)
+# !_bmad-output/
+
+# Claude Code session files
+.claude/
+
+# ============================================================================
+# Python
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# ============================================================================
+# Testing & Coverage
+# ============================================================================
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# ============================================================================
+# Django
+# ============================================================================
+staticfiles/
+*.mo
+*.pot
+celerybeat-schedule
+celerybeat.pid
+
+# Media uploads (local dev)
+doi_portal/media/
+
+# ============================================================================
+# Environment & Secrets (CRITICAL - never commit!)
+# ============================================================================
+.env
+.envs/
+*.local
+
+# ============================================================================
+# Documentation
+# ============================================================================
+docs/_build/
+site/
+
+# ============================================================================
+# Node.js
+# ============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+*.tgz
+.yarn-integrity
+
+# ============================================================================
+# IDE & Editors
+# ============================================================================
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-v][a-z]
+[._]sw[a-p]
+Session.vim
+.netrwhist
+tags
+
+# ============================================================================
+# OS Generated
+# ============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# Misc
+# ============================================================================
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+dump.rdb
+.mypy_cache/
+.ipython/
+.ropeproject/

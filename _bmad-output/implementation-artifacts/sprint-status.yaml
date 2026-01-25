@@ -1,0 +1,110 @@
+# generated: 2026-01-25
+# project: DOI
+# project_key: doi
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-25
+project: DOI
+project_key: doi
+tracking_system: file-system
+story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+development_status:
+  # Epic 1: Project Foundation & Authentication
+  epic-1: in-progress
+  1-1-project-initialization-with-cookiecutter-django: done
+  1-2-custom-user-model-rbac-setup: backlog
+  1-3-user-login-logout: backlog
+  1-4-user-registration: backlog
+  1-5-password-reset: backlog
+  1-6-user-management-by-superadmin: backlog
+  1-7-admin-dashboard-shell: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Content Structure Management
+  epic-2: backlog
+  2-1-publisher-model-admin-crud: backlog
+  2-2-public-publisher-page: backlog
+  2-3-publication-model-with-type-specific-fields: backlog
+  2-4-publication-admin-list-edit: backlog
+  2-5-public-publication-list-with-filters: backlog
+  2-6-issue-model-admin-crud: backlog
+  2-7-public-issue-list-detail: backlog
+  2-8-row-level-permissions-for-content: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Article Workflow
+  epic-3: backlog
+  3-1-article-model-basic-metadata-entry: backlog
+  3-2-author-management-with-drag-drop: backlog
+  3-3-pdf-upload-with-virus-scanning: backlog
+  3-4-auto-save-functionality: backlog
+  3-5-submit-article-for-review: backlog
+  3-6-editorial-review-process: backlog
+  3-7-article-publishing-withdrawal: backlog
+  3-8-dashboard-statistics-pending-items: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Public Portal Experience
+  epic-4: backlog
+  4-1-portal-home-page: backlog
+  4-2-article-search-functionality: backlog
+  4-3-advanced-filtering-for-articles: backlog
+  4-4-article-landing-page: backlog
+  4-5-floating-action-bar: backlog
+  4-6-pdf-download: backlog
+  4-7-citation-modal: backlog
+  4-8-about-page: backlog
+  4-9-contact-form: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Crossref XML Integration
+  epic-5: backlog
+  5-1-crossref-service-infrastructure: backlog
+  5-2-pre-generation-validation-warnings: backlog
+  5-3-xml-generation-for-all-publication-types: backlog
+  5-4-xsd-validation: backlog
+  5-5-xml-preview-with-syntax-highlighting: backlog
+  5-6-xml-download: backlog
+  5-7-crossref-deposit-workflow-page: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Compliance & Monitoring
+  epic-6: backlog
+  6-1-audit-log-integration: backlog
+  6-2-audit-log-viewer: backlog
+  6-3-soft-delete-implementation: backlog
+  6-4-gdpr-data-request-handling: backlog
+  6-5-system-monitoring-with-sentry: backlog
+  6-6-system-health-dashboard: backlog
+  epic-6-retrospective: optional
