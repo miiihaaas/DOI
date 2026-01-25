@@ -108,7 +108,9 @@ AUTHENTICATION_BACKENDS = [
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
-LOGIN_REDIRECT_URL = "users:redirect"
+LOGIN_REDIRECT_URL = "dashboard"  # Story 1.3: Redirect to dashboard after login
+# https://docs.djangoproject.com/en/dev/ref/settings/#logout-redirect-url
+LOGOUT_REDIRECT_URL = "account_login"  # Story 1.3: Redirect to login after logout
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
 LOGIN_URL = "account_login"
 
@@ -143,6 +145,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "doi_portal.core.middleware.LastActivityMiddleware",  # Story 1.3: Track user activity
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
@@ -336,3 +339,17 @@ SOCIALACCOUNT_FORMS = {"signup": "doi_portal.users.forms.UserSocialSignupForm"}
 GUARDIAN_RAISE_403 = True
 # Required for custom User model with email as USERNAME_FIELD
 ANONYMOUS_USER_NAME = None
+
+# SESSION CONFIGURATION (Story 1.3)
+# ------------------------------------------------------------------------------
+# https://docs.djangoproject.com/en/dev/ref/settings/#session-cookie-age
+SESSION_COOKIE_AGE = 1800  # 30 minutes in seconds (NFR9 requirement)
+# https://docs.djangoproject.com/en/dev/ref/settings/#session-save-every-request
+SESSION_SAVE_EVERY_REQUEST = True  # Extend session on each request
+# https://docs.djangoproject.com/en/dev/ref/settings/#session-expire-at-browser-close
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Use cookie age instead
+
+# ALLAUTH LOGOUT CONFIGURATION (Story 1.3)
+# ------------------------------------------------------------------------------
+# https://docs.allauth.org/en/latest/account/configuration.html
+ACCOUNT_LOGOUT_ON_GET = False  # Require POST for logout (security)

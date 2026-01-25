@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Sign Out" %} - DOI Portal{% endblock title %}
+
+{% block bodyclass %}bg-light{% endblock bodyclass %}
+
+{% block body %}
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow">
+        <div class="card-body p-4">
+          <div class="text-center mb-4">
+            <h2 class="card-title h4">{% translate "Sign Out" %}</h2>
+            <p class="text-muted">{% translate "Are you sure you want to sign out?" %}</p>
+          </div>
+
+          <form method="post" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+
+            {% if redirect_field_value %}
+              <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-danger">
+                {% translate "Sign Out" %}
+              </button>
+              <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                {% translate "Cancel" %}
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="text-center mt-3">
+        <a href="{% url 'home' %}" class="text-muted text-decoration-none">
+          &larr; {% translate "Back to Home" %}
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock body %}

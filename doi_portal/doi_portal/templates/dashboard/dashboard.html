@@ -1,0 +1,52 @@
+{% extends "admin_base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Dashboard" %} - DOI Portal{% endblock title %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="card-title h3">
+          {% translate "Welcome" %}, {% if user.name %}{{ user.name }}{% else %}{{ user.email }}{% endif %}!
+        </h1>
+        <p class="card-text text-muted">
+          {% translate "This is your DOI Portal dashboard. Full functionality will be available in future updates." %}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard placeholder content -->
+<div class="row mt-4">
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="bi bi-journal-text display-4 text-primary mb-3"></i>
+        <h5 class="card-title">{% translate "Publications" %}</h5>
+        <p class="card-text text-muted">{% translate "Manage your publications and articles." %}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="bi bi-building display-4 text-success mb-3"></i>
+        <h5 class="card-title">{% translate "Publishers" %}</h5>
+        <p class="card-text text-muted">{% translate "View and manage publisher information." %}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="bi bi-link-45deg display-4 text-info mb-3"></i>
+        <h5 class="card-title">{% translate "DOI Management" %}</h5>
+        <p class="card-text text-muted">{% translate "Generate and manage DOI identifiers." %}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

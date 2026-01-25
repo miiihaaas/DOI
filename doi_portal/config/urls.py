@@ -6,6 +6,8 @@ from django.urls import path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
 
+from doi_portal.core.views import DashboardView
+
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
     path(
@@ -21,6 +23,8 @@ urlpatterns = [
     # API
     path("api/", include("config.api_router")),
     # Your stuff: custom urls includes go here
+    # Story 1.3: Dashboard route
+    path("dashboard/", DashboardView.as_view(), name="dashboard"),
     # ...
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),

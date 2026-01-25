@@ -106,7 +106,9 @@ class TestRoleRequiredDecorator:
             protected_view(request)
 
     def test_role_required_allows_multiple_roles(
-        self, request_factory, administrator_user,
+        self,
+        request_factory,
+        administrator_user,
     ):
         """AC#4: role_required allows any of multiple roles."""
 
@@ -176,7 +178,9 @@ class TestPublisherPermissionMixin:
         assert mixin.test_func() is True
 
     def test_mixin_denies_urednik_without_publisher(
-        self, request_factory, urednik_no_publisher,
+        self,
+        request_factory,
+        urednik_no_publisher,
     ):
         """AC#4: Urednik without publisher assignment is denied."""
 
