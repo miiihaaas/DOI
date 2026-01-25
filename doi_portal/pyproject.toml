@@ -160,6 +160,8 @@ dependencies = [
     "django-crispy-forms==2.5",
     "crispy-bootstrap5==2025.6",
     "django-redis==6.0.0",
+    "django-guardian==3.2.0",
+    "djangorestframework==3.15.2",
     # Local/dev dependencies (from requirements/local.txt)
     "Werkzeug[watchdog]==3.1.5",
     "ipdb==0.13.13",

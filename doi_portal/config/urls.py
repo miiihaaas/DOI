@@ -18,6 +18,8 @@ urlpatterns = [
     # User management
     path("users/", include("doi_portal.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
+    # API
+    path("api/", include("config.api_router")),
     # Your stuff: custom urls includes go here
     # ...
     # Media files

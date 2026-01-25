@@ -2,6 +2,7 @@
 from typing import ClassVar
 
 from django.contrib.auth.models import AbstractUser
+from django.db import models
 from django.db.models import CharField
 from django.db.models import EmailField
 from django.urls import reverse
@@ -23,6 +24,24 @@ class User(AbstractUser):
     last_name = None  # type: ignore[assignment]
     email = EmailField(_("email address"), unique=True)
     username = None  # type: ignore[assignment]
+
+    # NEW: Publisher assignment for row-level permissions (AC#1)
+    # String reference - Publisher model created in Epic 2
+    publisher = models.ForeignKey(
+        "publishers.Publisher",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="users",
+        help_text=_("Publisher assignment for row-level permissions"),
+    )
+
+    # NEW: Track last activity for session management (AC#1)
+    last_activity = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_("Last user activity timestamp"),
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

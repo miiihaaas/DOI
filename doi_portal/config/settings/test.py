@@ -1,10 +1,25 @@
 """
 With these settings, tests run faster.
 """
+import os
+
+# Set DATABASE_URL before importing base settings to avoid KeyError
+# This will be overridden below with SQLite for tests
+os.environ.setdefault("DATABASE_URL", "sqlite://:memory:")
 
 from .base import *  # noqa: F403
 from .base import TEMPLATES
 from .base import env
+
+# DATABASES
+# ------------------------------------------------------------------------------
+# Use SQLite for tests to avoid requiring PostgreSQL
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
+    }
+}
 
 # GENERAL
 # ------------------------------------------------------------------------------

@@ -79,10 +79,14 @@ THIRD_PARTY_APPS = [
     "allauth.mfa",
     "allauth.socialaccount",
     "django_celery_beat",
+    "guardian",
+    "rest_framework",
 ]
 
 LOCAL_APPS = [
     "doi_portal.users",
+    "doi_portal.publishers",
+    "doi_portal.core",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -99,6 +103,7 @@ MIGRATION_MODULES = {"sites": "doi_portal.contrib.sites.migrations"}
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
+    "guardian.backends.ObjectPermissionBackend",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "users.User"
@@ -324,3 +329,10 @@ SOCIALACCOUNT_FORMS = {"signup": "doi_portal.users.forms.UserSocialSignupForm"}
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+# django-guardian
+# ------------------------------------------------------------------------------
+# https://django-guardian.readthedocs.io/en/stable/configuration.html
+GUARDIAN_RAISE_403 = True
+# Required for custom User model with email as USERNAME_FIELD
+ANONYMOUS_USER_NAME = None
