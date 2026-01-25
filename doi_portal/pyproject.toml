@@ -165,7 +165,7 @@ dependencies = [
     # Local/dev dependencies (from requirements/local.txt)
     "Werkzeug[watchdog]==3.1.5",
     "ipdb==0.13.13",
-    "psycopg[c]==3.3.2",
+    "psycopg[binary]==3.3.2",  # binary za Windows (ne zahteva pg_config)
     "watchfiles==1.1.1",
     "mypy==1.19.1",
     "django-stubs[compatible-mypy]==5.2.9",
