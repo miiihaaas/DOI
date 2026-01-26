@@ -8,42 +8,61 @@
     <div class="card shadow-sm">
       <div class="card-body">
         <h1 class="card-title h3">
-          Dobrodošli, {% if user.name %}{{ user.name }}{% else %}{{ user.email }}{% endif %}!
+          Dobrodosli, {% if user.name %}{{ user.name }}{% else %}{{ user.email }}{% endif %}!
         </h1>
         <p class="card-text text-muted">
-          Ovo je vaša DOI Portal kontrolna tabla. Puna funkcionalnost biće dostupna u budućim ažuriranjima.
+          {% if user_role %}
+            Prijavljeni ste kao <strong>{{ user_role }}</strong>.
+          {% endif %}
+          Ovo je vasa DOI Portal kontrolna tabla.
         </p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Dashboard placeholder content -->
+<!-- Dashboard statistics placeholder - will be expanded in future stories -->
 <div class="row mt-4">
-  <div class="col-md-4">
-    <div class="card shadow-sm h-100">
+  <div class="col-md-4 mb-4">
+    <div class="card shadow-sm h-100 dashboard-stat-card primary">
       <div class="card-body text-center">
         <i class="bi bi-journal-text display-4 text-primary mb-3"></i>
         <h5 class="card-title">Publikacije</h5>
-        <p class="card-text text-muted">Upravljajte publikacijama i člancima.</p>
+        <p class="card-text text-muted">Upravljajte publikacijama i clancima.</p>
       </div>
     </div>
   </div>
-  <div class="col-md-4">
-    <div class="card shadow-sm h-100">
+  <div class="col-md-4 mb-4">
+    <div class="card shadow-sm h-100 dashboard-stat-card success">
       <div class="card-body text-center">
         <i class="bi bi-building display-4 text-success mb-3"></i>
-        <h5 class="card-title">Izdavači</h5>
-        <p class="card-text text-muted">Pregledajte i upravljajte informacijama o izdavačima.</p>
+        <h5 class="card-title">Izdavaci</h5>
+        <p class="card-text text-muted">Pregledajte i upravljajte informacijama o izdavacima.</p>
       </div>
     </div>
   </div>
-  <div class="col-md-4">
-    <div class="card shadow-sm h-100">
+  <div class="col-md-4 mb-4">
+    <div class="card shadow-sm h-100 dashboard-stat-card info">
       <div class="card-body text-center">
         <i class="bi bi-link-45deg display-4 text-info mb-3"></i>
         <h5 class="card-title">Upravljanje DOI</h5>
-        <p class="card-text text-muted">Generišite i upravljajte DOI identifikatorima.</p>
+        <p class="card-text text-muted">Generisete i upravljajte DOI identifikatorima.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick actions section placeholder -->
+<div class="row mt-2">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Brze akcije</h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-0">
+          Brze akcije za vas role ce biti dostupne u buducim azuriranjima.
+        </p>
       </div>
     </div>
   </div>

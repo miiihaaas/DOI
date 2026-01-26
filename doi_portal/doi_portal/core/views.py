@@ -1,7 +1,7 @@
 """
 Core views for DOI Portal.
 
-DashboardView - Admin dashboard placeholder (full implementation in Story 1.7).
+DashboardView - Admin dashboard with role-based content (Story 1.7).
 """
 
 from typing import Any
@@ -9,13 +9,18 @@ from typing import Any
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 
+from doi_portal.core.menu import get_user_role
+
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     """
-    Admin dashboard placeholder.
+    Admin dashboard with role-based content.
 
-    Full implementation with role-based content will be in Story 1.7.
-    For now, this view requires login and displays a simple welcome message.
+    Displays a Bootstrap 5 admin layout with:
+    - Collapsible sidebar navigation (AC#1)
+    - Role-based menu items (AC#2, #3, #4)
+    - Breadcrumbs
+    - Welcome message with user info
 
     AC#2: Authenticated users are redirected here after login.
     """
@@ -24,5 +29,15 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context["user"] = self.request.user
+        user = self.request.user
+
+        # User info
+        context["user"] = user
+        context["user_role"] = get_user_role(user)
+
+        # Breadcrumbs - Dashboard is the root
+        context["breadcrumbs"] = [
+            {"label": "Kontrolna tabla", "url": None},  # Current page - no link
+        ]
+
         return context

@@ -1,0 +1,15 @@
+{# Sidebar menu items rendered based on user role #}
+{% for item in menu_items %}
+  {% if item.is_disabled %}
+    <a class="list-group-item list-group-item-action sidebar-menu-item disabled"
+       href="#"
+       aria-disabled="true">
+      <i class="bi {{ item.icon }} me-2"></i>{{ item.label }}
+    </a>
+  {% else %}
+    <a class="list-group-item list-group-item-action sidebar-menu-item {% if item.is_active %}active{% endif %}"
+       href="{{ item.url }}">
+      <i class="bi {{ item.icon }} me-2"></i>{{ item.label }}
+    </a>
+  {% endif %}
+{% endfor %}

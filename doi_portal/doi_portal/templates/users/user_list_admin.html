@@ -10,6 +10,7 @@
 {% endblock javascript %}
 
 {% block inline_javascript %}
+{{ block.super }}
 <!-- HTMX CSRF token configuration for Django -->
 <script>
   document.body.addEventListener('htmx:configRequest', function(evt) {

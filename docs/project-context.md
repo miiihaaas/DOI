@@ -29,6 +29,34 @@
 - **Komentari u kodu:** Engleski (standard)
 - **Commit poruke:** Engleski
 
+### Srpski Karakteri (KRITIČNO)
+
+**OBAVEZNO koristi prave srpske karaktere sa dijakritičkim znacima:**
+
+| POGREŠNO | ISPRAVNO |
+|----------|----------|
+| Clanci | Članci |
+| cekanje | čekanje |
+| Podesavanja | Podešavanja |
+| Izdavac | Izdavač |
+| greska | greška |
+| pretrazivanje | pretraživanje |
+| azuriranje | ažuriranje |
+
+**Karakteri koje MORAŠ koristiti:** `č`, `ć`, `š`, `đ`, `ž` (i velika: `Č`, `Ć`, `Š`, `Đ`, `Ž`)
+
+```python
+# POGREŠNO - ASCII bez dijakritika
+label = "Clanci"
+message = "Uspesno sacuvano"
+
+# ISPRAVNO - pravi srpski karakteri
+label = "Članci"
+message = "Uspešno sačuvano"
+```
+
+**Napomena:** Fajlovi MORAJU biti UTF-8 encoded (Django default).
+
 ---
 
 ## Naming Konvencije (OBAVEZNO)

@@ -48,7 +48,7 @@ development_status:
   1-4-user-registration: cancelled  # Uklonjena - interni korisnici, Superadmin kreira naloge
   1-5-password-reset: done
   1-6-user-management-by-superadmin: done
-  1-7-admin-dashboard-shell: backlog
+  1-7-admin-dashboard-shell: done
   epic-1-retrospective: optional
 
   # Epic 2: Content Structure Management
