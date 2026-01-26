@@ -1,0 +1,195 @@
+{% extends "admin_base.html" %}
+{% load i18n crispy_forms_tags %}
+
+{% block title %}{% trans "Dodaj korisnika" %} - DOI Portal{% endblock title %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Kontrolna tabla" %}</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'users:manage-list' %}">{% trans "Upravljanje korisnicima" %}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{% trans "Dodaj korisnika" %}</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i class="bi bi-person-plus me-2"></i>{% trans "Dodaj novog korisnika" %}
+          </h4>
+        </div>
+        <div class="card-body">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+                <p class="mb-0">{{ error }}</p>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.email.id_for_label }}" class="form-label">
+                  {{ form.email.label }} <span class="text-danger">*</span>
+                </label>
+                <input type="email"
+                       class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                       id="{{ form.email.id_for_label }}"
+                       name="{{ form.email.name }}"
+                       value="{{ form.email.value|default:'' }}"
+                       required>
+                {% if form.email.errors %}
+                <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.name.id_for_label }}" class="form-label">
+                  {{ form.name.label }}
+                </label>
+                <input type="text"
+                       class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                       id="{{ form.name.id_for_label }}"
+                       name="{{ form.name.name }}"
+                       value="{{ form.name.value|default:'' }}">
+                {% if form.name.errors %}
+                <div class="invalid-feedback">{{ form.name.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.role.id_for_label }}" class="form-label">
+                  {{ form.role.label }} <span class="text-danger">*</span>
+                </label>
+                <select class="form-select {% if form.role.errors %}is-invalid{% endif %}"
+                        id="{{ form.role.id_for_label }}"
+                        name="{{ form.role.name }}"
+                        required>
+                  {% for value, label in form.role.field.choices %}
+                  <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                {% if form.role.help_text %}
+                <div class="form-text">{{ form.role.help_text }}</div>
+                {% endif %}
+                {% if form.role.errors %}
+                <div class="invalid-feedback">{{ form.role.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.publisher.id_for_label }}" class="form-label">
+                  {{ form.publisher.label }}
+                </label>
+                <select class="form-select {% if form.publisher.errors %}is-invalid{% endif %}"
+                        id="{{ form.publisher.id_for_label }}"
+                        name="{{ form.publisher.name }}">
+                  <option value="">{% trans "--- Bez dodele izdavaca ---" %}</option>
+                  {% for publisher in form.publisher.field.queryset %}
+                  <option value="{{ publisher.pk }}" {% if form.publisher.value == publisher.pk|stringformat:"s" %}selected{% endif %}>{{ publisher.name }}</option>
+                  {% endfor %}
+                </select>
+                {% if form.publisher.errors %}
+                <div class="invalid-feedback">{{ form.publisher.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="mb-3 form-check">
+              <input type="checkbox"
+                     class="form-check-input"
+                     id="{{ form.send_invitation.id_for_label }}"
+                     name="{{ form.send_invitation.name }}"
+                     {% if form.send_invitation.value %}checked{% endif %}
+                     onchange="togglePasswordFields(this)">
+              <label class="form-check-label" for="{{ form.send_invitation.id_for_label }}">
+                {{ form.send_invitation.label }}
+              </label>
+              {% if form.send_invitation.help_text %}
+              <div class="form-text">{{ form.send_invitation.help_text }}</div>
+              {% endif %}
+            </div>
+
+            <div id="password-fields">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="{{ form.password1.id_for_label }}" class="form-label">
+                    {{ form.password1.label }}
+                  </label>
+                  <input type="password"
+                         class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+                         id="{{ form.password1.id_for_label }}"
+                         name="{{ form.password1.name }}"
+                         autocomplete="new-password">
+                  {% if form.password1.help_text %}
+                  <div class="form-text">{{ form.password1.help_text }}</div>
+                  {% endif %}
+                  {% if form.password1.errors %}
+                  <div class="invalid-feedback">{{ form.password1.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label for="{{ form.password2.id_for_label }}" class="form-label">
+                    {{ form.password2.label }}
+                  </label>
+                  <input type="password"
+                         class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+                         id="{{ form.password2.id_for_label }}"
+                         name="{{ form.password2.name }}"
+                         autocomplete="new-password">
+                  {% if form.password2.errors %}
+                  <div class="invalid-feedback">{{ form.password2.errors.0 }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'users:manage-list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>{% trans "Nazad" %}
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg me-1"></i>{% trans "Kreiraj korisnika" %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block inline_javascript %}
+<script>
+  function togglePasswordFields(checkbox) {
+    const passwordFields = document.getElementById('password-fields');
+    if (checkbox.checked) {
+      passwordFields.style.display = 'none';
+    } else {
+      passwordFields.style.display = 'block';
+    }
+  }
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const checkbox = document.getElementById('{{ form.send_invitation.id_for_label }}');
+    if (checkbox) {
+      togglePasswordFields(checkbox);
+    }
+  });
+</script>
+{% endblock inline_javascript %}

@@ -22,10 +22,7 @@
           referrerpolicy="no-referrer" />
     <!-- Bootstrap Icons -->
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"
-          integrity="sha512-dPXYcDub/aeb08c63jRq/k6GqJ89LnZTMnfz8R4P4vkGRMJGV9r8S2N2fqCi6nZ2bflz9eEpWqTu7hd/t9R1Nw=="
-          crossorigin="anonymous"
-          referrerpolicy="no-referrer" />
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <!-- Project CSS -->
     <link href="{% static 'css/project.css' %}" rel="stylesheet" />
   {% endblock css %}
@@ -65,6 +62,16 @@
               <i class="bi bi-house-door me-1"></i>Kontrolna tabla
             </a>
           </li>
+          <!-- Story 1.6: User Management (Superadmin only) -->
+          {% with first_group=user.groups.all.first %}
+          {% if first_group.name == 'Superadmin' or user.is_superuser %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'users:manage-list' %}">
+              <i class="bi bi-people me-1"></i>Korisnici
+            </a>
+          </li>
+          {% endif %}
+          {% endwith %}
           <!-- Future navigation items will be added here -->
         </ul>
 

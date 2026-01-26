@@ -1,0 +1,156 @@
+{% extends "admin_base.html" %}
+{% load i18n crispy_forms_tags %}
+
+{% block title %}{% trans "Izmeni korisnika" %} - DOI Portal{% endblock title %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Kontrolna tabla" %}</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'users:manage-list' %}">{% trans "Upravljanje korisnicima" %}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{% trans "Izmeni korisnika" %}</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i class="bi bi-pencil me-2"></i>{% trans "Izmeni korisnika" %}
+          </h4>
+        </div>
+        <div class="card-body">
+          <!-- User Info Header -->
+          <div class="alert alert-info d-flex align-items-center mb-4">
+            <i class="bi bi-person-circle fs-1 me-3"></i>
+            <div>
+              <strong>{{ object.email }}</strong>
+              {% if object.name %}
+              <br><span class="text-muted">{{ object.name }}</span>
+              {% endif %}
+              <br>
+              <small class="text-muted">
+                {% trans "Kreiran" %}: {{ object.date_joined|date:"d.m.Y H:i" }}
+                {% if object.last_activity %}
+                | {% trans "Poslednja aktivnost" %}: {{ object.last_activity|date:"d.m.Y H:i" }}
+                {% endif %}
+              </small>
+            </div>
+          </div>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+                <p class="mb-0">{{ error }}</p>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.email.id_for_label }}" class="form-label">
+                  {{ form.email.label }} <span class="text-danger">*</span>
+                </label>
+                <input type="email"
+                       class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                       id="{{ form.email.id_for_label }}"
+                       name="{{ form.email.name }}"
+                       value="{{ form.email.value|default:'' }}"
+                       required>
+                {% if form.email.errors %}
+                <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.name.id_for_label }}" class="form-label">
+                  {{ form.name.label }}
+                </label>
+                <input type="text"
+                       class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                       id="{{ form.name.id_for_label }}"
+                       name="{{ form.name.name }}"
+                       value="{{ form.name.value|default:'' }}">
+                {% if form.name.errors %}
+                <div class="invalid-feedback">{{ form.name.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.role.id_for_label }}" class="form-label">
+                  {{ form.role.label }} <span class="text-danger">*</span>
+                </label>
+                <select class="form-select {% if form.role.errors %}is-invalid{% endif %}"
+                        id="{{ form.role.id_for_label }}"
+                        name="{{ form.role.name }}"
+                        required>
+                  {% for value, label in form.role.field.choices %}
+                  <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                {% if form.role.help_text %}
+                <div class="form-text">{{ form.role.help_text }}</div>
+                {% endif %}
+                {% if form.role.errors %}
+                <div class="invalid-feedback">{{ form.role.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.publisher.id_for_label }}" class="form-label">
+                  {{ form.publisher.label }}
+                </label>
+                <select class="form-select {% if form.publisher.errors %}is-invalid{% endif %}"
+                        id="{{ form.publisher.id_for_label }}"
+                        name="{{ form.publisher.name }}">
+                  <option value="">{% trans "--- Bez dodele izdavaca ---" %}</option>
+                  {% for publisher in form.publisher.field.queryset %}
+                  <option value="{{ publisher.pk }}" {% if form.publisher.value|stringformat:"s" == publisher.pk|stringformat:"s" %}selected{% endif %}>{{ publisher.name }}</option>
+                  {% endfor %}
+                </select>
+                {% if form.publisher.errors %}
+                <div class="invalid-feedback">{{ form.publisher.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Status Info -->
+            <div class="mb-4">
+              <label class="form-label">{% trans "Status" %}</label>
+              <div>
+                {% if object.is_active %}
+                <span class="badge bg-success fs-6">{% trans "Aktivan" %}</span>
+                {% else %}
+                <span class="badge bg-danger fs-6">{% trans "Neaktivan" %}</span>
+                {% endif %}
+                <small class="text-muted ms-2">
+                  ({% trans "Koristite dugme na listi korisnika za promenu statusa" %})
+                </small>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'users:manage-list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>{% trans "Nazad" %}
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg me-1"></i>{% trans "Sacuvaj izmene" %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

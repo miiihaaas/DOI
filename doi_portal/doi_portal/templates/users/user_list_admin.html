@@ -1,0 +1,145 @@
+{% extends "admin_base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Upravljanje korisnicima" %} - DOI Portal{% endblock title %}
+
+{% block javascript %}
+{{ block.super }}
+<!-- HTMX -->
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
+{% endblock javascript %}
+
+{% block inline_javascript %}
+<!-- HTMX CSRF token configuration for Django -->
+<script>
+  document.body.addEventListener('htmx:configRequest', function(evt) {
+    evt.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+  });
+</script>
+{% endblock inline_javascript %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Kontrolna tabla" %}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{% trans "Upravljanje korisnicima" %}</li>
+    </ol>
+  </nav>
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-people me-2"></i>{% trans "Upravljanje korisnicima" %}</h1>
+    <a href="{% url 'users:create' %}" class="btn btn-primary">
+      <i class="bi bi-plus-lg me-1"></i>{% trans "Dodaj korisnika" %}
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-3">
+          <label for="roleFilter" class="form-label">{% trans "Uloga" %}</label>
+          <select class="form-select" name="role" id="roleFilter">
+            <option value="">{% trans "Sve uloge" %}</option>
+            <option value="Superadmin" {% if current_role == "Superadmin" %}selected{% endif %}>Superadmin</option>
+            <option value="Administrator" {% if current_role == "Administrator" %}selected{% endif %}>Administrator</option>
+            <option value="Urednik" {% if current_role == "Urednik" %}selected{% endif %}>Urednik</option>
+            <option value="Bibliotekar" {% if current_role == "Bibliotekar" %}selected{% endif %}>Bibliotekar</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="statusFilter" class="form-label">{% trans "Status" %}</label>
+          <select class="form-select" name="status" id="statusFilter">
+            <option value="">{% trans "Svi statusi" %}</option>
+            <option value="active" {% if current_status == "active" %}selected{% endif %}>{% trans "Aktivni" %}</option>
+            <option value="inactive" {% if current_status == "inactive" %}selected{% endif %}>{% trans "Neaktivni" %}</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="searchInput" class="form-label">{% trans "Pretraga" %}</label>
+          <input type="search"
+                 class="form-control"
+                 name="search"
+                 id="searchInput"
+                 placeholder="{% trans 'Pretraga po email ili imenu...' %}"
+                 value="{{ current_search }}">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-outline-primary w-100">
+            <i class="bi bi-search me-1"></i>{% trans "Pretrazi" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- User Table -->
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>{% trans "Email" %}</th>
+              <th>{% trans "Ime" %}</th>
+              <th>{% trans "Uloga" %}</th>
+              <th>{% trans "Izdavac" %}</th>
+              <th>{% trans "Status" %}</th>
+              <th>{% trans "Poslednja aktivnost" %}</th>
+              <th class="text-end">{% trans "Akcije" %}</th>
+            </tr>
+          </thead>
+          <tbody id="user-table-body">
+            {% for user in users %}
+              {% include "users/partials/_user_row.html" with user=user current_user_pk=request.user.pk %}
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-muted py-4">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                {% trans "Nema korisnika koji odgovaraju kriterijumima pretrage." %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <nav aria-label="{% trans 'Stranice' %}" class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&role={{ current_role }}&status={{ current_status }}&search={{ current_search }}">
+          {% trans "Prethodna" %}
+        </a>
+      </li>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ num }}&role={{ current_role }}&status={{ current_status }}&search={{ current_search }}">{{ num }}</a>
+        </li>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}&role={{ current_role }}&status={{ current_status }}&search={{ current_search }}">
+          {% trans "Sledeca" %}
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock content %}

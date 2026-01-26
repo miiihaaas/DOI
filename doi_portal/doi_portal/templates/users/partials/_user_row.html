@@ -1,0 +1,54 @@
+{% load i18n %}
+<tr id="user-{{ user.pk }}" class="{% if not user.is_active %}table-secondary{% endif %}">
+  <td>{{ user.email }}</td>
+  <td>{{ user.name|default:"-" }}</td>
+  <td>
+    {% for group in user.groups.all %}
+      <span class="badge bg-{% if group.name == 'Superadmin' %}danger{% elif group.name == 'Administrator' %}primary{% elif group.name == 'Urednik' %}success{% else %}secondary{% endif %}">
+        {{ group.name }}
+      </span>
+    {% empty %}
+      <span class="badge bg-light text-dark">{% trans "Bez uloge" %}</span>
+    {% endfor %}
+  </td>
+  <td>{{ user.publisher.name|default:"-" }}</td>
+  <td>
+    {% if user.is_active %}
+      <span class="badge bg-success">{% trans "Aktivan" %}</span>
+    {% else %}
+      <span class="badge bg-danger">{% trans "Neaktivan" %}</span>
+    {% endif %}
+  </td>
+  <td>{{ user.last_activity|date:"d.m.Y H:i"|default:"-" }}</td>
+  <td class="text-end">
+    <div class="btn-group btn-group-sm" role="group">
+      <a href="{% url 'users:edit' user.pk %}"
+         class="btn btn-outline-primary"
+         title="{% trans 'Izmeni' %}">
+        <i class="bi bi-pencil"></i>
+        <span class="visually-hidden">{% trans "Izmeni" %}</span>
+      </a>
+      {% if user.pk == current_user_pk %}
+        {# Current user cannot deactivate themselves #}
+        <button type="button"
+                class="btn btn-outline-secondary"
+                disabled
+                title="{% trans 'Ne možete deaktivirati sopstveni nalog' %}">
+          <i class="bi bi-person-lock"></i>
+          <span class="visually-hidden">{% trans "Zaključano" %}</span>
+        </button>
+      {% else %}
+        <button type="button"
+                class="btn btn-outline-{% if user.is_active %}warning{% else %}success{% endif %}"
+                hx-post="{% url 'users:toggle-active' user.pk %}"
+                hx-target="#user-{{ user.pk }}"
+                hx-swap="outerHTML"
+                hx-confirm="{% if user.is_active %}{% trans 'Da li ste sigurni da želite da deaktivirate ovog korisnika?' %}{% else %}{% trans 'Da li ste sigurni da želite da aktivirate ovog korisnika?' %}{% endif %}"
+                title="{% if user.is_active %}{% trans 'Deaktiviraj' %}{% else %}{% trans 'Aktiviraj' %}{% endif %}">
+          <i class="bi bi-{% if user.is_active %}person-x{% else %}person-check{% endif %}"></i>
+          <span class="visually-hidden">{% if user.is_active %}{% trans "Deaktiviraj" %}{% else %}{% trans "Aktiviraj" %}{% endif %}</span>
+        </button>
+      {% endif %}
+    </div>
+  </td>
+</tr>
