@@ -1,0 +1,86 @@
+{% extends "portal/base.html" %}
+{% load static i18n %}
+
+{% block title %}{{ publisher.name }} - DOI Portal{% endblock title %}
+
+{% block meta_description %}{{ publisher.name }} - Pregledajte publikacije i kontakt informacije izdavača na DOI Portalu.{% endblock meta_description %}
+
+{% block portal_content %}
+<div class="row">
+    <!-- Publisher Info -->
+    <div class="col-lg-4 mb-4">
+        <div class="card publisher-detail-card">
+            {% if publisher.logo %}
+            <img src="{{ publisher.logo.url }}"
+                 class="card-img-top"
+                 alt="{{ publisher.name }} logo">
+            {% endif %}
+            <div class="card-body">
+                <h1 class="h4 card-title">{{ publisher.name }}</h1>
+
+                {% if publisher.description %}
+                <p class="card-text">{{ publisher.description }}</p>
+                {% endif %}
+
+                <hr>
+
+                <ul class="list-unstyled small publisher-info-list">
+                    {% if publisher.contact_email %}
+                    <li>
+                        <i class="bi bi-envelope me-2" aria-hidden="true"></i>
+                        <a href="mailto:{{ publisher.contact_email }}">{{ publisher.contact_email }}</a>
+                    </li>
+                    {% endif %}
+
+                    {% if publisher.contact_phone %}
+                    <li>
+                        <i class="bi bi-telephone me-2" aria-hidden="true"></i>
+                        {{ publisher.contact_phone }}
+                    </li>
+                    {% endif %}
+
+                    {% if publisher.website %}
+                    <li>
+                        <i class="bi bi-globe me-2" aria-hidden="true"></i>
+                        <a href="{{ publisher.website }}" target="_blank" rel="noopener noreferrer">
+                            {{ publisher.website }}
+                            <i class="bi bi-box-arrow-up-right small" aria-hidden="true"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li>
+                        <i class="bi bi-link-45deg me-2" aria-hidden="true"></i>
+                        <span class="doi-prefix-badge">{{ publisher.doi_prefix }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Publications -->
+    <div class="col-lg-8">
+        <h2 class="h4 mb-4">Publikacije</h2>
+
+        {% if publications %}
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+            {% for publication in publications %}
+            <!-- Publication cards will be added in Story 2.3 -->
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        {{ publication.title }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-secondary text-center py-4">
+            <i class="bi bi-journal-text display-6 text-muted d-block mb-3" aria-hidden="true"></i>
+            <p class="mb-0 text-muted">Nema publikacija za ovog izdavača.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock portal_content %}

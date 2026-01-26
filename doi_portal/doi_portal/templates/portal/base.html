@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block css %}
+{{ block.super }}
+<!-- Bootstrap Icons with SRI hash for security -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+"
+      crossorigin="anonymous">
+<!-- Portal CSS -->
+<link rel="stylesheet" href="{% static 'css/portal.css' %}">
+{% endblock css %}
+
+{% block body %}
+<!-- Skip to content link for accessibility (NFR15) -->
+<a href="#main-content" class="skip-link visually-hidden-focusable">{% trans "Preskoči na sadržaj" %}</a>
+
+<!-- Sticky Header -->
+<header class="portal-header sticky-top bg-white shadow-sm">
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">DOI Portal</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{% trans 'Uključi/Isključi navigaciju' %}">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link{% if request.resolver_match.url_name == 'publisher-list' %} active{% endif %}" href="{% url 'portal:publisher-list' %}">Izdavači</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'about' %}">O portalu</a>
+                    </li>
+                    {% if request.user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'account_login' %}">Prijava</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- Breadcrumbs -->
+{% if breadcrumbs %}
+<nav aria-label="breadcrumb" class="bg-light py-2 border-bottom">
+    <div class="container">
+        <ol class="breadcrumb mb-0">
+            {% for crumb in breadcrumbs %}
+                {% if crumb.url %}
+                <li class="breadcrumb-item"><a href="{{ crumb.url }}">{{ crumb.label }}</a></li>
+                {% else %}
+                <li class="breadcrumb-item active" aria-current="page">{{ crumb.label }}</li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </div>
+</nav>
+{% endif %}
+
+<!-- Main Content -->
+<main id="main-content" class="portal-content py-4">
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'Zatvori' %}"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% block portal_content %}{% endblock portal_content %}
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="portal-footer bg-dark text-light py-4 mt-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5>DOI Portal</h5>
+                <p class="text-muted mb-0">Portal za registraciju DOI identifikatora naučnih publikacija.</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <p class="mb-0">&copy; 2026 DOI Portal</p>
+            </div>
+        </div>
+    </div>
+</footer>
+{% endblock body %}

@@ -87,6 +87,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "doi_portal.users",
     "doi_portal.publishers",
+    "doi_portal.portal",  # Story 2.2: Public portal
     "doi_portal.core",
     # Your stuff: custom apps go here
 ]

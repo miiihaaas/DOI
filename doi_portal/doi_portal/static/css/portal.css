@@ -1,0 +1,230 @@
+/* ===========================
+   DOI Portal - Public Theme
+   Style: Clean Academic
+   Story 2.2: Public Publisher Page
+   =========================== */
+
+:root {
+    --portal-primary: #1a365d;
+    --portal-secondary: #3182ce;
+    --portal-text: #1a202c;
+    --portal-text-muted: #4a5568;
+    --portal-bg: #ffffff;
+    --portal-bg-secondary: #f7fafc;
+    --portal-border: #e2e8f0;
+}
+
+/* ===========================
+   Layout - Flex container for sticky footer
+   =========================== */
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.portal-content {
+    flex: 1 0 auto;
+}
+
+.portal-footer {
+    flex-shrink: 0;
+}
+
+/* ===========================
+   Header
+   =========================== */
+
+.portal-header {
+    border-bottom: 1px solid var(--portal-border);
+}
+
+.portal-header .navbar-brand {
+    font-weight: 700;
+    color: var(--portal-primary);
+}
+
+.portal-header .nav-link {
+    color: var(--portal-text);
+    font-weight: 500;
+}
+
+.portal-header .nav-link:hover,
+.portal-header .nav-link.active {
+    color: var(--portal-secondary);
+}
+
+/* ===========================
+   Publisher Cards
+   =========================== */
+
+.publisher-card {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    border: 1px solid var(--portal-border);
+}
+
+.publisher-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.publisher-card .card-title a {
+    color: var(--portal-primary);
+    text-decoration: none;
+}
+
+.publisher-card .card-title a:hover {
+    color: var(--portal-secondary);
+}
+
+.publisher-card .card-img-placeholder {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--portal-bg-secondary);
+}
+
+.publisher-card .card-img-top {
+    height: 120px;
+    object-fit: contain;
+    padding: 1rem;
+    background-color: var(--portal-bg-secondary);
+}
+
+/* ===========================
+   Publisher Detail
+   =========================== */
+
+.publisher-detail-card .card-img-top {
+    max-height: 200px;
+    object-fit: contain;
+    padding: 1.5rem;
+    background-color: var(--portal-bg-secondary);
+}
+
+.publisher-info-list li {
+    margin-bottom: 0.75rem;
+}
+
+.publisher-info-list a {
+    color: var(--portal-secondary);
+}
+
+.publisher-info-list a:hover {
+    color: var(--portal-primary);
+}
+
+/* ===========================
+   Empty States
+   =========================== */
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--portal-text-muted);
+    opacity: 0.5;
+}
+
+.empty-state p {
+    color: var(--portal-text-muted);
+    margin-top: 1rem;
+}
+
+/* ===========================
+   Footer
+   =========================== */
+
+.portal-footer {
+    background-color: var(--portal-primary) !important;
+}
+
+.portal-footer h5 {
+    font-weight: 600;
+}
+
+/* ===========================
+   Breadcrumbs
+   =========================== */
+
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.breadcrumb-item a {
+    color: var(--portal-secondary);
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--portal-primary);
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+    color: var(--portal-text-muted);
+}
+
+/* ===========================
+   DOI Prefix Badge
+   =========================== */
+
+.doi-prefix-badge {
+    font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.875rem;
+    color: var(--portal-text-muted);
+}
+
+/* ===========================
+   Responsive Adjustments
+   =========================== */
+
+@media (max-width: 767.98px) {
+    .portal-content {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .publisher-card .card-img-top,
+    .publisher-card .card-img-placeholder {
+        height: 100px;
+    }
+
+    .portal-footer .text-md-end {
+        text-align: left !important;
+        margin-top: 1rem;
+    }
+}
+
+/* ===========================
+   Accessibility
+   =========================== */
+
+.portal-header .nav-link:focus,
+.publisher-card:focus-within,
+.breadcrumb-item a:focus {
+    outline: 2px solid var(--portal-secondary);
+    outline-offset: 2px;
+}
+
+/* Skip to content link for screen readers */
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    background: var(--portal-primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    z-index: 9999;
+}
+
+.skip-link:focus {
+    top: 0;
+}

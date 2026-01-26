@@ -1,0 +1,50 @@
+{% extends "portal/base.html" %}
+{% load static i18n %}
+
+{% block title %}Izdavači - DOI Portal{% endblock title %}
+
+{% block meta_description %}Pregledajte sve izdavače registrovane na DOI Portalu. Pronađite naučne časopise i publikacije srpskih akademskih institucija.{% endblock meta_description %}
+
+{% block portal_content %}
+<h1 class="h2 mb-4">Izdavači</h1>
+
+{% if publishers %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for publisher in publishers %}
+    <div class="col">
+        <article class="card h-100 publisher-card">
+            {% if publisher.logo %}
+            <img src="{{ publisher.logo.url }}"
+                 class="card-img-top"
+                 alt="{{ publisher.name }} logo">
+            {% else %}
+            <div class="card-img-placeholder">
+                <i class="bi bi-building text-muted" style="font-size: 3rem;" aria-hidden="true"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h2 class="h5 card-title">
+                    <a href="{% url 'portal:publisher-detail' publisher.slug %}">
+                        {{ publisher.name }}
+                    </a>
+                </h2>
+                {% if publisher.description %}
+                <p class="card-text text-muted small">{{ publisher.description|truncatewords:30 }}</p>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <small class="doi-prefix-badge">
+                    <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ publisher.doi_prefix }}
+                </small>
+            </div>
+        </article>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="bi bi-building" aria-hidden="true"></i>
+    <p class="lead">Nema registrovanih izdavača.</p>
+</div>
+{% endif %}
+{% endblock portal_content %}
