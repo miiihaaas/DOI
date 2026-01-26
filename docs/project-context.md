@@ -21,6 +21,16 @@
 
 ---
 
+## Lokalizacija (OBAVEZNO)
+
+- **UI jezik:** Srpski (sr-Latn)
+- **Django settings:** `LANGUAGE_CODE = 'sr-latn'`
+- **Svi UI tekstovi:** Na srpskom (dugmad, forme, poruke, greške)
+- **Komentari u kodu:** Engleski (standard)
+- **Commit poruke:** Engleski
+
+---
+
 ## Naming Konvencije (OBAVEZNO)
 
 ```python

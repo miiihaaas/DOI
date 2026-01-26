@@ -170,7 +170,7 @@ This document provides the complete epic and story breakdown for DOI, decomposin
 
 | FR | Epic | Opis |
 |----|------|------|
-| FR1 | Epic 1 | Registracija korisnika |
+| FR1 | ~~UKLONJEN~~ | ~~Registracija korisnika~~ - interni korisnici |
 | FR2 | Epic 1 | Prijava na sistem |
 | FR3 | Epic 1 | Reset lozinke |
 | FR4 | Epic 1 | Kreiranje novih korisnika |
@@ -343,34 +343,10 @@ So that **I can access the admin panel according to my role**.
 
 ---
 
-### Story 1.4: User Registration
+### Story 1.4: User Registration - ~~UKLONJENA~~
 
-As a **new user**,
-I want **to register for an account with my email**,
-So that **I can request access to the system**.
-
-**Acceptance Criteria:**
-
-**Given** an unregistered user
-**When** navigating to the registration page
-**Then** a Bootstrap 5 styled registration form is displayed
-**And** fields include: email, password, password confirmation, first name, last name
-
-**Given** valid registration data is submitted
-**When** the form is processed
-**Then** a new user account is created with is_active=False (pending approval)
-**And** password is hashed using argon2
-**And** email verification is sent via django-allauth
-**And** user sees confirmation message
-
-**Given** password does not meet policy (min 8 chars, letters+numbers)
-**When** the form is submitted
-**Then** validation error is displayed
-**And** account is not created
-
-**Given** email already exists
-**When** the form is submitted
-**Then** appropriate error message is displayed
+> **NAPOMENA:** Ova priča je uklonjena. Portal je interni alat - javna registracija nije potrebna.
+> Superadmin kreira korisničke naloge ručno (videti Story 1.6: User Management by Superadmin).
 
 ---
 

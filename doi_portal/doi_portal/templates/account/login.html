@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load i18n crispy_forms_tags %}
+{% load crispy_forms_tags %}
 
-{% block title %}{% translate "Sign In" %} - DOI Portal{% endblock title %}
+{% block title %}Prijava - DOI Portal{% endblock title %}
 
 {% block bodyclass %}bg-light{% endblock bodyclass %}
 
@@ -12,13 +12,13 @@
       <div class="card shadow">
         <div class="card-body p-4">
           <div class="text-center mb-4">
-            <h2 class="card-title h4">{% translate "Sign In" %}</h2>
-            <p class="text-muted">{% translate "Access your DOI Portal account" %}</p>
+            <h2 class="card-title h4">Prijava</h2>
+            <p class="text-muted">Pristupite vašem DOI Portal nalogu</p>
           </div>
 
           {% if form.errors %}
             <div class="alert alert-danger" role="alert">
-              {% translate "The email address and/or password you specified are not correct." %}
+              Email adresa i/ili lozinka nisu tačni.
             </div>
           {% endif %}
 
@@ -26,12 +26,12 @@
             {% csrf_token %}
 
             <div class="mb-3">
-              <label for="id_login" class="form-label">{% translate "Email" %}</label>
+              <label for="id_login" class="form-label">Email</label>
               <input type="email"
                      name="login"
                      id="id_login"
                      class="form-control {% if form.login.errors %}is-invalid{% endif %}"
-                     placeholder="{% translate 'Email address' %}"
+                     placeholder="Email adresa"
                      autocomplete="email"
                      required />
               {% if form.login.errors %}
@@ -40,12 +40,12 @@
             </div>
 
             <div class="mb-3">
-              <label for="id_password" class="form-label">{% translate "Password" %}</label>
+              <label for="id_password" class="form-label">Lozinka</label>
               <input type="password"
                      name="password"
                      id="id_password"
                      class="form-control {% if form.password.errors %}is-invalid{% endif %}"
-                     placeholder="{% translate 'Password' %}"
+                     placeholder="Lozinka"
                      autocomplete="current-password"
                      required />
               {% if form.password.errors %}
@@ -60,7 +60,7 @@
                        id="id_remember"
                        class="form-check-input" />
                 <label for="id_remember" class="form-check-label">
-                  {% translate "Remember Me" %}
+                  Zapamti me
                 </label>
               </div>
             {% endif %}
@@ -70,22 +70,22 @@
             {% endif %}
 
             <button type="submit" class="btn btn-primary w-100 mt-3">
-              {% translate "Sign In" %}
+              Prijava
             </button>
           </form>
 
           <div class="text-center mt-3">
             <a href="{% url 'account_reset_password' %}" class="text-decoration-none">
-              {% translate "Forgot your password?" %}
+              Zaboravili ste lozinku?
             </a>
           </div>
 
           {% if ACCOUNT_ALLOW_REGISTRATION %}
             <hr class="my-4" />
             <div class="text-center">
-              <span class="text-muted">{% translate "Don't have an account?" %}</span>
+              <span class="text-muted">Nemate nalog?</span>
               <a href="{% url 'account_signup' %}" class="text-decoration-none ms-1">
-                {% translate "Sign Up" %}
+                Registracija
               </a>
             </div>
           {% endif %}
@@ -94,7 +94,7 @@
 
       <div class="text-center mt-3">
         <a href="{% url 'home' %}" class="text-muted text-decoration-none">
-          &larr; {% translate "Back to Home" %}
+          &larr; Nazad na početnu
         </a>
       </div>
     </div>

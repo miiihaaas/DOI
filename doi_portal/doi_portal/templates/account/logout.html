@@ -1,7 +1,6 @@
 {% extends "base.html" %}
-{% load i18n %}
 
-{% block title %}{% translate "Sign Out" %} - DOI Portal{% endblock title %}
+{% block title %}Odjava - DOI Portal{% endblock title %}
 
 {% block bodyclass %}bg-light{% endblock bodyclass %}
 
@@ -12,8 +11,8 @@
       <div class="card shadow">
         <div class="card-body p-4">
           <div class="text-center mb-4">
-            <h2 class="card-title h4">{% translate "Sign Out" %}</h2>
-            <p class="text-muted">{% translate "Are you sure you want to sign out?" %}</p>
+            <h2 class="card-title h4">Odjava</h2>
+            <p class="text-muted">Da li ste sigurni da želite da se odjavite?</p>
           </div>
 
           <form method="post" action="{% url 'account_logout' %}">
@@ -25,10 +24,10 @@
 
             <div class="d-grid gap-2">
               <button type="submit" class="btn btn-danger">
-                {% translate "Sign Out" %}
+                Odjava
               </button>
               <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
-                {% translate "Cancel" %}
+                Otkaži
               </a>
             </div>
           </form>
@@ -37,7 +36,7 @@
 
       <div class="text-center mt-3">
         <a href="{% url 'home' %}" class="text-muted text-decoration-none">
-          &larr; {% translate "Back to Home" %}
+          &larr; Nazad na početnu
         </a>
       </div>
     </div>

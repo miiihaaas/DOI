@@ -1,0 +1,1 @@
+Email za potvrdu je poslat na {{ email }}.

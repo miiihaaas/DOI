@@ -1,0 +1,1 @@
+Uspešno ste se prijavili kao {{ user }}.

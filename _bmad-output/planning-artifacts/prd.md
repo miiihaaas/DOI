@@ -347,7 +347,7 @@ techStack:
 
 ### 1. User Management & Authentication
 
-- **FR1:** Korisnik se moze registrovati sa email-om i lozinkom
+- **FR1:** ~~UKLONJEN~~ - Javna registracija nije potrebna (interni korisnici, Superadmin kreira naloge - videti FR4)
 - **FR2:** Korisnik se moze prijaviti na sistem
 - **FR3:** Korisnik moze resetovati zaboravljenu lozinku
 - **FR4:** Superadmin moze kreirati nove korisnike
