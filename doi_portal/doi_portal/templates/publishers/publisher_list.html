@@ -1,0 +1,63 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Izdavači - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Izdavači</h1>
+    <a href="{% url 'publishers:create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Novi izdavač
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if publishers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Naziv</th>
+                        <th>DOI prefiks</th>
+                        <th>Publikacija</th>
+                        <th>Kreirano</th>
+                        <th class="text-end">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for publisher in publishers %}
+                    <tr>
+                        <td>
+                            {% if publisher.logo %}
+                            <img src="{{ publisher.logo.url }}" alt="" class="me-2" style="height: 24px; width: auto;">
+                            {% endif %}
+                            <a href="{% url 'publishers:detail' publisher.pk %}">{{ publisher.name }}</a>
+                        </td>
+                        <td><code>{{ publisher.doi_prefix }}</code></td>
+                        <td>{{ publisher.publication_count }}</td>
+                        <td>{{ publisher.created_at|date:"d.m.Y." }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'publishers:update' publisher.pk %}" class="btn btn-sm btn-outline-primary" title="Izmeni">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'publishers:delete' publisher.pk %}" class="btn btn-sm btn-outline-danger" title="Obriši">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-building display-4 mb-3 d-block"></i>
+            <p class="mb-3">Nema izdavača.</p>
+            <a href="{% url 'publishers:create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Dodaj prvog izdavača
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

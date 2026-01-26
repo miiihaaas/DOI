@@ -52,8 +52,8 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Content Structure Management
-  epic-2: backlog
-  2-1-publisher-model-admin-crud: backlog
+  epic-2: in-progress
+  2-1-publisher-model-admin-crud: done
   2-2-public-publisher-page: backlog
   2-3-publication-model-with-type-specific-fields: backlog
   2-4-publication-admin-list-edit: backlog

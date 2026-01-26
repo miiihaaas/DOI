@@ -17,7 +17,33 @@
 | Alpine.js | 3.15.3 | CDN ili npm |
 | Bootstrap | 5.3+ | CSS framework |
 | django-guardian | 3.2.0 | Row-level permissions |
-| django-auditlog | 3.4.1 | Audit logging |
+| django-auditlog | 3.0.0 | Audit logging |
+
+---
+
+## Dependency Management (KRITIČNO)
+
+**Projekat koristi `uv` i `pyproject.toml`, NE requirements.txt!**
+
+```bash
+# Dodavanje novog paketa
+uv add django-package-name
+
+# Ažuriranje uv.lock fajla
+uv lock
+
+# Instalacija dependencies (lokalno)
+uv sync
+
+# Docker rebuild nakon promene dependencies
+docker-compose -f docker-compose.local.yml build django
+```
+
+**Fajlovi:**
+- `pyproject.toml` - definicija dependencies (NE requirements/*.txt)
+- `uv.lock` - lock fajl za reproducibilne builds
+
+**NIKAD ne edituj requirements/*.txt** - oni postoje samo kao legacy reference. Sve promene idu u `pyproject.toml`.
 
 ---
 

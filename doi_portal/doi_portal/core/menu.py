@@ -32,7 +32,7 @@ MENU_ITEMS: dict[str, dict] = {
     "publishers": {
         "label": "Izdavači",
         "icon": "bi-building",
-        "url_name": None,  # Epic 2 - Not implemented yet
+        "url_name": "publishers:list",  # Story 2.1 - Implemented
         "roles": ["Superadmin", "Administrator"],
     },
     "publications": {

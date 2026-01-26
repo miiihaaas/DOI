@@ -25,7 +25,8 @@ urlpatterns = [
     # Your stuff: custom urls includes go here
     # Story 1.3: Dashboard route
     path("dashboard/", DashboardView.as_view(), name="dashboard"),
-    # ...
+    # Story 2.1: Publisher admin routes (under dashboard, not Django admin)
+    path("dashboard/publishers/", include("doi_portal.publishers.urls", namespace="publishers")),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]

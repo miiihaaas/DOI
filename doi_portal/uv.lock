@@ -415,6 +415,19 @@ mfa = [
 ]
 
 [[package]]
+name = "django-auditlog"
+version = "3.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "python-dateutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/44/df/6cbc296b2fdd808bd710671409a1a838c9741670933f170930cb7b9c5804/django-auditlog-3.0.0.tar.gz", hash = "sha256:9de49f80a4911135d136017123cd73461f869b4947eec14d5e76db4b88182f3f", size = 65475, upload-time = "2024-04-12T09:56:52.782Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/49/d62c4728cd80f42e5061b3ae9e12fd28b460bd1cd5754c4d34232d18aab2/django_auditlog-3.0.0-py3-none-any.whl", hash = "sha256:92db1cf4a51ceca5c26b3ff46997d9e3305a02da1bd435e2efb5b8b6d300ce1f", size = 35493, upload-time = "2024-04-12T09:56:40.177Z" },
+]
+
+[[package]]
 name = "django-celery-beat"
 version = "2.8.1"
 source = { registry = "https://pypi.org/simple" }
@@ -628,6 +641,7 @@ dependencies = [
     { name = "crispy-bootstrap5" },
     { name = "django" },
     { name = "django-allauth", extra = ["mfa"] },
+    { name = "django-auditlog" },
     { name = "django-celery-beat" },
     { name = "django-coverage-plugin" },
     { name = "django-crispy-forms" },
@@ -669,6 +683,7 @@ requires-dist = [
     { name = "crispy-bootstrap5", specifier = "==2025.6" },
     { name = "django", specifier = "==5.2.10" },
     { name = "django-allauth", extras = ["mfa"], specifier = "==65.14.0" },
+    { name = "django-auditlog", specifier = "==3.0.0" },
     { name = "django-celery-beat", specifier = "==2.8.1" },
     { name = "django-coverage-plugin", specifier = "==3.2.0" },
     { name = "django-crispy-forms", specifier = "==2.5" },

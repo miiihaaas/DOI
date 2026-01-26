@@ -81,6 +81,7 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     "guardian",
     "rest_framework",
+    "auditlog",  # Story 2.1: Audit logging for Publisher and other models
 ]
 
 LOCAL_APPS = [

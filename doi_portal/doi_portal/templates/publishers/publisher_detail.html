@@ -1,0 +1,116 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ publisher.name }} - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">{{ publisher.name }}</h1>
+    <div>
+        <a href="{% url 'publishers:update' publisher.pk %}" class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i>Izmeni
+        </a>
+        <a href="{% url 'publishers:delete' publisher.pk %}" class="btn btn-outline-danger">
+            <i class="bi bi-trash me-1"></i>Obriši
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Osnovne informacije</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Naziv</dt>
+                    <dd class="col-sm-8">{{ publisher.name }}</dd>
+
+                    <dt class="col-sm-4">DOI prefiks</dt>
+                    <dd class="col-sm-8"><code>{{ publisher.doi_prefix }}</code></dd>
+
+                    <dt class="col-sm-4">Slug</dt>
+                    <dd class="col-sm-8"><code>{{ publisher.slug }}</code></dd>
+
+                    {% if publisher.description %}
+                    <dt class="col-sm-4">Opis</dt>
+                    <dd class="col-sm-8">{{ publisher.description }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Kontakt informacije</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    {% if publisher.contact_email %}
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">
+                        <a href="mailto:{{ publisher.contact_email }}">{{ publisher.contact_email }}</a>
+                    </dd>
+                    {% endif %}
+
+                    {% if publisher.contact_phone %}
+                    <dt class="col-sm-4">Telefon</dt>
+                    <dd class="col-sm-8">{{ publisher.contact_phone }}</dd>
+                    {% endif %}
+
+                    {% if publisher.website %}
+                    <dt class="col-sm-4">Web sajt</dt>
+                    <dd class="col-sm-8">
+                        <a href="{{ publisher.website }}" target="_blank" rel="noopener noreferrer">
+                            {{ publisher.website }}
+                            <i class="bi bi-box-arrow-up-right ms-1"></i>
+                        </a>
+                    </dd>
+                    {% endif %}
+
+                    {% if not publisher.contact_email and not publisher.contact_phone and not publisher.website %}
+                    <dd class="col-12 text-muted">Nema unetih kontakt informacija.</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Sistemske informacije</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Kreirano</dt>
+                    <dd class="col-sm-8">{{ publisher.created_at|date:"d.m.Y. H:i" }}</dd>
+
+                    <dt class="col-sm-4">Ažurirano</dt>
+                    <dd class="col-sm-8">{{ publisher.updated_at|date:"d.m.Y. H:i" }}</dd>
+
+                    <dt class="col-sm-4">Broj publikacija</dt>
+                    <dd class="col-sm-8">{{ publisher.publication_count }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        {% if publisher.logo %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Logo</h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ publisher.logo.url }}" alt="{{ publisher.name }}" class="img-fluid" style="max-height: 200px;">
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'publishers:list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Nazad na listu
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ form_title }} - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{{ form_title }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label">Naziv <span class="text-danger">*</span></label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_doi_prefix" class="form-label">DOI prefiks <span class="text-danger">*</span></label>
+                        {{ form.doi_prefix }}
+                        <div class="form-text">Format: 10.XXXX (npr. 10.1234)</div>
+                        {% if form.doi_prefix.errors %}
+                        <div class="invalid-feedback d-block">{{ form.doi_prefix.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Opis</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_logo" class="form-label">Logo</label>
+                        {% if form.instance.logo %}
+                        <div class="mb-2">
+                            <img src="{{ form.instance.logo.url }}" alt="Trenutni logo" class="img-thumbnail" style="max-height: 100px;">
+                        </div>
+                        {% endif %}
+                        {{ form.logo }}
+                        <div class="form-text">Dozvoljeni formati: JPG, PNG, SVG. Maksimalna veličina: 2MB.</div>
+                        {% if form.logo.errors %}
+                        <div class="invalid-feedback d-block">{{ form.logo.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+                    <h6 class="mb-3">Kontakt informacije</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_contact_email" class="form-label">Email</label>
+                            {{ form.contact_email }}
+                            {% if form.contact_email.errors %}
+                            <div class="invalid-feedback d-block">{{ form.contact_email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_contact_phone" class="form-label">Telefon</label>
+                            {{ form.contact_phone }}
+                            {% if form.contact_phone.errors %}
+                            <div class="invalid-feedback d-block">{{ form.contact_phone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_website" class="form-label">Web sajt</label>
+                        {{ form.website }}
+                        {% if form.website.errors %}
+                        <div class="invalid-feedback d-block">{{ form.website.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'publishers:list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Nazad
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>{{ submit_text }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
