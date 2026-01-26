@@ -129,9 +129,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},  # Story 1.5: NFR8 requirement
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    # NumericPasswordValidator disabled per Story 1.5 Task 8.4 (allow numeric+letters combo)
 ]
 
 # MIDDLEWARE
@@ -353,3 +356,10 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Use cookie age instead
 # ------------------------------------------------------------------------------
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_LOGOUT_ON_GET = False  # Require POST for logout (security)
+
+# PASSWORD RESET CONFIGURATION (Story 1.5)
+# ------------------------------------------------------------------------------
+# https://docs.djangoproject.com/en/dev/ref/settings/#password-reset-timeout
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour in seconds (NFR requirement)
+# https://docs.allauth.org/en/latest/account/configuration.html
+ACCOUNT_PASSWORD_MIN_LENGTH = 8  # Minimum password length (NFR8 requirement)

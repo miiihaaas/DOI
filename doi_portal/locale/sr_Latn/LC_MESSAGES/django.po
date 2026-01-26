@@ -1,0 +1,152 @@
+# Serbian (Latin) translations for DOI Portal
+# Copyright (C) 2026 DOI Portal
+# This file is distributed under the same license as the DOI Portal package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: DOI Portal 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-26 12:00+0000\n"
+"PO-Revision-Date: 2026-01-26 12:00+0000\n"
+"Last-Translator: DOI Portal Team\n"
+"Language-Team: Serbian (Latin)\n"
+"Language: sr_Latn\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+
+# ============================================================
+# django-allauth: Password Reset
+# ============================================================
+
+msgid "You must type the same password each time."
+msgstr "Morate uneti istu lozinku oba puta."
+
+msgid "Password must be a minimum of {0} characters."
+msgstr "Lozinka mora imati najmanje {0} karaktera."
+
+msgid "This password is too short. It must contain at least %(min_length)d characters."
+msgstr "Ova lozinka je prekratka. Mora sadrzati najmanje %(min_length)d karaktera."
+
+msgid "This password is too common."
+msgstr "Ova lozinka je previse uobicajena."
+
+msgid "This password is entirely numeric."
+msgstr "Ova lozinka se sastoji samo od brojeva."
+
+msgid "The password is too similar to the %(verbose_name)s."
+msgstr "Lozinka je previse slicna polju %(verbose_name)s."
+
+msgid "Password Reset"
+msgstr "Resetovanje lozinke"
+
+msgid "Password Reset E-mail"
+msgstr "Email za resetovanje lozinke"
+
+msgid "We have sent you an e-mail. Please contact us if you do not receive it within a few minutes."
+msgstr "Poslali smo vam email. Kontaktirajte nas ako ga ne primite u roku od nekoliko minuta."
+
+msgid "The password reset link was invalid, possibly because it has already been used. Please request a new password reset."
+msgstr "Link za resetovanje lozinke nije validan, mozda zato sto je vec iskoriscen. Molimo zatrazite novi link."
+
+msgid "Your password is now changed."
+msgstr "Vasa lozinka je promenjena."
+
+msgid "Password successfully changed."
+msgstr "Lozinka uspesno promenjena."
+
+msgid "Password successfully set."
+msgstr "Lozinka uspesno postavljena."
+
+msgid "Current Password"
+msgstr "Trenutna lozinka"
+
+msgid "New Password"
+msgstr "Nova lozinka"
+
+msgid "New Password (again)"
+msgstr "Nova lozinka (ponovo)"
+
+msgid "Please type your current password."
+msgstr "Molimo unesite vasu trenutnu lozinku."
+
+msgid "The e-mail address is not assigned to any user account"
+msgstr "Ova email adresa nije povezana ni sa jednim korisnickim nalogom"
+
+msgid "E-mail"
+msgstr "Email"
+
+msgid "Reset My Password"
+msgstr "Resetuj moju lozinku"
+
+msgid "Change Password"
+msgstr "Promeni lozinku"
+
+msgid "Set Password"
+msgstr "Postavi lozinku"
+
+# ============================================================
+# django-allauth: Sign In / Sign Out
+# ============================================================
+
+msgid "Sign In"
+msgstr "Prijava"
+
+msgid "Sign Out"
+msgstr "Odjava"
+
+msgid "Sign Up"
+msgstr "Registracija"
+
+msgid "Signed In"
+msgstr "Prijavljeni ste"
+
+msgid "Signed Out"
+msgstr "Odjavljeni ste"
+
+msgid "Remember Me"
+msgstr "Zapamti me"
+
+msgid "Forgot Password?"
+msgstr "Zaboravili ste lozinku?"
+
+msgid "Password"
+msgstr "Lozinka"
+
+msgid "Username"
+msgstr "Korisnicko ime"
+
+msgid "The username and/or password you specified are not correct."
+msgstr "Korisnicko ime i/ili lozinka nisu ispravni."
+
+msgid "This account is inactive."
+msgstr "Ovaj nalog je neaktivan."
+
+msgid "You have signed out."
+msgstr "Uspesno ste se odjavili."
+
+msgid "Successfully signed in as %(name)s."
+msgstr "Uspesno ste se prijavili kao %(name)s."
+
+# ============================================================
+# Django: Auth & Validation
+# ============================================================
+
+msgid "Enter a valid email address."
+msgstr "Unesite validnu email adresu."
+
+msgid "This field is required."
+msgstr "Ovo polje je obavezno."
+
+msgid "email address"
+msgstr "email adresa"
+
+msgid "first name"
+msgstr "ime"
+
+msgid "last name"
+msgstr "prezime"
+
+msgid "The two password fields didn't match."
+msgstr "Lozinke se ne poklapaju."

@@ -1,5 +1,10 @@
 /* These styles are generated from project.scss. */
 
+/* Alpine.js: Hide elements until Alpine initializes */
+[x-cloak] {
+  display: none !important;
+}
+
 .alert-debug {
   color: black;
   background-color: white;
