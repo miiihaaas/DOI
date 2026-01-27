@@ -1,0 +1,232 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ publication.title }} - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="{{ publication.type_icon }} me-2"></i>{{ publication.title }}
+    </h1>
+    <div>
+        <a href="{% url 'publications:update' publication.slug %}" class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i>Izmeni
+        </a>
+        <a href="{% url 'publications:delete' publication.slug %}" class="btn btn-outline-danger ms-2">
+            <i class="bi bi-trash me-1"></i>Obriši
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Info Card -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Osnovne informacije</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Naslov</dt>
+                    <dd class="col-sm-9">{{ publication.title }}</dd>
+
+                    <dt class="col-sm-3">Izdavač</dt>
+                    <dd class="col-sm-9">
+                        <a href="{% url 'publishers:detail' publication.publisher.pk %}">
+                            {{ publication.publisher.name }}
+                        </a>
+                    </dd>
+
+                    <dt class="col-sm-3">Tip publikacije</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge bg-secondary">
+                            <i class="{{ publication.type_icon }} me-1"></i>{{ publication.type_display }}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-3">Tip pristupa</dt>
+                    <dd class="col-sm-9">
+                        {% if publication.access_type == 'OPEN' %}
+                        <span class="badge bg-success">Otvoreni pristup</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">Ograničeni pristup</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">Jezik</dt>
+                    <dd class="col-sm-9">{{ publication.language|upper }}</dd>
+
+                    {% if publication.subject_area %}
+                    <dt class="col-sm-3">Naučna oblast</dt>
+                    <dd class="col-sm-9">{{ publication.subject_area }}</dd>
+                    {% endif %}
+
+                    {% if publication.description %}
+                    <dt class="col-sm-3">Opis</dt>
+                    <dd class="col-sm-9">{{ publication.description|linebreaks }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+
+        <!-- Type-Specific Fields Card -->
+        {% if publication.publication_type == 'JOURNAL' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Polja za časopis</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    {% if publication.issn_print %}
+                    <dt class="col-sm-3">ISSN (štampano)</dt>
+                    <dd class="col-sm-9"><code>{{ publication.issn_print }}</code></dd>
+                    {% endif %}
+
+                    {% if publication.issn_online %}
+                    <dt class="col-sm-3">ISSN (online)</dt>
+                    <dd class="col-sm-9"><code>{{ publication.issn_online }}</code></dd>
+                    {% endif %}
+
+                    {% if publication.abbreviation %}
+                    <dt class="col-sm-3">Skraćenica</dt>
+                    <dd class="col-sm-9">{{ publication.abbreviation }}</dd>
+                    {% endif %}
+
+                    {% if publication.frequency %}
+                    <dt class="col-sm-3">Učestalost</dt>
+                    <dd class="col-sm-9">{{ publication.frequency }}</dd>
+                    {% endif %}
+                </dl>
+                {% if not publication.issn_print and not publication.issn_online and not publication.abbreviation and not publication.frequency %}
+                <p class="text-muted mb-0">Nema unetih podataka specifičnih za časopis.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% elif publication.publication_type == 'CONFERENCE' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Polja za konferenciju</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    {% if publication.conference_name %}
+                    <dt class="col-sm-3">Naziv konferencije</dt>
+                    <dd class="col-sm-9">{{ publication.conference_name }}</dd>
+                    {% endif %}
+
+                    {% if publication.conference_acronym %}
+                    <dt class="col-sm-3">Akronim</dt>
+                    <dd class="col-sm-9">{{ publication.conference_acronym }}</dd>
+                    {% endif %}
+
+                    {% if publication.conference_location %}
+                    <dt class="col-sm-3">Lokacija</dt>
+                    <dd class="col-sm-9">{{ publication.conference_location }}</dd>
+                    {% endif %}
+
+                    {% if publication.conference_date %}
+                    <dt class="col-sm-3">Datum</dt>
+                    <dd class="col-sm-9">{{ publication.conference_date|date:"d.m.Y." }}</dd>
+                    {% endif %}
+
+                    {% if publication.series_issn %}
+                    <dt class="col-sm-3">ISSN serije</dt>
+                    <dd class="col-sm-9"><code>{{ publication.series_issn }}</code></dd>
+                    {% endif %}
+                </dl>
+                {% if not publication.conference_name and not publication.conference_acronym and not publication.conference_location and not publication.conference_date and not publication.series_issn %}
+                <p class="text-muted mb-0">Nema unetih podataka specifičnih za konferenciju.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% elif publication.publication_type == 'BOOK' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-book me-2"></i>Polja za knjigu</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    {% if publication.isbn_print %}
+                    <dt class="col-sm-3">ISBN (štampano)</dt>
+                    <dd class="col-sm-9"><code>{{ publication.isbn_print }}</code></dd>
+                    {% endif %}
+
+                    {% if publication.isbn_online %}
+                    <dt class="col-sm-3">ISBN (online)</dt>
+                    <dd class="col-sm-9"><code>{{ publication.isbn_online }}</code></dd>
+                    {% endif %}
+
+                    {% if publication.edition %}
+                    <dt class="col-sm-3">Izdanje</dt>
+                    <dd class="col-sm-9">{{ publication.edition }}</dd>
+                    {% endif %}
+
+                    {% if publication.series_title %}
+                    <dt class="col-sm-3">Serija</dt>
+                    <dd class="col-sm-9">{{ publication.series_title }}</dd>
+                    {% endif %}
+                </dl>
+                {% if not publication.isbn_print and not publication.isbn_online and not publication.edition and not publication.series_title %}
+                <p class="text-muted mb-0">Nema unetih podataka specifičnih za knjigu.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Cover Image -->
+        {% if publication.cover_image %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Naslovna slika</h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ publication.cover_image.url }}" alt="{{ publication.title }}"
+                     class="img-fluid rounded">
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Metadata Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Metapodaci</h5>
+            </div>
+            <div class="card-body">
+                <dl class="mb-0">
+                    <dt>Kreirano</dt>
+                    <dd>{{ publication.created_at|date:"d.m.Y. H:i" }}</dd>
+
+                    <dt>Ažurirano</dt>
+                    <dd>{{ publication.updated_at|date:"d.m.Y. H:i" }}</dd>
+
+                    <dt>Slug</dt>
+                    <dd><code>{{ publication.slug }}</code></dd>
+
+                    <dt>Broj izdanja</dt>
+                    <dd>{{ publication.issue_count }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Brze akcije</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{% url 'publications:update' publication.slug %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-pencil me-2"></i>Izmeni publikaciju
+                </a>
+                <a href="{% url 'publications:list' %}?publisher={{ publication.publisher.pk }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-building me-2"></i>Sve publikacije izdavača
+                </a>
+                <a href="{% url 'publications:list' %}?type={{ publication.publication_type }}" class="list-group-item list-group-item-action">
+                    <i class="{{ publication.type_icon }} me-2"></i>Sve publikacije ovog tipa
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

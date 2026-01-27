@@ -1,0 +1,54 @@
+<!-- Book-specific fields partial -->
+<div class="type-fields-section border rounded p-3 mb-3 bg-light">
+    <h6 class="text-muted mb-3">
+        <i class="bi bi-book me-2"></i>Polja za knjigu/monografiju
+    </h6>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="id_isbn_print" class="form-label">ISBN (štampano)</label>
+            <input type="text" name="isbn_print" id="id_isbn_print"
+                   class="form-control {% if form.isbn_print.errors %}is-invalid{% endif %}"
+                   placeholder="978-XX-XXXX-XXX-X"
+                   value="{% if form.isbn_print.value %}{{ form.isbn_print.value }}{% endif %}">
+            {% if form.isbn_print.errors %}
+            <div class="invalid-feedback">{{ form.isbn_print.errors.0 }}</div>
+            {% else %}
+            <div class="form-text">ISBN-13 format (počinje sa 978 ili 979)</div>
+            {% endif %}
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="id_isbn_online" class="form-label">ISBN (online)</label>
+            <input type="text" name="isbn_online" id="id_isbn_online"
+                   class="form-control {% if form.isbn_online.errors %}is-invalid{% endif %}"
+                   placeholder="978-XX-XXXX-XXX-X"
+                   value="{% if form.isbn_online.value %}{{ form.isbn_online.value }}{% endif %}">
+            {% if form.isbn_online.errors %}
+            <div class="invalid-feedback">{{ form.isbn_online.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="id_edition" class="form-label">Izdanje</label>
+            <input type="text" name="edition" id="id_edition"
+                   class="form-control {% if form.edition.errors %}is-invalid{% endif %}"
+                   placeholder="npr. 1. izdanje"
+                   value="{% if form.edition.value %}{{ form.edition.value }}{% endif %}">
+            {% if form.edition.errors %}
+            <div class="invalid-feedback">{{ form.edition.errors.0 }}</div>
+            {% else %}
+            <div class="form-text">npr. '1. izdanje', '2. dopunjeno izdanje'</div>
+            {% endif %}
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="id_series_title" class="form-label">Naslov serije/edicije</label>
+            <input type="text" name="series_title" id="id_series_title"
+                   class="form-control {% if form.series_title.errors %}is-invalid{% endif %}"
+                   placeholder="Naslov serije knjiga"
+                   value="{% if form.series_title.value %}{{ form.series_title.value }}{% endif %}">
+            {% if form.series_title.errors %}
+            <div class="invalid-feedback">{{ form.series_title.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>

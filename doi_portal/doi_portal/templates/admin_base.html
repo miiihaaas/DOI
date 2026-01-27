@@ -36,11 +36,8 @@
             integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg=="
             crossorigin="anonymous"
             referrerpolicy="no-referrer"></script>
-    <!-- HTMX -->
-    <script defer
-            src="https://unpkg.com/htmx.org@2.0.8"
-            integrity="sha384-VnRUlKmqnJbWmFRYqijjEOWCTLRzw0QxGjQPRr3yO7+jMVVkz4zwmKjP/HBieDXh"
-            crossorigin="anonymous"></script>
+    <!-- HTMX - using jsDelivr for reliable SRI -->
+    <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
     <!-- Project JS -->
     <script defer src="{% static 'js/project.js' %}"></script>
   {% endblock javascript %}

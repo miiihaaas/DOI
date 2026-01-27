@@ -27,6 +27,8 @@ urlpatterns = [
     path("dashboard/", DashboardView.as_view(), name="dashboard"),
     # Story 2.1: Publisher admin routes (under dashboard, not Django admin)
     path("dashboard/publishers/", include("doi_portal.publishers.urls", namespace="publishers")),
+    # Story 2.3: Publication admin routes (under dashboard)
+    path("dashboard/publications/", include("doi_portal.publications.urls", namespace="publications")),
     # Story 2.2: Public portal routes (no authentication required)
     path("publishers/", include("doi_portal.portal.urls", namespace="portal")),
     # Media files

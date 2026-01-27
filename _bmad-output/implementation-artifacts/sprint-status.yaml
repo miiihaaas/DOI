@@ -41,7 +41,7 @@ story_location: "{project-root}/_bmad-output/implementation-artifacts"
 
 development_status:
   # Epic 1: Project Foundation & Authentication
-  epic-1: in-progress
+  epic-1: done
   1-1-project-initialization-with-cookiecutter-django: done
   1-2-custom-user-model-rbac-setup: done
   1-3-user-login-logout: done
@@ -55,7 +55,7 @@ development_status:
   epic-2: in-progress
   2-1-publisher-model-admin-crud: done
   2-2-public-publisher-page: done
-  2-3-publication-model-with-type-specific-fields: backlog
+  2-3-publication-model-with-type-specific-fields: done
   2-4-publication-admin-list-edit: backlog
   2-5-public-publication-list-with-filters: backlog
   2-6-issue-model-admin-crud: backlog

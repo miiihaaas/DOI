@@ -1,0 +1,27 @@
+<!-- Publication row partial for HTMX updates -->
+<tr id="publication-row-{{ publication.pk }}">
+    <td>
+        <i class="{{ publication.type_icon }} me-2 text-muted"></i>
+        <a href="{% url 'publications:detail' publication.slug %}">{{ publication.title }}</a>
+    </td>
+    <td>
+        <span class="badge bg-secondary">{{ publication.type_display }}</span>
+    </td>
+    <td>{{ publication.publisher.name }}</td>
+    <td>
+        {% if publication.access_type == 'OPEN' %}
+        <span class="badge bg-success">Otvoreni</span>
+        {% else %}
+        <span class="badge bg-warning text-dark">Ograničeni</span>
+        {% endif %}
+    </td>
+    <td>{{ publication.created_at|date:"d.m.Y." }}</td>
+    <td class="text-end">
+        <a href="{% url 'publications:update' publication.slug %}" class="btn btn-sm btn-outline-primary" title="Izmeni">
+            <i class="bi bi-pencil"></i>
+        </a>
+        <a href="{% url 'publications:delete' publication.slug %}" class="btn btn-sm btn-outline-danger" title="Obriši">
+            <i class="bi bi-trash"></i>
+        </a>
+    </td>
+</tr>

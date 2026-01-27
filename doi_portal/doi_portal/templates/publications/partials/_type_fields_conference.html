@@ -1,0 +1,64 @@
+<!-- Conference-specific fields partial -->
+<div class="type-fields-section border rounded p-3 mb-3 bg-light">
+    <h6 class="text-muted mb-3">
+        <i class="bi bi-people me-2"></i>Polja za konferenciju
+    </h6>
+    <div class="row">
+        <div class="col-md-8 mb-3">
+            <label for="id_conference_name" class="form-label">Naziv konferencije</label>
+            <input type="text" name="conference_name" id="id_conference_name"
+                   class="form-control {% if form.conference_name.errors %}is-invalid{% endif %}"
+                   placeholder="Puni naziv konferencije"
+                   value="{% if form.conference_name.value %}{{ form.conference_name.value }}{% endif %}">
+            {% if form.conference_name.errors %}
+            <div class="invalid-feedback">{{ form.conference_name.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="id_conference_acronym" class="form-label">Akronim</label>
+            <input type="text" name="conference_acronym" id="id_conference_acronym"
+                   class="form-control {% if form.conference_acronym.errors %}is-invalid{% endif %}"
+                   placeholder="npr. NK2026"
+                   value="{% if form.conference_acronym.value %}{{ form.conference_acronym.value }}{% endif %}">
+            {% if form.conference_acronym.errors %}
+            <div class="invalid-feedback">{{ form.conference_acronym.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="id_conference_location" class="form-label">Lokacija</label>
+            <input type="text" name="conference_location" id="id_conference_location"
+                   class="form-control {% if form.conference_location.errors %}is-invalid{% endif %}"
+                   placeholder="npr. Beograd, Srbija"
+                   value="{% if form.conference_location.value %}{{ form.conference_location.value }}{% endif %}">
+            {% if form.conference_location.errors %}
+            <div class="invalid-feedback">{{ form.conference_location.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="id_conference_date" class="form-label">Datum konferencije</label>
+            <input type="date" name="conference_date" id="id_conference_date"
+                   class="form-control {% if form.conference_date.errors %}is-invalid{% endif %}"
+                   value="{% if form.conference_date.value %}{{ form.conference_date.value|date:'Y-m-d' }}{% endif %}">
+            {% if form.conference_date.errors %}
+            <div class="invalid-feedback">{{ form.conference_date.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="id_series_issn" class="form-label">ISSN serije</label>
+            <input type="text" name="series_issn" id="id_series_issn"
+                   class="form-control {% if form.series_issn.errors %}is-invalid{% endif %}"
+                   placeholder="####-####"
+                   pattern="\d{4}-\d{3}[\dX]"
+                   value="{% if form.series_issn.value %}{{ form.series_issn.value }}{% endif %}">
+            {% if form.series_issn.errors %}
+            <div class="invalid-feedback">{{ form.series_issn.errors.0 }}</div>
+            {% else %}
+            <div class="form-text">ISSN za seriju zbornika radova</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
