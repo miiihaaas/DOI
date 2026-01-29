@@ -154,6 +154,19 @@ class Publication(models.Model):
         blank=True,
         null=True,
     )
+    # Additional Conference fields for Crossref compliance
+    conference_date_end = models.DateField(
+        _("Datum završetka konferencije"),
+        null=True,
+        blank=True,
+        help_text=_("Datum završetka konferencije"),
+    )
+    conference_number = models.PositiveIntegerField(
+        _("Broj konferencije"),
+        null=True,
+        blank=True,
+        help_text=_("Redni broj konferencije (npr. 5 za '5. godišnja konferencija')"),
+    )
     series_issn = models.CharField(
         _("ISSN serije"),
         max_length=9,

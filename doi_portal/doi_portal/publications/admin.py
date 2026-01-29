@@ -62,6 +62,8 @@ class PublicationAdmin(admin.ModelAdmin):
                     "conference_acronym",
                     "conference_location",
                     "conference_date",
+                    "conference_date_end",
+                    "conference_number",
                     "series_issn",
                 ),
                 "classes": ("collapse",),

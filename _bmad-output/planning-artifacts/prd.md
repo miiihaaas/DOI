@@ -42,6 +42,8 @@ techStack:
 
 **Author:** Mihas
 **Date:** 2026-01-24
+**Last Updated:** 2026-01-27
+**Revision:** 1.2 - Crossref Compliance Update (XML Head, Contributor fields, Affiliations, SiteSettings)
 
 ## Executive Summary
 
@@ -110,6 +112,9 @@ techStack:
 
 - HTML editor za unos celog teksta clanka
 - Crossref API integracija za automatsko slanje XML-a
+- **Funding informacije** - Unos podataka o finansiranju istrazivanja (funder_name, award_number, Open Funder Registry DOI)
+- **Citation list** - Strukturirane reference za clanke
+- **Crossmark integracija** - Pracenje ispravki i azuriranja clanaka
 
 ### Vision (Future)
 
@@ -213,10 +218,45 @@ techStack:
 
 ### Crossref Compliance
 
+**Verzija sheme:** Crossref XSD 5.4.0
+
 - Svaki izdavac ima svoj **DOI prefix** (npr. `10.1234`) - mora se cuvati u izdavac CRUD-u
-- XML generisanje prema aktuelnoj Crossref XSD shemi
+- XML generisanje prema aktuelnoj Crossref XSD shemi (5.4.0)
 - Validacija XML-a pre download-a/slanja
 - Obavezna Crossref polja moraju biti validirana pre objave
+
+#### XML Head elementi (OBAVEZNO za svaki deposit)
+
+Svaki XML fajl koji se salje Crossref-u MORA sadrzati `<head>` sekciju sa:
+
+| Element | Opis | Izvor podataka |
+|---------|------|----------------|
+| `doi_batch_id` | Jedinstveni ID batch-a | Auto-generisan (UUID + timestamp) |
+| `timestamp` | Vreme generisanja (YYYYMMDDHHmmss) | Auto-generisan |
+| `depositor_name` | Naziv organizacije/osobe koja salje | SiteSettings.depositor_name |
+| `email_address` | Email za Crossref submission log | SiteSettings.depositor_email |
+| `registrant` | Naziv registranta | Publisher.name (iz veze Publication → Publisher) |
+
+#### Podrzani tipovi sadrzaja
+
+| Tip | XML kontejner | Crossref element |
+|-----|---------------|------------------|
+| Casopis | `<journal>` | `<journal_article>` |
+| Zbornik | `<conference>` | `<conference_paper>` |
+| Knjiga/Monografija | `<book>` | `<content_item>` |
+
+#### Kontributor zahtevi (OBAVEZNO)
+
+Za svakog autora/kontributora, Crossref zahteva:
+
+| Polje | Obaveznost | Vrednosti |
+|-------|------------|-----------|
+| `sequence` | **OBAVEZNO** | `first` (prvi autor) ili `additional` (ostali) |
+| `contributor_role` | **OBAVEZNO** | `author`, `editor`, `chair`, `translator`, `reviewer` |
+| `surname` | **OBAVEZNO** | Prezime |
+| `given_name` | Preporuceno | Ime |
+| `ORCID` | Preporuceno | Format: `https://orcid.org/0000-0000-0000-0000` |
+| `affiliations` | Preporuceno | Institucija, ROR ID, departman |
 
 ### GDPR & Privacy
 
@@ -242,10 +282,151 @@ techStack:
 
 ### Data Model Update
 
-**Izdavac (Publisher) - dodatna polja:**
-- `doi_prefix` - Crossref DOI prefix (npr. "10.1234") - **OBAVEZNO**
-- `crossref_username` - (opciono, za Growth API)
-- `crossref_password` - (opciono, za Growth API)
+#### Izdavac (Publisher) - polja
+
+**Osnovna polja (implementirano):**
+- `name` - Naziv izdavaca - **OBAVEZNO**
+- `slug` - URL-friendly identifikator - auto-generisan
+- `description` - Opis izdavaca
+- `logo` - Logo (JPG, PNG, SVG, max 2MB)
+- `contact_email`, `contact_phone`, `website` - Kontakt informacije
+- `doi_prefix` - Crossref DOI prefix (npr. "10.1234") - **OBAVEZNO**, validiran regex `^10\.\d{4,}$`
+
+**Growth polja (opciono, za API):**
+- `crossref_username` - Crossref API username
+- `crossref_password` - Crossref API password (enkriptovan)
+
+---
+
+#### Podešavanja portala (SiteSettings) - globalna polja
+
+**Singleton model** - samo jedna instanca u bazi:
+
+- `depositor_name` - Naziv organizacije koja šalje XML na Crossref - **OBAVEZNO za XML**
+- `depositor_email` - Email za Crossref notifikacije o statusu deposit-a - **OBAVEZNO za XML**
+
+**Napomena:** `registrant` se ne čuva kao posebno polje - dobija se iz `Publisher.name` pri generisanju XML-a.
+
+---
+
+#### Publikacija (Publication) - type-specific polja
+
+**Zajednicka polja (svi tipovi):**
+- `title`, `slug`, `description`, `cover_image`
+- `publisher` (FK) - Povezana sa izdavacem
+- `publication_type` - JOURNAL, CONFERENCE, BOOK, OTHER
+- `language` - ISO 639-1 kod (default: 'sr')
+- `subject_area`, `access_type` (OPEN, RESTRICTED)
+
+**Casopis (Journal) polja:**
+- `issn_print` - ISSN (Print), format ####-####
+- `issn_online` - e-ISSN (Electronic)
+- `abbreviation` - ISO skracenica casopisa
+- `frequency` - Ucestalost izlazenja
+
+**Zbornik (Conference) polja:**
+- `conference_name` - Pun naziv konferencije - **OBAVEZNO za tip**
+- `conference_acronym` - Skracenica (npr. "ICML2024")
+- `conference_location` - Lokacija (npr. "Beograd, Srbija")
+- `conference_date` - Datum pocetka konferencije
+- `conference_date_end` - Datum zavrsetka konferencije - **NOVO**
+- `conference_number` - Redni broj konferencije (npr. 5 za "5th") - **NOVO**
+- `series_issn` - ISSN serije (ako je deo serije)
+
+**Knjiga/Monografija (Book) polja:**
+- `isbn_print` - ISBN (Print), ISBN-13 format
+- `isbn_online` - ISBN (Electronic)
+- `edition` - Izdanje (npr. "2nd edition")
+- `series_title` - Naziv serije/kolekcije
+
+---
+
+#### Izdanje (Issue) - polja
+
+**Osnovna polja:**
+- `publication` (FK) - Povezano sa publikacijom
+- `volume` - Volumen
+- `issue_number` - Broj izdanja
+- `year` - Godina izdanja - **OBAVEZNO**
+- `publication_date` - Datum objavljivanja
+- `cover_image` - Naslovna slika izdanja
+- `status` - DRAFT, SCHEDULED, PUBLISHED, ARCHIVE
+
+**Za Zbornik (proceedings_metadata) - specificna polja:**
+- `proceedings_title` - Naslov zbornika (ako razlicit od publication.title)
+- `proceedings_publisher_name` - Naziv izdavaca zbornika
+- `proceedings_publisher_place` - Mesto izdavanja
+
+---
+
+#### Clanak (Article) - polja
+
+**Osnovna polja:**
+- `issue` (FK) - Povezan sa izdanjem
+- `title` - Naslov clanka - **OBAVEZNO**
+- `subtitle` - Podnaslov
+- `abstract` - Apstrakt (plain text ili JATS format)
+- `keywords` - Kljucne reci (ArrayField ili JSON)
+- `doi_suffix` - Sufiks za DOI (pun DOI = publisher.doi_prefix + "/" + doi_suffix) - **OBAVEZNO**
+- `first_page`, `last_page` - Stranice
+- `article_number` - Za online-only clanke (umesto stranica)
+- `language` - ISO 639-1 kod
+- `publication_type` - `full_text`, `abstract_only`, `bibliographic_record` - **OBAVEZNO za Crossref**
+- `pdf_file` - PDF fajl (S3 storage)
+- `status` - DRAFT, REVIEW, READY, PUBLISHED, WITHDRAWN
+- `created_by` (FK) - Ko je kreirao
+
+**License/Access polja:**
+- `license_url` - URL licence (npr. CC BY 4.0)
+- `license_applies_to` - `vor` (Version of Record), `am` (Accepted Manuscript), `tdm` (Text Mining)
+- `free_to_read` - Boolean, da li je Open Access
+- `free_to_read_start_date` - Od kada je besplatno dostupan
+
+---
+
+#### Autor/Kontributor (Author) - polja
+
+**Identifikacija:**
+- `given_name` - Ime - Preporuceno
+- `surname` - Prezime - **OBAVEZNO**
+- `suffix` - Sufiks (Jr., III, itd.)
+- `email` - Email adresa
+- `orcid` - ORCID iD, format `0000-0000-0000-000X`, validiran
+- `orcid_authenticated` - Boolean, da li je ORCID autentifikovan
+
+**Crossref obavezna polja:**
+- `sequence` - **OBAVEZNO**: `first` (prvi/corresponding) ili `additional` (ostali)
+- `contributor_role` - **OBAVEZNO**: `author`, `editor`, `chair`, `translator`, `reviewer`
+
+**Redosled i status:**
+- `order` - Redni broj za sortiranje (drag & drop)
+- `is_corresponding` - Boolean, da li je corresponding author
+- `article` (FK) - Povezan sa clankom
+
+---
+
+#### Afilijacija (Affiliation) - polja
+
+Posebna tabela za institucije autora (M2M sa Author):
+
+- `author` (FK) - Povezana sa autorom
+- `institution_name` - Naziv institucije - **OBAVEZNO**
+- `institution_ror_id` - ROR ID (https://ror.org/...) - Preporuceno
+- `department` - Departman/odeljenje
+- `order` - Redosled afilijacija
+
+---
+
+#### Finansiranje (Funding) - Growth Feature
+
+Posebna tabela za informacije o finansiranju istrazivanja:
+
+- `article` (FK) - Povezano sa clankom
+- `funder_name` - Naziv finansijera - **OBAVEZNO ako postoji**
+- `funder_doi` - DOI iz Open Funder Registry (10.13039/...)
+- `funder_ror_id` - ROR ID finansijera
+- `award_number` - Broj projekta/granta
+- `grant_doi` - Crossref Grant DOI (ako postoji)
 
 ## Web App Specific Requirements
 
@@ -362,6 +543,9 @@ techStack:
 - **FR10:** Administrator moze pregledati listu svih izdavaca
 - **FR11:** Sistem cuva DOI prefix za svakog izdavaca
 - **FR12:** Posetilac moze videti stranicu izdavaca sa listom njegovih publikacija
+- **FR12a:** Superadmin moze podesiti globalne Crossref depositor podatke (depositor_name, depositor_email) u Django Admin - **AZURIRANO**
+- **FR12b:** Sistem validira da su globalni depositor podaci popunjeni pre generisanja XML-a - **AZURIRANO**
+- **FR12c:** Sistem koristi Publisher.name kao registrant vrednost pri generisanju XML-a - **NOVO**
 
 ### 3. Publication Management (Publikacije)
 
@@ -369,6 +553,7 @@ techStack:
 - **FR14:** Administrator moze editovati podatke o publikaciji
 - **FR15:** Administrator moze povezati publikaciju sa izdavacem
 - **FR16:** Sistem podrzava razlicite tipove publikacija sa specificnim poljima
+- **FR16a:** Za tip Zbornik, sistem cuva conference_date_end i conference_number - **NOVO**
 - **FR17:** Posetilac moze pregledati listu svih publikacija sa filterima
 
 ### 4. Issue Management (Izdanja)
@@ -383,21 +568,32 @@ techStack:
 - **FR22:** Bibliotekar moze kreirati novi clanak
 - **FR23:** Bibliotekar moze uneti metapodatke clanka (naslov, podnaslov, apstrakt, kljucne reci)
 - **FR24:** Bibliotekar moze dodati autore sa reorderingom (ime, afilijacija, ORCID, email)
+- **FR24a:** Sistem automatski postavlja sequence polje (first za prvog autora, additional za ostale) - **NOVO**
+- **FR24b:** Bibliotekar moze izabrati contributor_role za svakog autora (author, editor, chair, translator, reviewer) - **NOVO**
+- **FR24c:** Bibliotekar moze dodati vise afilijacija po autoru sa ROR ID-jem - **NOVO**
 - **FR25:** Bibliotekar moze upload-ovati PDF fajl
 - **FR26:** Bibliotekar moze sacuvati clanak kao draft
 - **FR27:** Sistem automatski cuva izmene (auto-save)
 - **FR28:** Sistem validira ORCID format
+- **FR28a:** Sistem validira da prvi autor ima sequence='first' pre objave - **NOVO**
 - **FR29:** Urednik moze pregledati clanak za odobrenje
 - **FR30:** Administrator moze objaviti clanak
+- **FR30a:** Bibliotekar moze izabrati publication_type za clanak (full_text, abstract_only, bibliographic_record) - **NOVO**
+- **FR30b:** Bibliotekar moze uneti license informacije (license_url, free_to_read) - **NOVO**
 - **FR31:** Administrator moze povuci (withdraw) objavljeni clanak
 - **FR32:** Sistem prikazuje withdrawn clanke sa oznakom
 
 ### 6. Crossref Integration
 
 - **FR33:** Administrator moze generisati Crossref XML za izdanje (svi clanci izdanja u jednom XML fajlu)
+- **FR33a:** Sistem automatski generise XML Head sa doi_batch_id, timestamp, depositor i registrant podacima - **NOVO**
+- **FR33b:** Sistem korektno generise kontributor elemente sa sequence i contributor_role atributima - **NOVO**
+- **FR33c:** Sistem ukljucuje afilijacije sa ROR ID-jem u XML ako su unete - **NOVO**
 - **FR34:** Sistem prikazuje preview generisanog XML-a za izdanje
-- **FR35:** Sistem validira XML prema Crossref XSD shemi
+- **FR35:** Sistem validira XML prema Crossref XSD shemi (verzija 5.4.0) - **AZURIRANO**
 - **FR36:** Sistem upozorava na greske pre generisanja XML-a
+- **FR36a:** Sistem proverava da li su depositor podaci popunjeni za izdavaca pre generisanja - **NOVO**
+- **FR36b:** Sistem proverava da li svi clanci imaju barem jednog autora sa sequence='first' - **NOVO**
 - **FR37:** Administrator moze preuzeti generisani XML fajl za izdanje
 
 ### 7. Public Portal

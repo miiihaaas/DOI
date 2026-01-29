@@ -9,10 +9,12 @@ inputDocuments:
   - architecture.md
   - ux-design-specification.md
 totalEpics: 6
-totalStories: 45
+totalStories: 46
 totalFRsCovered: 50
 validationStatus: PASSED
 validatedAt: 2026-01-25
+prdRevision: "1.1"
+prdRevisionNotes: "Added Story 2.3a for Crossref compliance fields"
 ---
 
 # DOI - Epic Breakdown
@@ -567,6 +569,48 @@ So that **each publication type (journal, conference, book) has appropriate Cros
 **Then** publication is created with publisher association
 **And** type-specific fields are validated (e.g., ISSN format)
 **And** django-guardian assigns object permissions if needed
+
+---
+
+### Story 2.3a: Crossref Depositor Fields Migration (PATCH STORY)
+
+> **NAPOMENA:** Ova priča je patch story dodata nakon PRD revizije 1.1 za Crossref compliance.
+> Dodaje nedostajuća obavezna polja za Crossref XML generisanje.
+
+As an **Administrator**,
+I want **Publisher and Publication models to have Crossref-compliant depositor and conference fields**,
+So that **XML generation in Epic 5 can produce valid Crossref deposits with proper head metadata**.
+
+**Acceptance Criteria:**
+
+**Given** the Publisher model exists
+**When** reviewing the model fields
+**Then** it includes new Crossref depositor fields:
+  - `depositor_name` (CharField, max_length=255, blank=True)
+  - `depositor_email` (EmailField, blank=True)
+  - `registrant` (CharField, max_length=255, blank=True)
+
+**Given** the Publication model exists (CONFERENCE type)
+**When** reviewing the model fields
+**Then** it includes new conference fields:
+  - `conference_date_end` (DateField, null=True, blank=True)
+  - `conference_number` (PositiveIntegerField, null=True, blank=True)
+
+**Given** the Django migrations are created
+**When** migrations are applied to the database
+**Then** migrations complete successfully without data loss
+
+**Given** the Publisher admin form
+**When** editing a publisher
+**Then** depositor fields appear in a new "Crossref Depositor" fieldset
+
+**Given** the Publication admin form for CONFERENCE type
+**When** editing a conference publication
+**Then** new fields appear in the conference fieldset alongside existing fields
+
+**Given** the existing test suite
+**When** running all tests
+**Then** all existing tests pass without modification
 
 ---
 
@@ -1933,14 +1977,17 @@ So that **I can monitor the overall system status**.
 | Epic | Name | Stories | FRs Covered |
 |------|------|---------|-------------|
 | 1 | Project Foundation & Authentication | 7 | FR1-FR7 |
-| 2 | Content Structure Management | 8 | FR8-FR21 |
+| 2 | Content Structure Management | 9* | FR8-FR21 |
 | 3 | Article Workflow | 8 | FR22-FR32, FR46-FR47 |
 | 4 | Public Portal Experience | 9 | FR38-FR45 |
 | 5 | Crossref XML Integration | 7 | FR33-FR37 |
 | 6 | Compliance & Monitoring | 6 | FR48-FR50 |
-| **TOTAL** | | **45 stories** | **50 FRs** |
+| **TOTAL** | | **46 stories** | **50 FRs** |
+
+*\* Epic 2 includes Story 2.3a (patch story added after PRD revision 1.1 for Crossref compliance)*
 
 ---
 
 *Document generated: 2026-01-25*
+*Updated: 2026-01-27 (PRD revision 1.1 - Story 2.3a added)*
 *Epics and Stories Workflow Complete*

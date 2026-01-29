@@ -52,10 +52,12 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Content Structure Management
+  # NOTE: PRD revision 1.1 added Story 2-3a for Crossref compliance
   epic-2: in-progress
   2-1-publisher-model-admin-crud: done
   2-2-public-publisher-page: done
   2-3-publication-model-with-type-specific-fields: done
+  2-3a-crossref-depositor-fields-migration: done  # Patch story - PRD compliance update
   2-4-publication-admin-list-edit: backlog
   2-5-public-publication-list-with-filters: backlog
   2-6-issue-model-admin-crud: backlog

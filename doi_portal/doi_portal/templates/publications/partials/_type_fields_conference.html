@@ -4,7 +4,7 @@
         <i class="bi bi-people me-2"></i>Polja za konferenciju
     </h6>
     <div class="row">
-        <div class="col-md-8 mb-3">
+        <div class="col-md-6 mb-3">
             <label for="id_conference_name" class="form-label">Naziv konferencije</label>
             <input type="text" name="conference_name" id="id_conference_name"
                    class="form-control {% if form.conference_name.errors %}is-invalid{% endif %}"
@@ -14,7 +14,7 @@
             <div class="invalid-feedback">{{ form.conference_name.errors.0 }}</div>
             {% endif %}
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <label for="id_conference_acronym" class="form-label">Akronim</label>
             <input type="text" name="conference_acronym" id="id_conference_acronym"
                    class="form-control {% if form.conference_acronym.errors %}is-invalid{% endif %}"
@@ -22,6 +22,19 @@
                    value="{% if form.conference_acronym.value %}{{ form.conference_acronym.value }}{% endif %}">
             {% if form.conference_acronym.errors %}
             <div class="invalid-feedback">{{ form.conference_acronym.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div class="col-md-3 mb-3">
+            <label for="id_conference_number" class="form-label">Broj konferencije</label>
+            <input type="number" name="conference_number" id="id_conference_number"
+                   class="form-control {% if form.conference_number.errors %}is-invalid{% endif %}"
+                   placeholder="npr. 15"
+                   min="1"
+                   value="{% if form.conference_number.value %}{{ form.conference_number.value }}{% endif %}">
+            {% if form.conference_number.errors %}
+            <div class="invalid-feedback">{{ form.conference_number.errors.0 }}</div>
+            {% else %}
+            <div class="form-text">npr. 15. po redu</div>
             {% endif %}
         </div>
     </div>
@@ -36,13 +49,22 @@
             <div class="invalid-feedback">{{ form.conference_location.errors.0 }}</div>
             {% endif %}
         </div>
-        <div class="col-md-6 mb-3">
-            <label for="id_conference_date" class="form-label">Datum konferencije</label>
+        <div class="col-md-3 mb-3">
+            <label for="id_conference_date" class="form-label">Datum početka</label>
             <input type="date" name="conference_date" id="id_conference_date"
                    class="form-control {% if form.conference_date.errors %}is-invalid{% endif %}"
                    value="{% if form.conference_date.value %}{{ form.conference_date.value|date:'Y-m-d' }}{% endif %}">
             {% if form.conference_date.errors %}
             <div class="invalid-feedback">{{ form.conference_date.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div class="col-md-3 mb-3">
+            <label for="id_conference_date_end" class="form-label">Datum završetka</label>
+            <input type="date" name="conference_date_end" id="id_conference_date_end"
+                   class="form-control {% if form.conference_date_end.errors %}is-invalid{% endif %}"
+                   value="{% if form.conference_date_end.value %}{{ form.conference_date_end.value|date:'Y-m-d' }}{% endif %}">
+            {% if form.conference_date_end.errors %}
+            <div class="invalid-feedback">{{ form.conference_date_end.errors.0 }}</div>
             {% endif %}
         </div>
     </div>

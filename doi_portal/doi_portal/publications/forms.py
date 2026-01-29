@@ -43,8 +43,10 @@ class PublicationForm(forms.ModelForm):
             # Conference fields
             "conference_name",
             "conference_acronym",
+            "conference_number",
             "conference_location",
             "conference_date",
+            "conference_date_end",
             "series_issn",
             # Book fields
             "isbn_print",
@@ -149,6 +151,19 @@ class PublicationForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "type": "date",
+                }
+            ),
+            "conference_date_end": forms.DateInput(
+                attrs={
+                    "class": "form-control",
+                    "type": "date",
+                }
+            ),
+            "conference_number": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "npr. 15",
+                    "min": "1",
                 }
             ),
             "series_issn": forms.TextInput(
@@ -292,8 +307,10 @@ class PublicationForm(forms.ModelForm):
             PublicationType.CONFERENCE: [
                 "conference_name",
                 "conference_acronym",
+                "conference_number",
                 "conference_location",
                 "conference_date",
+                "conference_date_end",
                 "series_issn",
             ],
             PublicationType.BOOK: [
