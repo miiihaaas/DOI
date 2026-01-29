@@ -31,6 +31,8 @@ urlpatterns = [
     path("dashboard/publications/", include("doi_portal.publications.urls", namespace="publications")),
     # Story 2.2: Public portal routes (no authentication required)
     path("publishers/", include("doi_portal.portal.urls", namespace="portal")),
+    # Story 2.5: Public publications portal routes (no authentication required)
+    path("publications/", include("doi_portal.portal.urls_publications", namespace="portal-publications")),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]

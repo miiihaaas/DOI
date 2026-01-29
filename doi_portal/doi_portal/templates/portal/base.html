@@ -30,6 +30,9 @@
                         <a class="nav-link{% if request.resolver_match.url_name == 'publisher-list' %} active{% endif %}" href="{% url 'portal:publisher-list' %}">Izdavači</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link{% if request.resolver_match.namespace == 'portal-publications' %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}">Publikacije</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'about' %}">O portalu</a>
                     </li>
                     {% if request.user.is_authenticated %}

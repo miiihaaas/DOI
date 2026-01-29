@@ -1,0 +1,104 @@
+{% load static i18n %}
+
+{% if publications %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for publication in publications %}
+    <div class="col">
+        <article class="card h-100 publication-card">
+            {% if publication.cover_image %}
+            <img src="{{ publication.cover_image.url }}"
+                 class="card-img-top"
+                 alt="{{ publication.title }} naslovna slika"
+                 loading="lazy">
+            {% else %}
+            <div class="card-img-placeholder text-center py-4 bg-light">
+                <i class="{{ publication.type_icon }} display-4 text-muted" aria-hidden="true"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <div class="mb-2">
+                    <span class="badge bg-secondary">
+                        <i class="{{ publication.type_icon }} me-1" aria-hidden="true"></i>
+                        {{ publication.type_display }}
+                    </span>
+                    {% if publication.access_type == "OPEN" %}
+                    <span class="badge bg-success ms-1">
+                        <i class="bi bi-unlock me-1" aria-hidden="true"></i>Otvoreni pristup
+                    </span>
+                    {% endif %}
+                </div>
+                <h3 class="h6 card-title">
+                    <a href="{% url 'portal-publications:publication-detail' publication.slug %}"
+                       class="text-decoration-none stretched-link">
+                        {{ publication.title }}
+                    </a>
+                </h3>
+                <p class="card-text text-muted small mb-0">
+                    <i class="bi bi-building me-1" aria-hidden="true"></i>
+                    {{ publication.publisher.name }}
+                </p>
+            </div>
+        </article>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Navigacija stranica">
+    <ul class="pagination justify-content-center mt-4">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link"
+               href="?page={{ page_obj.previous_page_number }}{% for key, val in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ val }}{% endif %}{% endfor %}"
+               hx-get="{% url 'portal-publications:publication-list' %}?page={{ page_obj.previous_page_number }}{% for key, val in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ val }}{% endif %}{% endfor %}"
+               hx-target="#publication-results"
+               hx-push-url="true">
+                Prethodna
+            </a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active" aria-current="page">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ num }}{% for key, val in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ val }}{% endif %}{% endfor %}"
+                   hx-get="{% url 'portal-publications:publication-list' %}?page={{ num }}{% for key, val in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ val }}{% endif %}{% endfor %}"
+                   hx-target="#publication-results"
+                   hx-push-url="true">
+                    {{ num }}
+                </a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link"
+               href="?page={{ page_obj.next_page_number }}{% for key, val in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ val }}{% endif %}{% endfor %}"
+               hx-get="{% url 'portal-publications:publication-list' %}?page={{ page_obj.next_page_number }}{% for key, val in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ val }}{% endif %}{% endfor %}"
+               hx-target="#publication-results"
+               hx-push-url="true">
+                Sledeća
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-5">
+    <i class="bi bi-journal-text display-3 text-muted d-block mb-3" aria-hidden="true"></i>
+    <p class="lead text-muted">Nema publikacija koje odgovaraju kriterijumima pretrage.</p>
+    <a href="{% url 'portal-publications:publication-list' %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Obrišite sve filtere
+    </a>
+</div>
+{% endif %}

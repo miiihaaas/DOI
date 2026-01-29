@@ -2,6 +2,7 @@
 Public portal views for DOI Portal.
 
 Story 2.2: Public Publisher Page
+Story 2.5: Public Publication List with Filters
 
 These are PUBLIC views - no authentication required.
 CSRF protection is handled by Django middleware for GET requests (safe methods).
@@ -11,6 +12,9 @@ from django.urls import reverse
 from django.views.generic import DetailView
 from django.views.generic import ListView
 
+from doi_portal.publications.models import AccessType
+from doi_portal.publications.models import Publication
+from doi_portal.publications.models import PublicationType
 from doi_portal.publishers.models import Publisher
 
 
@@ -73,6 +77,147 @@ class PublisherPublicDetailView(DetailView):
             {"label": "Izdavači", "url": reverse("portal:publisher-list")},
             {"label": self.object.name, "url": None},
         ]
-        # Publications placeholder - empty for now, Story 2.3 will populate
-        context["publications"] = []
+        # Story 2.5: Real publications for this publisher
+        context["publications"] = (
+            Publication.objects.filter(publisher=self.object)
+            .select_related("publisher")
+            .order_by("title")
+        )
+        return context
+
+
+# =============================================================================
+# Story 2.5: Public Publication Views
+# =============================================================================
+
+
+class PublicationPublicListView(ListView):
+    """
+    Public listing of all active publications with filters.
+
+    FR17: Posetilac moze pregledati listu svih publikacija sa filterima.
+    FR40: Posetilac moze filtrirati publikacije po vrsti, oblasti, pristupu, jeziku.
+    """
+
+    model = Publication
+    template_name = "portal/publications/publication_list.html"
+    context_object_name = "publications"
+    paginate_by = 12
+
+    def get_queryset(self):
+        """Return filtered queryset of active publications."""
+        queryset = Publication.objects.select_related("publisher").order_by("title")
+
+        # Filter by type (multi-select checkboxes - AC #2)
+        pub_types = self.request.GET.getlist("type")
+        valid_types = [t for t in pub_types if t in [c[0] for c in PublicationType.choices]]
+        if valid_types:
+            queryset = queryset.filter(publication_type__in=valid_types)
+
+        # Filter by subject area (multi-select checkboxes)
+        subjects = self.request.GET.getlist("subject")
+        if subjects:
+            queryset = queryset.filter(subject_area__in=subjects)
+
+        # Filter by access type (multi-select checkboxes)
+        access_values = self.request.GET.getlist("access")
+        valid_access = [a for a in access_values if a in [c[0] for c in AccessType.choices]]
+        if valid_access:
+            queryset = queryset.filter(access_type__in=valid_access)
+
+        # Filter by language (multi-select checkboxes)
+        languages = self.request.GET.getlist("language")
+        if languages:
+            queryset = queryset.filter(language__in=languages)
+
+        # Search by title
+        search = self.request.GET.get("search")
+        if search:
+            queryset = queryset.filter(title__icontains=search)
+
+        return queryset
+
+    def get_template_names(self):
+        """Return partial template for HTMX requests."""
+        if self.request.headers.get("HX-Request"):
+            return ["portal/publications/partials/_publication_grid.html"]
+        return [self.template_name]
+
+    def get_context_data(self, **kwargs):
+        """Add breadcrumbs, filter choices, and active filter values to context."""
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {"label": "Publikacije", "url": None},
+        ]
+        context["publication_types"] = PublicationType.choices
+        context["access_types"] = AccessType.choices
+
+        # Dynamic filter options from database
+        context["subject_areas"] = (
+            Publication.objects.exclude(subject_area="")
+            .values_list("subject_area", flat=True)
+            .distinct()
+            .order_by("subject_area")
+        )
+        context["languages"] = (
+            Publication.objects.exclude(language="")
+            .values_list("language", flat=True)
+            .distinct()
+            .order_by("language")
+        )
+
+        # Active filters for UI state (multi-select checkboxes - AC #2)
+        context["current_types"] = self.request.GET.getlist("type")
+        context["current_subjects"] = self.request.GET.getlist("subject")
+        context["current_access"] = self.request.GET.getlist("access")
+        context["current_languages"] = self.request.GET.getlist("language")
+        context["search_query"] = self.request.GET.get("search", "")
+
+        # Convenience: any filter active?
+        context["has_active_filters"] = bool(
+            context["current_types"]
+            or context["current_subjects"]
+            or context["current_access"]
+            or context["current_languages"]
+            or context["search_query"]
+        )
+
+        return context
+
+
+class PublicationPublicDetailView(DetailView):
+    """
+    Public view of a single publication with its details.
+
+    AC: #5 - Shows publication detail with type-specific fields.
+    Returns 404 for deleted or non-existent publications.
+    """
+
+    model = Publication
+    template_name = "portal/publications/publication_detail.html"
+    context_object_name = "publication"
+    slug_url_kwarg = "slug"
+
+    def get_queryset(self):
+        """
+        Return queryset of active publications.
+
+        SoftDeleteManager excludes deleted publications - will raise 404.
+        """
+        return Publication.objects.select_related("publisher")
+
+    def get_context_data(self, **kwargs):
+        """Add breadcrumbs and issues placeholder to context."""
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {
+                "label": "Publikacije",
+                "url": reverse("portal-publications:publication-list"),
+            },
+            {"label": self.object.title, "url": None},
+        ]
+        # Issues placeholder - Story 2.6/2.7 will populate
+        context["issues"] = []
         return context

@@ -65,13 +65,38 @@
         {% if publications %}
         <div class="row row-cols-1 row-cols-md-2 g-3">
             {% for publication in publications %}
-            <!-- Publication cards will be added in Story 2.3 -->
             <div class="col">
-                <div class="card">
-                    <div class="card-body">
-                        {{ publication.title }}
+                <article class="card h-100 publication-card">
+                    {% if publication.cover_image %}
+                    <img src="{{ publication.cover_image.url }}"
+                         class="card-img-top"
+                         alt="{{ publication.title }} naslovna slika"
+                         loading="lazy">
+                    {% else %}
+                    <div class="card-img-placeholder text-center py-3 bg-light">
+                        <i class="{{ publication.type_icon }} display-5 text-muted" aria-hidden="true"></i>
                     </div>
-                </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <span class="badge bg-secondary">
+                                <i class="{{ publication.type_icon }} me-1" aria-hidden="true"></i>
+                                {{ publication.type_display }}
+                            </span>
+                            {% if publication.access_type == "OPEN" %}
+                            <span class="badge bg-success ms-1">
+                                <i class="bi bi-unlock me-1" aria-hidden="true"></i>Otvoreni pristup
+                            </span>
+                            {% endif %}
+                        </div>
+                        <h3 class="h6 card-title">
+                            <a href="{% url 'portal-publications:publication-detail' publication.slug %}"
+                               class="text-decoration-none stretched-link">
+                                {{ publication.title }}
+                            </a>
+                        </h3>
+                    </div>
+                </article>
             </div>
             {% endfor %}
         </div>
