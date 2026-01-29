@@ -58,7 +58,7 @@ development_status:
   2-2-public-publisher-page: done
   2-3-publication-model-with-type-specific-fields: done
   2-3a-crossref-depositor-fields-migration: done  # Patch story - PRD compliance update
-  2-4-publication-admin-list-edit: backlog
+  2-4-publication-admin-list-edit: done
   2-5-public-publication-list-with-filters: backlog
   2-6-issue-model-admin-crud: backlog
   2-7-public-issue-list-detail: backlog

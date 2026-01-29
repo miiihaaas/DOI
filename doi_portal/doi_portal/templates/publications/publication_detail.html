@@ -8,12 +8,16 @@
         <i class="{{ publication.type_icon }} me-2"></i>{{ publication.title }}
     </h1>
     <div>
+        {% if can_edit %}
         <a href="{% url 'publications:update' publication.slug %}" class="btn btn-primary">
             <i class="bi bi-pencil me-1"></i>Izmeni
         </a>
+        {% endif %}
+        {% if can_delete %}
         <a href="{% url 'publications:delete' publication.slug %}" class="btn btn-outline-danger ms-2">
             <i class="bi bi-trash me-1"></i>Obriši
         </a>
+        {% endif %}
     </div>
 </div>
 
@@ -125,7 +129,22 @@
 
                     {% if publication.conference_date %}
                     <dt class="col-sm-3">Datum</dt>
-                    <dd class="col-sm-9">{{ publication.conference_date|date:"d.m.Y." }}</dd>
+                    <dd class="col-sm-9">
+                        {{ publication.conference_date|date:"d.m.Y." }}
+                        {% if publication.conference_date_end %}
+                         - {{ publication.conference_date_end|date:"d.m.Y." }}
+                        {% endif %}
+                    </dd>
+                    {% endif %}
+
+                    {% if publication.conference_date_end and not publication.conference_date %}
+                    <dt class="col-sm-3">Datum završetka</dt>
+                    <dd class="col-sm-9">{{ publication.conference_date_end|date:"d.m.Y." }}</dd>
+                    {% endif %}
+
+                    {% if publication.conference_number %}
+                    <dt class="col-sm-3">Broj konferencije</dt>
+                    <dd class="col-sm-9">{{ publication.conference_number }}.</dd>
                     {% endif %}
 
                     {% if publication.series_issn %}
@@ -133,7 +152,7 @@
                     <dd class="col-sm-9"><code>{{ publication.series_issn }}</code></dd>
                     {% endif %}
                 </dl>
-                {% if not publication.conference_name and not publication.conference_acronym and not publication.conference_location and not publication.conference_date and not publication.series_issn %}
+                {% if not publication.conference_name and not publication.conference_acronym and not publication.conference_location and not publication.conference_date and not publication.conference_date_end and not publication.conference_number and not publication.series_issn %}
                 <p class="text-muted mb-0">Nema unetih podataka specifičnih za konferenciju.</p>
                 {% endif %}
             </div>
@@ -216,9 +235,11 @@
                 <h5 class="mb-0">Brze akcije</h5>
             </div>
             <div class="list-group list-group-flush">
+                {% if can_edit %}
                 <a href="{% url 'publications:update' publication.slug %}" class="list-group-item list-group-item-action">
                     <i class="bi bi-pencil me-2"></i>Izmeni publikaciju
                 </a>
+                {% endif %}
                 <a href="{% url 'publications:list' %}?publisher={{ publication.publisher.pk }}" class="list-group-item list-group-item-action">
                     <i class="bi bi-building me-2"></i>Sve publikacije izdavača
                 </a>

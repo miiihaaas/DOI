@@ -2,11 +2,13 @@
 Publication views.
 
 Story 2.3 - Task 3: Publication admin CRUD views with HTMX support.
+Story 2.4 - Tasks 1-3: Sorting, issue_count, row-level permissions.
 """
 
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse, HttpResponseRedirect
+from django.db.models import Count, Value
+from django.db.models.fields import IntegerField
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
@@ -19,17 +21,39 @@ from django.views.generic import (
     UpdateView,
 )
 
-from doi_portal.publishers.mixins import AdministratorRequiredMixin
+from doi_portal.publishers.mixins import (
+    AdministratorRequiredMixin,
+    PublisherScopedEditMixin,
+    PublisherScopedMixin,
+)
 
 from .forms import PublicationForm
 from .models import Publication, PublicationType
 
 
-class PublicationListView(LoginRequiredMixin, AdministratorRequiredMixin, ListView):
-    """
-    List all publications with filtering by type/publisher.
+# Whitelist of allowed sort fields (Story 2.4 - Task 1.2)
+ALLOWED_SORT_FIELDS = {
+    "title": "title",
+    "type": "publication_type",
+    "publisher": "publisher__name",
+    "created": "created_at",
+}
 
-    AC: #5 - Displays list of all publications with type icons.
+# Cache whether Issue model relation exists (checked once at module load)
+# Will become True when Story 2.6 creates the Issue model with related_name="issues"
+_HAS_ISSUES_RELATION = any(
+    rel.get_accessor_name() == "issues"
+    for rel in Publication._meta.related_objects
+)
+
+
+class PublicationListView(PublisherScopedMixin, ListView):
+    """
+    List all publications with filtering, sorting, and role-based scoping.
+
+    AC: #1 - Displays list with sortable columns, type icons, issue count.
+    AC: #4 - Urednik sees only own publisher's publications.
+    AC: #6 - Bibliotekar sees only own publisher's publications (read-only).
     """
 
     model = Publication
@@ -38,8 +62,21 @@ class PublicationListView(LoginRequiredMixin, AdministratorRequiredMixin, ListVi
     paginate_by = 20
 
     def get_queryset(self):
-        """Filter publications by type and publisher if specified."""
+        """Filter publications by type, publisher, search; apply sorting and scoping."""
         queryset = super().get_queryset().select_related("publisher")
+
+        # Scope by publisher for Urednik/Bibliotekar (Story 2.4 - Task 3)
+        queryset = self.get_scoped_queryset(queryset)
+
+        # Annotate issue_count (Story 2.4 - Task 2.1)
+        # Issue model doesn't exist yet (Story 2.6) - use Value(0) as placeholder
+        # When Issue model is created with related_name="issues", replace with Count("issues")
+        if _HAS_ISSUES_RELATION:
+            queryset = queryset.annotate(issue_count_annotation=Count("issues"))
+        else:
+            queryset = queryset.annotate(
+                issue_count_annotation=Value(0, output_field=IntegerField())
+            )
 
         # Filter by publication type
         pub_type = self.request.GET.get("type")
@@ -56,10 +93,18 @@ class PublicationListView(LoginRequiredMixin, AdministratorRequiredMixin, ListVi
         if search:
             queryset = queryset.filter(title__icontains=search)
 
+        # Sorting (Story 2.4 - Task 1)
+        sort_field = self.request.GET.get("sort", "title")
+        order = self.request.GET.get("order", "asc")
+        db_field = ALLOWED_SORT_FIELDS.get(sort_field, "title")
+        if order == "desc":
+            db_field = f"-{db_field}"
+        queryset = queryset.order_by(db_field)
+
         return queryset
 
     def get_context_data(self, **kwargs):
-        """Add breadcrumbs and filter options to context."""
+        """Add breadcrumbs, filter options, sort state to context."""
         context = super().get_context_data(**kwargs)
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
@@ -69,16 +114,26 @@ class PublicationListView(LoginRequiredMixin, AdministratorRequiredMixin, ListVi
         context["current_type"] = self.request.GET.get("type", "")
         context["current_publisher"] = self.request.GET.get("publisher", "")
         context["search_query"] = self.request.GET.get("search", "")
+
+        # Sort context (Story 2.4 - Task 1.4)
+        context["current_sort"] = self.request.GET.get("sort", "title")
+        context["current_order"] = self.request.GET.get("order", "asc")
+
+        # Role-based action visibility (uses cached role flags from mixin)
+        flags = self._get_user_role_flags()
+        context["can_create"] = flags["is_admin"]
+        context["can_edit"] = flags["is_admin"] or flags["is_urednik"]
+        context["can_delete"] = flags["is_admin"]
+
         return context
 
 
-class PublicationCreateView(
-    LoginRequiredMixin, AdministratorRequiredMixin, CreateView
-):
+class PublicationCreateView(AdministratorRequiredMixin, CreateView):
     """
     Create new publication with dynamic HTMX form.
 
     AC: #5, #6 - Displays form with type-specific fields, creates publication.
+    Only Administrator/Superadmin can create publications (Story 2.4 - Task 3.4).
     """
 
     model = Publication
@@ -109,13 +164,12 @@ class PublicationCreateView(
         return response
 
 
-class PublicationUpdateView(
-    LoginRequiredMixin, AdministratorRequiredMixin, UpdateView
-):
+class PublicationUpdateView(PublisherScopedEditMixin, UpdateView):
     """
     Update an existing publication.
 
-    AC: #5, #6 - Updates publication data with dynamic type-specific fields.
+    Story 2.4 - Task 3.5: Urednik can edit own publisher's, Admin can edit all.
+    Bibliotekar cannot edit (PublisherScopedEditMixin blocks).
     """
 
     model = Publication
@@ -123,6 +177,11 @@ class PublicationUpdateView(
     template_name = "publications/publication_form.html"
     success_url = reverse_lazy("publications:list")
     slug_url_kwarg = "slug"
+
+    def get_queryset(self):
+        """Scope queryset to user's publisher for non-admin roles."""
+        queryset = super().get_queryset().select_related("publisher")
+        return self.get_scoped_queryset(queryset)
 
     def get_context_data(self, **kwargs):
         """Add breadcrumbs and form metadata to context."""
@@ -147,13 +206,12 @@ class PublicationUpdateView(
         return response
 
 
-class PublicationDetailView(
-    LoginRequiredMixin, AdministratorRequiredMixin, DetailView
-):
+class PublicationDetailView(PublisherScopedMixin, DetailView):
     """
     View publication details.
 
-    AC: #5 - Displays publication information with type-specific fields.
+    Story 2.4 - Task 3.3: Scoped by publisher for Urednik/Bibliotekar.
+    AC: #2 - Displays all fields including conference_date_end, conference_number.
     """
 
     model = Publication
@@ -161,24 +219,32 @@ class PublicationDetailView(
     context_object_name = "publication"
     slug_url_kwarg = "slug"
 
+    def get_queryset(self):
+        """Scope queryset to user's publisher for non-admin roles."""
+        queryset = super().get_queryset().select_related("publisher")
+        return self.get_scoped_queryset(queryset)
+
     def get_context_data(self, **kwargs):
-        """Add breadcrumbs to context."""
+        """Add breadcrumbs and role-based action flags to context."""
         context = super().get_context_data(**kwargs)
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
             {"label": "Publikacije", "url": reverse_lazy("publications:list")},
             {"label": self.object.title, "url": None},
         ]
+
+        # Role-based action visibility (uses cached role flags from mixin)
+        flags = self._get_user_role_flags()
+        context["can_edit"] = flags["is_admin"] or flags["is_urednik"]
+        context["can_delete"] = flags["is_admin"]
         return context
 
 
-class PublicationDeleteView(
-    LoginRequiredMixin, AdministratorRequiredMixin, DeleteView
-):
+class PublicationDeleteView(AdministratorRequiredMixin, DeleteView):
     """
     Soft delete a publication.
 
-    AC: #6 - Performs soft delete instead of actual deletion.
+    Only Administrator/Superadmin can delete (Story 2.4 - Task 3.4).
     """
 
     model = Publication
