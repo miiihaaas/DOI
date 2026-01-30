@@ -38,14 +38,14 @@ MENU_ITEMS: dict[str, dict] = {
     "publications": {
         "label": "Publikacije",
         "icon": "bi-journal-text",
-        "url_name": None,  # Epic 2 - Not implemented yet
-        "roles": ["Superadmin", "Administrator"],
+        "url_name": "publications:list",  # Story 2.3 - Implemented
+        "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
     },
     "issues": {
         "label": "Izdanja",
         "icon": "bi-collection",
-        "url_name": None,  # Epic 2 - Not implemented yet
-        "roles": ["Superadmin", "Administrator", "Urednik"],
+        "url_name": "issues:list",  # Story 2.6 - Implemented
+        "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
     },
     "articles": {
         "label": "Članci",

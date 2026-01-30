@@ -1,0 +1,189 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ form_title }} - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{{ form_title }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate
+                      x-data="issueForm()"
+                      x-init="init()">
+                    {% csrf_token %}
+
+                    <!-- Publication type map for Alpine.js proceedings toggle -->
+                    <script type="application/json" id="pub-type-map">{{ form.publication_type_map_json }}</script>
+
+                    <!-- Form Errors Summary -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger mb-4">
+                        <h6 class="alert-heading mb-2">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Ispravite sledeće greške:
+                        </h6>
+                        <ul class="mb-0">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Basic Fields Section -->
+                    <h6 class="text-muted mb-3 border-bottom pb-2">Osnovne informacije</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_publication" class="form-label">Publikacija <span class="text-danger">*</span></label>
+                            {{ form.publication }}
+                            {% if form.publication.errors %}
+                            <div class="invalid-feedback d-block">{{ form.publication.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_status" class="form-label">Status</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">{{ form.status.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="id_volume" class="form-label">Volumen</label>
+                            {{ form.volume }}
+                            {% if form.volume.errors %}
+                            <div class="invalid-feedback d-block">{{ form.volume.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="id_issue_number" class="form-label">Broj izdanja</label>
+                            {{ form.issue_number }}
+                            {% if form.issue_number.errors %}
+                            <div class="invalid-feedback d-block">{{ form.issue_number.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="id_year" class="form-label">Godina <span class="text-danger">*</span></label>
+                            {{ form.year }}
+                            {% if form.year.errors %}
+                            <div class="invalid-feedback d-block">{{ form.year.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="id_publication_date" class="form-label">Datum objave</label>
+                            {{ form.publication_date }}
+                            {% if form.publication_date.errors %}
+                            <div class="invalid-feedback d-block">{{ form.publication_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="id_title" class="form-label">Naslov</label>
+                            {{ form.title }}
+                            <div class="form-text">Opcioni naslov izdanja</div>
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_cover_image" class="form-label">Naslovna slika</label>
+                            {% if form.instance.cover_image %}
+                            <div class="mb-2">
+                                <img src="{{ form.instance.cover_image.url }}" alt="Trenutna naslovna slika" class="img-thumbnail" style="max-height: 100px;">
+                            </div>
+                            {% endif %}
+                            {{ form.cover_image }}
+                            {% if form.cover_image.errors %}
+                            <div class="invalid-feedback d-block">{{ form.cover_image.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Conference Proceedings Fields (shown only for CONFERENCE type) -->
+                    <div id="proceedings-fields" x-show="isConference" x-transition>
+                        <h6 class="text-muted mb-3 border-bottom pb-2">Podaci o zborniku</h6>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="id_proceedings_title" class="form-label">Naslov zbornika</label>
+                                {{ form.proceedings_title }}
+                                <div class="form-text">Ako se razlikuje od naslova publikacije</div>
+                                {% if form.proceedings_title.errors %}
+                                <div class="invalid-feedback d-block">{{ form.proceedings_title.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_proceedings_publisher_name" class="form-label">Naziv izdavača zbornika</label>
+                                {{ form.proceedings_publisher_name }}
+                                {% if form.proceedings_publisher_name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.proceedings_publisher_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_proceedings_publisher_place" class="form-label">Mesto izdavanja</label>
+                                {{ form.proceedings_publisher_place }}
+                                {% if form.proceedings_publisher_place.errors %}
+                                <div class="invalid-feedback d-block">{{ form.proceedings_publisher_place.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'issues:list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Nazad
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>{{ submit_text }}
+                        </button>
+                    </div>
+                </form>
+
+                <script>
+                    function issueForm() {
+                        return {
+                            pubTypeMap: {},
+                            isConference: false,
+                            init() {
+                                const mapEl = document.getElementById('pub-type-map');
+                                if (mapEl) {
+                                    try {
+                                        this.pubTypeMap = JSON.parse(mapEl.textContent);
+                                    } catch (e) {
+                                        this.pubTypeMap = {};
+                                    }
+                                }
+                                const select = document.getElementById('id_publication');
+                                if (select) {
+                                    this.updateType(select.value);
+                                    select.addEventListener('change', (e) => {
+                                        this.updateType(e.target.value);
+                                    });
+                                }
+                            },
+                            updateType(pubId) {
+                                this.isConference = this.pubTypeMap[String(pubId)] === 'CONFERENCE';
+                            }
+                        }
+                    }
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

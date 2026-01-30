@@ -218,6 +218,9 @@ class PublicationPublicDetailView(DetailView):
             },
             {"label": self.object.title, "url": None},
         ]
-        # Issues placeholder - Story 2.6/2.7 will populate
-        context["issues"] = []
+        # Story 2.6: Real published issues list
+        context["issues"] = (
+            self.object.issues.filter(status="PUBLISHED")
+            .order_by("-year", "-volume", "-issue_number")
+        )
         return context

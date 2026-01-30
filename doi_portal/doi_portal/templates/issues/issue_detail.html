@@ -1,0 +1,172 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ issue }} - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-collection me-2"></i>{{ issue }}
+    </h1>
+    <div>
+        {% if can_edit %}
+        <a href="{% url 'issues:update' issue.pk %}" class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i>Izmeni
+        </a>
+        {% endif %}
+        {% if can_delete %}
+        <a href="{% url 'issues:delete' issue.pk %}" class="btn btn-outline-danger ms-2">
+            <i class="bi bi-trash me-1"></i>Obriši
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Info Card -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Osnovne informacije</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Publikacija</dt>
+                    <dd class="col-sm-9">
+                        <a href="{% url 'publications:detail' issue.publication.slug %}">
+                            {{ issue.publication.title }}
+                        </a>
+                    </dd>
+
+                    <dt class="col-sm-3">Izdavač</dt>
+                    <dd class="col-sm-9">
+                        <a href="{% url 'publishers:detail' issue.publication.publisher.pk %}">
+                            {{ issue.publication.publisher.name }}
+                        </a>
+                    </dd>
+
+                    <dt class="col-sm-3">Volumen</dt>
+                    <dd class="col-sm-9">{{ issue.volume|default:"-" }}</dd>
+
+                    <dt class="col-sm-3">Broj izdanja</dt>
+                    <dd class="col-sm-9">{{ issue.issue_number|default:"-" }}</dd>
+
+                    <dt class="col-sm-3">Godina</dt>
+                    <dd class="col-sm-9">{{ issue.year }}</dd>
+
+                    {% if issue.title %}
+                    <dt class="col-sm-3">Naslov</dt>
+                    <dd class="col-sm-9">{{ issue.title }}</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-3">Status</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge {{ issue.status_badge_class }}">
+                            {{ issue.get_status_display }}
+                        </span>
+                    </dd>
+
+                    {% if issue.publication_date %}
+                    <dt class="col-sm-3">Datum objave</dt>
+                    <dd class="col-sm-9">{{ issue.publication_date|date:"d.m.Y." }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+
+        <!-- Conference Proceedings Fields -->
+        {% if issue.publication.publication_type == "CONFERENCE" %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Podaci o zborniku</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    {% if issue.proceedings_title %}
+                    <dt class="col-sm-3">Naslov zbornika</dt>
+                    <dd class="col-sm-9">{{ issue.proceedings_title }}</dd>
+                    {% endif %}
+
+                    {% if issue.proceedings_publisher_name %}
+                    <dt class="col-sm-3">Izdavač zbornika</dt>
+                    <dd class="col-sm-9">{{ issue.proceedings_publisher_name }}</dd>
+                    {% endif %}
+
+                    {% if issue.proceedings_publisher_place %}
+                    <dt class="col-sm-3">Mesto izdavanja</dt>
+                    <dd class="col-sm-9">{{ issue.proceedings_publisher_place }}</dd>
+                    {% endif %}
+                </dl>
+                {% if not issue.proceedings_title and not issue.proceedings_publisher_name and not issue.proceedings_publisher_place %}
+                <p class="text-muted mb-0">Nema unetih podataka o zborniku.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Articles Section (Placeholder) -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Članci</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-0">Članci će biti dostupni nakon implementacije.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Cover Image -->
+        {% if issue.cover_image %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Naslovna slika</h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ issue.cover_image.url }}" alt="{{ issue }} naslovna slika"
+                     class="img-fluid rounded">
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Metadata Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Metapodaci</h5>
+            </div>
+            <div class="card-body">
+                <dl class="mb-0">
+                    <dt>Kreirano</dt>
+                    <dd>{{ issue.created_at|date:"d.m.Y. H:i" }}</dd>
+
+                    <dt>Ažurirano</dt>
+                    <dd>{{ issue.updated_at|date:"d.m.Y. H:i" }}</dd>
+
+                    <dt>Broj članaka</dt>
+                    <dd>{{ issue.article_count }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Brze akcije</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% if can_edit %}
+                <a href="{% url 'issues:update' issue.pk %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-pencil me-2"></i>Izmeni izdanje
+                </a>
+                {% endif %}
+                <a href="{% url 'issues:list' %}?publication={{ issue.publication.pk }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-collection me-2"></i>Sva izdanja ove publikacije
+                </a>
+                <a href="{% url 'publications:detail' issue.publication.slug %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-journal-text me-2"></i>Detalji publikacije
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

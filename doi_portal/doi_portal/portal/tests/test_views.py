@@ -855,7 +855,8 @@ class TestPublicationPublicDetailView:
         response = client.get(url)
         content = response.content.decode()
 
-        assert "Izdanja će biti dostupna uskoro." in content
+        # Story 2.6: Placeholder replaced with real issues (empty = "Nema objavljenih izdanja.")
+        assert "Nema objavljenih izdanja." in content
 
     def test_detail_has_publisher_link(self, client):
         """AC #5: Detail has link to publisher detail page."""

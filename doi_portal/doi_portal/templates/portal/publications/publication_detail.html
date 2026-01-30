@@ -168,7 +168,7 @@
             </div>
             {% endif %}
 
-            <!-- Issues Section (Placeholder) -->
+            <!-- Issues Section -->
             <div class="card mb-4">
                 <div class="card-body">
                     <h2 class="h5 card-title">
@@ -177,11 +177,24 @@
                     {% if issues %}
                     <div class="list-group">
                         {% for issue in issues %}
-                        <div class="list-group-item">{{ issue }}</div>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Vol. {{ issue.volume }}, No. {{ issue.issue_number }}</strong>
+                                    <span class="text-muted ms-2">({{ issue.year }})</span>
+                                    {% if issue.title %}
+                                    <br><span class="text-muted">{{ issue.title }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if issue.publication_date %}
+                                <small class="text-muted">{{ issue.publication_date|date:"d.m.Y." }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
                         {% endfor %}
                     </div>
                     {% else %}
-                    <p class="text-muted mb-0">Izdanja će biti dostupna uskoro.</p>
+                    <p class="text-muted mb-0">Nema objavljenih izdanja.</p>
                     {% endif %}
                 </div>
             </div>

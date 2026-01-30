@@ -60,7 +60,7 @@ development_status:
   2-3a-crossref-depositor-fields-migration: done  # Patch story - PRD compliance update
   2-4-publication-admin-list-edit: done
   2-5-public-publication-list-with-filters: done
-  2-6-issue-model-admin-crud: backlog
+  2-6-issue-model-admin-crud: done
   2-7-public-issue-list-detail: backlog
   2-8-row-level-permissions-for-content: backlog
   epic-2-retrospective: optional
