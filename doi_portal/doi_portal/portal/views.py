@@ -3,6 +3,7 @@ Public portal views for DOI Portal.
 
 Story 2.2: Public Publisher Page
 Story 2.5: Public Publication List with Filters
+Story 2.7: Public Issue List & Detail
 
 These are PUBLIC views - no authentication required.
 CSRF protection is handled by Django middleware for GET requests (safe methods).
@@ -12,6 +13,8 @@ from django.urls import reverse
 from django.views.generic import DetailView
 from django.views.generic import ListView
 
+from doi_portal.issues.models import Issue
+from doi_portal.issues.models import IssueStatus
 from doi_portal.publications.models import AccessType
 from doi_portal.publications.models import Publication
 from doi_portal.publications.models import PublicationType
@@ -220,7 +223,70 @@ class PublicationPublicDetailView(DetailView):
         ]
         # Story 2.6: Real published issues list
         context["issues"] = (
-            self.object.issues.filter(status="PUBLISHED")
+            self.object.issues.filter(status=IssueStatus.PUBLISHED)
             .order_by("-year", "-volume", "-issue_number")
         )
+        return context
+
+
+# =============================================================================
+# Story 2.7: Public Issue Detail View
+# =============================================================================
+
+
+class IssuePublicDetailView(DetailView):
+    """
+    Public view of a single published issue with its articles.
+
+    FR21: Posetilac moze pregledati sva izdanja publikacije.
+    Only PUBLISHED issues are visible to the public.
+    """
+
+    model = Issue
+    template_name = "portal/publications/issue_detail.html"
+    context_object_name = "issue"
+
+    def get_queryset(self):
+        """
+        Return queryset of published, non-deleted issues.
+
+        Only PUBLISHED status issues are visible to the public.
+        SoftDeleteManager already excludes is_deleted=True records.
+        Additional filter for publication slug to ensure URL consistency.
+        """
+        slug = self.kwargs.get("slug")
+        return (
+            Issue.objects.filter(
+                status=IssueStatus.PUBLISHED,
+                publication__slug=slug,
+                publication__is_deleted=False,
+            ).select_related("publication", "publication__publisher")
+        )
+
+    def get_context_data(self, **kwargs):
+        """Add breadcrumbs and articles placeholder to context."""
+        context = super().get_context_data(**kwargs)
+        issue = self.object
+        publication = issue.publication
+
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {
+                "label": "Publikacije",
+                "url": reverse("portal-publications:publication-list"),
+            },
+            {
+                "label": publication.title,
+                "url": reverse(
+                    "portal-publications:publication-detail",
+                    kwargs={"slug": publication.slug},
+                ),
+            },
+            {
+                "label": f"Vol. {issue.volume}, No. {issue.issue_number} ({issue.year})",
+                "url": None,
+            },
+        ]
+        # Placeholder until Story 3.1 - Article model doesn't exist yet
+        context["articles"] = []
         return context

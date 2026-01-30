@@ -61,7 +61,7 @@ development_status:
   2-4-publication-admin-list-edit: done
   2-5-public-publication-list-with-filters: done
   2-6-issue-model-admin-crud: done
-  2-7-public-issue-list-detail: backlog
+  2-7-public-issue-list-detail: done
   2-8-row-level-permissions-for-content: backlog
   epic-2-retrospective: optional
 

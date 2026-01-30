@@ -2,6 +2,7 @@
 Public portal URL configuration for publications.
 
 Story 2.5: Public Publication List with Filters.
+Story 2.7: Public Issue List & Detail.
 
 These are PUBLIC routes - no authentication required.
 """
@@ -24,5 +25,11 @@ urlpatterns = [
         "<slug:slug>/",
         views.PublicationPublicDetailView.as_view(),
         name="publication-detail",
+    ),
+    # Issue detail - /publications/<slug>/issues/<pk>/ (Story 2.7)
+    path(
+        "<slug:slug>/issues/<int:pk>/",
+        views.IssuePublicDetailView.as_view(),
+        name="issue-detail",
     ),
 ]

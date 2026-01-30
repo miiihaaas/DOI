@@ -3,11 +3,14 @@ Tests for Portal public views.
 
 Story 2.2: Public Publisher Page
 Story 2.5: Public Publication List with Filters
+Story 2.7: Public Issue List & Detail
 """
 
 import pytest
 from django.urls import reverse
 
+from doi_portal.issues.models import IssueStatus
+from doi_portal.issues.tests.factories import IssueFactory
 from doi_portal.publications.models import AccessType
 from doi_portal.publications.models import Publication
 from doi_portal.publications.models import PublicationType
@@ -1013,3 +1016,422 @@ class TestPublisherDetailWithPublications:
             kwargs={"slug": pub.slug},
         )
         assert detail_url in content
+
+
+# =============================================================================
+# Story 2.7: Public Issue Detail View Tests
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestIssuePublicDetailView:
+    """Test public issue detail view (AC: #1-#8)."""
+
+    # --- Task 5.1: Test published issue detail ---
+
+    def test_published_issue_detail(self, client):
+        """AC #2: Published issue detail returns 200 and displays data."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED, volume="3", issue_number="2", year=2026)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "Vol. 3" in content
+        assert "No. 2" in content
+        assert "2026" in content
+
+    # --- Task 5.2: Test draft issue returns 404 ---
+
+    def test_draft_issue_returns_404(self, client):
+        """AC #3: Draft issue returns 404."""
+        issue = IssueFactory(status=IssueStatus.DRAFT)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        assert response.status_code == 404
+
+    # --- Task 5.3: Test scheduled issue returns 404 ---
+
+    def test_scheduled_issue_returns_404(self, client):
+        """AC #3: Scheduled issue returns 404."""
+        issue = IssueFactory(status=IssueStatus.SCHEDULED)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        assert response.status_code == 404
+
+    # --- Task 5.4: Test archive issue returns 404 ---
+
+    def test_archive_issue_returns_404(self, client):
+        """AC #3: Archive issue returns 404."""
+        issue = IssueFactory(status=IssueStatus.ARCHIVE)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        assert response.status_code == 404
+
+    # --- Task 5.5: Test soft-deleted issue returns 404 ---
+
+    def test_soft_deleted_issue_returns_404(self, client):
+        """AC #3: Soft-deleted issue returns 404."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        issue.soft_delete()
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        assert response.status_code == 404
+
+    # --- Task 5.6: Test breadcrumbs ---
+
+    def test_breadcrumbs_hierarchy(self, client):
+        """AC #4: Breadcrumbs show Pocetna > Publikacije > {Publication} > {Issue}."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED, volume="1", issue_number="3", year=2026)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        assert "Početna" in content
+        assert "Publikacije" in content
+        assert issue.publication.title in content
+        assert "Vol. 1, No. 3 (2026)" in content
+
+        # Verify context breadcrumbs
+        breadcrumbs = response.context["breadcrumbs"]
+        assert len(breadcrumbs) == 4
+        assert breadcrumbs[0]["label"] == "Početna"
+        assert breadcrumbs[1]["label"] == "Publikacije"
+        assert breadcrumbs[2]["label"] == issue.publication.title
+        assert breadcrumbs[3]["url"] is None  # Last breadcrumb is active
+
+    # --- Task 5.7: Test cover image ---
+
+    def test_cover_image_displayed(self, client):
+        """AC #5: Cover image displayed with alt text."""
+        issue = IssueFactory(
+            status=IssueStatus.PUBLISHED,
+            cover_image="issues/covers/test.jpg",
+            volume="2",
+            issue_number="1",
+        )
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        assert "issues/covers/test.jpg" in content
+        assert "Naslovna slika:" in content
+        assert "Vol. 2, No. 1" in content
+
+    # --- Task 5.8: Test proceedings fields for CONFERENCE ---
+
+    def test_proceedings_fields_for_conference(self, client):
+        """AC #6: Proceedings fields shown only for CONFERENCE type."""
+        from doi_portal.publications.tests.factories import ConferenceFactory
+
+        pub = ConferenceFactory()
+        issue = IssueFactory(
+            publication=pub,
+            status=IssueStatus.PUBLISHED,
+            proceedings_title="Zbornik Radova 2026",
+            proceedings_publisher_name="Akademski Izdavač",
+            proceedings_publisher_place="Beograd",
+        )
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": pub.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        assert "Zbornik Radova 2026" in content
+        assert "Akademski Izdavač" in content
+        assert "Beograd" in content
+        assert "Podaci o zborniku" in content
+
+    def test_proceedings_not_shown_for_journal(self, client):
+        """AC #6: Proceedings fields NOT shown for JOURNAL type."""
+        from doi_portal.publications.tests.factories import JournalFactory
+
+        pub = JournalFactory()
+        issue = IssueFactory(
+            publication=pub,
+            status=IssueStatus.PUBLISHED,
+            proceedings_title="Should Not Show",
+        )
+        assert pub.publication_type == "JOURNAL"  # Explicit assertion on type
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": pub.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        assert "Podaci o zborniku" not in content
+        assert "Should Not Show" not in content
+
+    # --- Task 5.9: Test SEO meta tags ---
+
+    def test_seo_meta_title(self, client):
+        """AC #8: Title tag contains publication title, Vol, No, Year, DOI Portal."""
+        issue = IssueFactory(
+            status=IssueStatus.PUBLISHED,
+            volume="5",
+            issue_number="2",
+            year=2026,
+        )
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        assert f"{issue.publication.title} - Vol. 5, No. 2 (2026) - DOI Portal" in content
+
+    def test_seo_meta_description(self, client):
+        """AC #8: Meta description contains issue information."""
+        issue = IssueFactory(
+            status=IssueStatus.PUBLISHED,
+            volume="5",
+            issue_number="2",
+            year=2026,
+        )
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        assert "Izdanje Vol. 5, No. 2 (2026)" in content
+        assert issue.publication.title in content
+        assert "DOI Portalu" in content
+
+    # --- Task 5.10: Test publication detail shows clickable issue links ---
+
+    def test_publication_detail_shows_clickable_issue_links(self, client):
+        """AC #1: Publication detail has clickable links to issue detail."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        pub = issue.publication
+
+        pub_url = reverse(
+            "portal-publications:publication-detail",
+            kwargs={"slug": pub.slug},
+        )
+        response = client.get(pub_url)
+        content = response.content.decode()
+
+        issue_url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": pub.slug, "pk": issue.pk},
+        )
+        assert issue_url in content
+        assert "list-group-item-action" in content
+
+    # --- Task 5.11: Test publication detail does not show draft issues ---
+
+    def test_publication_detail_excludes_draft_issues(self, client):
+        """AC #1: Draft issues not shown on publication detail."""
+        pub = PublicationFactory()
+        published_issue = IssueFactory(
+            publication=pub,
+            status=IssueStatus.PUBLISHED,
+            volume="1",
+            issue_number="1",
+        )
+        draft_issue = IssueFactory(
+            publication=pub,
+            status=IssueStatus.DRAFT,
+            volume="2",
+            issue_number="1",
+        )
+
+        url = reverse(
+            "portal-publications:publication-detail",
+            kwargs={"slug": pub.slug},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        # Published issue should be visible
+        assert "Vol. 1" in content
+        # Draft issue link should NOT exist
+        draft_url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": pub.slug, "pk": draft_issue.pk},
+        )
+        assert draft_url not in content
+
+    # --- Task 5.12: Test publication with no issues shows empty message ---
+
+    def test_publication_no_issues_shows_empty_message(self, client):
+        """AC #7: Publication with no published issues shows empty message."""
+        pub = PublicationFactory()
+        url = reverse(
+            "portal-publications:publication-detail",
+            kwargs={"slug": pub.slug},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        assert "Nema objavljenih izdanja." in content
+
+    # --- Task 5.13: Test wrong publication slug returns 404 ---
+
+    def test_wrong_publication_slug_returns_404(self, client):
+        """AC #3: Issue with wrong publication slug returns 404."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": "wrong-slug", "pk": issue.pk},
+        )
+        response = client.get(url)
+        assert response.status_code == 404
+
+    # --- Task 5.14: Test articles placeholder ---
+
+    def test_articles_placeholder_message(self, client):
+        """AC #2: Articles placeholder shown on issue detail."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        assert "Članci će biti dostupni uskoro." in content
+        assert "Članci" in content
+
+    # --- Task 5.15: Test article_count displayed ---
+
+    def test_article_count_displayed_on_publication_detail(self, client):
+        """AC #1: Article count (0) is displayed on publication detail issue list."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        pub = issue.publication
+
+        url = reverse(
+            "portal-publications:publication-detail",
+            kwargs={"slug": pub.slug},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        # article_count is 0 (placeholder) - should show "0 clanaka"
+        # Use bi-file-earmark-text icon as anchor to verify article count context
+        assert "bi-file-earmark-text" in content
+        assert "0 članaka" in content
+
+    # --- Additional tests ---
+
+    def test_uses_correct_template(self, client):
+        """Issue detail uses portal issue_detail.html template."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+
+        template_names = [t.name for t in response.templates]
+        assert "portal/publications/issue_detail.html" in template_names
+
+    def test_no_authentication_required(self, client):
+        """Public view - no login required."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        # 200, not 302 redirect to login
+        assert response.status_code == 200
+
+    def test_context_has_articles_empty_list(self, client):
+        """Context articles is empty list (placeholder until Story 3.1)."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        assert response.context["articles"] == []
+
+    def test_publisher_link_on_issue_detail(self, client):
+        """Issue detail has link to publisher detail."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        publisher_url = reverse(
+            "portal:publisher-detail",
+            kwargs={"slug": issue.publication.publisher.slug},
+        )
+        assert publisher_url in content
+        assert issue.publication.publisher.name in content
+
+    def test_deleted_publication_issue_returns_404(self, client):
+        """Security: Issue of a soft-deleted publication returns 404."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        pub = issue.publication
+        slug = pub.slug
+        pub.soft_delete()
+
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        assert response.status_code == 404
+
+    def test_back_to_publication_link(self, client):
+        """Issue detail has 'Nazad na publikaciju' link."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        response = client.get(url)
+        content = response.content.decode()
+
+        assert "Nazad na publikaciju" in content
+        pub_url = reverse(
+            "portal-publications:publication-detail",
+            kwargs={"slug": issue.publication.slug},
+        )
+        assert pub_url in content
+
+
+@pytest.mark.django_db
+class TestIssueURLPatterns:
+    """Test issue URL patterns are configured correctly."""
+
+    def test_issue_detail_url(self):
+        """Test issue detail URL resolves to /publications/<slug>/issues/<pk>/."""
+        issue = IssueFactory(status=IssueStatus.PUBLISHED)
+        url = reverse(
+            "portal-publications:issue-detail",
+            kwargs={"slug": issue.publication.slug, "pk": issue.pk},
+        )
+        assert f"/publications/{issue.publication.slug}/issues/{issue.pk}/" == url

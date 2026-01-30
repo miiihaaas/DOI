@@ -1,0 +1,131 @@
+{% extends "portal/base.html" %}
+{% load static i18n %}
+
+{% block title %}{{ issue.publication.title }} - Vol. {{ issue.volume }}, No. {{ issue.issue_number }} ({{ issue.year }}) - DOI Portal{% endblock title %}
+
+{% block meta_description %}Izdanje Vol. {{ issue.volume }}, No. {{ issue.issue_number }} ({{ issue.year }}) publikacije {{ issue.publication.title }} na DOI Portalu.{% endblock meta_description %}
+
+{% block portal_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <article>
+            <h1 class="h3 mb-3">
+                {{ issue.publication.title }}
+                <small class="text-muted d-block mt-1">
+                    Vol. {{ issue.volume }}, No. {{ issue.issue_number }} ({{ issue.year }})
+                </small>
+            </h1>
+
+            {% if issue.title %}
+            <p class="lead">{{ issue.title }}</p>
+            {% endif %}
+
+            <div class="mb-3">
+                <span class="badge {{ issue.status_badge_class }}">{{ issue.get_status_display }}</span>
+                {% if issue.publication_date %}
+                <span class="text-muted ms-2">
+                    <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>
+                    {{ issue.publication_date|date:"d.m.Y." }}
+                </span>
+                {% endif %}
+            </div>
+
+            {% if issue.cover_image %}
+            <div class="mb-4">
+                <img src="{{ issue.cover_image.url }}"
+                     class="img-fluid rounded"
+                     alt="Naslovna slika: {{ issue.publication.title }} Vol. {{ issue.volume }}, No. {{ issue.issue_number }}"
+                     style="max-height: 300px;">
+            </div>
+            {% endif %}
+
+            <!-- Conference Proceedings (samo za CONFERENCE tip) -->
+            {% if issue.publication.publication_type == "CONFERENCE" %}
+            {% if issue.proceedings_title or issue.proceedings_publisher_name or issue.proceedings_publisher_place %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="h5 card-title">
+                        <i class="bi bi-people me-2" aria-hidden="true"></i>Podaci o zborniku
+                    </h2>
+                    <dl class="row mb-0">
+                        {% if issue.proceedings_title %}
+                        <dt class="col-sm-4">Naslov zbornika</dt>
+                        <dd class="col-sm-8">{{ issue.proceedings_title }}</dd>
+                        {% endif %}
+                        {% if issue.proceedings_publisher_name %}
+                        <dt class="col-sm-4">Izdavač zbornika</dt>
+                        <dd class="col-sm-8">{{ issue.proceedings_publisher_name }}</dd>
+                        {% endif %}
+                        {% if issue.proceedings_publisher_place %}
+                        <dt class="col-sm-4">Mesto izdavanja</dt>
+                        <dd class="col-sm-8">{{ issue.proceedings_publisher_place }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <!-- Articles Section (placeholder until Story 3.1) -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="h5 card-title">
+                        <i class="bi bi-file-earmark-text me-2" aria-hidden="true"></i>Članci
+                    </h2>
+                    {% if articles %}
+                    <!-- Story 3.1 ce popuniti ovu sekciju sa realnim clancima -->
+                    <div class="list-group">
+                        {% for article in articles %}
+                        <div class="list-group-item">
+                            {{ article.title }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">Članci će biti dostupni uskoro.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Back to Publication -->
+            <a href="{% url 'portal-publications:publication-detail' issue.publication.slug %}"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+                Nazad na publikaciju
+            </a>
+        </article>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="col-lg-4">
+        <!-- Publication Info Card -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5 card-title">Publikacija</h2>
+                <p class="mb-2">
+                    <a href="{% url 'portal-publications:publication-detail' issue.publication.slug %}">
+                        {{ issue.publication.title }}
+                    </a>
+                </p>
+                <span class="badge bg-secondary">
+                    <i class="{{ issue.publication.type_icon }} me-1" aria-hidden="true"></i>
+                    {{ issue.publication.type_display }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Publisher Info Card -->
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5 card-title">Izdavač</h2>
+                <p class="mb-2">
+                    <i class="bi bi-building me-2" aria-hidden="true"></i>
+                    <a href="{% url 'portal:publisher-detail' issue.publication.publisher.slug %}">
+                        {{ issue.publication.publisher.name }}
+                    </a>
+                </p>
+            </div>
+        </div>
+    </aside>
+</div>
+{% endblock portal_content %}
