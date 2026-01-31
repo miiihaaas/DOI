@@ -50,7 +50,7 @@ MENU_ITEMS: dict[str, dict] = {
     "articles": {
         "label": "Članci",
         "icon": "bi-file-earmark-text",
-        "url_name": None,  # Epic 3 - Not implemented yet
+        "url_name": "articles:list",  # Story 3.1 - Implemented
         "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
     },
     "my_drafts": {

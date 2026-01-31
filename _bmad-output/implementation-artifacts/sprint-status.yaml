@@ -53,7 +53,7 @@ development_status:
 
   # Epic 2: Content Structure Management
   # NOTE: PRD revision 1.1 added Story 2-3a for Crossref compliance
-  epic-2: in-progress
+  epic-2: done
   2-1-publisher-model-admin-crud: done
   2-2-public-publisher-page: done
   2-3-publication-model-with-type-specific-fields: done
@@ -66,8 +66,8 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Article Workflow
-  epic-3: backlog
-  3-1-article-model-basic-metadata-entry: backlog
+  epic-3: in-progress
+  3-1-article-model-basic-metadata-entry: done
   3-2-author-management-with-drag-drop: backlog
   3-3-pdf-upload-with-virus-scanning: backlog
   3-4-auto-save-functionality: backlog

@@ -168,12 +168,14 @@ class Issue(models.Model):
     @property
     def article_count(self) -> int:
         """
-        Return count of articles (placeholder until Story 3.1).
+        Return count of articles in this issue.
+
+        Uses the 'articles' reverse relation from Article model.
 
         Returns:
-            Number of articles in this issue (0 until Article model exists)
+            Number of non-deleted articles in this issue
         """
-        return 0
+        return self.articles.count()
 
     @property
     def status_badge_class(self) -> str:

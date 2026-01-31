@@ -1,0 +1,209 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ article.title }} - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-file-earmark-text me-2"></i>{{ article.title }}
+    </h1>
+    <div>
+        {% if can_edit %}
+        <a href="{% url 'articles:update' article.pk %}" class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i>Izmeni
+        </a>
+        {% endif %}
+        {% if can_delete %}
+        <a href="{% url 'articles:delete' article.pk %}" class="btn btn-outline-danger ms-2">
+            <i class="bi bi-trash me-1"></i>Obriši
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Info Card -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Osnovne informacije</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Naslov</dt>
+                    <dd class="col-sm-9">{{ article.title }}</dd>
+
+                    {% if article.subtitle %}
+                    <dt class="col-sm-3">Podnaslov</dt>
+                    <dd class="col-sm-9">{{ article.subtitle }}</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-3">Izdanje</dt>
+                    <dd class="col-sm-9">
+                        {{ article.issue }}
+                    </dd>
+
+                    <dt class="col-sm-3">Publikacija</dt>
+                    <dd class="col-sm-9">
+                        {{ article.issue.publication.title }}
+                    </dd>
+
+                    <dt class="col-sm-3">Izdavač</dt>
+                    <dd class="col-sm-9">
+                        {{ article.issue.publication.publisher.name }}
+                    </dd>
+
+                    <dt class="col-sm-3">DOI sufiks</dt>
+                    <dd class="col-sm-9">{{ article.doi_suffix }}</dd>
+
+                    <dt class="col-sm-3">Status</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge {{ article.status_badge_class }}">
+                            {{ article.get_status_display }}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-3">Jezik</dt>
+                    <dd class="col-sm-9">{{ article.language }}</dd>
+
+                    <dt class="col-sm-3">Tip sadržaja</dt>
+                    <dd class="col-sm-9">{{ article.get_publication_type_display }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Abstract Section -->
+        {% if article.abstract %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-text-paragraph me-2"></i>Apstrakt</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ article.abstract }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Keywords Section -->
+        {% if article.keywords %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-tags me-2"></i>Ključne reči</h5>
+            </div>
+            <div class="card-body">
+                {% for keyword in article.keywords %}
+                <span class="badge bg-primary me-1 mb-1">{{ keyword }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Pages/Identification Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bookmark me-2"></i>Stranice i identifikacija</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    {% if article.first_page %}
+                    <dt class="col-sm-3">Prva stranica</dt>
+                    <dd class="col-sm-9">{{ article.first_page }}</dd>
+                    {% endif %}
+
+                    {% if article.last_page %}
+                    <dt class="col-sm-3">Poslednja stranica</dt>
+                    <dd class="col-sm-9">{{ article.last_page }}</dd>
+                    {% endif %}
+
+                    {% if article.article_number %}
+                    <dt class="col-sm-3">Broj članka</dt>
+                    <dd class="col-sm-9">{{ article.article_number }}</dd>
+                    {% endif %}
+                </dl>
+                {% if not article.first_page and not article.last_page and not article.article_number %}
+                <p class="text-muted mb-0">Nema unetih podataka o stranicama.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- License/Access Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Licenca i pristup</h5>
+            </div>
+            <div class="card-body">
+                <dl class="mb-0">
+                    {% if article.license_url %}
+                    <dt>URL licence</dt>
+                    <dd><a href="{{ article.license_url }}" target="_blank">{{ article.license_url }}</a></dd>
+                    {% endif %}
+
+                    {% if article.license_applies_to %}
+                    <dt>Licenca se odnosi na</dt>
+                    <dd>{{ article.get_license_applies_to_display }}</dd>
+                    {% endif %}
+
+                    <dt>Slobodan pristup</dt>
+                    <dd>
+                        {% if article.free_to_read %}
+                        <span class="badge bg-success">Da</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Ne</span>
+                        {% endif %}
+                    </dd>
+
+                    {% if article.free_to_read_start_date %}
+                    <dt>Datum slobodnog pristupa</dt>
+                    <dd>{{ article.free_to_read_start_date|date:"d.m.Y." }}</dd>
+                    {% endif %}
+                </dl>
+                {% if not article.license_url and not article.license_applies_to %}
+                <p class="text-muted mb-0">Nema unetih podataka o licenci.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Metadata Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Metapodaci</h5>
+            </div>
+            <div class="card-body">
+                <dl class="mb-0">
+                    <dt>Kreirao</dt>
+                    <dd>{{ article.created_by|default:"-" }}</dd>
+
+                    <dt>Kreirano</dt>
+                    <dd>{{ article.created_at|date:"d.m.Y. H:i" }}</dd>
+
+                    <dt>Ažurirano</dt>
+                    <dd>{{ article.updated_at|date:"d.m.Y. H:i" }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Brze akcije</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% if can_edit %}
+                <a href="{% url 'articles:update' article.pk %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-pencil me-2"></i>Izmeni članak
+                </a>
+                {% endif %}
+                <a href="{% url 'articles:list' %}?issue={{ article.issue.pk }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-file-earmark-text me-2"></i>Svi članci ovog izdanja
+                </a>
+                <a href="{% url 'articles:list' %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-list-ul me-2"></i>Svi članci
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

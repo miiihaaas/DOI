@@ -89,6 +89,7 @@ LOCAL_APPS = [
     "doi_portal.publishers",
     "doi_portal.publications",  # Story 2.3: Publication types
     "doi_portal.issues",  # Story 2.6: Issue model & admin CRUD
+    "doi_portal.articles",  # Story 3.1: Article model & basic metadata entry
     "doi_portal.portal",  # Story 2.2: Public portal
     "doi_portal.core",
     # Your stuff: custom apps go here

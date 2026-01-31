@@ -31,6 +31,8 @@ urlpatterns = [
     path("dashboard/publications/", include("doi_portal.publications.urls", namespace="publications")),
     # Story 2.6: Issue admin routes (under dashboard)
     path("dashboard/issues/", include("doi_portal.issues.urls", namespace="issues")),
+    # Story 3.1: Article admin routes (under dashboard)
+    path("dashboard/articles/", include("doi_portal.articles.urls", namespace="articles")),
     # Story 2.2: Public portal routes (no authentication required)
     path("publishers/", include("doi_portal.portal.urls", namespace="portal")),
     # Story 2.5: Public publications portal routes (no authentication required)
