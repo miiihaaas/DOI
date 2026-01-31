@@ -105,7 +105,7 @@ class UserCreateForm(forms.ModelForm):
         labels = {
             "email": _("Email adresa"),
             "name": _("Ime i prezime"),
-            "publisher": _("Izdavac"),
+            "publisher": _("Izdavač"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -184,7 +184,7 @@ class UserUpdateForm(forms.ModelForm):
         labels = {
             "email": _("Email adresa"),
             "name": _("Ime i prezime"),
-            "publisher": _("Izdavac"),
+            "publisher": _("Izdavač"),
         }
 
     def __init__(self, *args, **kwargs):

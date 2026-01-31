@@ -62,7 +62,7 @@ development_status:
   2-5-public-publication-list-with-filters: done
   2-6-issue-model-admin-crud: done
   2-7-public-issue-list-detail: done
-  2-8-row-level-permissions-for-content: backlog
+  2-8-row-level-permissions-for-content: done
   epic-2-retrospective: optional
 
   # Epic 3: Article Workflow

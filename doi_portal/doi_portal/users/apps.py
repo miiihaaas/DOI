@@ -15,6 +15,7 @@ class UsersConfig(AppConfig):
         This ensures that signal handlers are connected when the application
         is ready. Specifically loads:
         - Session invalidation on password change (Story 1.5)
+        - Publisher permission sync on user save (Story 2.8)
         """
         with contextlib.suppress(ImportError):
             import doi_portal.users.signals  # noqa: F401, PLC0415
