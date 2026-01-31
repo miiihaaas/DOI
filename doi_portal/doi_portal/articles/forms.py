@@ -2,6 +2,7 @@
 Article forms for DOI Portal.
 
 Story 3.1: ArticleForm with issue scoping and validation.
+Story 3.2: AuthorForm and AffiliationForm for inline HTMX editing.
 """
 
 import json
@@ -11,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 
 from doi_portal.issues.models import Issue
 
-from .models import Article
+from .models import Affiliation, Article, Author
 
 
 class ArticleForm(forms.ModelForm):
@@ -197,3 +198,115 @@ class ArticleForm(forms.ModelForm):
         if not result:
             self.add_error_classes()
         return result
+
+
+class AuthorForm(forms.ModelForm):
+    """
+    Form for creating and editing authors via HTMX inline editing.
+
+    Story 3.2: Bootstrap 5 styled form with Serbian labels.
+    """
+
+    class Meta:
+        model = Author
+        fields = [
+            "given_name",
+            "surname",
+            "suffix",
+            "email",
+            "orcid",
+            "contributor_role",
+            "is_corresponding",
+        ]
+        widgets = {
+            "given_name": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Ime autora",
+                }
+            ),
+            "surname": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Prezime autora",
+                }
+            ),
+            "suffix": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "npr. Jr., III",
+                }
+            ),
+            "email": forms.EmailInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "email@primer.com",
+                }
+            ),
+            "orcid": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "0000-0000-0000-0000",
+                }
+            ),
+            "contributor_role": forms.Select(
+                attrs={
+                    "class": "form-select",
+                }
+            ),
+            "is_corresponding": forms.CheckboxInput(
+                attrs={
+                    "class": "form-check-input",
+                }
+            ),
+        }
+        labels = {
+            "given_name": _("Ime"),
+            "surname": _("Prezime"),
+            "suffix": _("Sufiks"),
+            "email": _("Email"),
+            "orcid": _("ORCID"),
+            "contributor_role": _("Uloga kontributora"),
+            "is_corresponding": _("Korespondentan autor"),
+        }
+
+
+class AffiliationForm(forms.ModelForm):
+    """
+    Form for creating and editing affiliations via HTMX inline editing.
+
+    Story 3.2: Bootstrap 5 styled form with Serbian labels.
+    """
+
+    class Meta:
+        model = Affiliation
+        fields = [
+            "institution_name",
+            "institution_ror_id",
+            "department",
+        ]
+        widgets = {
+            "institution_name": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Naziv institucije",
+                }
+            ),
+            "institution_ror_id": forms.URLInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "https://ror.org/...",
+                }
+            ),
+            "department": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Departman (opciono)",
+                }
+            ),
+        }
+        labels = {
+            "institution_name": _("Naziv institucije"),
+            "institution_ror_id": _("ROR ID"),
+            "department": _("Departman"),
+        }

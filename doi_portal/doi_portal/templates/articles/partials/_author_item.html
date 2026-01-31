@@ -1,0 +1,56 @@
+{% load i18n %}
+<div class="card mb-2" data-author-id="{{ author.pk }}">
+    <div class="card-body py-2 d-flex align-items-center">
+        <span class="drag-handle me-2" style="cursor: grab;" title="Prevucite za promenu redosleda">
+            <i class="bi bi-grip-vertical"></i>
+        </span>
+        <div class="flex-grow-1">
+            <strong>{{ author.surname }}{% if author.given_name %}, {{ author.given_name }}{% endif %}</strong>
+            {% if author.suffix %}
+                <span class="text-muted">{{ author.suffix }}</span>
+            {% endif %}
+            <span class="badge bg-info ms-1">{{ author.get_contributor_role_display }}</span>
+            {% if author.is_corresponding %}
+                <span class="badge bg-warning ms-1">Korespondentan</span>
+            {% endif %}
+            {% if author.orcid %}
+                <span class="text-success ms-2">
+                    <i class="bi bi-check-circle"></i> {{ author.orcid }}
+                </span>
+            {% endif %}
+            {% if author.email %}
+                <br><small class="text-muted"><i class="bi bi-envelope me-1"></i>{{ author.email }}</small>
+            {% endif %}
+            {% for aff in author.affiliations.all %}
+                {% include "articles/partials/_affiliation_item.html" with affiliation=aff %}
+            {% endfor %}
+        </div>
+        <div class="ms-2 d-flex align-items-center gap-1">
+            <span class="badge bg-{% if author.sequence == 'first' %}primary{% else %}secondary{% endif %}">
+                {{ author.get_sequence_display }}
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-primary"
+                    hx-get="{% url 'articles:author-edit-form' pk=author.pk %}"
+                    hx-target="#author-form-container"
+                    hx-swap="innerHTML"
+                    title="Izmeni autora">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-success"
+                    hx-get="{% url 'articles:affiliation-form' author_pk=author.pk %}"
+                    hx-target="#author-form-container"
+                    hx-swap="innerHTML"
+                    title="Dodaj afilijaciju">
+                <i class="bi bi-building-add"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    hx-post="{% url 'articles:author-delete' pk=author.pk %}"
+                    hx-target="#authors-section-content"
+                    hx-swap="innerHTML"
+                    hx-confirm="Da li ste sigurni da želite ukloniti autora {{ author }}?"
+                    title="Ukloni autora">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+</div>

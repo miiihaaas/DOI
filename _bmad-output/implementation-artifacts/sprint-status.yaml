@@ -68,7 +68,7 @@ development_status:
   # Epic 3: Article Workflow
   epic-3: in-progress
   3-1-article-model-basic-metadata-entry: done
-  3-2-author-management-with-drag-drop: backlog
+  3-2-author-management-with-drag-drop: done
   3-3-pdf-upload-with-virus-scanning: backlog
   3-4-auto-save-functionality: backlog
   3-5-submit-article-for-review: backlog

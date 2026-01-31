@@ -227,6 +227,30 @@
                 </script>
             </div>
         </div>
+
+        <!-- Author Section (Edit Mode Only) - Story 3.2 -->
+        {% if is_edit %}
+        <div class="card mt-4" x-data="authorList()">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-people me-2"></i>Autori
+                </h5>
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                        hx-get="{% url 'articles:author-form' article_pk=object.pk %}"
+                        hx-target="#author-form-container"
+                        hx-swap="innerHTML">
+                    <i class="bi bi-plus-lg me-1"></i>Dodaj autora
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="author-form-container"></div>
+                <div id="authors-section-content">
+                    {% include "articles/partials/_author_list.html" with authors=authors %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 </div>
 {% endblock %}
@@ -235,4 +259,67 @@
 {{ block.super }}
 <!-- Alpine.js for tag input and character count -->
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.3/dist/cdn.min.js"></script>
+{% if is_edit %}
+<!-- SortableJS for drag & drop author reordering -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+{% endif %}
+{% endblock %}
+
+{% block inline_javascript %}
+{{ block.super }}
+{% if is_edit %}
+<script>
+// CSRF token injection for all HTMX POST requests (required because CSRF_COOKIE_HTTPONLY=True)
+document.body.addEventListener('htmx:configRequest', function(evt) {
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfInput) {
+        evt.detail.headers['X-CSRFToken'] = csrfInput.value;
+    }
+});
+
+function authorList() {
+    return {
+        init() {
+            this.$nextTick(() => {
+                this.initSortable();
+            });
+            // Re-initialize after HTMX swaps
+            document.body.addEventListener('htmx:afterSwap', (evt) => {
+                if (evt.detail.target.id === 'authors-section-content') {
+                    this.$nextTick(() => {
+                        this.initSortable();
+                    });
+                }
+            });
+        },
+        initSortable() {
+            const el = document.getElementById('authors-container');
+            if (el && el.children.length > 0) {
+                new Sortable(el, {
+                    handle: '.drag-handle',
+                    animation: 150,
+                    ghostClass: 'bg-light',
+                    onEnd: (evt) => {
+                        const items = el.querySelectorAll('[data-author-id]');
+                        const order = Array.from(items).map(item =>
+                            parseInt(item.dataset.authorId)
+                        );
+                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        htmx.ajax('POST', '{% url "articles:author-reorder" article_pk=object.pk %}', {
+                            target: '#authors-section-content',
+                            swap: 'innerHTML',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken,
+                            },
+                            body: JSON.stringify({order: order}),
+                        });
+                    }
+                });
+            }
+        }
+    }
+}
+</script>
+{% endif %}
 {% endblock %}

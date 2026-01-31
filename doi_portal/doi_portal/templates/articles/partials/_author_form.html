@@ -1,0 +1,102 @@
+{% load i18n %}
+<div class="card border-primary mb-3">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            {% if author %}Izmeni autora{% else %}Dodaj autora{% endif %}
+        </h6>
+        <button type="button" class="btn btn-sm btn-light"
+                onclick="document.getElementById('author-form-container').innerHTML = '';">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="card-body">
+        <form {% if author %}
+                hx-post="{% url 'articles:author-update' pk=author.pk %}"
+              {% else %}
+                hx-post="{% url 'articles:author-add' article_pk=article.pk %}"
+              {% endif %}
+              hx-target="#authors-section-content"
+              hx-swap="innerHTML">
+            {% csrf_token %}
+
+            {% if author_form.non_field_errors %}
+            <div class="alert alert-danger mb-2">
+                {% for error in author_form.non_field_errors %}
+                <p class="mb-0">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <label for="id_given_name" class="form-label">{{ author_form.given_name.label }}</label>
+                    {{ author_form.given_name }}
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label for="id_surname" class="form-label">{{ author_form.surname.label }} <span class="text-danger">*</span></label>
+                    {{ author_form.surname }}
+                    {% if author_form.surname.errors %}
+                    <div class="invalid-feedback d-block">{{ author_form.surname.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label for="id_suffix" class="form-label">{{ author_form.suffix.label }}</label>
+                    {{ author_form.suffix }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label for="id_email" class="form-label">{{ author_form.email.label }}</label>
+                    {{ author_form.email }}
+                    {% if author_form.email.errors %}
+                    <div class="invalid-feedback d-block">{{ author_form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label for="id_orcid" class="form-label">{{ author_form.orcid.label }}</label>
+                    <div class="input-group">
+                        {{ author_form.orcid }}
+                        <span id="orcid-feedback" class="input-group-text"></span>
+                    </div>
+                    {% if author_form.orcid.errors %}
+                    <div class="invalid-feedback d-block">{{ author_form.orcid.errors.0 }}</div>
+                    {% endif %}
+                    <input type="hidden"
+                           name="_orcid_validate"
+                           hx-get="{% url 'articles:validate-orcid' %}"
+                           hx-trigger="blur from:#id_orcid"
+                           hx-target="#orcid-feedback"
+                           hx-swap="innerHTML"
+                           hx-include="#id_orcid"
+                           hx-params="orcid">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label for="id_contributor_role" class="form-label">{{ author_form.contributor_role.label }}</label>
+                    {{ author_form.contributor_role }}
+                </div>
+                <div class="col-md-6 mb-2 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        {{ author_form.is_corresponding }}
+                        <label class="form-check-label" for="id_is_corresponding">
+                            {{ author_form.is_corresponding.label }}
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        onclick="document.getElementById('author-form-container').innerHTML = '';">
+                    Otkaži
+                </button>
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>Sačuvaj
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

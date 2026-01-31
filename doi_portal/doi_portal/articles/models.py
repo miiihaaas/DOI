@@ -2,6 +2,7 @@
 Article models for DOI Portal.
 
 Story 3.1: Article Model & Basic Metadata Entry.
+Story 3.2: Author & Affiliation models with Crossref-compliant fields.
 Supports: Article tracking within Issues for Crossref DOI registration.
 """
 
@@ -15,13 +16,19 @@ from django.utils.translation import gettext_lazy as _
 
 from doi_portal.publishers.models import SoftDeleteManager
 
+from .validators import validate_orcid
+
 if TYPE_CHECKING:
     from doi_portal.users.models import User
 
 __all__ = [
+    "Affiliation",
     "Article",
     "ArticleContentType",
     "ArticleStatus",
+    "Author",
+    "AuthorSequence",
+    "ContributorRole",
     "LicenseAppliesTo",
 ]
 
@@ -50,6 +57,23 @@ class LicenseAppliesTo(models.TextChoices):
     VOR = "vor", _("Verzija zapisa (VoR)")
     AM = "am", _("Prihvaćeni rukopis (AM)")
     TDM = "tdm", _("Rudarenje teksta (TDM)")
+
+
+class AuthorSequence(models.TextChoices):
+    """Crossref sequence atribut za kontributore."""
+
+    FIRST = "first", _("Glavni (first)")
+    ADDITIONAL = "additional", _("Ostali (additional)")
+
+
+class ContributorRole(models.TextChoices):
+    """Crossref contributor_role atribut."""
+
+    AUTHOR = "author", _("Autor")
+    EDITOR = "editor", _("Urednik")
+    CHAIR = "chair", _("Predsedavajući")
+    TRANSLATOR = "translator", _("Prevodilac")
+    REVIEWER = "reviewer", _("Recenzent")
 
 
 class Article(models.Model):
@@ -226,3 +250,134 @@ class Article(models.Model):
             ArticleStatus.WITHDRAWN: "bg-danger",
         }
         return badge_classes.get(self.status, "bg-secondary")
+
+    @property
+    def author_count(self) -> int:
+        """Return count of authors for this article."""
+        return self.authors.count()
+
+
+class Author(models.Model):
+    """
+    Author/Contributor model for articles.
+
+    Stores Crossref-compliant contributor data including
+    sequence, contributor_role, and ORCID.
+    Part of hierarchy: Article -> Author -> Affiliation.
+    """
+
+    article = models.ForeignKey(
+        "articles.Article",
+        on_delete=models.CASCADE,
+        related_name="authors",
+        verbose_name=_("Članak"),
+    )
+    # Identification
+    given_name = models.CharField(
+        _("Ime"),
+        max_length=255,
+        blank=True,
+    )
+    surname = models.CharField(
+        _("Prezime"),
+        max_length=255,
+    )
+    suffix = models.CharField(
+        _("Sufiks"),
+        max_length=50,
+        blank=True,
+        help_text=_("npr. Jr., III"),
+    )
+    email = models.EmailField(
+        _("Email"),
+        blank=True,
+    )
+    orcid = models.CharField(
+        _("ORCID"),
+        max_length=19,
+        blank=True,
+        validators=[validate_orcid],
+        help_text=_("Format: 0000-0000-0000-000X"),
+    )
+    orcid_authenticated = models.BooleanField(
+        _("ORCID autentifikovan"),
+        default=False,
+    )
+
+    # Crossref required
+    sequence = models.CharField(
+        _("Redosled (Crossref)"),
+        max_length=20,
+        choices=AuthorSequence.choices,
+        default=AuthorSequence.ADDITIONAL,
+    )
+    contributor_role = models.CharField(
+        _("Uloga kontributora"),
+        max_length=20,
+        choices=ContributorRole.choices,
+        default=ContributorRole.AUTHOR,
+    )
+
+    # Status
+    is_corresponding = models.BooleanField(
+        _("Korespondentan autor"),
+        default=False,
+    )
+    order = models.PositiveIntegerField(
+        _("Redni broj"),
+        default=0,
+    )
+
+    class Meta:
+        verbose_name = _("Autor")
+        verbose_name_plural = _("Autori")
+        ordering = ["order"]
+
+    def __str__(self) -> str:
+        if self.given_name:
+            return f"{self.given_name} {self.surname}"
+        return self.surname
+
+
+class Affiliation(models.Model):
+    """
+    Affiliation model for authors.
+
+    Stores institution data with optional ROR ID for Crossref.
+    One author can have multiple affiliations.
+    """
+
+    author = models.ForeignKey(
+        "articles.Author",
+        on_delete=models.CASCADE,
+        related_name="affiliations",
+        verbose_name=_("Autor"),
+    )
+    institution_name = models.CharField(
+        _("Naziv institucije"),
+        max_length=500,
+    )
+    institution_ror_id = models.URLField(
+        _("ROR ID"),
+        blank=True,
+        help_text=_("https://ror.org/..."),
+    )
+    department = models.CharField(
+        _("Departman"),
+        max_length=500,
+        blank=True,
+    )
+    order = models.PositiveIntegerField(
+        _("Redni broj"),
+        default=0,
+    )
+
+    class Meta:
+        verbose_name = _("Afilijacija")
+        verbose_name_plural = _("Afilijacije")
+        ordering = ["order"]
+
+    def __str__(self) -> str:
+        if self.department:
+            return f"{self.department}, {self.institution_name}"
+        return self.institution_name

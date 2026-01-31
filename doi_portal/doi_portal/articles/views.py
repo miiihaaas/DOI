@@ -2,11 +2,20 @@
 Article views for DOI Portal.
 
 Story 3.1: Article admin CRUD views with row-level permissions.
+Story 3.2: HTMX FBV views for Author CRUD, reorder, ORCID validation.
 """
 
+import json
+import re
+
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.db import models
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -21,8 +30,42 @@ from doi_portal.publishers.mixins import (
     PublisherScopedMixin,
 )
 
-from .forms import ArticleForm
-from .models import Article, ArticleStatus
+from .forms import AffiliationForm, ArticleForm, AuthorForm
+from .models import (
+    Affiliation,
+    Article,
+    ArticleStatus,
+    Author,
+    AuthorSequence,
+)
+
+
+# =============================================================================
+# Publisher scoping helper for HTMX FBV views
+# =============================================================================
+
+
+def _check_article_permission(user, article):
+    """
+    Check if user has permission to modify authors on this article.
+
+    Raises PermissionDenied if not allowed.
+    Scoping: article.issue.publication.publisher (4-level chain).
+    """
+    if user.is_superuser:
+        return
+    if user.groups.filter(name__in=["Administrator", "Superadmin"]).exists():
+        return
+    # Urednik/Bibliotekar - check publisher scoping
+    if hasattr(user, "publisher") and user.publisher:
+        if article.issue.publication.publisher == user.publisher:
+            return
+    raise PermissionDenied
+
+
+# =============================================================================
+# CBV views for Article CRUD (Story 3.1)
+# =============================================================================
 
 
 class ArticleListView(PublisherScopedMixin, ListView):
@@ -233,6 +276,8 @@ class ArticleUpdateView(PublisherScopedEditMixin, UpdateView):
         context["form_title"] = f"Izmeni članak: {self.object.title}"
         context["submit_text"] = "Sačuvaj izmene"
         context["is_edit"] = True
+        # Prefetch authors with affiliations to avoid N+1 queries (Story 3.2)
+        context["authors"] = self.object.authors.prefetch_related("affiliations").all()
         return context
 
     def form_valid(self, form):
@@ -297,6 +342,9 @@ class ArticleDetailView(PublisherScopedMixin, DetailView):
             flags["is_admin"] or flags["is_urednik"] or flags["is_bibliotekar"]
         ) and self.object.status == ArticleStatus.DRAFT
 
+        # Author list for detail view (Story 3.2)
+        context["authors"] = self.object.authors.prefetch_related("affiliations").all()
+
         return context
 
 
@@ -336,3 +384,311 @@ class ArticleDeleteView(AdministratorRequiredMixin, DeleteView):
         )
         article.soft_delete(user=self.request.user)
         return HttpResponseRedirect(self.success_url)
+
+
+# =============================================================================
+# HTMX FBV views for Author CRUD (Story 3.2)
+# =============================================================================
+
+
+@login_required
+@require_POST
+def author_add(request, article_pk):
+    """Add author to article via HTMX POST."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    form = AuthorForm(request.POST)
+    if form.is_valid():
+        author = form.save(commit=False)
+        author.article = article
+        # Auto-set order to next available
+        max_order = article.authors.aggregate(
+            max_order=models.Max("order")
+        )["max_order"] or 0
+        author.order = max_order + 1
+        # Auto-set sequence
+        if author.order == 1:
+            author.sequence = AuthorSequence.FIRST
+        else:
+            author.sequence = AuthorSequence.ADDITIONAL
+        author.save()
+    else:
+        # Return form with errors, retarget to form container
+        response = render(request, "articles/partials/_author_form.html", {
+            "article": article,
+            "author_form": form,
+        })
+        response["HX-Retarget"] = "#author-form-container"
+        response["HX-Reswap"] = "innerHTML"
+        return response
+
+    # Return updated author list fragment
+    authors = article.authors.prefetch_related("affiliations").all()
+    return render(request, "articles/partials/_author_list.html", {
+        "article": article,
+        "authors": authors,
+        "author_form": AuthorForm(),
+    })
+
+
+@login_required
+@require_POST
+def author_update(request, pk):
+    """Update author via HTMX POST."""
+    author = get_object_or_404(
+        Author.objects.select_related(
+            "article", "article__issue",
+            "article__issue__publication",
+            "article__issue__publication__publisher",
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, author.article)
+
+    form = AuthorForm(request.POST, instance=author)
+    if form.is_valid():
+        form.save()
+    else:
+        # Return form with errors, retarget to form container
+        response = render(request, "articles/partials/_author_form.html", {
+            "article": author.article,
+            "author_form": form,
+            "author": author,
+        })
+        response["HX-Retarget"] = "#author-form-container"
+        response["HX-Reswap"] = "innerHTML"
+        return response
+
+    article = author.article
+    authors = article.authors.prefetch_related("affiliations").all()
+    return render(request, "articles/partials/_author_list.html", {
+        "article": article,
+        "authors": authors,
+        "author_form": AuthorForm(),
+    })
+
+
+@login_required
+@require_POST
+def author_delete(request, pk):
+    """Delete author via HTMX POST, re-order remaining authors."""
+    author = get_object_or_404(
+        Author.objects.select_related(
+            "article", "article__issue",
+            "article__issue__publication",
+            "article__issue__publication__publisher",
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, author.article)
+
+    article = author.article
+    author.delete()
+
+    # Re-order remaining authors and recalculate sequence
+    remaining = article.authors.order_by("order")
+    for index, a in enumerate(remaining, start=1):
+        Author.objects.filter(pk=a.pk).update(
+            order=index,
+            sequence=AuthorSequence.FIRST if index == 1 else AuthorSequence.ADDITIONAL,
+        )
+
+    authors = article.authors.prefetch_related("affiliations").all()
+    return render(request, "articles/partials/_author_list.html", {
+        "article": article,
+        "authors": authors,
+        "author_form": AuthorForm(),
+    })
+
+
+@login_required
+@require_POST
+def author_reorder(request, article_pk):
+    """Reorder authors via HTMX POST (drag & drop)."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    try:
+        order_data = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        order_data = {}
+
+    # order_data = {"order": [pk1, pk2, pk3, ...]}
+    order_list = order_data.get("order", [])
+
+    # Validate: only accept integer PKs
+    if not isinstance(order_list, list):
+        order_list = []
+
+    for index, author_pk in enumerate(order_list, start=1):
+        if not isinstance(author_pk, int):
+            continue
+        Author.objects.filter(pk=author_pk, article=article).update(
+            order=index,
+            sequence=AuthorSequence.FIRST if index == 1 else AuthorSequence.ADDITIONAL,
+        )
+
+    authors = article.authors.prefetch_related("affiliations").all()
+    return render(request, "articles/partials/_author_list.html", {
+        "article": article,
+        "authors": authors,
+        "author_form": AuthorForm(),
+    })
+
+
+@login_required
+@require_GET
+def validate_orcid_view(request):
+    """Validate ORCID format via HTMX GET request."""
+    orcid = request.GET.get("orcid", "").strip()
+    is_valid = False
+    if orcid:
+        is_valid = bool(re.match(r"^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$", orcid))
+
+    return render(request, "articles/partials/_orcid_validation.html", {
+        "orcid": orcid,
+        "is_valid": is_valid,
+        "has_value": bool(orcid),
+    })
+
+
+@login_required
+@require_GET
+def author_form_view(request, article_pk):
+    """Return empty author form for inline editing via HTMX GET."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    form = AuthorForm()
+    return render(request, "articles/partials/_author_form.html", {
+        "article": article,
+        "author_form": form,
+    })
+
+
+@login_required
+@require_GET
+def author_edit_form_view(request, pk):
+    """Return pre-filled author form for editing via HTMX GET."""
+    author = get_object_or_404(
+        Author.objects.select_related(
+            "article", "article__issue",
+            "article__issue__publication",
+            "article__issue__publication__publisher",
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, author.article)
+
+    form = AuthorForm(instance=author)
+    return render(request, "articles/partials/_author_form.html", {
+        "article": author.article,
+        "author_form": form,
+        "author": author,
+    })
+
+
+@login_required
+@require_POST
+def affiliation_add(request, author_pk):
+    """Add affiliation to author via HTMX POST."""
+    author = get_object_or_404(
+        Author.objects.select_related(
+            "article", "article__issue",
+            "article__issue__publication",
+            "article__issue__publication__publisher",
+        ),
+        pk=author_pk,
+    )
+    _check_article_permission(request.user, author.article)
+
+    form = AffiliationForm(request.POST)
+    if form.is_valid():
+        affiliation = form.save(commit=False)
+        affiliation.author = author
+        # Auto-set order to next available
+        max_order = author.affiliations.aggregate(
+            max_order=models.Max("order")
+        )["max_order"] or 0
+        affiliation.order = max_order + 1
+        affiliation.save()
+    else:
+        # Return form with errors, retarget to form container
+        response = render(request, "articles/partials/_affiliation_form.html", {
+            "author": author,
+            "affiliation_form": form,
+        })
+        response["HX-Retarget"] = "#author-form-container"
+        response["HX-Reswap"] = "innerHTML"
+        return response
+
+    article = author.article
+    authors = article.authors.prefetch_related("affiliations").all()
+    return render(request, "articles/partials/_author_list.html", {
+        "article": article,
+        "authors": authors,
+        "author_form": AuthorForm(),
+    })
+
+
+@login_required
+@require_POST
+def affiliation_delete(request, pk):
+    """Delete affiliation via HTMX POST."""
+    affiliation = get_object_or_404(
+        Affiliation.objects.select_related(
+            "author", "author__article",
+            "author__article__issue",
+            "author__article__issue__publication",
+            "author__article__issue__publication__publisher",
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, affiliation.author.article)
+
+    article = affiliation.author.article
+    affiliation.delete()
+
+    authors = article.authors.prefetch_related("affiliations").all()
+    return render(request, "articles/partials/_author_list.html", {
+        "article": article,
+        "authors": authors,
+        "author_form": AuthorForm(),
+    })
+
+
+@login_required
+@require_GET
+def affiliation_form_view(request, author_pk):
+    """Return empty affiliation form for inline editing via HTMX GET."""
+    author = get_object_or_404(
+        Author.objects.select_related(
+            "article", "article__issue",
+            "article__issue__publication",
+            "article__issue__publication__publisher",
+        ),
+        pk=author_pk,
+    )
+    _check_article_permission(request.user, author.article)
+
+    form = AffiliationForm()
+    return render(request, "articles/partials/_affiliation_form.html", {
+        "author": author,
+        "affiliation_form": form,
+    })

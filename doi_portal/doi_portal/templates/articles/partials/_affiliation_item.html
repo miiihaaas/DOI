@@ -1,0 +1,21 @@
+{% load i18n %}
+<div class="d-flex align-items-center py-1 ms-4">
+    <i class="bi bi-building me-2 text-muted"></i>
+    <span class="flex-grow-1">
+        {{ affiliation.institution_name }}
+        {% if affiliation.department %}<span class="text-muted">, {{ affiliation.department }}</span>{% endif %}
+        {% if affiliation.institution_ror_id %}
+            <a href="{{ affiliation.institution_ror_id }}" target="_blank" class="ms-1 text-muted">
+                <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+        {% endif %}
+    </span>
+    <button type="button" class="btn btn-sm btn-outline-danger ms-2"
+            hx-post="{% url 'articles:affiliation-delete' pk=affiliation.pk %}"
+            hx-target="#authors-section-content"
+            hx-swap="innerHTML"
+            hx-confirm="Da li ste sigurni da želite ukloniti afilijaciju?"
+            title="Ukloni afilijaciju">
+        <i class="bi bi-x-lg"></i>
+    </button>
+</div>

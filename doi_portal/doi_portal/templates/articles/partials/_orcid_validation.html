@@ -1,0 +1,11 @@
+{% if has_value %}
+    {% if is_valid %}
+        <span class="text-success">
+            <i class="bi bi-check-circle-fill"></i>
+        </span>
+    {% else %}
+        <span class="text-danger">
+            <i class="bi bi-x-circle-fill"></i>
+        </span>
+    {% endif %}
+{% endif %}

@@ -98,6 +98,60 @@
         </div>
         {% endif %}
 
+        <!-- Authors Section (Story 3.2) -->
+        {% if authors %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Autori ({{ authors|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% for author in authors %}
+                <div class="{% if not forloop.last %}border-bottom pb-2 mb-2{% endif %}">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <strong>{{ author.surname }}{% if author.given_name %}, {{ author.given_name }}{% endif %}</strong>
+                            {% if author.suffix %}
+                                <span class="text-muted">{{ author.suffix }}</span>
+                            {% endif %}
+                            <span class="badge bg-info ms-1">{{ author.get_contributor_role_display }}</span>
+                            {% if author.is_corresponding %}
+                                <span class="badge bg-warning ms-1">Korespondentan</span>
+                            {% endif %}
+                            <span class="badge bg-{% if author.sequence == 'first' %}primary{% else %}secondary{% endif %} ms-1">
+                                {{ author.get_sequence_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% if author.orcid %}
+                    <div class="mt-1">
+                        <small class="text-success">
+                            <i class="bi bi-check-circle me-1"></i>ORCID: {{ author.orcid }}
+                        </small>
+                    </div>
+                    {% endif %}
+                    {% if author.email %}
+                    <div>
+                        <small class="text-muted">
+                            <i class="bi bi-envelope me-1"></i>{{ author.email }}
+                        </small>
+                    </div>
+                    {% endif %}
+                    {% for aff in author.affiliations.all %}
+                    <div>
+                        <small class="text-muted">
+                            <i class="bi bi-building me-1"></i>{{ aff.institution_name }}{% if aff.department %}, {{ aff.department }}{% endif %}
+                            {% if aff.institution_ror_id %}
+                                <a href="{{ aff.institution_ror_id }}" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Pages/Identification Section -->
         <div class="card mb-4">
             <div class="card-header">
