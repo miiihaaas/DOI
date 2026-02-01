@@ -1,0 +1,22 @@
+<div id="save-indicator">
+    {% if status == "saving" %}
+    <span class="badge bg-secondary">
+        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+        Čuvanje...
+    </span>
+    {% elif status == "saved" %}
+    <span class="badge bg-success" x-data="relativeTime('{{ saved_at|date:"c" }}')">
+        <i class="bi bi-check-lg me-1"></i><span x-text="display">Sačuvano</span>
+    </span>
+    {% elif status == "partial_error" %}
+    <span class="badge bg-warning text-dark">
+        <i class="bi bi-exclamation-triangle me-1"></i>Sačuvano (neka polja imaju greške)
+    </span>
+    {% elif status == "error" %}
+    <span class="badge bg-danger">
+        <i class="bi bi-x-circle me-1"></i>{{ message|default:"Čuvanje neuspešno" }}
+    </span>
+    {% else %}
+    <!-- Idle state - no save yet -->
+    {% endif %}
+</div>

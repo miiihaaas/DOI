@@ -4,6 +4,7 @@ Article URL configuration.
 Story 3.1: Article admin routes.
 Story 3.2: HTMX routes for Author CRUD, reorder, ORCID validation, affiliations.
 Story 3.3: HTMX routes for PDF upload, status polling, delete.
+Story 3.4: HTMX route for auto-save endpoint.
 """
 
 from django.urls import path
@@ -71,6 +72,12 @@ urlpatterns = [
         "affiliations/<int:pk>/delete/",
         views.affiliation_delete,
         name="affiliation-delete",
+    ),
+    # Auto-save HTMX endpoint (Story 3.4)
+    path(
+        "<int:pk>/autosave/",
+        views.article_autosave,
+        name="article-autosave",
     ),
     # PDF HTMX endpoints (Story 3.3)
     path(

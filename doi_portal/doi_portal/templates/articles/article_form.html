@@ -6,11 +6,25 @@
 <div class="row justify-content-center">
     <div class="col-lg-10">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">{{ form_title }}</h5>
+                {% if is_edit %}
+                <div id="save-indicator">
+                    <!-- Auto-save indicator will be injected here by HTMX -->
+                </div>
+                {% endif %}
             </div>
             <div class="card-body">
+                {% if is_edit %}
+                <form method="post" novalidate
+                      x-data="autosaveManager()"
+                      hx-post="{% url 'articles:article-autosave' pk=object.pk %}"
+                      hx-trigger="change delay:2s from:input, change delay:2s from:select, change delay:2s from:textarea"
+                      hx-target="#save-indicator"
+                      hx-swap="outerHTML">
+                {% else %}
                 <form method="post" novalidate>
+                {% endif %}
                     {% csrf_token %}
 
                     <!-- Form Errors Summary -->
@@ -187,7 +201,7 @@
                         <a href="{% url 'articles:list' %}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-1"></i>Nazad
                         </a>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" hx-disinherit="*">
                             <i class="bi bi-check-lg me-1"></i>{{ submit_text }}
                         </button>
                     </div>
@@ -216,11 +230,21 @@
                                 const trimmed = this.newKeyword.trim();
                                 if (trimmed && !this.keywords.includes(trimmed)) {
                                     this.keywords.push(trimmed);
+                                    // Trigger auto-save by dispatching change event on hidden input
+                                    this.$nextTick(() => {
+                                        const hidden = document.querySelector('input[name="keywords"]');
+                                        if (hidden) hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                                    });
                                 }
                                 this.newKeyword = '';
                             },
                             removeKeyword(index) {
                                 this.keywords.splice(index, 1);
+                                // Trigger auto-save by dispatching change event on hidden input
+                                this.$nextTick(() => {
+                                    const hidden = document.querySelector('input[name="keywords"]');
+                                    if (hidden) hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                                });
                             }
                         }
                     }
@@ -288,6 +312,109 @@ document.body.addEventListener('htmx:configRequest', function(evt) {
         evt.detail.headers['X-CSRFToken'] = csrfInput.value;
     }
 });
+
+// Auto-save manager Alpine.js component (Story 3.4)
+function autosaveManager() {
+    return {
+        hasUnsavedChanges: false,
+        retryCount: 0,
+        maxRetries: 3,
+        init() {
+            const form = this.$el;
+
+            // Track form changes
+            form.addEventListener('change', () => {
+                this.hasUnsavedChanges = true;
+            });
+
+            // Show saving spinner when HTMX request starts
+            document.body.addEventListener('htmx:beforeRequest', (evt) => {
+                if (evt.detail.elt === form) {
+                    const indicator = document.getElementById('save-indicator');
+                    if (indicator) {
+                        indicator.innerHTML =
+                            '<span class="badge bg-secondary">' +
+                            '<span class="spinner-border spinner-border-sm me-1" role="status"></span>' +
+                            'Čuvanje...</span>';
+                    }
+                }
+            });
+
+            // Listen for successful auto-save
+            document.body.addEventListener('htmx:afterRequest', (evt) => {
+                if (evt.detail.elt === form && evt.detail.successful) {
+                    this.hasUnsavedChanges = false;
+                    this.retryCount = 0;
+                }
+            });
+
+            // Listen for failed auto-save
+            document.body.addEventListener('htmx:responseError', (evt) => {
+                if (evt.detail.elt === form) {
+                    this.retryCount++;
+                    if (this.retryCount < this.maxRetries) {
+                        // Retry after 5 seconds
+                        setTimeout(() => {
+                            htmx.trigger(form, 'change');
+                        }, 5000);
+                    } else {
+                        // After 3 failures, show alert
+                        const indicator = document.getElementById('save-indicator');
+                        if (indicator) {
+                            indicator.innerHTML =
+                                '<span class="badge bg-danger">' +
+                                '<i class="bi bi-x-circle me-1"></i>' +
+                                'Automatsko čuvanje nije uspelo. Sačuvajte ručno.' +
+                                '</span>';
+                        }
+                    }
+                }
+            });
+
+            // Warn before leaving with unsaved changes (AC #5)
+            window.addEventListener('beforeunload', (e) => {
+                if (this.hasUnsavedChanges) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+        }
+    }
+}
+
+// Relative time display for save indicator (Story 3.4)
+function relativeTime(isoString) {
+    return {
+        display: '',
+        _intervalId: null,
+        init() {
+            this.update();
+            this._intervalId = setInterval(() => this.update(), 60000); // Update every minute
+        },
+        destroy() {
+            // Clean up interval when Alpine component is destroyed (HTMX swap)
+            if (this._intervalId) {
+                clearInterval(this._intervalId);
+            }
+        },
+        update() {
+            const saved = new Date(isoString);
+            const now = new Date();
+            const diff = Math.floor((now - saved) / 1000);
+            if (diff < 5) {
+                this.display = 'Upravo sačuvano';
+            } else if (diff < 60) {
+                this.display = 'Sačuvano pre ' + diff + ' sek';
+            } else if (diff < 3600) {
+                const mins = Math.floor(diff / 60);
+                this.display = 'Sačuvano pre ' + mins + ' min';
+            } else {
+                const hours = Math.floor(diff / 3600);
+                this.display = 'Sačuvano pre ' + hours + 'h';
+            }
+        }
+    }
+}
 
 function pdfUpload() {
     return {

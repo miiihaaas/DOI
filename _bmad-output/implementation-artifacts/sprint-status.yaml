@@ -69,8 +69,8 @@ development_status:
   epic-3: in-progress
   3-1-article-model-basic-metadata-entry: done
   3-2-author-management-with-drag-drop: done
-  3-3-pdf-upload-with-virus-scanning: backlog
-  3-4-auto-save-functionality: backlog
+  3-3-pdf-upload-with-virus-scanning: done
+  3-4-auto-save-functionality: done
   3-5-submit-article-for-review: backlog
   3-6-editorial-review-process: backlog
   3-7-article-publishing-withdrawal: backlog

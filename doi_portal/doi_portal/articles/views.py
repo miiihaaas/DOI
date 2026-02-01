@@ -4,6 +4,7 @@ Article views for DOI Portal.
 Story 3.1: Article admin CRUD views with row-level permissions.
 Story 3.2: HTMX FBV views for Author CRUD, reorder, ORCID validation.
 Story 3.3: HTMX FBV views for PDF upload, status polling, delete.
+Story 3.4: HTMX FBV for auto-save functionality.
 """
 
 import json
@@ -11,7 +12,8 @@ import re
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.validators import URLValidator
 from django.db import models
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
@@ -796,4 +798,114 @@ def pdf_delete(request, article_pk):
 
     return render(request, "articles/partials/_pdf_upload.html", {
         "article": article,
+    })
+
+
+# =============================================================================
+# HTMX FBV for Auto-Save (Story 3.4)
+# =============================================================================
+
+
+@login_required
+@require_POST
+def article_autosave(request, pk):
+    """
+    Auto-save article fields via HTMX POST.
+
+    Accepts partial form data - only saves fields that are present in POST.
+    Does NOT require all required fields (unlike full form submit).
+    Only works for DRAFT articles.
+    Returns save indicator HTML fragment.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, article)
+
+    # Only allow auto-save for DRAFT articles
+    if article.status != ArticleStatus.DRAFT:
+        return render(request, "articles/partials/_save_indicator.html", {
+            "status": "error",
+            "message": "Auto-save je moguć samo za članke u statusu Nacrt.",
+        })
+
+    # Collect fields to update
+    update_fields = []
+    errors = []
+
+    # Text fields - direct assignment
+    text_fields = [
+        "title", "subtitle", "abstract", "doi_suffix",
+        "first_page", "last_page", "article_number", "language",
+        "publication_type", "license_url", "license_applies_to",
+    ]
+    url_validator = URLValidator()
+    for field_name in text_fields:
+        if field_name in request.POST:
+            value = request.POST[field_name]
+            # Validate URL fields before saving
+            if field_name == "license_url" and value:
+                try:
+                    url_validator(value)
+                except ValidationError:
+                    errors.append("Nevažeći format URL-a za licencu.")
+                    continue
+            setattr(article, field_name, value)
+            update_fields.append(field_name)
+
+    # Boolean field
+    if "free_to_read" in request.POST:
+        article.free_to_read = request.POST.get("free_to_read") in (
+            "on", "true", "True", "1",
+        )
+        update_fields.append("free_to_read")
+    elif any(k for k in request.POST if k != "csrfmiddlewaretoken"):
+        # Checkbox not present means unchecked (only if other fields submitted)
+        article.free_to_read = False
+        update_fields.append("free_to_read")
+
+    # Date field
+    if "free_to_read_start_date" in request.POST:
+        date_val = request.POST["free_to_read_start_date"]
+        if date_val:
+            try:
+                from datetime import date
+
+                article.free_to_read_start_date = date.fromisoformat(date_val)
+                update_fields.append("free_to_read_start_date")
+            except (ValueError, TypeError):
+                errors.append("Nevažeći format datuma.")
+        else:
+            article.free_to_read_start_date = None
+            update_fields.append("free_to_read_start_date")
+
+    # Keywords JSON field
+    if "keywords" in request.POST:
+        raw = request.POST["keywords"]
+        try:
+            keywords = json.loads(raw) if raw else []
+            if isinstance(keywords, list):
+                article.keywords = [
+                    kw.strip() for kw in keywords
+                    if isinstance(kw, str) and kw.strip()
+                ]
+                update_fields.append("keywords")
+        except (json.JSONDecodeError, TypeError):
+            pass  # Ignore invalid JSON, keep existing keywords
+
+    # Save if we have fields to update
+    if update_fields:
+        # Must include updated_at explicitly because auto_now fields
+        # are only updated when listed in update_fields
+        update_fields.append("updated_at")
+        article.save(update_fields=update_fields)
+
+    status = "saved" if not errors else "partial_error"
+    return render(request, "articles/partials/_save_indicator.html", {
+        "status": status,
+        "errors": errors,
+        "saved_at": article.updated_at,
     })
