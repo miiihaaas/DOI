@@ -1,0 +1,116 @@
+{% if role_flags.is_admin %}
+<div class="col-md-3 mb-4">
+  <a href="{% url 'publications:list' %}" class="text-decoration-none">
+    <div class="card shadow-sm h-100 border-start border-primary border-4">
+      <div class="card-body text-center">
+        <i class="bi bi-journal-text display-4 text-primary mb-2"></i>
+        <h2 class="display-6 fw-bold">{{ stats.total_publications }}</h2>
+        <p class="text-muted mb-0">Publikacije</p>
+      </div>
+    </div>
+  </a>
+</div>
+<div class="col-md-3 mb-4">
+  <a href="{% url 'articles:list' %}" class="text-decoration-none">
+    <div class="card shadow-sm h-100 border-start border-success border-4">
+      <div class="card-body text-center">
+        <i class="bi bi-file-earmark-text display-4 text-success mb-2"></i>
+        <h2 class="display-6 fw-bold">{{ stats.total_articles }}</h2>
+        <p class="text-muted mb-0">Članci</p>
+      </div>
+    </div>
+  </a>
+</div>
+<div class="col-md-3 mb-4">
+  <a href="{% url 'articles:list' %}?status=REVIEW" class="text-decoration-none">
+    <div class="card shadow-sm h-100 border-start border-warning border-4">
+      <div class="card-body text-center">
+        <i class="bi bi-hourglass-split display-4 text-warning mb-2"></i>
+        <h2 class="display-6 fw-bold">{{ stats.pending_review_count }}</h2>
+        <p class="text-muted mb-0">Na pregledu</p>
+      </div>
+    </div>
+  </a>
+</div>
+<div class="col-md-3 mb-4">
+  <a href="{% url 'articles:list' %}?status=READY" class="text-decoration-none">
+    <div class="card shadow-sm h-100 border-start border-info border-4">
+      <div class="card-body text-center">
+        <i class="bi bi-check2-circle display-4 text-info mb-2"></i>
+        <h2 class="display-6 fw-bold">{{ stats.ready_to_publish_count }}</h2>
+        <p class="text-muted mb-0">Spremno za objavu</p>
+      </div>
+    </div>
+  </a>
+</div>
+
+{% elif role_flags.is_urednik %}
+<div class="col-md-4 mb-4">
+  <a href="{% url 'articles:list' %}" class="text-decoration-none">
+    <div class="card shadow-sm h-100 border-start border-primary border-4">
+      <div class="card-body text-center">
+        <i class="bi bi-file-earmark-text display-4 text-primary mb-2"></i>
+        <h2 class="display-6 fw-bold">{{ stats.total_articles }}</h2>
+        <p class="text-muted mb-0">Članci (moj izdavač)</p>
+      </div>
+    </div>
+  </a>
+</div>
+<div class="col-md-4 mb-4">
+  <a href="{% url 'articles:list' %}?status=REVIEW" class="text-decoration-none">
+    <div class="card shadow-sm h-100 border-start border-warning border-4">
+      <div class="card-body text-center">
+        <i class="bi bi-hourglass-split display-4 text-warning mb-2"></i>
+        <h2 class="display-6 fw-bold">{{ stats.pending_review_count }}</h2>
+        <p class="text-muted mb-0">Na pregledu</p>
+      </div>
+    </div>
+  </a>
+</div>
+<div class="col-md-4 mb-4">
+  <a href="{% url 'articles:list' %}?status=READY" class="text-decoration-none">
+    <div class="card shadow-sm h-100 border-start border-info border-4">
+      <div class="card-body text-center">
+        <i class="bi bi-check2-circle display-4 text-info mb-2"></i>
+        <h2 class="display-6 fw-bold">{{ stats.ready_to_publish_count }}</h2>
+        <p class="text-muted mb-0">Spremno za objavu</p>
+      </div>
+    </div>
+  </a>
+</div>
+
+{% elif role_flags.is_bibliotekar %}
+<div class="col-md-4 mb-4">
+  <a href="{% url 'articles:list' %}?status=DRAFT" class="text-decoration-none">
+    <div class="card shadow-sm h-100 border-start border-secondary border-4">
+      <div class="card-body text-center">
+        <i class="bi bi-pencil-square display-4 text-secondary mb-2"></i>
+        <h2 class="display-6 fw-bold">{{ stats.my_drafts_count }}</h2>
+        <p class="text-muted mb-0">Moji nacrti</p>
+      </div>
+    </div>
+  </a>
+</div>
+<div class="col-md-4 mb-4">
+  <a href="{% url 'articles:list' %}?status=REVIEW" class="text-decoration-none">
+    <div class="card shadow-sm h-100 border-start border-info border-4">
+      <div class="card-body text-center">
+        <i class="bi bi-send display-4 text-info mb-2"></i>
+        <h2 class="display-6 fw-bold">{{ stats.my_submitted_count }}</h2>
+        <p class="text-muted mb-0">Poslato na pregled</p>
+      </div>
+    </div>
+  </a>
+</div>
+<div class="col-md-4 mb-4">
+  <a href="{% url 'articles:list' %}" class="text-decoration-none">
+    <div class="card shadow-sm h-100 border-start border-primary border-4">
+      <div class="card-body text-center">
+        <i class="bi bi-file-earmark-text display-4 text-primary mb-2"></i>
+        <h2 class="display-6 fw-bold">{{ stats.my_total_count }}</h2>
+        <p class="text-muted mb-0">Ukupno mojih članaka</p>
+      </div>
+    </div>
+  </a>
+</div>
+{% endif %}

@@ -66,7 +66,7 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Article Workflow
-  epic-3: in-progress
+  epic-3: done
   3-1-article-model-basic-metadata-entry: done
   3-2-author-management-with-drag-drop: done
   3-3-pdf-upload-with-virus-scanning: done
@@ -74,7 +74,7 @@ development_status:
   3-5-submit-article-for-review: done
   3-6-editorial-review-process: done
   3-7-article-publishing-withdrawal: done
-  3-8-dashboard-statistics-pending-items: backlog
+  3-8-dashboard-statistics-pending-items: done
   epic-3-retrospective: optional
 
   # Epic 4: Public Portal Experience

@@ -1,0 +1,33 @@
+<div class="card shadow-sm h-100">
+  <div class="card-header bg-light d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">
+      <i class="bi bi-pencil-square me-2 text-secondary"></i>Moji nacrti
+      {% if stats.my_drafts_count %}
+      <span class="badge bg-secondary ms-2">{{ stats.my_drafts_count }}</span>
+      {% endif %}
+    </h5>
+    <a href="{% url 'articles:list' %}?status=DRAFT" class="btn btn-sm btn-outline-secondary">
+      Prikaži sve
+    </a>
+  </div>
+  {% if my_draft_articles %}
+  <div class="list-group list-group-flush">
+    {% for article in my_draft_articles %}
+    <a href="{% url 'articles:detail' pk=article.pk %}" class="list-group-item list-group-item-action">
+      <div class="d-flex w-100 justify-content-between">
+        <h6 class="mb-1 text-truncate" style="max-width: 70%;">{{ article.title }}</h6>
+        <small class="text-muted">{{ article.updated_at|date:"d.m.Y." }}</small>
+      </div>
+      <small class="text-muted">
+        {{ article.issue.publication.title }}
+      </small>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card-body text-center text-muted py-4">
+    <i class="bi bi-check-circle display-6 mb-2 d-block"></i>
+    Nemate članaka u nacrtu.
+  </div>
+  {% endif %}
+</div>

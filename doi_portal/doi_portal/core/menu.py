@@ -56,13 +56,13 @@ MENU_ITEMS: dict[str, dict] = {
     "my_drafts": {
         "label": "Moji nacrti",
         "icon": "bi-pencil-square",
-        "url_name": None,  # Epic 3 - Not implemented yet
+        "url_name": "articles:list",  # Story 3.8 - Now functional (filter via query param)
         "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
     },
     "pending_review": {
         "label": "Na čekanju",
         "icon": "bi-hourglass-split",
-        "url_name": None,  # Epic 3 - Not implemented yet
+        "url_name": "articles:list",  # Story 3.8 - Now functional (filter via query param)
         "roles": ["Superadmin", "Administrator", "Urednik"],
     },
     "users": {

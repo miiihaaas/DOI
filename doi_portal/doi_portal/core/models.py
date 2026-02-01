@@ -30,11 +30,11 @@ class SiteSettings(models.Model):
     )
 
     class Meta:
-        verbose_name = _("Podesavanja portala")
-        verbose_name_plural = _("Podesavanja portala")
+        verbose_name = _("Podešavanja portala")
+        verbose_name_plural = _("Podešavanja portala")
 
     def __str__(self):
-        return "Podesavanja portala"
+        return "Podešavanja portala"
 
     def save(self, *args, **kwargs):
         """Enforce singleton - always use pk=1."""

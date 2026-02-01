@@ -153,7 +153,7 @@ class TestRoleBasedMenuBibliotekar:
     """Test Bibliotekar sees limited menu (AC#2)."""
 
     def test_bibliotekar_sees_clanci(self, client: Client) -> None:
-        """AC#2: Bibliotekar should see Clanci menu item."""
+        """AC#2: Bibliotekar should see Članci menu item."""
         user = _create_user_with_role(
             email="bibliotekar@test.com",
             password=TEST_PASSWORD,
@@ -164,7 +164,7 @@ class TestRoleBasedMenuBibliotekar:
         response = client.get(reverse("dashboard"))
         content = response.content.decode("utf-8")
 
-        assert "Clanci" in content or "clanci" in content.lower()
+        assert "Članci" in content or "članci" in content.lower()
 
     def test_bibliotekar_sees_moji_nacrti(self, client: Client) -> None:
         """AC#2: Bibliotekar should see Moji nacrti menu item."""
@@ -208,7 +208,7 @@ class TestRoleBasedMenuBibliotekar:
         response = client.get(reverse("dashboard"))
         content = response.content.decode("utf-8")
 
-        assert "Podesavanja sistema" not in content
+        assert "Podešavanja sistema" not in content
 
 
 @pytest.mark.django_db
@@ -216,7 +216,7 @@ class TestRoleBasedMenuAdministrator:
     """Test Administrator sees full content menu (AC#3)."""
 
     def test_administrator_sees_izdavaci(self, client: Client) -> None:
-        """AC#3: Administrator should see Izdavaci menu item."""
+        """AC#3: Administrator should see Izdavači menu item."""
         user = _create_user_with_role(
             email="administrator@test.com",
             password=TEST_PASSWORD,
@@ -227,7 +227,7 @@ class TestRoleBasedMenuAdministrator:
         response = client.get(reverse("dashboard"))
         content = response.content.decode("utf-8")
 
-        assert "Izdavaci" in content or "izdavaci" in content.lower()
+        assert "Izdavači" in content or "izdavači" in content.lower()
 
     def test_administrator_sees_publikacije(self, client: Client) -> None:
         """AC#3: Administrator should see Publikacije menu item."""
@@ -304,7 +304,7 @@ class TestRoleBasedMenuSuperadmin:
         response = client.get(reverse("dashboard"))
         content = response.content.decode("utf-8")
 
-        assert "Podesavanja sistema" in content or "sistem" in content.lower()
+        assert "Podešavanja sistema" in content
 
     def test_superadmin_sees_all_content_menu_items(self, client: Client) -> None:
         """AC#4: Superadmin should see all content management menu items."""
@@ -318,9 +318,9 @@ class TestRoleBasedMenuSuperadmin:
         response = client.get(reverse("dashboard"))
         content = response.content.decode("utf-8")
 
-        # Should see all menu items
+        # Should see all menu items (with proper Serbian diacritics)
         assert "Kontrolna tabla" in content
-        assert "Izdavaci" in content
+        assert "Izdavači" in content
         assert "Publikacije" in content
 
 
