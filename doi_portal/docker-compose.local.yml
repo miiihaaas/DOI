@@ -2,6 +2,7 @@ volumes:
   doi_portal_local_postgres_data: {}
   doi_portal_local_postgres_data_backups: {}
   doi_portal_local_redis_data: {}
+  doi_portal_local_clamav_data: {}
 
 services:
   django: &django
@@ -48,6 +49,15 @@ services:
     volumes:
       - doi_portal_local_redis_data:/data
 
+  clamav:
+    image: clamav/clamav:latest
+    container_name: doi_portal_local_clamav
+    ports:
+      - "3310:3310"
+    volumes:
+      - doi_portal_local_clamav_data:/var/lib/clamav
+    restart: unless-stopped
+
   celeryworker:
     <<: *django
     image: doi_portal_local_celeryworker
@@ -56,6 +66,7 @@ services:
       - redis
       - postgres
       - mailpit
+      - clamav
     ports: []
     command: /start-celeryworker
 

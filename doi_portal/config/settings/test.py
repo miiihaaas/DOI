@@ -55,6 +55,13 @@ MEDIA_URL = "http://media.testserver/"
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-always-eager
 # Run Celery tasks synchronously in tests
 CELERY_TASK_ALWAYS_EAGER = True
+# Don't propagate exceptions from eager tasks (allows retry logic to work)
+CELERY_TASK_EAGER_PROPAGATES = False
+
+# ClamAV - disabled for tests (tasks run eager, ClamAV is mocked)
+# ------------------------------------------------------------------------------
+CLAMAV_HOST = "localhost"
+CLAMAV_PORT = 3310
 
 # Your stuff...
 # ------------------------------------------------------------------------------

@@ -249,6 +249,18 @@
                 </div>
             </div>
         </div>
+
+        <!-- PDF Upload Section (Story 3.3) -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>PDF fajl
+                </h5>
+            </div>
+            <div class="card-body">
+                {% include "articles/partials/_pdf_upload.html" with article=object %}
+            </div>
+        </div>
         {% endif %}
 
     </div>
@@ -276,6 +288,29 @@ document.body.addEventListener('htmx:configRequest', function(evt) {
         evt.detail.headers['X-CSRFToken'] = csrfInput.value;
     }
 });
+
+function pdfUpload() {
+    return {
+        isDragging: false,
+        uploading: false,
+        handleDrop(event) {
+            this.isDragging = false;
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                const input = this.$el.querySelector('input[type="file"]');
+                input.files = files;
+                this.uploading = true;
+                this.$el.closest('form').requestSubmit();
+            }
+        },
+        fileSelected(event) {
+            if (event.target.files.length > 0) {
+                this.uploading = true;
+                event.target.closest('form').requestSubmit();
+            }
+        }
+    }
+}
 
 function authorList() {
     return {

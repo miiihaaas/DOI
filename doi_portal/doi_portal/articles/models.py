@@ -3,6 +3,7 @@ Article models for DOI Portal.
 
 Story 3.1: Article Model & Basic Metadata Entry.
 Story 3.2: Author & Affiliation models with Crossref-compliant fields.
+Story 3.3: PDF Upload with virus scanning - PdfStatus tracking.
 Supports: Article tracking within Issues for Crossref DOI registration.
 """
 
@@ -30,6 +31,7 @@ __all__ = [
     "AuthorSequence",
     "ContributorRole",
     "LicenseAppliesTo",
+    "PdfStatus",
 ]
 
 
@@ -74,6 +76,17 @@ class ContributorRole(models.TextChoices):
     CHAIR = "chair", _("Predsedavajući")
     TRANSLATOR = "translator", _("Prevodilac")
     REVIEWER = "reviewer", _("Recenzent")
+
+
+class PdfStatus(models.TextChoices):
+    """PDF processing status."""
+
+    NONE = "none", _("Nema PDF-a")
+    UPLOADING = "uploading", _("Otpremanje")
+    SCANNING = "scanning", _("Skeniranje")
+    CLEAN = "clean", _("Čist")
+    INFECTED = "infected", _("Inficiran")
+    SCAN_FAILED = "scan_failed", _("Skeniranje neuspešno")
 
 
 class Article(models.Model):
@@ -167,6 +180,17 @@ class Article(models.Model):
     pdf_file = models.FileField(
         _("PDF fajl"),
         upload_to="articles/pdfs/",
+        blank=True,
+    )
+    pdf_status = models.CharField(
+        _("PDF status"),
+        max_length=20,
+        choices=PdfStatus.choices,
+        default=PdfStatus.NONE,
+    )
+    pdf_original_filename = models.CharField(
+        _("Originalni naziv fajla"),
+        max_length=500,
         blank=True,
     )
 

@@ -3,6 +3,7 @@ Article views for DOI Portal.
 
 Story 3.1: Article admin CRUD views with row-level permissions.
 Story 3.2: HTMX FBV views for Author CRUD, reorder, ORCID validation.
+Story 3.3: HTMX FBV views for PDF upload, status polling, delete.
 """
 
 import json
@@ -37,7 +38,9 @@ from .models import (
     ArticleStatus,
     Author,
     AuthorSequence,
+    PdfStatus,
 )
+from .validators import validate_pdf_file
 
 
 # =============================================================================
@@ -691,4 +694,106 @@ def affiliation_form_view(request, author_pk):
     return render(request, "articles/partials/_affiliation_form.html", {
         "author": author,
         "affiliation_form": form,
+    })
+
+
+# =============================================================================
+# HTMX FBV views for PDF Upload (Story 3.3)
+# =============================================================================
+
+
+@login_required
+@require_POST
+def pdf_upload(request, article_pk):
+    """Upload PDF file for article via HTMX POST."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    pdf_file = request.FILES.get("pdf_file")
+    if not pdf_file:
+        return render(request, "articles/partials/_pdf_upload.html", {
+            "article": article,
+            "error": "Izaberite PDF fajl za otpremanje.",
+        })
+
+    # Validate file
+    errors = validate_pdf_file(pdf_file)
+    if errors:
+        return render(request, "articles/partials/_pdf_upload.html", {
+            "article": article,
+            "error": errors[0],
+        })
+
+    # Save old file reference for cleanup after successful scan
+    old_pdf = article.pdf_file.name if article.pdf_file else None
+
+    # Save new file
+    article.pdf_file = pdf_file
+    article.pdf_original_filename = pdf_file.name
+    article.pdf_status = PdfStatus.SCANNING
+    article.save(update_fields=["pdf_file", "pdf_original_filename", "pdf_status"])
+
+    # Trigger async virus scan
+    from .tasks import virus_scan_pdf_task
+
+    virus_scan_pdf_task.delay(article.id, old_pdf_path=old_pdf)
+
+    return render(request, "articles/partials/_pdf_upload.html", {
+        "article": article,
+    })
+
+
+@login_required
+@require_GET
+def pdf_status(request, article_pk):
+    """Return PDF status fragment for HTMX polling."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    return render(request, "articles/partials/_pdf_upload.html", {
+        "article": article,
+    })
+
+
+@login_required
+@require_POST
+def pdf_delete(request, article_pk):
+    """Delete PDF file from article via HTMX POST."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    # Prevent deletion while virus scan is in progress
+    if article.pdf_status == PdfStatus.SCANNING:
+        return render(request, "articles/partials/_pdf_upload.html", {
+            "article": article,
+            "error": "Nije moguće obrisati PDF dok je skeniranje u toku.",
+        })
+
+    # Delete the file from storage
+    if article.pdf_file:
+        article.pdf_file.delete(save=False)
+
+    # Reset fields
+    article.pdf_file = ""
+    article.pdf_status = PdfStatus.NONE
+    article.pdf_original_filename = ""
+    article.save(update_fields=["pdf_file", "pdf_status", "pdf_original_filename"])
+
+    return render(request, "articles/partials/_pdf_upload.html", {
+        "article": article,
     })

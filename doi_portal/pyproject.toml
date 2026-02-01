@@ -183,4 +183,6 @@ dependencies = [
     "django-extensions==4.1",
     "django-coverage-plugin==3.2.0",
     "pytest-django==4.11.1",
+    "pyclamd>=0.4.0",
+    "structlog>=25.5.0",
 ]

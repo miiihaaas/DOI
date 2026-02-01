@@ -3,6 +3,7 @@ Article URL configuration.
 
 Story 3.1: Article admin routes.
 Story 3.2: HTMX routes for Author CRUD, reorder, ORCID validation, affiliations.
+Story 3.3: HTMX routes for PDF upload, status polling, delete.
 """
 
 from django.urls import path
@@ -70,5 +71,21 @@ urlpatterns = [
         "affiliations/<int:pk>/delete/",
         views.affiliation_delete,
         name="affiliation-delete",
+    ),
+    # PDF HTMX endpoints (Story 3.3)
+    path(
+        "<int:article_pk>/pdf/upload/",
+        views.pdf_upload,
+        name="pdf-upload",
+    ),
+    path(
+        "<int:article_pk>/pdf/status/",
+        views.pdf_status,
+        name="pdf-status",
+    ),
+    path(
+        "<int:article_pk>/pdf/delete/",
+        views.pdf_delete,
+        name="pdf-delete",
     ),
 ]

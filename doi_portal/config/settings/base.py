@@ -368,3 +368,8 @@ ACCOUNT_LOGOUT_ON_GET = False  # Require POST for logout (security)
 PASSWORD_RESET_TIMEOUT = 3600  # 1 hour in seconds (NFR requirement)
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_PASSWORD_MIN_LENGTH = 8  # Minimum password length (NFR8 requirement)
+
+# ClamAV Virus Scanning (Story 3.3)
+# ------------------------------------------------------------------------------
+CLAMAV_HOST = env("CLAMAV_HOST", default="clamav")
+CLAMAV_PORT = env.int("CLAMAV_PORT", default=3310)
