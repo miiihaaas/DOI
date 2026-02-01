@@ -164,3 +164,6 @@ dump.rdb
 .mypy_cache/
 .ipython/
 .ropeproject/
+NUL
+nul
+null

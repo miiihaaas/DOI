@@ -5,6 +5,7 @@ Story 3.1: Article admin CRUD views with row-level permissions.
 Story 3.2: HTMX FBV views for Author CRUD, reorder, ORCID validation.
 Story 3.3: HTMX FBV views for PDF upload, status polling, delete.
 Story 3.4: HTMX FBV for auto-save functionality.
+Story 3.5: Submit Article for Review - HTMX submit check + POST submit.
 """
 
 import json
@@ -41,6 +42,11 @@ from .models import (
     Author,
     AuthorSequence,
     PdfStatus,
+)
+from .services import (
+    InvalidStatusTransition,
+    submit_article_for_review as _submit_article_for_review,
+    validate_article_for_submit,
 )
 from .validators import validate_pdf_file
 
@@ -324,7 +330,8 @@ class ArticleDetailView(PublisherScopedMixin, DetailView):
     def get_queryset(self):
         """Scope queryset to user's publisher for non-admin roles."""
         queryset = super().get_queryset().select_related(
-            "issue", "issue__publication", "issue__publication__publisher", "created_by"
+            "issue", "issue__publication", "issue__publication__publisher",
+            "created_by", "submitted_by",
         )
         return self.get_scoped_queryset(queryset)
 
@@ -346,6 +353,9 @@ class ArticleDetailView(PublisherScopedMixin, DetailView):
         context["can_submit"] = (
             flags["is_admin"] or flags["is_urednik"] or flags["is_bibliotekar"]
         ) and self.object.status == ArticleStatus.DRAFT
+
+        # Story 3.5: Review status context
+        context["is_in_review"] = self.object.status == ArticleStatus.REVIEW
 
         # Author list for detail view (Story 3.2)
         context["authors"] = self.object.authors.prefetch_related("affiliations").all()
@@ -909,3 +919,61 @@ def article_autosave(request, pk):
         "errors": errors,
         "saved_at": article.updated_at,
     })
+
+
+# =============================================================================
+# HTMX FBV for Submit Article for Review (Story 3.5)
+# =============================================================================
+
+
+@login_required
+@require_GET
+def article_submit_check(request, pk):
+    """
+    Check article readiness for review submission via HTMX GET.
+
+    Returns modal content with validation results.
+    Delegates validation to services.validate_article_for_submit (DRY).
+    """
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ).prefetch_related("authors"),
+        pk=pk,
+    )
+    _check_article_permission(request.user, article)
+
+    # Validate readiness using shared service validation
+    errors = validate_article_for_submit(article)
+
+    return render(request, "articles/partials/_submit_review_modal.html", {
+        "article": article,
+        "errors": errors,
+        "is_ready": len(errors) == 0,
+    })
+
+
+@login_required
+@require_POST
+def article_submit_for_review(request, pk):
+    """
+    Submit article for editorial review via POST.
+
+    Delegates to submit_article_for_review() service function.
+    Redirects to article detail with success/error message.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ).prefetch_related("authors"),
+        pk=pk,
+    )
+    _check_article_permission(request.user, article)
+
+    try:
+        _submit_article_for_review(article, request.user)
+        messages.success(request, "Članak poslat na pregled.")
+    except InvalidStatusTransition as e:
+        messages.error(request, str(e))
+
+    return HttpResponseRedirect(reverse("articles:detail", kwargs={"pk": pk}))

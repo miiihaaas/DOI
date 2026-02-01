@@ -21,6 +21,17 @@
     </div>
 </div>
 
+{% if is_in_review %}
+<div class="alert alert-info mb-4">
+    <i class="bi bi-hourglass-split me-2"></i>
+    <strong>Članak čeka odobrenje urednika.</strong>
+    {% if article.submitted_at %}
+    <br><small class="text-muted">Poslat: {{ article.submitted_at|date:"d.m.Y. H:i" }}
+    {% if article.submitted_by %} od {{ article.submitted_by }}{% endif %}</small>
+    {% endif %}
+</div>
+{% endif %}
+
 <div class="row">
     <!-- Main Info Card -->
     <div class="col-lg-8">
@@ -250,6 +261,14 @@
                     <i class="bi bi-pencil me-2"></i>Izmeni članak
                 </a>
                 {% endif %}
+                {% if can_submit %}
+                <button type="button" class="list-group-item list-group-item-action text-primary"
+                        hx-get="{% url 'articles:article-submit-check' pk=article.pk %}"
+                        hx-target="#submit-modal-container"
+                        hx-swap="innerHTML">
+                    <i class="bi bi-send me-2"></i>Pošalji na pregled
+                </button>
+                {% endif %}
                 <a href="{% url 'articles:list' %}?issue={{ article.issue.pk }}" class="list-group-item list-group-item-action">
                     <i class="bi bi-file-earmark-text me-2"></i>Svi članci ovog izdanja
                 </a>
@@ -260,4 +279,19 @@
         </div>
     </div>
 </div>
+
+<!-- Submit Review Modal Container (Story 3.5) -->
+<div class="modal fade" id="submitReviewModal" tabindex="-1">
+    <div id="submit-modal-container">
+        <!-- HTMX will inject modal content here -->
+    </div>
+</div>
+
+<script>
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        if (event.detail.target.id === 'submit-modal-container') {
+            new bootstrap.Modal(document.getElementById('submitReviewModal')).show();
+        }
+    });
+</script>
 {% endblock %}

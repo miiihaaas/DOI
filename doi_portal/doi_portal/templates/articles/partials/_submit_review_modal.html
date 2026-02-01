@@ -1,0 +1,48 @@
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">
+                {% if is_ready %}
+                <i class="bi bi-send me-2"></i>Potvrda slanja na pregled
+                {% else %}
+                <i class="bi bi-exclamation-triangle me-2 text-warning"></i>Članak nije spreman
+                {% endif %}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            {% if is_ready %}
+            <p>Članak <strong>{{ article.title }}</strong> će biti poslat uredniku na pregled.</p>
+            <p class="text-muted mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                Nakon slanja, nećete moći da menjate članak dok ga urednik ne vrati na doradu.
+            </p>
+            {% else %}
+            <p>Pre slanja na pregled, ispravite sledeće:</p>
+            <ul class="list-group">
+                {% for error in errors %}
+                <li class="list-group-item list-group-item-warning">
+                    <i class="bi bi-exclamation-circle me-2"></i>{{ error }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            {% if is_ready %}
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkaži</button>
+            <form method="post" action="{% url 'articles:article-submit' pk=article.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-send me-1"></i>Pošalji na pregled
+                </button>
+            </form>
+            {% else %}
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
+            <a href="{% url 'articles:update' article.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil me-1"></i>Izmeni članak
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>

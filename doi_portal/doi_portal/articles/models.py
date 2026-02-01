@@ -210,6 +210,19 @@ class Article(models.Model):
         related_name="created_articles",
         verbose_name=_("Kreirao"),
     )
+    submitted_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="submitted_articles",
+        verbose_name=_("Poslao na pregled"),
+    )
+    submitted_at = models.DateTimeField(
+        _("Poslat na pregled"),
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(_("Kreirano"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Ažurirano"), auto_now=True)
 
