@@ -7,6 +7,7 @@ Story 3.3: HTMX routes for PDF upload, status polling, delete.
 Story 3.4: HTMX route for auto-save endpoint.
 Story 3.5: HTMX routes for Submit Article for Review.
 Story 3.6: HTMX routes for Editorial Review Process.
+Story 3.7: HTMX routes for Article Publishing & Withdrawal.
 """
 
 from django.urls import path
@@ -128,5 +129,26 @@ urlpatterns = [
         "<int:pk>/return/",
         views.article_return_for_revision,
         name="article-return",
+    ),
+    # Publish & Withdraw HTMX endpoints (Story 3.7)
+    path(
+        "<int:pk>/publish-check/",
+        views.article_publish_check,
+        name="article-publish-check",
+    ),
+    path(
+        "<int:pk>/publish/",
+        views.article_publish,
+        name="article-publish",
+    ),
+    path(
+        "<int:pk>/withdraw-check/",
+        views.article_withdraw_check,
+        name="article-withdraw-check",
+    ),
+    path(
+        "<int:pk>/withdraw/",
+        views.article_withdraw,
+        name="article-withdraw",
     ),
 ]

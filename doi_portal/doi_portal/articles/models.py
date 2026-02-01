@@ -5,6 +5,7 @@ Story 3.1: Article Model & Basic Metadata Entry.
 Story 3.2: Author & Affiliation models with Crossref-compliant fields.
 Story 3.3: PDF Upload with virus scanning - PdfStatus tracking.
 Story 3.6: Editorial Review Process - reviewed_by, reviewed_at, revision_comment, returned_by, returned_at.
+Story 3.7: Article Publishing & Withdrawal - published_by, published_at, withdrawal_reason, withdrawn_by, withdrawn_at.
 Supports: Article tracking within Issues for Crossref DOI registration.
 """
 
@@ -252,6 +253,37 @@ class Article(models.Model):
     )
     returned_at = models.DateTimeField(
         _("Vraćeno na doradu"),
+        null=True,
+        blank=True,
+    )
+    published_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="published_articles",
+        verbose_name=_("Objavio"),
+    )
+    published_at = models.DateTimeField(
+        _("Objavljeno"),
+        null=True,
+        blank=True,
+    )
+    withdrawal_reason = models.TextField(
+        _("Razlog povlačenja"),
+        blank=True,
+        help_text=_("Razlog povlačenja objavljenog članka."),
+    )
+    withdrawn_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="withdrawn_articles",
+        verbose_name=_("Povukao"),
+    )
+    withdrawn_at = models.DateTimeField(
+        _("Povučeno"),
         null=True,
         blank=True,
     )

@@ -4,6 +4,7 @@ Article business logic services for DOI Portal.
 Story 3.1: Placeholder for future business logic (status transitions in Story 3.5).
 Story 3.5: Submit Article for Review - DRAFT -> REVIEW status transition.
 Story 3.6: Editorial Review Process - approve_article, return_article_for_revision.
+Story 3.7: Article Publishing & Withdrawal - publish_article, withdraw_article.
 """
 
 from __future__ import annotations
@@ -179,6 +180,84 @@ def return_article_for_revision(article: Article, user, comment: str) -> Article
             "status", "revision_comment", "returned_by",
             "returned_at", "submitted_by", "submitted_at",
             "reviewed_by", "reviewed_at", "updated_at",
+        ])
+
+    return article
+
+
+def publish_article(article: Article, user) -> Article:
+    """
+    Publish article (READY -> PUBLISHED).
+
+    Args:
+        article: Article instance to publish
+        user: User performing the publication (Administrator/Superadmin)
+
+    Returns:
+        Updated Article instance
+
+    Raises:
+        InvalidStatusTransition: If article is not in READY status
+    """
+    if article.status != ArticleStatus.READY:
+        raise InvalidStatusTransition(
+            "Samo članci spremni za objavu mogu biti objavljeni."
+        )
+
+    with transaction.atomic():
+        article = Article.objects.select_for_update().get(pk=article.pk)
+        if article.status != ArticleStatus.READY:
+            raise InvalidStatusTransition(
+                "Samo članci spremni za objavu mogu biti objavljeni."
+            )
+        article.status = ArticleStatus.PUBLISHED
+        article.published_by = user
+        article.published_at = timezone.now()
+        article.save(update_fields=[
+            "status", "published_by", "published_at", "updated_at",
+        ])
+
+    return article
+
+
+def withdraw_article(article: Article, user, reason: str) -> Article:
+    """
+    Withdraw published article (PUBLISHED -> WITHDRAWN).
+
+    Args:
+        article: Article instance to withdraw
+        user: User performing the withdrawal (Administrator/Superadmin)
+        reason: Withdrawal reason (required)
+
+    Returns:
+        Updated Article instance
+
+    Raises:
+        InvalidStatusTransition: If article is not PUBLISHED or reason is empty
+    """
+    if article.status != ArticleStatus.PUBLISHED:
+        raise InvalidStatusTransition(
+            "Samo objavljeni članci mogu biti povučeni."
+        )
+
+    if not reason or not reason.strip():
+        raise InvalidStatusTransition(
+            "Razlog povlačenja je obavezan."
+        )
+
+    with transaction.atomic():
+        article = Article.objects.select_for_update().get(pk=article.pk)
+        if article.status != ArticleStatus.PUBLISHED:
+            raise InvalidStatusTransition(
+                "Samo objavljeni članci mogu biti povučeni."
+            )
+        article.status = ArticleStatus.WITHDRAWN
+        article.withdrawal_reason = reason.strip()
+        article.withdrawn_by = user
+        article.withdrawn_at = timezone.now()
+        article.save(update_fields=[
+            "status", "withdrawal_reason", "withdrawn_by",
+            "withdrawn_at", "updated_at",
         ])
 
     return article

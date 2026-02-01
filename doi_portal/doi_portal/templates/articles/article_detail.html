@@ -43,6 +43,31 @@
 </div>
 {% endif %}
 
+{% if is_published %}
+<div class="alert alert-success mb-4">
+    <i class="bi bi-globe me-2"></i>
+    <strong>Članak je objavljen.</strong>
+    {% if article.published_at %}
+    <br><small class="text-muted">Objavljeno: {{ article.published_at|date:"d.m.Y. H:i" }}
+    {% if article.published_by %} od {{ article.published_by }}{% endif %}</small>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if is_withdrawn %}
+<div class="alert alert-danger mb-4">
+    <i class="bi bi-x-circle me-2"></i>
+    <strong>Članak je povučen.</strong>
+    {% if article.withdrawal_reason %}
+    <p class="mb-0 mt-1"><strong>Razlog:</strong> {{ article.withdrawal_reason|linebreaksbr }}</p>
+    {% endif %}
+    {% if article.withdrawn_at %}
+    <small class="text-muted">Povučeno: {{ article.withdrawn_at|date:"d.m.Y. H:i" }}
+    {% if article.withdrawn_by %} od {{ article.withdrawn_by }}{% endif %}</small>
+    {% endif %}
+</div>
+{% endif %}
+
 {% if has_revision_comment %}
 <div class="alert alert-warning mb-4">
     <i class="bi bi-chat-left-text me-2"></i>
@@ -306,6 +331,22 @@
                     <i class="bi bi-arrow-return-left me-2"></i>Vrati na doradu
                 </button>
                 {% endif %}
+                {% if can_publish %}
+                <button type="button" class="list-group-item list-group-item-action text-success"
+                        hx-get="{% url 'articles:article-publish-check' pk=article.pk %}"
+                        hx-target="#publish-modal-container"
+                        hx-swap="innerHTML">
+                    <i class="bi bi-globe me-2"></i>Objavi
+                </button>
+                {% endif %}
+                {% if can_withdraw %}
+                <button type="button" class="list-group-item list-group-item-action text-danger"
+                        hx-get="{% url 'articles:article-withdraw-check' pk=article.pk %}"
+                        hx-target="#withdraw-modal-container"
+                        hx-swap="innerHTML">
+                    <i class="bi bi-x-circle me-2"></i>Povuci
+                </button>
+                {% endif %}
                 <a href="{% url 'articles:list' %}?issue={{ article.issue.pk }}" class="list-group-item list-group-item-action">
                     <i class="bi bi-file-earmark-text me-2"></i>Svi članci ovog izdanja
                 </a>
@@ -338,16 +379,33 @@
     </div>
 </div>
 
+<!-- Publish Modal Container (Story 3.7) -->
+<div class="modal fade" id="publishModal" tabindex="-1">
+    <div id="publish-modal-container">
+        <!-- HTMX will inject modal content here -->
+    </div>
+</div>
+
+<!-- Withdraw Modal Container (Story 3.7) -->
+<div class="modal fade" id="withdrawModal" tabindex="-1">
+    <div id="withdraw-modal-container">
+        <!-- HTMX will inject modal content here -->
+    </div>
+</div>
+
 <script>
     document.body.addEventListener('htmx:afterSwap', function(event) {
-        if (event.detail.target.id === 'submit-modal-container') {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('submitReviewModal')).show();
-        }
-        if (event.detail.target.id === 'approve-modal-container') {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('approveModal')).show();
-        }
-        if (event.detail.target.id === 'return-modal-container') {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('returnRevisionModal')).show();
+        var targetId = event.detail.target.id;
+        var modalMap = {
+            'submit-modal-container': 'submitReviewModal',
+            'approve-modal-container': 'approveModal',
+            'return-modal-container': 'returnRevisionModal',
+            'publish-modal-container': 'publishModal',
+            'withdraw-modal-container': 'withdrawModal'
+        };
+        var modalId = modalMap[targetId];
+        if (modalId) {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById(modalId)).show();
         }
     });
 </script>

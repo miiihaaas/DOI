@@ -7,6 +7,7 @@ Story 3.3: HTMX FBV views for PDF upload, status polling, delete.
 Story 3.4: HTMX FBV for auto-save functionality.
 Story 3.5: Submit Article for Review - HTMX submit check + POST submit.
 Story 3.6: Editorial Review Process - approve/return FBVs with role check.
+Story 3.7: Article Publishing & Withdrawal - publish/withdraw FBVs with admin role check.
 """
 
 import json
@@ -47,9 +48,11 @@ from .models import (
 from .services import (
     InvalidStatusTransition,
     approve_article,
+    publish_article,
     return_article_for_revision,
     submit_article_for_review as _submit_article_for_review,
     validate_article_for_submit,
+    withdraw_article,
 )
 from .validators import validate_pdf_file
 
@@ -101,6 +104,23 @@ def _check_reviewer_permission(user):
         return
     group_names = _get_user_group_names(user)
     if group_names & {"Administrator", "Superadmin", "Urednik"}:
+        return
+    raise PermissionDenied
+
+
+def _check_admin_permission(user):
+    """
+    Check if user has Administrator/Superadmin role.
+
+    Raises PermissionDenied if user is not Administrator or Superadmin.
+    This is stricter than _check_reviewer_permission - does NOT include Urednik.
+    Only Administrator and Superadmin can publish/withdraw articles.
+    Call AFTER _check_article_permission() (publisher scoping + admin role check).
+    """
+    if user.is_superuser:
+        return
+    group_names = _get_user_group_names(user)
+    if group_names & {"Administrator", "Superadmin"}:
         return
     raise PermissionDenied
 
@@ -363,6 +383,7 @@ class ArticleDetailView(PublisherScopedMixin, DetailView):
         queryset = super().get_queryset().select_related(
             "issue", "issue__publication", "issue__publication__publisher",
             "created_by", "submitted_by", "reviewed_by", "returned_by",
+            "published_by", "withdrawn_by",  # Story 3.7
         )
         return self.get_scoped_queryset(queryset)
 
@@ -390,8 +411,7 @@ class ArticleDetailView(PublisherScopedMixin, DetailView):
 
         # Story 3.6: Review action context
         context["can_review"] = (
-            flags["is_admin"]
-            or self.request.user.groups.filter(name="Urednik").exists()
+            flags["is_admin"] or flags["is_urednik"]
         ) and self.object.status == ArticleStatus.REVIEW
 
         context["is_ready"] = self.object.status == ArticleStatus.READY
@@ -401,6 +421,17 @@ class ArticleDetailView(PublisherScopedMixin, DetailView):
             self.object.revision_comment
             and self.object.status == ArticleStatus.DRAFT
         )
+
+        # Story 3.7: Publish/Withdraw action context
+        context["can_publish"] = (
+            flags["is_admin"] and self.object.status == ArticleStatus.READY
+        )
+        context["can_withdraw"] = (
+            flags["is_admin"] and self.object.status == ArticleStatus.PUBLISHED
+        )
+
+        context["is_published"] = self.object.status == ArticleStatus.PUBLISHED
+        context["is_withdrawn"] = self.object.status == ArticleStatus.WITHDRAWN
 
         # Author list for detail view (Story 3.2)
         context["authors"] = self.object.authors.prefetch_related("affiliations").all()
@@ -1129,6 +1160,117 @@ def article_return_for_revision(request, pk):
     try:
         return_article_for_revision(article, request.user, comment)
         messages.success(request, "Članak vraćen na doradu.")
+    except InvalidStatusTransition as e:
+        messages.error(request, str(e))
+
+    return HttpResponseRedirect(reverse("articles:detail", kwargs={"pk": pk}))
+
+
+# =============================================================================
+# HTMX FBV for Article Publishing & Withdrawal (Story 3.7)
+# =============================================================================
+
+
+@login_required
+@require_GET
+def article_publish_check(request, pk):
+    """
+    Check/confirm article publishing via HTMX GET.
+    Returns modal content for publish confirmation.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, article)
+    _check_admin_permission(request.user)
+
+    errors = []
+    if article.status != ArticleStatus.READY:
+        errors.append("Članak nije u statusu Spremno za objavu.")
+
+    return render(request, "articles/partials/_publish_modal.html", {
+        "article": article,
+        "errors": errors,
+        "is_ready": len(errors) == 0,
+    })
+
+
+@login_required
+@require_POST
+def article_publish(request, pk):
+    """
+    Publish article (READY -> PUBLISHED) via POST.
+    Delegates to publish_article() service function.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, article)
+    _check_admin_permission(request.user)
+
+    try:
+        publish_article(article, request.user)
+        messages.success(request, "Članak objavljen.")
+    except InvalidStatusTransition as e:
+        messages.error(request, str(e))
+
+    return HttpResponseRedirect(reverse("articles:detail", kwargs={"pk": pk}))
+
+
+@login_required
+@require_GET
+def article_withdraw_check(request, pk):
+    """
+    Check/prepare withdrawal form via HTMX GET.
+    Returns modal content with reason textarea and warnings.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, article)
+    _check_admin_permission(request.user)
+
+    errors = []
+    if article.status != ArticleStatus.PUBLISHED:
+        errors.append("Članak nije u statusu Objavljeno.")
+
+    return render(request, "articles/partials/_withdraw_modal.html", {
+        "article": article,
+        "errors": errors,
+        "is_ready": len(errors) == 0,
+    })
+
+
+@login_required
+@require_POST
+def article_withdraw(request, pk):
+    """
+    Withdraw article (PUBLISHED -> WITHDRAWN) via POST.
+    Delegates to withdraw_article() service function.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, article)
+    _check_admin_permission(request.user)
+
+    reason = request.POST.get("withdrawal_reason", "").strip()
+
+    try:
+        withdraw_article(article, request.user, reason)
+        messages.success(request, "Članak povučen.")
     except InvalidStatusTransition as e:
         messages.error(request, str(e))
 

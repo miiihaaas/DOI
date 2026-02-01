@@ -1,0 +1,42 @@
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">
+                {% if is_ready %}
+                <i class="bi bi-globe me-2 text-success"></i>Potvrda objavljivanja
+                {% else %}
+                <i class="bi bi-exclamation-triangle me-2 text-warning"></i>Nije moguće objaviti
+                {% endif %}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            {% if is_ready %}
+            <p>Članak <strong>{{ article.title }}</strong> će biti objavljen i postati vidljiv na javnom portalu.</p>
+            <p class="text-muted mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                Nakon objavljivanja, članak će biti dostupan posetiocima portala.
+            </p>
+            {% else %}
+            {% for error in errors %}
+            <div class="alert alert-warning mb-2">
+                <i class="bi bi-exclamation-circle me-2"></i>{{ error }}
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            {% if is_ready %}
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkaži</button>
+            <form method="post" action="{% url 'articles:article-publish' pk=article.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-globe me-1"></i>Objavi
+                </button>
+            </form>
+            {% else %}
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
