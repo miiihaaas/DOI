@@ -4,6 +4,7 @@ Public portal views for DOI Portal.
 Story 2.2: Public Publisher Page
 Story 2.5: Public Publication List with Filters
 Story 2.7: Public Issue List & Detail
+Story 4.1: Portal Home Page
 
 These are PUBLIC views - no authentication required.
 CSRF protection is handled by Django middleware for GET requests (safe methods).
@@ -12,6 +13,10 @@ CSRF protection is handled by Django middleware for GET requests (safe methods).
 from django.urls import reverse
 from django.views.generic import DetailView
 from django.views.generic import ListView
+from django.views.generic import TemplateView
+
+from doi_portal.portal.services import get_portal_statistics
+from doi_portal.portal.services import get_recent_publications
 
 from doi_portal.issues.models import Issue
 from doi_portal.issues.models import IssueStatus
@@ -289,4 +294,27 @@ class IssuePublicDetailView(DetailView):
         ]
         # Placeholder until Story 3.1 - Article model doesn't exist yet
         context["articles"] = []
+        return context
+
+
+# =============================================================================
+# Story 4.1: Portal Home Page
+# =============================================================================
+
+
+class PortalHomeView(TemplateView):
+    """
+    Portal home page view.
+
+    FR38: Posetilac moze videti pocetnu stranu portala.
+    Public view - no authentication required.
+    """
+
+    template_name = "portal/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["stats"] = get_portal_statistics()
+        context["recent_publications"] = get_recent_publications()
+        # No breadcrumbs on home page (it IS the root)
         return context

@@ -183,6 +183,52 @@ body {
 }
 
 /* ===========================
+   Home Page - Hero Section (Story 4.1)
+   =========================== */
+
+.hero-section {
+    background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-secondary) 100%) !important;
+}
+
+.hero-section .form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(49, 130, 206, 0.25);
+    border-color: var(--portal-secondary);
+}
+
+/* ===========================
+   Home Page - Stat & Quick Link Cards (Story 4.1)
+   =========================== */
+
+.stat-card,
+.publication-card,
+.quick-link-card {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    border: 1px solid var(--portal-border);
+}
+
+.stat-card:hover,
+.publication-card:hover,
+.quick-link-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.stat-card:focus-within,
+.publication-card:focus-within,
+.quick-link-card:focus-within {
+    outline: 2px solid var(--portal-secondary);
+    outline-offset: 2px;
+}
+
+.publication-card .card-title a {
+    color: var(--portal-primary);
+}
+
+.publication-card .card-title a:hover {
+    color: var(--portal-secondary);
+}
+
+/* ===========================
    Responsive Adjustments
    =========================== */
 
@@ -200,6 +246,17 @@ body {
     .portal-footer .text-md-end {
         text-align: left !important;
         margin-top: 1rem;
+    }
+
+    /* Home page hero responsive (Story 4.1) */
+    .hero-section {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .hero-section .input-group-lg .form-control,
+    .hero-section .input-group-lg .btn {
+        min-height: 48px;
     }
 }
 
