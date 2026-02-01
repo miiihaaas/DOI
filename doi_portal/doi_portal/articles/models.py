@@ -4,6 +4,7 @@ Article models for DOI Portal.
 Story 3.1: Article Model & Basic Metadata Entry.
 Story 3.2: Author & Affiliation models with Crossref-compliant fields.
 Story 3.3: PDF Upload with virus scanning - PdfStatus tracking.
+Story 3.6: Editorial Review Process - reviewed_by, reviewed_at, revision_comment, returned_by, returned_at.
 Supports: Article tracking within Issues for Crossref DOI registration.
 """
 
@@ -220,6 +221,37 @@ class Article(models.Model):
     )
     submitted_at = models.DateTimeField(
         _("Poslat na pregled"),
+        null=True,
+        blank=True,
+    )
+    reviewed_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_articles",
+        verbose_name=_("Odobrio"),
+    )
+    reviewed_at = models.DateTimeField(
+        _("Odobreno"),
+        null=True,
+        blank=True,
+    )
+    revision_comment = models.TextField(
+        _("Komentar za doradu"),
+        blank=True,
+        help_text=_("Komentar urednika pri vraćanju članka na doradu."),
+    )
+    returned_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="returned_articles",
+        verbose_name=_("Vratio na doradu"),
+    )
+    returned_at = models.DateTimeField(
+        _("Vraćeno na doradu"),
         null=True,
         blank=True,
     )

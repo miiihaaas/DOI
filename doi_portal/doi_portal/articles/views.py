@@ -6,6 +6,7 @@ Story 3.2: HTMX FBV views for Author CRUD, reorder, ORCID validation.
 Story 3.3: HTMX FBV views for PDF upload, status polling, delete.
 Story 3.4: HTMX FBV for auto-save functionality.
 Story 3.5: Submit Article for Review - HTMX submit check + POST submit.
+Story 3.6: Editorial Review Process - approve/return FBVs with role check.
 """
 
 import json
@@ -45,6 +46,8 @@ from .models import (
 )
 from .services import (
     InvalidStatusTransition,
+    approve_article,
+    return_article_for_revision,
     submit_article_for_review as _submit_article_for_review,
     validate_article_for_submit,
 )
@@ -56,6 +59,18 @@ from .validators import validate_pdf_file
 # =============================================================================
 
 
+def _get_user_group_names(user):
+    """
+    Get and cache user's group names to avoid redundant DB queries.
+
+    Caches group names on the user object for the duration of the request.
+    Called by both _check_article_permission and _check_reviewer_permission.
+    """
+    if not hasattr(user, "_cached_group_names"):
+        user._cached_group_names = set(user.groups.values_list("name", flat=True))
+    return user._cached_group_names
+
+
 def _check_article_permission(user, article):
     """
     Check if user has permission to modify authors on this article.
@@ -65,12 +80,28 @@ def _check_article_permission(user, article):
     """
     if user.is_superuser:
         return
-    if user.groups.filter(name__in=["Administrator", "Superadmin"]).exists():
+    group_names = _get_user_group_names(user)
+    if "Administrator" in group_names or "Superadmin" in group_names:
         return
     # Urednik/Bibliotekar - check publisher scoping
     if hasattr(user, "publisher") and user.publisher:
         if article.issue.publication.publisher == user.publisher:
             return
+    raise PermissionDenied
+
+
+def _check_reviewer_permission(user):
+    """
+    Check if user has reviewer (Urednik/Admin) role.
+
+    Raises PermissionDenied if user is not Urednik, Administrator, or Superadmin.
+    This is a ROLE check (not publisher scoping) - call AFTER _check_article_permission().
+    """
+    if user.is_superuser:
+        return
+    group_names = _get_user_group_names(user)
+    if group_names & {"Administrator", "Superadmin", "Urednik"}:
+        return
     raise PermissionDenied
 
 
@@ -331,7 +362,7 @@ class ArticleDetailView(PublisherScopedMixin, DetailView):
         """Scope queryset to user's publisher for non-admin roles."""
         queryset = super().get_queryset().select_related(
             "issue", "issue__publication", "issue__publication__publisher",
-            "created_by", "submitted_by",
+            "created_by", "submitted_by", "reviewed_by", "returned_by",
         )
         return self.get_scoped_queryset(queryset)
 
@@ -356,6 +387,20 @@ class ArticleDetailView(PublisherScopedMixin, DetailView):
 
         # Story 3.5: Review status context
         context["is_in_review"] = self.object.status == ArticleStatus.REVIEW
+
+        # Story 3.6: Review action context
+        context["can_review"] = (
+            flags["is_admin"]
+            or self.request.user.groups.filter(name="Urednik").exists()
+        ) and self.object.status == ArticleStatus.REVIEW
+
+        context["is_ready"] = self.object.status == ArticleStatus.READY
+
+        # Revision comment display (visible for DRAFT articles that were returned)
+        context["has_revision_comment"] = bool(
+            self.object.revision_comment
+            and self.object.status == ArticleStatus.DRAFT
+        )
 
         # Author list for detail view (Story 3.2)
         context["authors"] = self.object.authors.prefetch_related("affiliations").all()
@@ -973,6 +1018,117 @@ def article_submit_for_review(request, pk):
     try:
         _submit_article_for_review(article, request.user)
         messages.success(request, "Članak poslat na pregled.")
+    except InvalidStatusTransition as e:
+        messages.error(request, str(e))
+
+    return HttpResponseRedirect(reverse("articles:detail", kwargs={"pk": pk}))
+
+
+# =============================================================================
+# HTMX FBV for Editorial Review (Story 3.6)
+# =============================================================================
+
+
+@login_required
+@require_GET
+def article_approve_check(request, pk):
+    """
+    Check/confirm article approval via HTMX GET.
+    Returns modal content for approve confirmation.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, article)
+    _check_reviewer_permission(request.user)
+
+    errors = []
+    if article.status != ArticleStatus.REVIEW:
+        errors.append("Članak nije u statusu Na pregledu.")
+
+    return render(request, "articles/partials/_approve_modal.html", {
+        "article": article,
+        "errors": errors,
+        "is_ready": len(errors) == 0,
+    })
+
+
+@login_required
+@require_POST
+def article_approve(request, pk):
+    """
+    Approve article (REVIEW -> READY) via POST.
+    Delegates to approve_article() service function.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, article)
+    _check_reviewer_permission(request.user)
+
+    try:
+        approve_article(article, request.user)
+        messages.success(request, "Članak odobren.")
+    except InvalidStatusTransition as e:
+        messages.error(request, str(e))
+
+    return HttpResponseRedirect(reverse("articles:detail", kwargs={"pk": pk}))
+
+
+@login_required
+@require_GET
+def article_return_check(request, pk):
+    """
+    Check/prepare return-for-revision form via HTMX GET.
+    Returns modal content with comment textarea.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, article)
+    _check_reviewer_permission(request.user)
+
+    errors = []
+    if article.status != ArticleStatus.REVIEW:
+        errors.append("Članak nije u statusu Na pregledu.")
+
+    return render(request, "articles/partials/_return_revision_modal.html", {
+        "article": article,
+        "errors": errors,
+        "is_ready": len(errors) == 0,
+    })
+
+
+@login_required
+@require_POST
+def article_return_for_revision(request, pk):
+    """
+    Return article for revision (REVIEW -> DRAFT) via POST.
+    Delegates to return_article_for_revision() service function.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, article)
+    _check_reviewer_permission(request.user)
+
+    comment = request.POST.get("revision_comment", "").strip()
+
+    try:
+        return_article_for_revision(article, request.user, comment)
+        messages.success(request, "Članak vraćen na doradu.")
     except InvalidStatusTransition as e:
         messages.error(request, str(e))
 

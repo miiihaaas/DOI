@@ -32,6 +32,29 @@
 </div>
 {% endif %}
 
+{% if is_ready %}
+<div class="alert alert-primary mb-4">
+    <i class="bi bi-check2-circle me-2"></i>
+    <strong>Članak je odobren i spreman za objavu.</strong>
+    {% if article.reviewed_at %}
+    <br><small class="text-muted">Odobren: {{ article.reviewed_at|date:"d.m.Y. H:i" }}
+    {% if article.reviewed_by %} od {{ article.reviewed_by }}{% endif %}</small>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if has_revision_comment %}
+<div class="alert alert-warning mb-4">
+    <i class="bi bi-chat-left-text me-2"></i>
+    <strong>Komentar urednika:</strong>
+    <p class="mb-0 mt-1">{{ article.revision_comment }}</p>
+    {% if article.returned_at %}
+    <small class="text-muted">Vraćeno: {{ article.returned_at|date:"d.m.Y. H:i" }}
+    {% if article.returned_by %} od {{ article.returned_by }}{% endif %}</small>
+    {% endif %}
+</div>
+{% endif %}
+
 <div class="row">
     <!-- Main Info Card -->
     <div class="col-lg-8">
@@ -269,6 +292,20 @@
                     <i class="bi bi-send me-2"></i>Pošalji na pregled
                 </button>
                 {% endif %}
+                {% if can_review %}
+                <button type="button" class="list-group-item list-group-item-action text-success"
+                        hx-get="{% url 'articles:article-approve-check' pk=article.pk %}"
+                        hx-target="#approve-modal-container"
+                        hx-swap="innerHTML">
+                    <i class="bi bi-check-circle me-2"></i>Odobri
+                </button>
+                <button type="button" class="list-group-item list-group-item-action text-warning"
+                        hx-get="{% url 'articles:article-return-check' pk=article.pk %}"
+                        hx-target="#return-modal-container"
+                        hx-swap="innerHTML">
+                    <i class="bi bi-arrow-return-left me-2"></i>Vrati na doradu
+                </button>
+                {% endif %}
                 <a href="{% url 'articles:list' %}?issue={{ article.issue.pk }}" class="list-group-item list-group-item-action">
                     <i class="bi bi-file-earmark-text me-2"></i>Svi članci ovog izdanja
                 </a>
@@ -287,10 +324,30 @@
     </div>
 </div>
 
+<!-- Approve Modal Container (Story 3.6) -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div id="approve-modal-container">
+        <!-- HTMX will inject modal content here -->
+    </div>
+</div>
+
+<!-- Return for Revision Modal Container (Story 3.6) -->
+<div class="modal fade" id="returnRevisionModal" tabindex="-1">
+    <div id="return-modal-container">
+        <!-- HTMX will inject modal content here -->
+    </div>
+</div>
+
 <script>
     document.body.addEventListener('htmx:afterSwap', function(event) {
         if (event.detail.target.id === 'submit-modal-container') {
-            new bootstrap.Modal(document.getElementById('submitReviewModal')).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('submitReviewModal')).show();
+        }
+        if (event.detail.target.id === 'approve-modal-container') {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('approveModal')).show();
+        }
+        if (event.detail.target.id === 'return-modal-container') {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('returnRevisionModal')).show();
         }
     });
 </script>

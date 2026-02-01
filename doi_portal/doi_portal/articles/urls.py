@@ -6,6 +6,7 @@ Story 3.2: HTMX routes for Author CRUD, reorder, ORCID validation, affiliations.
 Story 3.3: HTMX routes for PDF upload, status polling, delete.
 Story 3.4: HTMX route for auto-save endpoint.
 Story 3.5: HTMX routes for Submit Article for Review.
+Story 3.6: HTMX routes for Editorial Review Process.
 """
 
 from django.urls import path
@@ -106,5 +107,26 @@ urlpatterns = [
         "<int:pk>/submit/",
         views.article_submit_for_review,
         name="article-submit",
+    ),
+    # Editorial Review HTMX endpoints (Story 3.6)
+    path(
+        "<int:pk>/approve-check/",
+        views.article_approve_check,
+        name="article-approve-check",
+    ),
+    path(
+        "<int:pk>/approve/",
+        views.article_approve,
+        name="article-approve",
+    ),
+    path(
+        "<int:pk>/return-check/",
+        views.article_return_check,
+        name="article-return-check",
+    ),
+    path(
+        "<int:pk>/return/",
+        views.article_return_for_revision,
+        name="article-return",
     ),
 ]
