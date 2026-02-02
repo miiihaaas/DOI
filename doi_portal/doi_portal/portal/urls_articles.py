@@ -3,6 +3,7 @@ Public portal URL configuration for articles.
 
 Story 4.4: Article Landing Page.
 Story 4.6: PDF Download.
+Story 4.7: Citation Modal.
 
 These are PUBLIC routes - no authentication required.
 """
@@ -25,5 +26,17 @@ urlpatterns = [
         "<int:pk>/pdf/",
         views.article_pdf_download,
         name="article-pdf-download",
+    ),
+    # Citation HTMX endpoint - /articles/<pk>/cite/
+    path(
+        "<int:pk>/cite/",
+        views.article_citation,
+        name="article-citation",
+    ),
+    # Citation download - /articles/<pk>/cite/download/
+    path(
+        "<int:pk>/cite/download/",
+        views.article_citation_download,
+        name="article-citation-download",
     ),
 ]

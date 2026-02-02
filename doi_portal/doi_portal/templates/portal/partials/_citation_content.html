@@ -1,0 +1,16 @@
+{% comment %}
+Citation Content - HTMX partial fragment
+Story 4.7: Citation Modal.
+Rendered by article_citation view, swapped into #citation-content via HTMX.
+Context: citation_text, citation_format, is_code_format
+{% endcomment %}
+
+{% if is_code_format %}
+<div class="citation-code" data-citation-format="{{ citation_format }}">
+  <pre class="mb-0"><code>{{ citation_text }}</code></pre>
+</div>
+{% else %}
+<div class="citation-text" data-citation-format="{{ citation_format }}">
+  {{ citation_text }}
+</div>
+{% endif %}

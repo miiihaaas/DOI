@@ -1,0 +1,178 @@
+{% comment %}
+Citation Modal - Bootstrap 5 modal with format tabs and HTMX content loading
+Story 4.7: Citation Modal (Custom UI Component #8).
+Included in article_detail.html.
+Context: article, citation_url, citation_download_url
+{% endcomment %}
+
+<script>
+function citationModal() {
+  return {
+    copied: false,
+    currentFormat: 'apa',
+
+    async copyCitation() {
+      const el = document.getElementById('citation-content');
+      if (!el) return;
+      const text = el.innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      this.copied = true;
+      setTimeout(() => { this.copied = false; }, 2000);
+    },
+
+    downloadCitation() {
+      if (this.currentFormat === 'bibtex' || this.currentFormat === 'ris') {
+        window.location.href = '{{ citation_download_url }}?format=' + this.currentFormat;
+      }
+    },
+
+    get isDownloadable() {
+      return this.currentFormat === 'bibtex' || this.currentFormat === 'ris';
+    },
+
+    selectTab(format) {
+      this.currentFormat = format;
+      this.copied = false;
+    }
+  };
+}
+</script>
+
+<div class="modal fade" id="citationModal"
+     tabindex="-1"
+     aria-labelledby="citationModalLabel"
+     aria-hidden="true"
+     role="dialog"
+     x-data="citationModal()">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="citationModalLabel">
+          <i class="bi bi-quote me-2" aria-hidden="true"></i>Citiranje
+        </h5>
+        <button type="button" class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Zatvori"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Article title -->
+        <p class="text-muted small mb-3">{{ article.title|truncatechars:80 }}</p>
+
+        <!-- Format tabs -->
+        <ul class="nav nav-tabs mb-3" id="citationTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button type="button"
+                    role="tab"
+                    data-format="apa"
+                    :class="currentFormat === 'apa' ? 'nav-link active' : 'nav-link'"
+                    :aria-selected="currentFormat === 'apa' ? 'true' : 'false'"
+                    @click="selectTab('apa')"
+                    hx-get="{{ citation_url }}?format=apa"
+                    hx-target="#citation-content"
+                    hx-swap="innerHTML">APA</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button type="button"
+                    role="tab"
+                    data-format="mla"
+                    :class="currentFormat === 'mla' ? 'nav-link active' : 'nav-link'"
+                    :aria-selected="currentFormat === 'mla' ? 'true' : 'false'"
+                    @click="selectTab('mla')"
+                    hx-get="{{ citation_url }}?format=mla"
+                    hx-target="#citation-content"
+                    hx-swap="innerHTML">MLA</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button type="button"
+                    role="tab"
+                    data-format="chicago"
+                    :class="currentFormat === 'chicago' ? 'nav-link active' : 'nav-link'"
+                    :aria-selected="currentFormat === 'chicago' ? 'true' : 'false'"
+                    @click="selectTab('chicago')"
+                    hx-get="{{ citation_url }}?format=chicago"
+                    hx-target="#citation-content"
+                    hx-swap="innerHTML">Čikago</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button type="button"
+                    role="tab"
+                    data-format="bibtex"
+                    :class="currentFormat === 'bibtex' ? 'nav-link active' : 'nav-link'"
+                    :aria-selected="currentFormat === 'bibtex' ? 'true' : 'false'"
+                    @click="selectTab('bibtex')"
+                    hx-get="{{ citation_url }}?format=bibtex"
+                    hx-target="#citation-content"
+                    hx-swap="innerHTML">BibTeX</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button type="button"
+                    role="tab"
+                    data-format="ris"
+                    :class="currentFormat === 'ris' ? 'nav-link active' : 'nav-link'"
+                    :aria-selected="currentFormat === 'ris' ? 'true' : 'false'"
+                    @click="selectTab('ris')"
+                    hx-get="{{ citation_url }}?format=ris"
+                    hx-target="#citation-content"
+                    hx-swap="innerHTML">RIS</button>
+          </li>
+        </ul>
+
+        <!-- Citation content (loaded via HTMX) -->
+        <div id="citation-content"
+             aria-live="polite"
+             hx-get="{{ citation_url }}?format=apa"
+             hx-trigger="shown.bs.modal from:closest .modal"
+             hx-swap="innerHTML">
+          <div class="text-center text-muted py-3">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+              <span class="visually-hidden">Učitavanje...</span>
+            </div>
+            Učitavanje citacije...
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <!-- Copy to clipboard button -->
+        <button type="button"
+                class="btn btn-outline-primary"
+                @click="copyCitation()"
+                :title="copied ? 'Citacija kopirana!' : 'Kopiraj u clipboard'"
+                :aria-label="copied ? 'Citacija kopirana!' : 'Kopiraj u clipboard'">
+          <i :class="copied ? 'bi bi-check-lg' : 'bi bi-clipboard'" aria-hidden="true"></i>
+          <span x-text="copied ? 'Citacija kopirana!' : 'Kopiraj u clipboard'"></span>
+        </button>
+
+        <!-- Download button (only for BibTeX/RIS) -->
+        <button type="button"
+                class="btn btn-outline-secondary"
+                @click="downloadCitation()"
+                x-show="isDownloadable"
+                :title="'Preuzmi ' + currentFormat.toUpperCase() + ' fajl'"
+                aria-label="Preuzmi">
+          <i class="bi bi-download" aria-hidden="true"></i>
+          Preuzmi
+        </button>
+
+        <!-- Download tooltip for non-downloadable formats -->
+        <span class="text-muted small"
+              x-show="!isDownloadable"
+              title="Preuzimanje dostupno za BibTeX i RIS formate">
+          <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+          Preuzimanje dostupno za BibTeX i RIS formate
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

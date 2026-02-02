@@ -2,6 +2,7 @@
 Floating Action Bar - Custom UI Component #4
 Story 4.5: Quick access to PDF, citation, sharing, and DOI copy.
 Story 4.6: Functional PDF download replaces placeholder button.
+Story 4.7: Cite button triggers Citation Modal (replaces placeholder).
 Included in article_detail.html. Requires Alpine.js (available in base.html).
 Context: article, full_doi, doi_url, has_pdf, is_withdrawn, share_url, pdf_download_url, pdf_download_filename
 {% endcomment %}
@@ -72,10 +73,6 @@ function floatingActionBar({ doi = '', shareUrl = '' } = {}) {
         document.body.removeChild(ta);
       }
     },
-
-    handleCiteClick() {
-      // Placeholder - Story 4.7 will add citation modal
-    },
   };
 }
 </script>
@@ -106,12 +103,13 @@ function floatingActionBar({ doi = '', shareUrl = '' } = {}) {
   </button>
   {% endif %}
 
-  <!-- Cite Button (placeholder - Story 4.7) -->
+  <!-- Cite Button (Story 4.7 - triggers Citation Modal) -->
   <button type="button"
           class="btn btn-outline-secondary fab-btn"
-          title="Citiranje uskoro dostupno"
+          title="Citiraj članak"
           aria-label="Citiraj članak"
-          @click="handleCiteClick()">
+          data-bs-toggle="modal"
+          data-bs-target="#citationModal">
     <i class="bi bi-quote" aria-hidden="true"></i>
     <span class="fab-label d-lg-none">Citiraj</span>
   </button>

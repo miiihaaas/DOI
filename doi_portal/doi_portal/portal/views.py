@@ -10,14 +10,15 @@ Story 4.3: Advanced Filtering for Articles
 Story 4.4: Article Landing Page
 Story 4.5: Floating Action Bar
 Story 4.6: PDF Download
+Story 4.7: Citation Modal
 
 These are PUBLIC views - no authentication required.
 CSRF protection is handled by Django middleware for GET requests (safe methods).
 """
 
 from django.db import models
-from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
@@ -25,6 +26,7 @@ from django.views.generic import ListView
 from django.views.generic import TemplateView
 
 from doi_portal.articles.models import Article, ArticleStatus
+from doi_portal.portal.services import generate_citation
 from doi_portal.portal.services import get_pdf_download_filename
 from doi_portal.portal.services import get_portal_statistics
 from doi_portal.portal.services import get_recent_publications
@@ -565,6 +567,16 @@ class ArticleLandingView(DetailView):
             context["pdf_download_url"] = None
             context["pdf_download_filename"] = None
 
+        # Story 4.7: Citation Modal URLs
+        context["citation_url"] = reverse(
+            "portal-articles:article-citation",
+            kwargs={"pk": article.pk},
+        )
+        context["citation_download_url"] = reverse(
+            "portal-articles:article-citation-download",
+            kwargs={"pk": article.pk},
+        )
+
         return context
 
 
@@ -600,3 +612,83 @@ def article_pdf_download(request, pk):
         raise Http404("PDF nije dostupan za ovaj članak.")
 
     return HttpResponseRedirect(article.pdf_file.url)
+
+
+# =============================================================================
+# Story 4.7: Citation Modal
+# =============================================================================
+
+
+CITATION_FORMATS = ("apa", "mla", "chicago", "bibtex", "ris")
+
+
+@require_GET
+def article_citation(request, pk):
+    """
+    Return HTML fragment with formatted citation for an article.
+
+    HTMX endpoint - returns HTML, never JSON.
+    Supports formats: apa, mla, chicago, bibtex, ris.
+    Default format is APA.
+    Public endpoint - no authentication required.
+    """
+    article = get_object_or_404(
+        Article.objects.select_related("issue__publication__publisher")
+        .prefetch_related("authors"),
+        pk=pk,
+        status__in=[ArticleStatus.PUBLISHED, ArticleStatus.WITHDRAWN],
+    )
+
+    fmt = request.GET.get("format", "apa")
+    if fmt not in CITATION_FORMATS:
+        fmt = "apa"
+
+    citation_text = generate_citation(article, fmt)
+
+    is_code_format = fmt in ("bibtex", "ris")
+
+    return render(
+        request,
+        "portal/partials/_citation_content.html",
+        {
+            "citation_text": citation_text,
+            "citation_format": fmt,
+            "is_code_format": is_code_format,
+        },
+    )
+
+
+@require_GET
+def article_citation_download(request, pk):
+    """
+    Download citation file (BibTeX .bib or RIS .ris).
+
+    Returns file with Content-Disposition: attachment header.
+    Only supports bibtex and ris formats.
+    Public endpoint - no authentication required.
+    """
+    fmt = request.GET.get("format", "")
+    if fmt not in ("bibtex", "ris"):
+        return HttpResponseBadRequest("Format mora biti 'bibtex' ili 'ris'.")
+
+    article = get_object_or_404(
+        Article.objects.select_related("issue__publication__publisher")
+        .prefetch_related("authors"),
+        pk=pk,
+        status__in=[ArticleStatus.PUBLISHED, ArticleStatus.WITHDRAWN],
+    )
+
+    citation_text = generate_citation(article, fmt)
+
+    doi_slug = article.doi_suffix.replace("/", "-")
+
+    if fmt == "bibtex":
+        content_type = "application/x-bibtex; charset=utf-8"
+        filename = f"{doi_slug}.bib"
+    else:
+        content_type = "application/x-research-info-systems; charset=utf-8"
+        filename = f"{doi_slug}.ris"
+
+    response = HttpResponse(citation_text, content_type=content_type)
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
