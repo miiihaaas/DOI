@@ -1,0 +1,29 @@
+{% load portal_tags %}
+
+{% if query and query|length >= min_query_length %}
+  <p class="text-muted mb-3">
+    Pronađeno <strong>{{ result_count }}</strong> članaka za "<em>{{ query }}</em>"
+  </p>
+
+  {% if articles %}
+    {% for article in articles %}
+      {% include "portal/partials/_article_search_card.html" with article=article query=query %}
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% include "components/_pagination.html" %}
+  {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-search display-4 d-block mb-3"></i>
+      <h2 class="h5">Nema pronađenih članaka za "{{ query }}"</h2>
+      <p class="mb-0">Proverite pravopis ili pokušajte sa drugim ključnim rečima.</p>
+    </div>
+  {% endif %}
+
+{% elif not query %}
+  <div class="text-center text-muted py-5">
+    <i class="bi bi-search display-4 d-block mb-3"></i>
+    <h2 class="h5">Pretražite članke</h2>
+    <p class="mb-0">Unesite pojam za pretragu iznad - naslov, ime autora ili ključne reči.</p>
+  </div>
+{% endif %}

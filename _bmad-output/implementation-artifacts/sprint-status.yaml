@@ -80,7 +80,7 @@ development_status:
   # Epic 4: Public Portal Experience
   epic-4: in-progress
   4-1-portal-home-page: done
-  4-2-article-search-functionality: backlog
+  4-2-article-search-functionality: done
   4-3-advanced-filtering-for-articles: backlog
   4-4-article-landing-page: backlog
   4-5-floating-action-bar: backlog

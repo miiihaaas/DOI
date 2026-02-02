@@ -7,10 +7,13 @@ from django.views import defaults as default_views
 from django.views.generic import TemplateView
 
 from doi_portal.core.views import DashboardView
+from doi_portal.portal.views import ArticleSearchView
 from doi_portal.portal.views import PortalHomeView
 
 urlpatterns = [
     path("", PortalHomeView.as_view(), name="home"),
+    # Story 4.2: Article search (public)
+    path("search/", ArticleSearchView.as_view(), name="article-search"),
     path(
         "about/",
         TemplateView.as_view(template_name="pages/about.html"),

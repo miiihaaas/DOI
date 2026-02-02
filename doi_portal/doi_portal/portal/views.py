@@ -5,6 +5,7 @@ Story 2.2: Public Publisher Page
 Story 2.5: Public Publication List with Filters
 Story 2.7: Public Issue List & Detail
 Story 4.1: Portal Home Page
+Story 4.2: Article Search Functionality
 
 These are PUBLIC views - no authentication required.
 CSRF protection is handled by Django middleware for GET requests (safe methods).
@@ -15,8 +16,10 @@ from django.views.generic import DetailView
 from django.views.generic import ListView
 from django.views.generic import TemplateView
 
+from doi_portal.articles.models import Article
 from doi_portal.portal.services import get_portal_statistics
 from doi_portal.portal.services import get_recent_publications
+from doi_portal.portal.services import search_articles
 
 from doi_portal.issues.models import Issue
 from doi_portal.issues.models import IssueStatus
@@ -317,4 +320,50 @@ class PortalHomeView(TemplateView):
         context["stats"] = get_portal_statistics()
         context["recent_publications"] = get_recent_publications()
         # No breadcrumbs on home page (it IS the root)
+        return context
+
+
+# =============================================================================
+# Story 4.2: Article Search Functionality
+# =============================================================================
+
+
+class ArticleSearchView(ListView):
+    """
+    Public article search view.
+
+    FR39: Posetilac moze pretrazivati clanke po nazivu, autoru i kljucnim recima.
+    Public view - no authentication required.
+    """
+
+    template_name = "portal/search_results.html"
+    context_object_name = "articles"
+    paginate_by = 20
+
+    def get_queryset(self):
+        """Return search results or empty queryset."""
+        query = self.request.GET.get("q", "").strip()[:200]
+        if len(query) < 3:
+            return Article.objects.none()
+        return search_articles(query)
+
+    def get_template_names(self):
+        """Return partial template for HTMX requests."""
+        if self.request.headers.get("HX-Request"):
+            return ["portal/partials/_search_results.html"]
+        return [self.template_name]
+
+    def get_context_data(self, **kwargs):
+        """Add search-specific context."""
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.get("q", "").strip()[:200]
+        context["query"] = query
+        context["result_count"] = (
+            context["paginator"].count if context.get("paginator") else 0
+        )
+        context["min_query_length"] = 3
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {"label": "Pretraga", "url": None},
+        ]
         return context

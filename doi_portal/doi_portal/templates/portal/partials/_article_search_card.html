@@ -1,0 +1,40 @@
+{% load portal_tags %}
+
+<article class="card mb-3 shadow-sm">
+  <div class="card-body">
+    <h3 class="h5 card-title mb-1">
+      <a href="/articles/{{ article.pk }}/" class="text-decoration-none">
+        {{ article.title|highlight_search:query }}
+      </a>
+    </h3>
+    {% if article.subtitle %}
+    <p class="text-muted small mb-2">{{ article.subtitle }}</p>
+    {% endif %}
+
+    <!-- Authors -->
+    <p class="small mb-2">
+      {% for author in article.authors.all|slice:":3" %}
+        {{ author.surname }} {{ author.given_name|default:"" }}{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+      {% if article.authors.all|length > 3 %}
+        <span class="text-muted">i dr.</span>
+      {% endif %}
+    </p>
+
+    <!-- Publication info -->
+    <p class="small text-muted mb-2">
+      <i class="bi bi-journal-text"></i>
+      {{ article.issue.publication.title }} &mdash;
+      Vol. {{ article.issue.volume }}, No. {{ article.issue.issue_number }} ({{ article.issue.year }})
+    </p>
+
+    <!-- Keywords -->
+    {% if article.keywords %}
+    <div class="mb-0">
+      {% for kw in article.keywords|slice:":5" %}
+        <span class="badge bg-light text-dark border me-1">{{ kw }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</article>

@@ -1,0 +1,60 @@
+{% extends "portal/base.html" %}
+{% load static %}
+{% load portal_tags %}
+
+{% block title %}Pretraga članaka{% if query %} - "{{ query }}"{% endif %}{% endblock title %}
+
+{% block portal_content %}
+<section class="mb-4">
+  <h1 class="h3 mb-3">Pretraga članaka</h1>
+
+  <!-- Search Form -->
+  <form action="{% url 'article-search' %}" method="get" role="search" class="mb-4">
+    <div class="input-group">
+      <input type="search" name="q" value="{{ query }}" class="form-control"
+             placeholder="Pretražite članke po naslovu, autoru, ključnim rečima..."
+             aria-label="Pretraga članaka"
+             minlength="3">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-search"></i> Pretraži
+      </button>
+    </div>
+    {% if query and query|length < min_query_length %}
+    <div class="form-text text-warning mt-1">
+      Unesite najmanje {{ min_query_length }} karaktera za pretragu.
+    </div>
+    {% endif %}
+  </form>
+
+  <!-- Results -->
+  <div id="search-results" class="search-results">
+  {% if query and query|length >= min_query_length %}
+    <p class="text-muted mb-3">
+      Pronađeno <strong>{{ result_count }}</strong> članaka za "<em>{{ query }}</em>"
+    </p>
+
+    {% if articles %}
+      {% for article in articles %}
+        {% include "portal/partials/_article_search_card.html" with article=article query=query %}
+      {% endfor %}
+
+      <!-- Pagination -->
+      {% include "components/_pagination.html" %}
+    {% else %}
+      <div class="text-center text-muted py-5">
+        <i class="bi bi-search display-4 d-block mb-3"></i>
+        <h2 class="h5">Nema pronađenih članaka za "{{ query }}"</h2>
+        <p class="mb-0">Proverite pravopis ili pokušajte sa drugim ključnim rečima.</p>
+      </div>
+    {% endif %}
+
+  {% elif not query %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-search display-4 d-block mb-3"></i>
+      <h2 class="h5">Pretražite članke</h2>
+      <p class="mb-0">Unesite pojam za pretragu iznad - naslov, ime autora ili ključne reči.</p>
+    </div>
+  {% endif %}
+  </div>
+</section>
+{% endblock portal_content %}
