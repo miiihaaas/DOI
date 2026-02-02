@@ -1,8 +1,9 @@
 {% comment %}
 Floating Action Bar - Custom UI Component #4
 Story 4.5: Quick access to PDF, citation, sharing, and DOI copy.
+Story 4.6: Functional PDF download replaces placeholder button.
 Included in article_detail.html. Requires Alpine.js (available in base.html).
-Context: article, full_doi, doi_url, has_pdf, is_withdrawn, share_url
+Context: article, full_doi, doi_url, has_pdf, is_withdrawn, share_url, pdf_download_url, pdf_download_filename
 {% endcomment %}
 
 <script>
@@ -72,10 +73,6 @@ function floatingActionBar({ doi = '', shareUrl = '' } = {}) {
       }
     },
 
-    handlePdfClick() {
-      // Placeholder - Story 4.6 will add real download
-    },
-
     handleCiteClick() {
       // Placeholder - Story 4.7 will add citation modal
     },
@@ -88,16 +85,26 @@ function floatingActionBar({ doi = '', shareUrl = '' } = {}) {
      role="navigation"
      x-data="floatingActionBar({ doi: '{{ full_doi|escapejs }}', shareUrl: '{{ share_url|escapejs }}' })">
 
-  <!-- PDF Download Button (placeholder - Story 4.6) -->
+  <!-- PDF Download (Story 4.6) -->
+  {% if has_pdf %}
+  <a href="{{ pdf_download_url }}"
+     class="btn btn-primary fab-btn"
+     title="Preuzmi PDF"
+     aria-label="Preuzmi PDF"
+     download="{{ pdf_download_filename }}">
+    <i class="bi bi-file-earmark-pdf-fill" aria-hidden="true"></i>
+    <span class="fab-label d-lg-none">PDF</span>
+  </a>
+  {% else %}
   <button type="button"
           class="btn btn-primary fab-btn"
-          {% if not has_pdf %}disabled{% endif %}
-          title="{% if has_pdf %}Preuzmi PDF{% else %}PDF nije dostupan{% endif %}"
-          aria-label="{% if has_pdf %}Preuzmi PDF{% else %}PDF nije dostupan{% endif %}"
-          @click="handlePdfClick()">
+          disabled
+          title="PDF nije dostupan"
+          aria-label="PDF nije dostupan">
     <i class="bi bi-file-earmark-pdf-fill" aria-hidden="true"></i>
     <span class="fab-label d-lg-none">PDF</span>
   </button>
+  {% endif %}
 
   <!-- Cite Button (placeholder - Story 4.7) -->
   <button type="button"

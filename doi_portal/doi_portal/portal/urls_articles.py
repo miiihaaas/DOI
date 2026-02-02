@@ -2,6 +2,7 @@
 Public portal URL configuration for articles.
 
 Story 4.4: Article Landing Page.
+Story 4.6: PDF Download.
 
 These are PUBLIC routes - no authentication required.
 """
@@ -18,5 +19,11 @@ urlpatterns = [
         "<int:pk>/",
         views.ArticleLandingView.as_view(),
         name="article-detail",
+    ),
+    # PDF download - /articles/<pk>/pdf/
+    path(
+        "<int:pk>/pdf/",
+        views.article_pdf_download,
+        name="article-pdf-download",
     ),
 ]

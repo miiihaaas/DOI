@@ -3,13 +3,16 @@ Portal service functions for DOI Portal.
 
 Story 4.1: Portal Home Page.
 Story 4.2: Article Search Functionality.
-Provides portal-wide statistics, recent publications, and article search.
+Story 4.6: PDF Download.
+Provides portal-wide statistics, recent publications, article search,
+and PDF download helpers.
 All business logic for portal data retrieval is centralized here.
 """
 
 from __future__ import annotations
 
 from django.db.models import Count, Q, QuerySet
+from django.utils.text import slugify
 
 from doi_portal.articles.models import Article, ArticleStatus, Author
 from doi_portal.publications.models import Publication
@@ -17,6 +20,7 @@ from doi_portal.publishers.models import Publisher
 
 __all__ = [
     "get_article_for_landing",
+    "get_pdf_download_filename",
     "get_portal_statistics",
     "get_recent_publications",
     "search_articles",
@@ -173,3 +177,29 @@ def get_recent_publications(limit: int = 6) -> QuerySet[Publication]:
         Publication.objects.select_related("publisher")
         .order_by("-created_at")[:limit]
     )
+
+
+def get_pdf_download_filename(article: Article) -> str:
+    """
+    Generate descriptive PDF filename for download attribute.
+
+    FR42: Posetilac može preuzeti PDF članka.
+    Format: {doi_suffix}_{title_slug}.pdf
+    Example: "test-001_some-article-title.pdf"
+
+    Note: Used for the HTML download attribute on the <a> tag,
+    not for server-side Content-Disposition header.
+    The download attribute is ignored by browsers for cross-origin URLs (S3),
+    but works for same-origin (local development).
+
+    Args:
+        article: Article instance with doi_suffix and title.
+
+    Returns:
+        Descriptive filename string ending in .pdf.
+    """
+    title_slug = slugify(article.title)[:100]
+    doi_slug = article.doi_suffix.replace("/", "-")
+    if not title_slug:
+        return f"{doi_slug}.pdf"
+    return f"{doi_slug}_{title_slug}.pdf"

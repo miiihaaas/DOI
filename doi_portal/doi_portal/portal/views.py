@@ -9,18 +9,23 @@ Story 4.2: Article Search Functionality
 Story 4.3: Advanced Filtering for Articles
 Story 4.4: Article Landing Page
 Story 4.5: Floating Action Bar
+Story 4.6: PDF Download
 
 These are PUBLIC views - no authentication required.
 CSRF protection is handled by Django middleware for GET requests (safe methods).
 """
 
 from django.db import models
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
 from django.views.generic import ListView
 from django.views.generic import TemplateView
 
 from doi_portal.articles.models import Article, ArticleStatus
+from doi_portal.portal.services import get_pdf_download_filename
 from doi_portal.portal.services import get_portal_statistics
 from doi_portal.portal.services import get_recent_publications
 from doi_portal.portal.services import search_articles
@@ -549,4 +554,49 @@ class ArticleLandingView(DetailView):
             reverse("portal-articles:article-detail", kwargs={"pk": article.pk})
         )
 
+        # Story 4.6: PDF Download URL and filename for download attribute
+        if context["has_pdf"]:
+            context["pdf_download_url"] = reverse(
+                "portal-articles:article-pdf-download",
+                kwargs={"pk": article.pk},
+            )
+            context["pdf_download_filename"] = get_pdf_download_filename(article)
+        else:
+            context["pdf_download_url"] = None
+            context["pdf_download_filename"] = None
+
         return context
+
+
+# =============================================================================
+# Story 4.6: PDF Download
+# =============================================================================
+
+
+@require_GET
+def article_pdf_download(request, pk):
+    """
+    Redirect to article PDF file URL.
+
+    FR42: Posetilac može preuzeti PDF članka.
+    NFR4: Direktan link, bez procesiranja.
+
+    Only PUBLISHED articles with uploaded PDF are served.
+    WITHDRAWN articles are excluded (has_pdf = False per Story 4.5 logic).
+    Infected or in-progress PDFs are excluded via pdf_status check.
+    """
+    article = get_object_or_404(
+        Article,
+        pk=pk,
+        status=ArticleStatus.PUBLISHED,
+    )
+    if not article.pdf_file:
+        raise Http404("PDF nije dostupan za ovaj članak.")
+
+    # Security: Do not serve infected or in-progress PDF files
+    from doi_portal.articles.models import PdfStatus
+
+    if article.pdf_status in (PdfStatus.INFECTED, PdfStatus.SCANNING, PdfStatus.UPLOADING):
+        raise Http404("PDF nije dostupan za ovaj članak.")
+
+    return HttpResponseRedirect(article.pdf_file.url)
