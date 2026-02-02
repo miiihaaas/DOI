@@ -1,0 +1,132 @@
+<!-- Filter sidebar partial for article search (desktop + mobile offcanvas) -->
+<div class="card filter-sidebar">
+  <div class="card-body">
+    <h2 class="h5 card-title mb-3">Filteri</h2>
+
+    <!-- Hidden search query to preserve q param during filter changes -->
+    <input type="hidden" name="q" value="{{ query }}">
+
+    <!-- Type Filter -->
+    <fieldset class="mb-3">
+      <legend class="form-label fw-semibold h6">Tip publikacije</legend>
+      {% for value, label in publication_types %}
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="type"
+               id="type-{{ value }}" value="{{ value }}"
+               {% if value in current_types %}checked{% endif %}
+               hx-get="{% url 'article-search' %}"
+               hx-trigger="change"
+               hx-target="#search-results"
+               hx-include="closest .filter-sidebar"
+               hx-replace-url="true">
+        <label class="form-check-label" for="type-{{ value }}">{{ label }}</label>
+      </div>
+      {% endfor %}
+    </fieldset>
+
+    <hr>
+
+    <!-- Subject Area Filter -->
+    {% if subject_areas %}
+    <fieldset class="mb-3">
+      <legend class="form-label fw-semibold h6">Naučna oblast</legend>
+      {% for area in subject_areas %}
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="subject"
+               id="subject-{{ forloop.counter }}" value="{{ area }}"
+               {% if area in current_subjects %}checked{% endif %}
+               hx-get="{% url 'article-search' %}"
+               hx-trigger="change"
+               hx-target="#search-results"
+               hx-include="closest .filter-sidebar"
+               hx-replace-url="true">
+        <label class="form-check-label" for="subject-{{ forloop.counter }}">{{ area }}</label>
+      </div>
+      {% endfor %}
+    </fieldset>
+    <hr>
+    {% endif %}
+
+    <!-- Access Type Filter -->
+    <fieldset class="mb-3">
+      <legend class="form-label fw-semibold h6">Tip pristupa</legend>
+      {% for value, label in access_types %}
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="access"
+               id="access-{{ value }}" value="{{ value }}"
+               {% if value in current_access %}checked{% endif %}
+               hx-get="{% url 'article-search' %}"
+               hx-trigger="change"
+               hx-target="#search-results"
+               hx-include="closest .filter-sidebar"
+               hx-replace-url="true">
+        <label class="form-check-label" for="access-{{ value }}">{{ label }}</label>
+      </div>
+      {% endfor %}
+    </fieldset>
+
+    <hr>
+
+    <!-- Language Filter -->
+    {% if languages %}
+    <fieldset class="mb-3">
+      <legend class="form-label fw-semibold h6">Jezik</legend>
+      {% for lang in languages %}
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="language"
+               id="language-{{ lang }}" value="{{ lang }}"
+               {% if lang in current_languages %}checked{% endif %}
+               hx-get="{% url 'article-search' %}"
+               hx-trigger="change"
+               hx-target="#search-results"
+               hx-include="closest .filter-sidebar"
+               hx-replace-url="true">
+        <label class="form-check-label" for="language-{{ lang }}">{{ lang }}</label>
+      </div>
+      {% endfor %}
+    </fieldset>
+    <hr>
+    {% endif %}
+
+    <!-- Year Range Filter -->
+    {% if year_range.min %}
+    <fieldset class="mb-3">
+      <legend class="form-label fw-semibold h6">Godina izdanja</legend>
+      <div class="row g-2">
+        <div class="col-6">
+          <label for="year-from" class="form-label small">Od</label>
+          <input type="number" class="form-control form-control-sm" id="year-from"
+                 name="year_from" value="{{ current_year_from }}"
+                 min="{{ year_range.min }}" max="{{ year_range.max }}"
+                 placeholder="{{ year_range.min }}"
+                 hx-get="{% url 'article-search' %}"
+                 hx-trigger="change"
+                 hx-target="#search-results"
+                 hx-include="closest .filter-sidebar"
+                 hx-replace-url="true">
+        </div>
+        <div class="col-6">
+          <label for="year-to" class="form-label small">Do</label>
+          <input type="number" class="form-control form-control-sm" id="year-to"
+                 name="year_to" value="{{ current_year_to }}"
+                 min="{{ year_range.min }}" max="{{ year_range.max }}"
+                 placeholder="{{ year_range.max }}"
+                 hx-get="{% url 'article-search' %}"
+                 hx-trigger="change"
+                 hx-target="#search-results"
+                 hx-include="closest .filter-sidebar"
+                 hx-replace-url="true">
+        </div>
+      </div>
+    </fieldset>
+    {% endif %}
+
+    <!-- Clear All Filters -->
+    {% if has_active_filters %}
+    <hr>
+    <a href="{% url 'article-search' %}?q={{ query|urlencode }}" class="btn btn-outline-danger btn-sm w-100">
+      <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Obrišite sve filtere
+    </a>
+    {% endif %}
+  </div>
+</div>

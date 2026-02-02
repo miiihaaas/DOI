@@ -6,11 +6,13 @@ Story 2.5: Public Publication List with Filters
 Story 2.7: Public Issue List & Detail
 Story 4.1: Portal Home Page
 Story 4.2: Article Search Functionality
+Story 4.3: Advanced Filtering for Articles
 
 These are PUBLIC views - no authentication required.
 CSRF protection is handled by Django middleware for GET requests (safe methods).
 """
 
+from django.db import models
 from django.urls import reverse
 from django.views.generic import DetailView
 from django.views.generic import ListView
@@ -330,9 +332,10 @@ class PortalHomeView(TemplateView):
 
 class ArticleSearchView(ListView):
     """
-    Public article search view.
+    Public article search view with advanced filtering.
 
     FR39: Posetilac moze pretrazivati clanke po nazivu, autoru i kljucnim recima.
+    FR40: Posetilac moze filtrirati publikacije po vrsti, oblasti, pristupu, jeziku.
     Public view - no authentication required.
     """
 
@@ -340,12 +343,59 @@ class ArticleSearchView(ListView):
     context_object_name = "articles"
     paginate_by = 20
 
+    def _parse_filters(self) -> dict:
+        """Parse and validate filter parameters from GET request."""
+        filters = {}
+
+        pub_types = self.request.GET.getlist("type")
+        valid_types = [t for t in pub_types if t in [c[0] for c in PublicationType.choices]]
+        if valid_types:
+            filters["types"] = valid_types
+
+        subjects = self.request.GET.getlist("subject")
+        # Validate against actual subject areas in database
+        valid_subjects = list(
+            Publication.objects.exclude(subject_area="")
+            .values_list("subject_area", flat=True)
+            .distinct()
+        )
+        filtered_subjects = [s for s in subjects if s in valid_subjects]
+        if filtered_subjects:
+            filters["subjects"] = filtered_subjects
+
+        languages = self.request.GET.getlist("language")
+        # Validate against actual languages in database
+        valid_languages = list(
+            Publication.objects.exclude(language="")
+            .values_list("language", flat=True)
+            .distinct()
+        )
+        filtered_languages = [lg for lg in languages if lg in valid_languages]
+        if filtered_languages:
+            filters["languages"] = filtered_languages
+
+        access_values = self.request.GET.getlist("access")
+        valid_access = [a for a in access_values if a in [c[0] for c in AccessType.choices]]
+        if valid_access:
+            filters["access_types"] = valid_access
+
+        year_from = self.request.GET.get("year_from")
+        if year_from and year_from.isdigit():
+            filters["year_from"] = int(year_from)
+
+        year_to = self.request.GET.get("year_to")
+        if year_to and year_to.isdigit():
+            filters["year_to"] = int(year_to)
+
+        return filters
+
     def get_queryset(self):
-        """Return search results or empty queryset."""
+        """Return filtered search results."""
         query = self.request.GET.get("q", "").strip()[:200]
         if len(query) < 3:
             return Article.objects.none()
-        return search_articles(query)
+        filters = self._parse_filters()
+        return search_articles(query, filters=filters)
 
     def get_template_names(self):
         """Return partial template for HTMX requests."""
@@ -354,7 +404,7 @@ class ArticleSearchView(ListView):
         return [self.template_name]
 
     def get_context_data(self, **kwargs):
-        """Add search-specific context."""
+        """Add search-specific context with filter choices and active state."""
         context = super().get_context_data(**kwargs)
         query = self.request.GET.get("q", "").strip()[:200]
         context["query"] = query
@@ -366,4 +416,54 @@ class ArticleSearchView(ListView):
             {"label": "Početna", "url": reverse("home")},
             {"label": "Pretraga", "url": None},
         ]
+
+        # Filter choices
+        context["publication_types"] = PublicationType.choices
+        context["access_types"] = AccessType.choices
+        context["subject_areas"] = (
+            Publication.objects.exclude(subject_area="")
+            .values_list("subject_area", flat=True)
+            .distinct()
+            .order_by("subject_area")
+        )
+        context["languages"] = (
+            Publication.objects.exclude(language="")
+            .values_list("language", flat=True)
+            .distinct()
+            .order_by("language")
+        )
+
+        # Year range from published issues
+        year_agg = Issue.objects.filter(
+            status=IssueStatus.PUBLISHED
+        ).aggregate(
+            min_year=models.Min("year"),
+            max_year=models.Max("year"),
+        )
+        context["year_range"] = {
+            "min": year_agg["min_year"],
+            "max": year_agg["max_year"],
+        }
+
+        # Active filter state
+        context["current_types"] = self.request.GET.getlist("type")
+        context["current_subjects"] = self.request.GET.getlist("subject")
+        context["current_languages"] = self.request.GET.getlist("language")
+        context["current_access"] = self.request.GET.getlist("access")
+
+        # Year filter state: only show if valid digit
+        year_from_raw = self.request.GET.get("year_from", "")
+        year_to_raw = self.request.GET.get("year_to", "")
+        context["current_year_from"] = year_from_raw if year_from_raw.isdigit() else ""
+        context["current_year_to"] = year_to_raw if year_to_raw.isdigit() else ""
+
+        context["has_active_filters"] = bool(
+            context["current_types"]
+            or context["current_subjects"]
+            or context["current_languages"]
+            or context["current_access"]
+            or context["current_year_from"]
+            or context["current_year_to"]
+        )
+
         return context

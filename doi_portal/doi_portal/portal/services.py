@@ -44,11 +44,15 @@ def get_portal_statistics() -> dict[str, int]:
     }
 
 
-def search_articles(query: str) -> QuerySet[Article]:
+def search_articles(
+    query: str,
+    filters: dict | None = None,
+) -> QuerySet[Article]:
     """
     Search published articles by title, author names, keywords, and abstract.
 
     FR39: Posetilac moze pretrazivati clanke po nazivu, autoru i kljucnim recima.
+    FR40: Filtriranje po vrsti, oblasti, pristupu, jeziku.
     NFR5: Rezultati < 2 sekunde.
 
     Only PUBLISHED articles are searched.
@@ -56,6 +60,13 @@ def search_articles(query: str) -> QuerySet[Article]:
 
     Args:
         query: Search term (minimum 3 characters expected, caller validates).
+        filters: Optional dict with filter criteria:
+            - types: list of PublicationType values
+            - subjects: list of subject area strings
+            - languages: list of language strings
+            - access_types: list of AccessType values
+            - year_from: int minimum year
+            - year_to: int maximum year
 
     Returns:
         QuerySet of matching Article objects with related data pre-fetched.
@@ -74,7 +85,7 @@ def search_articles(query: str) -> QuerySet[Article]:
         .distinct()
     )
 
-    return (
+    queryset = (
         Article.objects.filter(
             Q(status=ArticleStatus.PUBLISHED),
             Q(title__icontains=q)
@@ -87,6 +98,35 @@ def search_articles(query: str) -> QuerySet[Article]:
         .order_by("-published_at", "-created_at")
         .distinct()
     )
+
+    # Apply filters (AND logic - all must be satisfied)
+    if filters:
+        if filters.get("types"):
+            queryset = queryset.filter(
+                issue__publication__publication_type__in=filters["types"]
+            )
+        if filters.get("subjects"):
+            queryset = queryset.filter(
+                issue__publication__subject_area__in=filters["subjects"]
+            )
+        if filters.get("languages"):
+            queryset = queryset.filter(
+                issue__publication__language__in=filters["languages"]
+            )
+        if filters.get("access_types"):
+            queryset = queryset.filter(
+                issue__publication__access_type__in=filters["access_types"]
+            )
+        if filters.get("year_from"):
+            queryset = queryset.filter(
+                issue__year__gte=filters["year_from"]
+            )
+        if filters.get("year_to"):
+            queryset = queryset.filter(
+                issue__year__lte=filters["year_to"]
+            )
+
+    return queryset
 
 
 def get_recent_publications(limit: int = 6) -> QuerySet[Publication]:

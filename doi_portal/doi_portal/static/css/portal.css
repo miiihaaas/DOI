@@ -255,6 +255,59 @@ mark {
 }
 
 /* ===========================
+   Filter Sidebar (Story 4.3)
+   =========================== */
+
+.filter-sidebar .card-body {
+    padding: 1.25rem;
+}
+
+.filter-sidebar fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.filter-sidebar legend {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+}
+
+.filter-sidebar .form-check {
+    margin-bottom: 0.25rem;
+}
+
+.filter-sidebar .form-check-label {
+    font-size: 0.875rem;
+    color: var(--portal-text);
+}
+
+/* Active filter tags */
+.filter-tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.8rem;
+    padding: 0.35em 0.65em;
+}
+
+.filter-tag a {
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.filter-tag a:hover {
+    opacity: 0.7;
+}
+
+/* Year range inputs */
+.filter-sidebar .row .form-control-sm {
+    font-size: 0.875rem;
+}
+
+/* ===========================
    Responsive Adjustments
    =========================== */
 
@@ -295,6 +348,16 @@ mark {
     .search-results .card-title a {
         min-height: 44px;
         min-width: 44px;
+    }
+
+    /* Filter offcanvas mobile (Story 4.3) */
+    .offcanvas .filter-sidebar .card {
+        border: none;
+        box-shadow: none;
+    }
+
+    .offcanvas .filter-sidebar .card-body {
+        padding: 0;
     }
 }
 

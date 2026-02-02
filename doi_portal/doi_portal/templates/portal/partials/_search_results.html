@@ -1,8 +1,57 @@
 {% load portal_tags %}
 
 {% if query and query|length >= min_query_length %}
+  <!-- Active Filter Tags -->
+  {% if has_active_filters %}
+  <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+    <span class="text-muted small">Aktivni filteri:</span>
+    {% for t in current_types %}
+    <span class="badge bg-primary filter-tag">
+      {{ t }}
+      <a href="?q={{ query|urlencode }}{% for ot in current_types %}{% if ot != t %}&type={{ ot|urlencode }}{% endif %}{% endfor %}{% for s in current_subjects %}&subject={{ s|urlencode }}{% endfor %}{% for a in current_access %}&access={{ a|urlencode }}{% endfor %}{% for l in current_languages %}&language={{ l|urlencode }}{% endfor %}{% if current_year_from %}&year_from={{ current_year_from|urlencode }}{% endif %}{% if current_year_to %}&year_to={{ current_year_to|urlencode }}{% endif %}"
+         class="text-white ms-1" aria-label="Ukloni filter {{ t }}">&times;</a>
+    </span>
+    {% endfor %}
+    {% for s in current_subjects %}
+    <span class="badge bg-info filter-tag">
+      {{ s }}
+      <a href="?q={{ query|urlencode }}{% for t in current_types %}&type={{ t|urlencode }}{% endfor %}{% for os in current_subjects %}{% if os != s %}&subject={{ os|urlencode }}{% endif %}{% endfor %}{% for a in current_access %}&access={{ a|urlencode }}{% endfor %}{% for l in current_languages %}&language={{ l|urlencode }}{% endfor %}{% if current_year_from %}&year_from={{ current_year_from|urlencode }}{% endif %}{% if current_year_to %}&year_to={{ current_year_to|urlencode }}{% endif %}"
+         class="text-white ms-1" aria-label="Ukloni filter {{ s }}">&times;</a>
+    </span>
+    {% endfor %}
+    {% for a in current_access %}
+    <span class="badge bg-success filter-tag">
+      {{ a }}
+      <a href="?q={{ query|urlencode }}{% for t in current_types %}&type={{ t|urlencode }}{% endfor %}{% for s in current_subjects %}&subject={{ s|urlencode }}{% endfor %}{% for oa in current_access %}{% if oa != a %}&access={{ oa|urlencode }}{% endif %}{% endfor %}{% for l in current_languages %}&language={{ l|urlencode }}{% endfor %}{% if current_year_from %}&year_from={{ current_year_from|urlencode }}{% endif %}{% if current_year_to %}&year_to={{ current_year_to|urlencode }}{% endif %}"
+         class="text-white ms-1" aria-label="Ukloni filter {{ a }}">&times;</a>
+    </span>
+    {% endfor %}
+    {% for l in current_languages %}
+    <span class="badge bg-warning text-dark filter-tag">
+      {{ l }}
+      <a href="?q={{ query|urlencode }}{% for t in current_types %}&type={{ t|urlencode }}{% endfor %}{% for s in current_subjects %}&subject={{ s|urlencode }}{% endfor %}{% for a in current_access %}&access={{ a|urlencode }}{% endfor %}{% for ol in current_languages %}{% if ol != l %}&language={{ ol|urlencode }}{% endif %}{% endfor %}{% if current_year_from %}&year_from={{ current_year_from|urlencode }}{% endif %}{% if current_year_to %}&year_to={{ current_year_to|urlencode }}{% endif %}"
+         class="text-dark ms-1" aria-label="Ukloni filter {{ l }}">&times;</a>
+    </span>
+    {% endfor %}
+    {% if current_year_from %}
+    <span class="badge bg-secondary filter-tag">
+      Od: {{ current_year_from }}
+      <a href="?q={{ query|urlencode }}{% for t in current_types %}&type={{ t|urlencode }}{% endfor %}{% for s in current_subjects %}&subject={{ s|urlencode }}{% endfor %}{% for a in current_access %}&access={{ a|urlencode }}{% endfor %}{% for l in current_languages %}&language={{ l|urlencode }}{% endfor %}{% if current_year_to %}&year_to={{ current_year_to|urlencode }}{% endif %}"
+         class="text-white ms-1" aria-label="Ukloni filter Od: {{ current_year_from }}">&times;</a>
+    </span>
+    {% endif %}
+    {% if current_year_to %}
+    <span class="badge bg-secondary filter-tag">
+      Do: {{ current_year_to }}
+      <a href="?q={{ query|urlencode }}{% for t in current_types %}&type={{ t|urlencode }}{% endfor %}{% for s in current_subjects %}&subject={{ s|urlencode }}{% endfor %}{% for a in current_access %}&access={{ a|urlencode }}{% endfor %}{% for l in current_languages %}&language={{ l|urlencode }}{% endfor %}{% if current_year_from %}&year_from={{ current_year_from|urlencode }}{% endif %}"
+         class="text-white ms-1" aria-label="Ukloni filter Do: {{ current_year_to }}">&times;</a>
+    </span>
+    {% endif %}
+  </div>
+  {% endif %}
+
   <p class="text-muted mb-3">
-    Pronađeno <strong>{{ result_count }}</strong> članaka za "<em>{{ query }}</em>"
+    Pronađeno <strong>{{ result_count }}</strong> članaka za "<em>{{ query }}</em>"{% if has_active_filters %} (filtrirano){% endif %}
   </p>
 
   {% if articles %}
