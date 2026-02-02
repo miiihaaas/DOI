@@ -1,0 +1,160 @@
+{% comment %}
+Floating Action Bar - Custom UI Component #4
+Story 4.5: Quick access to PDF, citation, sharing, and DOI copy.
+Included in article_detail.html. Requires Alpine.js (available in base.html).
+Context: article, full_doi, doi_url, has_pdf, is_withdrawn, share_url
+{% endcomment %}
+
+<script>
+function floatingActionBar({ doi = '', shareUrl = '' } = {}) {
+  return {
+    doi: doi,
+    shareUrl: shareUrl,
+    shareOpen: false,
+    doiCopied: false,
+
+    get emailShareUrl() {
+      const subject = encodeURIComponent(document.title);
+      const body = encodeURIComponent(this.shareUrl);
+      return `mailto:?subject=${subject}&body=${body}`;
+    },
+
+    get twitterShareUrl() {
+      const text = encodeURIComponent(document.title);
+      const url = encodeURIComponent(this.shareUrl);
+      return `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+    },
+
+    get linkedinShareUrl() {
+      const url = encodeURIComponent(this.shareUrl);
+      return `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+    },
+
+    async handleShare() {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: document.title,
+            url: this.shareUrl,
+          });
+          return;
+        } catch (e) {
+          // User cancelled or error - fall through to dropdown
+        }
+      }
+      this.shareOpen = !this.shareOpen;
+    },
+
+    async copyLink() {
+      await this.copyToClipboard(this.shareUrl);
+      this.shareOpen = false;
+    },
+
+    async copyDoi() {
+      await this.copyToClipboard(this.doi);
+      this.doiCopied = true;
+      setTimeout(() => { this.doiCopied = false; }, 2000);
+    },
+
+    async copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+    },
+
+    handlePdfClick() {
+      // Placeholder - Story 4.6 will add real download
+    },
+
+    handleCiteClick() {
+      // Placeholder - Story 4.7 will add citation modal
+    },
+  };
+}
+</script>
+
+<nav class="floating-action-bar"
+     aria-label="Akcije za članak"
+     role="navigation"
+     x-data="floatingActionBar({ doi: '{{ full_doi|escapejs }}', shareUrl: '{{ share_url|escapejs }}' })">
+
+  <!-- PDF Download Button (placeholder - Story 4.6) -->
+  <button type="button"
+          class="btn btn-primary fab-btn"
+          {% if not has_pdf %}disabled{% endif %}
+          title="{% if has_pdf %}Preuzmi PDF{% else %}PDF nije dostupan{% endif %}"
+          aria-label="{% if has_pdf %}Preuzmi PDF{% else %}PDF nije dostupan{% endif %}"
+          @click="handlePdfClick()">
+    <i class="bi bi-file-earmark-pdf-fill" aria-hidden="true"></i>
+    <span class="fab-label d-lg-none">PDF</span>
+  </button>
+
+  <!-- Cite Button (placeholder - Story 4.7) -->
+  <button type="button"
+          class="btn btn-outline-secondary fab-btn"
+          title="Citiranje uskoro dostupno"
+          aria-label="Citiraj članak"
+          @click="handleCiteClick()">
+    <i class="bi bi-quote" aria-hidden="true"></i>
+    <span class="fab-label d-lg-none">Citiraj</span>
+  </button>
+
+  <!-- Share Button -->
+  <div class="fab-share-wrapper" style="position: relative;">
+    <button type="button"
+            class="btn btn-outline-secondary fab-btn"
+            title="Podeli članak"
+            aria-label="Podeli članak"
+            :aria-expanded="shareOpen.toString()"
+            @click="handleShare()">
+      <i class="bi bi-share" aria-hidden="true"></i>
+      <span class="fab-label d-lg-none">Podeli</span>
+    </button>
+
+    <!-- Share Dropdown -->
+    <div class="fab-share-dropdown"
+         x-cloak
+         x-show="shareOpen"
+         x-transition
+         @click.outside="shareOpen = false"
+         role="menu"
+         aria-label="Opcije deljenja">
+      <button type="button" class="fab-share-option" role="menuitem"
+              @click="copyLink()" aria-label="Kopiraj link">
+        <i class="bi bi-link-45deg" aria-hidden="true"></i> Kopiraj link
+      </button>
+      <a class="fab-share-option" role="menuitem"
+         :href="emailShareUrl" aria-label="Podeli putem e-pošte">
+        <i class="bi bi-envelope" aria-hidden="true"></i> E-pošta
+      </a>
+      <a :href="twitterShareUrl" class="fab-share-option" role="menuitem"
+         target="_blank" rel="noopener noreferrer" aria-label="Podeli na Twitter/X">
+        <i class="bi bi-twitter-x" aria-hidden="true"></i> Twitter/X
+      </a>
+      <a :href="linkedinShareUrl" class="fab-share-option" role="menuitem"
+         target="_blank" rel="noopener noreferrer" aria-label="Podeli na LinkedIn">
+        <i class="bi bi-linkedin" aria-hidden="true"></i> LinkedIn
+      </a>
+    </div>
+  </div>
+
+  <!-- Copy DOI Button -->
+  <button type="button"
+          class="btn btn-outline-secondary fab-btn"
+          :title="doiCopied ? 'Kopirano!' : 'Kopiraj DOI'"
+          :aria-label="doiCopied ? 'DOI kopiran' : 'Kopiraj DOI: {{ full_doi|escapejs }}'"
+          @click="copyDoi()">
+    <i :class="doiCopied ? 'bi bi-check-lg text-success' : 'bi bi-clipboard'" aria-hidden="true"></i>
+    <span class="fab-label d-lg-none" x-text="doiCopied ? 'Kopirano!' : 'DOI'"></span>
+  </button>
+</nav>

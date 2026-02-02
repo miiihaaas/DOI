@@ -314,6 +314,10 @@ mark {
 @media (max-width: 767.98px) {
     .portal-content {
         padding-top: 1rem;
+        /* Note: padding-bottom for mobile is handled by the floating-action-bar
+           media query at 991.98px (5rem) on article pages. This rule only sets
+           the non-article-page default. The 991.98px rule has cascade priority
+           since it appears later in the file. */
         padding-bottom: 1rem;
     }
 
@@ -437,6 +441,145 @@ mark {
     font-size: 0.8rem;
     font-weight: 400;
     padding: 0.35em 0.65em;
+}
+
+/* ===========================
+   Floating Action Bar (Story 4.5)
+   =========================== */
+
+/* Desktop: Vertical bar on right side */
+.floating-action-bar {
+    position: fixed;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 1030;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--portal-border);
+}
+
+/* FAB buttons - round on desktop */
+.fab-btn {
+    width: 48px;
+    height: 48px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    padding: 0;
+    position: relative;
+}
+
+.fab-btn:focus-visible {
+    outline: 2px solid var(--portal-secondary);
+    outline-offset: 2px;
+}
+
+.fab-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Label visible only on mobile */
+.fab-label {
+    font-size: 0.7rem;
+    margin-left: 0.25rem;
+}
+
+/* Share dropdown */
+.fab-share-dropdown {
+    position: absolute;
+    left: -200px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: white;
+    border: 1px solid var(--portal-border);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    z-index: 1031;
+    padding: 0.5rem 0;
+}
+
+.fab-share-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    width: 100%;
+    border: none;
+    background: none;
+    color: var(--portal-text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-align: left;
+}
+
+.fab-share-option:hover {
+    background-color: var(--portal-bg-secondary);
+    color: var(--portal-primary);
+}
+
+/* Mobile: Horizontal bar at bottom */
+@media (max-width: 991.98px) {
+    .floating-action-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        transform: none;
+        flex-direction: row;
+        justify-content: space-around;
+        border-radius: 0;
+        padding: 0.75rem 1rem;
+        border-top: 1px solid var(--portal-border);
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        gap: 0;
+    }
+
+    .fab-btn {
+        width: auto;
+        height: auto;
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        padding: 0.5rem 0.75rem;
+        flex-direction: column;
+        gap: 0.125rem;
+    }
+
+    .fab-label {
+        display: block !important;
+        margin-left: 0;
+    }
+
+    /* Share dropdown on mobile - above button */
+    .fab-share-dropdown {
+        left: 50%;
+        transform: translateX(-50%);
+        top: auto;
+        bottom: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Padding on main content so bar does not cover content.
+       Scoped to only apply when floating-action-bar is present on the page
+       using the :has() selector (supported in all modern browsers). */
+    .portal-content:has(.floating-action-bar) {
+        padding-bottom: 5rem;
+    }
 }
 
 /* ===========================

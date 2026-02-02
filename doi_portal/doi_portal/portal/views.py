@@ -8,6 +8,7 @@ Story 4.1: Portal Home Page
 Story 4.2: Article Search Functionality
 Story 4.3: Advanced Filtering for Articles
 Story 4.4: Article Landing Page
+Story 4.5: Floating Action Bar
 
 These are PUBLIC views - no authentication required.
 CSRF protection is handled by Django middleware for GET requests (safe methods).
@@ -541,5 +542,11 @@ class ArticleLandingView(DetailView):
         context["is_withdrawn"] = article.status == ArticleStatus.WITHDRAWN
         context["full_doi"] = f"{publisher.doi_prefix}/{article.doi_suffix}"
         context["doi_url"] = f"https://doi.org/{publisher.doi_prefix}/{article.doi_suffix}"
+
+        # Story 4.5: Floating Action Bar context
+        context["has_pdf"] = bool(article.pdf_file) and article.status != ArticleStatus.WITHDRAWN
+        context["share_url"] = self.request.build_absolute_uri(
+            reverse("portal-articles:article-detail", kwargs={"pk": article.pk})
+        )
 
         return context
