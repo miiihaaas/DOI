@@ -1364,15 +1364,15 @@ class TestIssuePublicDetailView:
         # 200, not 302 redirect to login
         assert response.status_code == 200
 
-    def test_context_has_articles_empty_list(self, client):
-        """Context articles is empty list (placeholder until Story 3.1)."""
+    def test_context_has_articles_empty_queryset(self, client):
+        """Context articles is empty queryset when no published articles exist (Story 4.4)."""
         issue = IssueFactory(status=IssueStatus.PUBLISHED)
         url = reverse(
             "portal-publications:issue-detail",
             kwargs={"slug": issue.publication.slug, "pk": issue.pk},
         )
         response = client.get(url)
-        assert response.context["articles"] == []
+        assert list(response.context["articles"]) == []
 
     def test_publisher_link_on_issue_detail(self, client):
         """Issue detail has link to publisher detail."""

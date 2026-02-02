@@ -66,19 +66,39 @@
             {% endif %}
             {% endif %}
 
-            <!-- Articles Section (placeholder until Story 3.1) -->
+            <!-- Articles Section (Story 4.4: Article Landing Page links) -->
             <div class="card mb-4">
                 <div class="card-body">
                     <h2 class="h5 card-title">
                         <i class="bi bi-file-earmark-text me-2" aria-hidden="true"></i>Članci
                     </h2>
                     {% if articles %}
-                    <!-- Story 3.1 ce popuniti ovu sekciju sa realnim clancima -->
                     <div class="list-group">
                         {% for article in articles %}
-                        <div class="list-group-item">
-                            {{ article.title }}
-                        </div>
+                        <a href="{% url 'portal-articles:article-detail' article.pk %}"
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h3 class="h6 mb-1">{{ article.title }}</h3>
+                                    <p class="small text-muted mb-0">
+                                        {% for author in article.authors.all|slice:":3" %}
+                                            {{ author.surname }} {{ author.given_name|default:"" }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                        {% if article.authors.all|length > 3 %}
+                                            <span>i dr.</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="text-end">
+                                    {% if article.first_page %}
+                                    <span class="text-muted small">str. {{ article.first_page }}{% if article.last_page %}-{{ article.last_page }}{% endif %}</span>
+                                    {% endif %}
+                                    {% if article.status == "WITHDRAWN" %}
+                                    <br><span class="badge bg-danger">Povučen</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
                         {% endfor %}
                     </div>
                     {% else %}

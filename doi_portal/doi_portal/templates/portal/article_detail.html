@@ -1,0 +1,184 @@
+{% extends "portal/base.html" %}
+
+{% block title %}{{ article.title }} - {{ article.issue.publication.title }} - DOI Portal{% endblock title %}
+
+{% block meta_description %}{{ article.abstract|truncatewords:30 }}{% endblock meta_description %}
+
+{% block portal_content %}
+<!-- WITHDRAWN Banner -->
+{% if is_withdrawn %}
+<div class="alert alert-danger withdrawn-banner d-flex align-items-start mb-4" role="alert">
+  <i class="bi bi-exclamation-triangle-fill me-3 fs-4" aria-hidden="true"></i>
+  <div>
+    <h2 class="alert-heading h5 mb-1">Povučen članak</h2>
+    <p class="mb-1">Ovaj članak je povučen{% if article.withdrawn_at %} dana {{ article.withdrawn_at|date:"d.m.Y." }}{% endif %}.</p>
+    {% if article.withdrawal_reason %}
+    <p class="mb-0"><strong>Razlog:</strong> {{ article.withdrawal_reason }}</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="row">
+  <!-- Main Content -->
+  <article class="col-lg-8">
+    <!-- Title -->
+    <h1 class="article-title mb-2">{{ article.title }}</h1>
+    {% if article.subtitle %}
+    <p class="article-subtitle text-muted lead mb-3">{{ article.subtitle }}</p>
+    {% endif %}
+
+    <!-- Status & Date -->
+    <div class="mb-3">
+      <span class="badge {{ article.status_badge_class }}">{{ article.get_status_display }}</span>
+      {% if article.published_at %}
+      <span class="text-muted ms-2">
+        <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>
+        {{ article.published_at|date:"d.m.Y." }}
+      </span>
+      {% endif %}
+    </div>
+
+    <!-- Authors -->
+    <section class="article-authors mb-4" aria-labelledby="authors-heading">
+      <h2 id="authors-heading" class="h5 mb-3">Autori</h2>
+      {% for author in article.authors.all %}
+      <div class="author-entry mb-2">
+        <span class="fw-semibold">
+          {{ author.given_name }} {{ author.surname }}{% if author.suffix %} {{ author.suffix }}{% endif %}
+        </span>
+        {% if author.is_corresponding %}
+        <span class="badge bg-info ms-1" title="Korespondentni autor">
+          <i class="bi bi-envelope-fill" aria-hidden="true"></i> Korespondent
+        </span>
+        {% endif %}
+        {% if author.orcid %}
+        <a href="https://orcid.org/{{ author.orcid }}"
+           class="orcid-link ms-1"
+           rel="external"
+           target="_blank"
+           aria-label="ORCID profil za {{ author.given_name }} {{ author.surname }}: {{ author.orcid }}">
+          <img src="https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png"
+               alt="ORCID" width="16" height="16">
+          {{ author.orcid }}
+        </a>
+        {% endif %}
+        {% for affiliation in author.affiliations.all %}
+        <div class="text-muted small ms-3">
+          {{ affiliation.institution_name }}{% if affiliation.department %}, {{ affiliation.department }}{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% empty %}
+      <p class="text-muted">Nema podataka o autorima.</p>
+      {% endfor %}
+    </section>
+
+    <!-- Abstract -->
+    {% if article.abstract %}
+    <section class="article-abstract mb-4" aria-labelledby="abstract-heading">
+      <h2 id="abstract-heading" class="h5 mb-3">Apstrakt</h2>
+      <p>{{ article.abstract }}</p>
+    </section>
+    {% endif %}
+
+    <!-- Keywords -->
+    {% if article.keywords %}
+    <section class="article-keywords mb-4" aria-labelledby="keywords-heading">
+      <h2 id="keywords-heading" class="h5 mb-3">Ključne reči</h2>
+      <div>
+        {% for kw in article.keywords %}
+        <span class="badge bg-light text-dark border me-1 mb-1 keyword-tag">{{ kw }}</span>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- Article Metadata -->
+    <section class="article-metadata mb-4" aria-labelledby="metadata-heading">
+      <h2 id="metadata-heading" class="h5 mb-3">Metapodaci</h2>
+      <dl class="row">
+        <dt class="col-sm-4">DOI</dt>
+        <dd class="col-sm-8">
+          <a href="{{ doi_url }}" rel="external" target="_blank" aria-label="DOI: {{ full_doi }}">{{ full_doi }}</a>
+        </dd>
+
+        {% if article.first_page %}
+        <dt class="col-sm-4">Stranice</dt>
+        <dd class="col-sm-8">{{ article.first_page }}{% if article.last_page %}&ndash;{{ article.last_page }}{% endif %}</dd>
+        {% endif %}
+
+        <dt class="col-sm-4">Jezik</dt>
+        <dd class="col-sm-8">{{ article.language }}</dd>
+
+        <dt class="col-sm-4">Tip sadržaja</dt>
+        <dd class="col-sm-8">{{ article.get_publication_type_display }}</dd>
+
+        {% if article.license_url %}
+        <dt class="col-sm-4">Licenca</dt>
+        <dd class="col-sm-8">
+          <a href="{{ article.license_url }}" rel="external" target="_blank" aria-label="Licenca: {{ article.license_url }}">{{ article.license_url }}</a>
+        </dd>
+        {% endif %}
+
+        {% if article.free_to_read %}
+        <dt class="col-sm-4">Pristup</dt>
+        <dd class="col-sm-8">
+          <span class="badge bg-success">
+            <i class="bi bi-unlock-fill me-1" aria-hidden="true"></i>Slobodan pristup
+          </span>
+        </dd>
+        {% endif %}
+      </dl>
+    </section>
+  </article>
+
+  <!-- Sidebar -->
+  <aside class="col-lg-4">
+    <!-- Publication Info Card -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <h2 class="h5 card-title">Publikacija</h2>
+        {% if article.issue.publication.cover_image %}
+        <img src="{{ article.issue.publication.cover_image.url }}"
+             class="img-fluid rounded mb-2"
+             alt="Naslovna: {{ article.issue.publication.title }}"
+             style="max-height: 200px;">
+        {% endif %}
+        <p class="mb-2">
+          <a href="{% url 'portal-publications:publication-detail' article.issue.publication.slug %}">
+            {{ article.issue.publication.title }}
+          </a>
+        </p>
+        <p class="small text-muted mb-2">
+          <a href="{% url 'portal-publications:issue-detail' slug=article.issue.publication.slug pk=article.issue.pk %}">
+            Vol. {{ article.issue.volume }}, No. {{ article.issue.issue_number }} ({{ article.issue.year }})
+          </a>
+        </p>
+        <span class="badge bg-secondary">
+          {{ article.issue.publication.get_publication_type_display }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Publisher Info Card -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <h2 class="h5 card-title">Izdavač</h2>
+        {% if article.issue.publication.publisher.logo %}
+        <img src="{{ article.issue.publication.publisher.logo.url }}"
+             class="img-fluid mb-2"
+             alt="Logo: {{ article.issue.publication.publisher.name }}"
+             style="max-height: 60px;">
+        {% endif %}
+        <p class="mb-0">
+          <i class="bi bi-building me-2" aria-hidden="true"></i>
+          <a href="{% url 'portal:publisher-detail' article.issue.publication.publisher.slug %}">
+            {{ article.issue.publication.publisher.name }}
+          </a>
+        </p>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock portal_content %}

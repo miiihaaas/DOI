@@ -16,10 +16,38 @@ from doi_portal.publications.models import Publication
 from doi_portal.publishers.models import Publisher
 
 __all__ = [
+    "get_article_for_landing",
     "get_portal_statistics",
     "get_recent_publications",
     "search_articles",
 ]
+
+
+def get_article_for_landing(article_pk: int) -> Article | None:
+    """
+    Get article for public landing page display.
+
+    FR41: Posetilac moze videti landing stranicu clanka sa svim metapodacima.
+    Only PUBLISHED and WITHDRAWN articles are visible on public portal.
+
+    Args:
+        article_pk: Primary key of the article.
+
+    Returns:
+        Article with related data or None if not found/not public.
+    """
+    try:
+        return (
+            Article.objects.filter(
+                pk=article_pk,
+                status__in=[ArticleStatus.PUBLISHED, ArticleStatus.WITHDRAWN],
+            )
+            .select_related("issue__publication__publisher")
+            .prefetch_related("authors__affiliations")
+            .get()
+        )
+    except Article.DoesNotExist:
+        return None
 
 
 def get_portal_statistics() -> dict[str, int]:

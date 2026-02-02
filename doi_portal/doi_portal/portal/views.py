@@ -7,6 +7,7 @@ Story 2.7: Public Issue List & Detail
 Story 4.1: Portal Home Page
 Story 4.2: Article Search Functionality
 Story 4.3: Advanced Filtering for Articles
+Story 4.4: Article Landing Page
 
 These are PUBLIC views - no authentication required.
 CSRF protection is handled by Django middleware for GET requests (safe methods).
@@ -18,7 +19,7 @@ from django.views.generic import DetailView
 from django.views.generic import ListView
 from django.views.generic import TemplateView
 
-from doi_portal.articles.models import Article
+from doi_portal.articles.models import Article, ArticleStatus
 from doi_portal.portal.services import get_portal_statistics
 from doi_portal.portal.services import get_recent_publications
 from doi_portal.portal.services import search_articles
@@ -297,8 +298,16 @@ class IssuePublicDetailView(DetailView):
                 "url": None,
             },
         ]
-        # Placeholder until Story 3.1 - Article model doesn't exist yet
-        context["articles"] = []
+        # Story 4.4: Real articles for this issue (only PUBLISHED/WITHDRAWN)
+        context["articles"] = (
+            Article.objects.filter(
+                issue=self.object,
+                status__in=[ArticleStatus.PUBLISHED, ArticleStatus.WITHDRAWN],
+            )
+            .select_related("issue__publication__publisher")
+            .prefetch_related("authors")
+            .order_by("first_page", "title")
+        )
         return context
 
 
@@ -465,5 +474,72 @@ class ArticleSearchView(ListView):
             or context["current_year_from"]
             or context["current_year_to"]
         )
+
+        return context
+
+
+# =============================================================================
+# Story 4.4: Article Landing Page
+# =============================================================================
+
+
+class ArticleLandingView(DetailView):
+    """
+    Public article landing page.
+
+    FR41: Posetilac moze videti landing stranicu clanka sa svim metapodacima.
+    NFR1: First Contentful Paint < 3 sekunde.
+    Only PUBLISHED and WITHDRAWN articles are visible.
+    """
+
+    model = Article
+    template_name = "portal/article_detail.html"
+    context_object_name = "article"
+
+    def get_queryset(self):
+        """Return only PUBLISHED and WITHDRAWN articles with related data."""
+        return (
+            Article.objects.filter(
+                status__in=[ArticleStatus.PUBLISHED, ArticleStatus.WITHDRAWN],
+            )
+            .select_related("issue__publication__publisher")
+            .prefetch_related("authors__affiliations")
+        )
+
+    def get_context_data(self, **kwargs):
+        """Add article-specific context."""
+        context = super().get_context_data(**kwargs)
+        article = self.object
+        issue = article.issue
+        publication = issue.publication
+        publisher = publication.publisher
+
+        # Breadcrumbs: Home > Publications > Publication > Issue > Article
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {
+                "label": "Publikacije",
+                "url": reverse("portal-publications:publication-list"),
+            },
+            {
+                "label": publication.title,
+                "url": reverse(
+                    "portal-publications:publication-detail",
+                    kwargs={"slug": publication.slug},
+                ),
+            },
+            {
+                "label": f"Vol. {issue.volume}, No. {issue.issue_number} ({issue.year})",
+                "url": reverse(
+                    "portal-publications:issue-detail",
+                    kwargs={"slug": publication.slug, "pk": issue.pk},
+                ),
+            },
+            {"label": article.title[:80], "url": None},
+        ]
+
+        context["is_withdrawn"] = article.status == ArticleStatus.WITHDRAWN
+        context["full_doi"] = f"{publisher.doi_prefix}/{article.doi_suffix}"
+        context["doi_url"] = f"https://doi.org/{publisher.doi_prefix}/{article.doi_suffix}"
 
         return context

@@ -3,7 +3,7 @@
 <article class="card mb-3 shadow-sm">
   <div class="card-body">
     <h3 class="h5 card-title mb-1">
-      <a href="/articles/{{ article.pk }}/" class="text-decoration-none">
+      <a href="{% url 'portal-articles:article-detail' article.pk %}" class="text-decoration-none">
         {{ article.title|highlight_search:query }}
       </a>
     </h3>
