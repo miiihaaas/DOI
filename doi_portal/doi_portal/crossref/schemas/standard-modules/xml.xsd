@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Stub schema for xml namespace.
+    Used as a local fallback when the W3C schema is not accessible.
+    Part of Crossref 5.4.0 XSD bundling for DOI Portal.
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.w3.org/XML/1998/namespace"
+            xml:lang="en">
+    <xsd:attribute name="lang" type="xsd:string"/>
+    <xsd:attribute name="space">
+        <xsd:simpleType>
+            <xsd:restriction base="xsd:NCName">
+                <xsd:enumeration value="default"/>
+                <xsd:enumeration value="preserve"/>
+            </xsd:restriction>
+        </xsd:simpleType>
+    </xsd:attribute>
+    <xsd:attribute name="base" type="xsd:anyURI"/>
+    <xsd:attribute name="id" type="xsd:ID"/>
+</xsd:schema>

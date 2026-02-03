@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Stub schema for JATS elements.
+    Used as a local fallback for Crossref schema validation.
+    Part of Crossref 5.4.0 XSD bundling for DOI Portal.
+
+    Note: Full JATS validation would require the complete NCBI JATS schema.
+    This stub provides minimal element definitions for abstract/title content.
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns="http://www.ncbi.nlm.nih.gov/JATS1"
+            targetNamespace="http://www.ncbi.nlm.nih.gov/JATS1"
+            elementFormDefault="qualified">
+
+    <!-- Abstract element for structured abstracts -->
+    <xsd:element name="abstract">
+        <xsd:complexType mixed="true">
+            <xsd:sequence>
+                <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+            </xsd:sequence>
+            <xsd:anyAttribute processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <!-- Title element -->
+    <xsd:element name="title">
+        <xsd:complexType mixed="true">
+            <xsd:sequence>
+                <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+            </xsd:sequence>
+            <xsd:anyAttribute processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <!-- Paragraph element for abstract content -->
+    <xsd:element name="p">
+        <xsd:complexType mixed="true">
+            <xsd:sequence>
+                <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+            </xsd:sequence>
+            <xsd:anyAttribute processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <!-- Section element for structured abstracts -->
+    <xsd:element name="sec">
+        <xsd:complexType mixed="true">
+            <xsd:sequence>
+                <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+            </xsd:sequence>
+            <xsd:anyAttribute processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

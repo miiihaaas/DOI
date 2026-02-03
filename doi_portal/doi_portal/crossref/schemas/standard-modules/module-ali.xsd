@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Stub schema for NISO ALI namespace.
+    Used as a local fallback for Crossref schema validation.
+    Part of Crossref 5.4.0 XSD bundling for DOI Portal.
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.niso.org/schemas/ali/1.0/">
+    <!-- Minimal stub - only defines namespace -->
+</xsd:schema>

@@ -1,5 +1,7 @@
 {# Story 5.3: XML Generation for All Publication Types #}
+{# Story 5.4: XSD Validation - Updated with validation status #}
 {# Generation result template for Crossref XML generation #}
+
 {% if generating %}
 <div class="alert alert-info" id="generation-result">
   <div class="d-flex align-items-center">
@@ -13,21 +15,30 @@
     Osvežite stranicu za pregled statusa.
   </small>
 </div>
+
 {% elif success %}
-<div class="alert alert-success mb-0" id="generation-result">
-  <div class="d-flex align-items-center">
-    <i class="bi bi-check-circle-fill me-2"></i>
-    <div>
+<div class="card mb-3" id="generation-result">
+  {# Generation success header #}
+  <div class="card-header bg-success-subtle">
+    <div class="d-flex align-items-center">
+      <i class="bi bi-check-circle-fill text-success me-2"></i>
       <strong>{{ message }}</strong>
-      {% if timestamp %}
-        <small class="d-block text-muted mt-1">
-          Generisano: {{ timestamp|date:"d.m.Y H:i" }}
-        </small>
-      {% endif %}
     </div>
+    {% if timestamp %}
+    <small class="text-muted">
+      Generisano: {{ timestamp|date:"d.m.Y H:i" }}
+    </small>
+    {% endif %}
+  </div>
+
+  {# XSD Validation Status (Story 5.4) #}
+  <div class="card-body p-2">
+    {% include "crossref/partials/_xsd_validation_result.html" %}
   </div>
 </div>
+
 {% else %}
+{# Generation failed #}
 <div class="alert alert-danger mb-0" id="generation-result">
   <div class="d-flex align-items-start">
     <i class="bi bi-x-circle-fill me-2 mt-1"></i>

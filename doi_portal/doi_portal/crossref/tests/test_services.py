@@ -576,19 +576,20 @@ class TestGenerateXmlBook:
 
 @pytest.mark.django_db
 class TestValidateXml:
-    """Tests for validate_xml stub."""
+    """Tests for validate_xml function (Story 5.4: XSD Validation)."""
 
-    def test_validate_xml_stub_returns_valid(self):
-        """Test validate_xml stub returns (True, [])."""
-        is_valid, errors = validate_xml("<test>xml</test>")
-        assert is_valid is True
-        assert errors == []
+    def test_validate_xml_returns_xsd_validation_result(self):
+        """Test validate_xml returns XSDValidationResult object."""
+        from doi_portal.crossref.validators import XSDValidationResult
 
-    def test_validate_xml_stub_with_any_input(self):
-        """Test validate_xml accepts any input in stub mode."""
-        is_valid, errors = validate_xml("invalid xml {}")
-        assert is_valid is True
-        assert errors == []
+        result = validate_xml("<test>xml</test>")
+        assert isinstance(result, XSDValidationResult)
+
+    def test_validate_xml_invalid_xml_returns_errors(self):
+        """Test validate_xml with invalid XML returns errors."""
+        result = validate_xml("invalid xml {}")
+        assert result.is_valid is False
+        assert len(result.errors) > 0
 
 
 @pytest.mark.django_db

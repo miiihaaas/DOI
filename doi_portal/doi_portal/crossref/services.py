@@ -334,11 +334,14 @@ class CrossrefService:
 
     def generate_and_store_xml(self, issue: Issue) -> tuple[bool, str]:
         """
-        Generate and store XML for an issue.
+        Generate, store, and validate XML for an issue.
 
         Story 5.3: XML Generation for All Publication Types.
+        Story 5.4: XSD Validation.
+
         Generates XML using the existing generate_xml() method,
-        stores result in Issue model fields, and records timestamp.
+        stores result in Issue model fields, records timestamp,
+        and runs XSD validation.
 
         Uses transaction.atomic to ensure database consistency.
 
@@ -350,16 +353,31 @@ class CrossrefService:
         """
         from django.db import transaction
 
+        from doi_portal.crossref.validators import validate_xml
+
         try:
             xml = self.generate_xml(issue)
+
+            # Run XSD validation (Story 5.4)
+            validation_result = validate_xml(xml)
+
             with transaction.atomic():
                 issue.crossref_xml = xml
                 issue.xml_generated_at = timezone.now()
                 issue.xml_generation_status = "completed"
+
+                # Store XSD validation results (Story 5.4)
+                issue.xsd_valid = validation_result.is_valid
+                issue.xsd_errors = [e.to_dict() for e in validation_result.errors]
+                issue.xsd_validated_at = validation_result.validated_at
+
                 issue.save(update_fields=[
                     "crossref_xml",
                     "xml_generated_at",
                     "xml_generation_status",
+                    "xsd_valid",
+                    "xsd_errors",
+                    "xsd_validated_at",
                 ])
             return (True, xml)
         except Exception as e:

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Stub schema for MathML 3.0 namespace.
+    Used as a local fallback for Crossref schema validation.
+    Part of Crossref 5.4.0 XSD bundling for DOI Portal.
+
+    Note: Full MathML validation would require the complete W3C MathML schema.
+    This stub allows Crossref schema loading without network access.
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.w3.org/1998/Math/MathML">
+    <!-- Minimal stub for math element -->
+    <xsd:element name="math">
+        <xsd:complexType mixed="true">
+            <xsd:sequence>
+                <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+            </xsd:sequence>
+            <xsd:anyAttribute processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

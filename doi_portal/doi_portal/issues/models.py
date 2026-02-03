@@ -134,6 +134,25 @@ class Issue(models.Model):
         verbose_name=_("Status generisanja"),
     )
 
+    # === XSD VALIDATION FIELDS (Story 5.4) ===
+    xsd_valid = models.BooleanField(
+        null=True,
+        blank=True,
+        verbose_name=_("XSD validan"),
+        help_text=_("Da li je XML validan prema Crossref XSD shemi"),
+    )
+    xsd_errors = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name=_("XSD greške"),
+        help_text=_("Lista grešaka XSD validacije"),
+    )
+    xsd_validated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("XSD validiran"),
+    )
+
     # === TIMESTAMPS ===
     created_at = models.DateTimeField(_("Kreirano"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Ažurirano"), auto_now=True)

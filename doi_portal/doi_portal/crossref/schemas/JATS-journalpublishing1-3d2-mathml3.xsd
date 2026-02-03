@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Modified JATS schema driver for Crossref 5.4.0 validation.
+    Uses local stub schemas instead of remote dependencies.
+    Part of Crossref 5.4.0 XSD bundling for DOI Portal.
+
+    Original: JATS Journal Publishing DTD (MathML 3.0) v1.3d2
+-->
+<xsd:schema xmlns="http://www.ncbi.nlm.nih.gov/JATS1"
+            targetNamespace="http://www.ncbi.nlm.nih.gov/JATS1"
+            xmlns:mml="http://www.w3.org/1998/Math/MathML"
+            xmlns:xlink="http://www.w3.org/1999/xlink"
+            xmlns:ali="http://www.niso.org/schemas/ali/1.0/"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:import namespace="http://www.w3.org/1999/xlink"
+                schemaLocation="standard-modules/xlink.xsd"/>
+    <xsd:import namespace="http://www.w3.org/1998/Math/MathML"
+                schemaLocation="standard-modules/mathml3/mathml3.xsd"/>
+    <xsd:import namespace="http://www.niso.org/schemas/ali/1.0/"
+                schemaLocation="standard-modules/module-ali.xsd"/>
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"
+                schemaLocation="standard-modules/xml.xsd"/>
+    <xsd:include schemaLocation="JATS-journalpublishing1-3d2-mathml3-elements.xsd"/>
+</xsd:schema>

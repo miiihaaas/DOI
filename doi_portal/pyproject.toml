@@ -185,4 +185,6 @@ dependencies = [
     "pytest-django==4.11.1",
     "pyclamd>=0.4.0",
     "structlog>=25.5.0",
+    "lxml>=5.3.0",
+    "Jinja2>=3.1.4",
 ]
