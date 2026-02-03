@@ -4,9 +4,9 @@ from django.contrib import admin
 from django.urls import include
 from django.urls import path
 from django.views import defaults as default_views
-from django.views.generic import TemplateView
 
 from doi_portal.core.views import DashboardView
+from doi_portal.portal.views import AboutView
 from doi_portal.portal.views import ArticleSearchView
 from doi_portal.portal.views import PortalHomeView
 
@@ -14,11 +14,8 @@ urlpatterns = [
     path("", PortalHomeView.as_view(), name="home"),
     # Story 4.2: Article search (public)
     path("search/", ArticleSearchView.as_view(), name="article-search"),
-    path(
-        "about/",
-        TemplateView.as_view(template_name="pages/about.html"),
-        name="about",
-    ),
+    # Story 4.8: About page (public)
+    path("about/", AboutView.as_view(), name="about"),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management

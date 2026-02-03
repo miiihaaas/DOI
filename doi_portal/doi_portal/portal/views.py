@@ -11,6 +11,7 @@ Story 4.4: Article Landing Page
 Story 4.5: Floating Action Bar
 Story 4.6: PDF Download
 Story 4.7: Citation Modal
+Story 4.8: About Page
 
 These are PUBLIC views - no authentication required.
 CSRF protection is handled by Django middleware for GET requests (safe methods).
@@ -656,6 +657,31 @@ def article_citation(request, pk):
             "is_code_format": is_code_format,
         },
     )
+
+
+# =============================================================================
+# Story 4.8: About Page
+# =============================================================================
+
+
+class AboutView(TemplateView):
+    """
+    Public About page for DOI Portal.
+
+    FR43: Posetilac moze videti stranicu "O portalu"
+    Static page with portal mission, organization info, and contact details.
+    """
+
+    template_name = "portal/about.html"
+
+    def get_context_data(self, **kwargs):
+        """Add breadcrumbs to context."""
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {"label": "O portalu", "url": None},
+        ]
+        return context
 
 
 @require_GET

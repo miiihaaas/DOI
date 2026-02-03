@@ -1,0 +1,135 @@
+{% extends "portal/base.html" %}
+{% load static i18n %}
+
+{% block title %}O portalu - DOI Portal{% endblock %}
+
+{% block meta_description %}Saznajte više o DOI Portalu za registraciju DOI identifikatora naučnih publikacija u Srbiji. Misija, usluge i kontakt informacije.{% endblock %}
+
+{% block portal_content %}
+<div class="row">
+    <!-- Main Content (2/3) -->
+    <div class="col-lg-8">
+        <h1 class="mb-4">O portalu</h1>
+
+        <section aria-labelledby="mission-title" class="mb-5">
+            <h2 id="mission-title" class="h4 mb-3">
+                <i class="bi bi-bullseye me-2" aria-hidden="true"></i>Misija portala
+            </h2>
+            <p class="lead">
+                DOI Portal je nacionalna platforma za registraciju i upravljanje digitalnim objektnim identifikatorima (DOI) naučnih publikacija u Srbiji.
+            </p>
+            <p>
+                Naša misija je da olakšamo pristup naučnim publikacijama i povećamo njihovu vidljivost u globalnoj naučnoj zajednici. Omogućavamo izdavačima da jednostavno registruju DOI identifikatore za svoje članke, čime se osigurava trajna identifikacija i citiranje naučnih radova.
+            </p>
+            <p>
+                Portal podržava sve vrste naučnih publikacija uključujući časopise, zbornike konferencija i monografije, pružajući integrisano rešenje za upravljanje metapodacima i Crossref integraciju.
+            </p>
+        </section>
+
+        <section aria-labelledby="about-org-title" class="mb-5">
+            <h2 id="about-org-title" class="h4 mb-3">
+                <i class="bi bi-building me-2" aria-hidden="true"></i>O nama
+            </h2>
+            <p>
+                DOI Portal je razvijen kao deo inicijative za unapređenje naučnog izdavaštva u Srbiji. Platforma je dizajnirana da podrži domaće izdavače u procesu digitalizacije i međunarodne integracije njihovih publikacija.
+            </p>
+            <p>
+                Naš tim se sastoji od stručnjaka iz oblasti informacionih tehnologija i naučnog izdavaštva, posvećenih pružanju kvalitetne usluge i tehničke podrške svim korisnicima portala.
+            </p>
+        </section>
+
+        <section aria-labelledby="services-title" class="mb-5">
+            <h2 id="services-title" class="h4 mb-3">
+                <i class="bi bi-gear me-2" aria-hidden="true"></i>Naše usluge
+            </h2>
+            <ul class="list-unstyled">
+                <li class="mb-3">
+                    <i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>
+                    <strong>Registracija DOI identifikatora</strong> - Brza i jednostavna registracija DOI-ja za sve vrste naučnih publikacija
+                </li>
+                <li class="mb-3">
+                    <i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>
+                    <strong>Upravljanje metapodacima</strong> - Centralizovano upravljanje bibliografskim podacima članaka i autora
+                </li>
+                <li class="mb-3">
+                    <i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>
+                    <strong>Crossref integracija</strong> - Automatska generacija XML fajlova i deponovanje u Crossref registar
+                </li>
+                <li class="mb-3">
+                    <i class="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>
+                    <strong>Javni portal</strong> - Pretraživanje i pristup publikacijama za naučnu zajednicu
+                </li>
+            </ul>
+        </section>
+    </div>
+
+    <!-- Sidebar (1/3) -->
+    <div class="col-lg-4">
+        <!-- Contact Card -->
+        <section aria-labelledby="contact-title" class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h3 id="contact-title" class="h5 mb-3">
+                    <i class="bi bi-envelope me-2" aria-hidden="true"></i>Kontakt
+                </h3>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="bi bi-envelope-at me-2 text-muted" aria-hidden="true"></i>
+                        <a href="mailto:info@doi-portal.rs">info@doi-portal.rs</a>
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-geo-alt me-2 text-muted" aria-hidden="true"></i>
+                        Beograd, Srbija
+                    </li>
+                    <li>
+                        <i class="bi bi-chat-dots me-2 text-muted" aria-hidden="true"></i>
+                        <span class="text-muted">Kontakt forma uskoro dostupna</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Useful Links Card -->
+        <section aria-labelledby="links-title" class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h3 id="links-title" class="h5 mb-3">
+                    <i class="bi bi-link-45deg me-2" aria-hidden="true"></i>Korisni linkovi
+                </h3>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <a href="{% url 'portal-publications:publication-list' %}" class="text-decoration-none">
+                            <i class="bi bi-journal-text me-2" aria-hidden="true"></i>Publikacije
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="{% url 'portal:publisher-list' %}" class="text-decoration-none">
+                            <i class="bi bi-building me-2" aria-hidden="true"></i>Izdavači
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="{% url 'article-search' %}" class="text-decoration-none">
+                            <i class="bi bi-search me-2" aria-hidden="true"></i>Pretraga članaka
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.crossref.org/" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                            <i class="bi bi-box-arrow-up-right me-2" aria-hidden="true"></i>Crossref
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- DOI Info Card -->
+        <section aria-labelledby="doi-info-title" class="card shadow-sm bg-light">
+            <div class="card-body">
+                <h3 id="doi-info-title" class="h6 mb-2">
+                    <i class="bi bi-info-circle me-2" aria-hidden="true"></i>Šta je DOI?
+                </h3>
+                <p class="small text-muted mb-0">
+                    DOI (Digital Object Identifier) je trajni identifikator koji omogućava jedinstvenu identifikaciju digitalnih objekata, uključujući naučne članke, knjige i druge publikacije. DOI osigurava da link do publikacije uvek funkcioniše, čak i ako se URL adresa promeni.
+                </p>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock portal_content %}

@@ -33,7 +33,7 @@
                         <a class="nav-link{% if request.resolver_match.namespace == 'portal-publications' %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}">Publikacije</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'about' %}">O portalu</a>
+                        <a class="nav-link{% if request.resolver_match.url_name == 'about' %} active{% endif %}" href="{% url 'about' %}">O portalu</a>
                     </li>
                     {% if request.user.is_authenticated %}
                     <li class="nav-item">
