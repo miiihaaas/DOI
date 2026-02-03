@@ -4,16 +4,24 @@ Crossref views.
 Story 5.1: Crossref Service Infrastructure.
 Story 5.2: Pre-Generation Validation & Warnings.
 Story 5.3: XML Generation for All Publication Types.
+Story 5.5: XML Preview with Syntax Highlighting.
 """
 
 from typing import TYPE_CHECKING
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
+from django.http import Http404
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
+from django.template.response import TemplateResponse
+from django.utils import timezone
+from django.utils.text import slugify
 from django.views import View
 
+from doi_portal.core.permissions import has_publisher_access
 from doi_portal.crossref.services import CrossrefService
 from doi_portal.crossref.services import PreValidationService
 from doi_portal.crossref.tasks import crossref_generate_xml_task
@@ -22,7 +30,12 @@ from doi_portal.issues.models import Issue
 if TYPE_CHECKING:
     from django.http import HttpRequest
 
-__all__ = ["GenerateXMLView", "IssueValidationView"]
+__all__ = [
+    "GenerateXMLView",
+    "IssueValidationView",
+    "xml_preview",
+    "xml_download",
+]
 
 
 class IssueValidationView(LoginRequiredMixin, View):
@@ -125,12 +138,117 @@ class GenerateXMLView(LoginRequiredMixin, View):
         service = CrossrefService()
         success, result_data = service.generate_and_store_xml(issue)
 
+        # Refresh issue from DB to get updated XSD validation fields
+        issue.refresh_from_db()
+
         return render(
             request,
             "crossref/partials/_generation_result.html",
             {
+                "issue": issue,
                 "success": success,
                 "message": "XML uspešno generisan" if success else result_data,
                 "timestamp": issue.xml_generated_at,
+                "xsd_valid": issue.xsd_valid,
+                "xsd_errors": issue.xsd_errors,
+                "xsd_validated_at": issue.xsd_validated_at,
             },
         )
+
+
+@login_required
+def xml_preview(request: "HttpRequest", pk: int) -> HttpResponse:
+    """
+    Return XML preview modal for an issue.
+
+    Story 5.5: XML Preview with Syntax Highlighting.
+
+    Args:
+        request: HTTP request
+        pk: Issue primary key
+
+    Returns:
+        HTML partial with modal containing XML preview
+
+    Raises:
+        PermissionDenied: If user does not have access to the issue's publisher.
+    """
+    issue = get_object_or_404(Issue, pk=pk)
+
+    # Check publisher-level permission (RBAC model requires row-level access)
+    if not has_publisher_access(request.user, issue.publication.publisher):
+        raise PermissionDenied
+
+    if not issue.crossref_xml:
+        return HttpResponse(
+            '<div class="alert alert-warning">XML nije generisan.</div>',
+            status=200,
+        )
+
+    # Extract error line numbers for highlighting
+    error_lines = []
+    if issue.xsd_errors:
+        for error in issue.xsd_errors:
+            if error.get("line"):
+                error_lines.append(str(error["line"]))
+
+    # Performance warning for large XML (>100KB as per Task 3)
+    xml_size_kb = len(issue.crossref_xml.encode("utf-8")) / 1024
+    is_large_xml = xml_size_kb > 100
+
+    context = {
+        "issue": issue,
+        "xml_content": issue.crossref_xml,
+        "xsd_valid": issue.xsd_valid,
+        "xsd_errors": issue.xsd_errors,
+        "error_lines": ",".join(error_lines),
+        "is_large_xml": is_large_xml,
+        "xml_size_kb": round(xml_size_kb, 1),
+    }
+
+    return TemplateResponse(
+        request,
+        "crossref/partials/_xml_preview_modal.html",
+        context,
+    )
+
+
+@login_required
+def xml_download(request: "HttpRequest", pk: int) -> HttpResponse:
+    """
+    Download Crossref XML for an issue.
+
+    Story 5.5: XML Preview with Syntax Highlighting.
+
+    Args:
+        request: HTTP request
+        pk: Issue primary key
+
+    Returns:
+        XML file download response
+
+    Raises:
+        PermissionDenied: If user does not have access to the issue's publisher.
+    """
+    issue = get_object_or_404(Issue, pk=pk)
+
+    # Check publisher-level permission (RBAC model requires row-level access)
+    if not has_publisher_access(request.user, issue.publication.publisher):
+        raise PermissionDenied
+
+    if not issue.crossref_xml:
+        raise Http404("XML nije generisan.")
+
+    # Generate filename: {publication-slug}_{volume}_{issue}_{timestamp}.xml
+    publication_slug = slugify(issue.publication.title)[:30]
+    volume = issue.volume or "v0"
+    issue_num = issue.issue_number or "i0"
+    timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{publication_slug}_{volume}_{issue_num}_{timestamp}.xml"
+
+    response = HttpResponse(
+        issue.crossref_xml,
+        content_type="application/xml",
+    )
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response

@@ -1,0 +1,295 @@
+{# Story 5.5: XML Preview with Syntax Highlighting #}
+{# Modal component for previewing Crossref XML with syntax highlighting #}
+
+{# Prism.js CSS for syntax highlighting #}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.css" />
+
+<style>
+  /* Custom error line highlighting */
+  .xml-preview-container .line-highlight {
+    background: linear-gradient(to right, rgba(220, 53, 69, 0.25) 70%, rgba(220, 53, 69, 0));
+  }
+  .xml-preview-container pre {
+    margin: 0;
+    border-radius: 0;
+  }
+  .xml-preview-container code {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  /* Section navigation buttons */
+  .xml-section-nav .btn {
+    font-family: monospace;
+  }
+</style>
+
+<div class="modal fade"
+     id="xmlPreviewModal"
+     tabindex="-1"
+     aria-labelledby="xmlPreviewModalLabel"
+     aria-hidden="true"
+     x-data="xmlPreviewState()"
+     @shown.bs.modal.window="initHighlight()">
+  <div class="modal-dialog modal-fullscreen-lg-down modal-xl">
+    <div class="modal-content">
+      {# Modal Header #}
+      <div class="modal-header">
+        <h5 class="modal-title" id="xmlPreviewModalLabel">
+          <i class="bi bi-code-square me-2"></i>Pregled XML
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button>
+      </div>
+
+      {# Modal Body #}
+      <div class="modal-body p-0">
+        {# Large XML Performance Warning (Task 3) #}
+        {% if is_large_xml %}
+        <div class="alert alert-info m-3 mb-0 d-flex align-items-start">
+          <i class="bi bi-info-circle-fill me-2 mt-1"></i>
+          <div>
+            <strong>Veliki XML fajl ({{ xml_size_kb }} KB)</strong>
+            <span class="d-block small">Učitavanje sintaksnog isticanja može potrajati.</span>
+          </div>
+        </div>
+        {% endif %}
+        {# XSD Validation Warning (AC5) #}
+        {% if xsd_valid is False %}
+        <div class="alert alert-warning m-3 {% if is_large_xml %}mt-2{% endif %} mb-0 d-flex align-items-start">
+          <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+          <div>
+            <strong>XML ima {{ xsd_errors|length }} greške validacije.</strong>
+            <span class="d-block small">Linije sa greškama su označene crvenom bojom.</span>
+          </div>
+        </div>
+        {% endif %}
+
+        {# Section Navigation (AC3) #}
+        <div class="xml-section-nav d-flex gap-2 p-2 border-bottom bg-light">
+          <span class="text-muted small me-2 align-self-center">Sekcije:</span>
+          <button type="button"
+                  class="btn btn-sm btn-outline-secondary"
+                  @click="scrollToSection('head')">
+            &lt;head&gt;
+          </button>
+          <button type="button"
+                  class="btn btn-sm btn-outline-secondary"
+                  @click="scrollToSection('body')">
+            &lt;body&gt;
+          </button>
+          {% if error_lines %}
+          <button type="button"
+                  class="btn btn-sm btn-outline-danger ms-auto"
+                  @click="scrollToFirstError()">
+            <i class="bi bi-exclamation-circle me-1"></i>Prva greška
+          </button>
+          {% endif %}
+        </div>
+
+        {# XML Content with Syntax Highlighting (AC2) #}
+        <div class="xml-preview-container" style="max-height: 65vh; overflow: auto;">
+          <pre class="line-numbers" {% if error_lines %}data-line="{{ error_lines }}"{% endif %}><code class="language-xml">{{ xml_content|escape }}</code></pre>
+        </div>
+      </div>
+
+      {# Modal Footer with Action Buttons (AC4) #}
+      <div class="modal-footer">
+        <button type="button"
+                class="btn btn-outline-secondary"
+                onclick="copyXmlToClipboard()">
+          <i class="bi bi-clipboard me-1"></i>Kopiraj u clipboard
+        </button>
+        <a href="{% url 'crossref:xml-download' issue.pk %}"
+           class="btn btn-outline-primary"
+           download>
+          <i class="bi bi-download me-1"></i>Preuzmi XML
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Toast container for notifications - z-index 1090 is above Bootstrap modal (1055) #}
+<div id="xmlPreviewToast"
+     class="toast-container position-fixed bottom-0 end-0 p-3"
+     style="z-index: 1090;">
+</div>
+
+{# Prism.js Scripts #}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.js"></script>
+
+<script>
+  /**
+   * Alpine.js state for XML preview modal.
+   *
+   * Story 5.5: XML Preview with Syntax Highlighting.
+   * Provides syntax highlighting, section navigation, clipboard copy, and toast notifications.
+   */
+  function xmlPreviewState() {
+    return {
+      highlighted: false,
+
+      /**
+       * Initialize Prism.js syntax highlighting after modal is shown.
+       * Defers highlighting for better performance with large XML files.
+       */
+      initHighlight() {
+        if (!this.highlighted) {
+          const codeBlock = document.querySelector('#xmlPreviewModal code');
+          if (codeBlock) {
+            Prism.highlightElement(codeBlock);
+            this.highlighted = true;
+          }
+        }
+      },
+
+      /**
+       * Scroll to a specific XML section (head, body, etc.).
+       * @param {string} sectionName - Name of the XML element to scroll to.
+       */
+      scrollToSection(sectionName) {
+        const container = document.querySelector('.xml-preview-container');
+        const codeBlock = document.querySelector('#xmlPreviewModal code');
+        if (!container || !codeBlock) return;
+
+        const text = codeBlock.textContent;
+        const pattern = new RegExp(`<${sectionName}[>\\s]`, 'i');
+        const match = text.match(pattern);
+
+        if (match) {
+          const index = match.index;
+          const lineNumber = text.substring(0, index).split('\n').length;
+          this.scrollToLine(lineNumber);
+        }
+      },
+
+      /**
+       * Scroll to the first XSD validation error line.
+       */
+      scrollToFirstError() {
+        const errorLines = "{{ error_lines }}".split(',').filter(l => l);
+        if (errorLines.length > 0) {
+          this.scrollToLine(parseInt(errorLines[0]));
+        }
+      },
+
+      /**
+       * Scroll to a specific line number in the code preview.
+       * @param {number} lineNumber - The 1-based line number to scroll to.
+       */
+      scrollToLine(lineNumber) {
+        const container = document.querySelector('.xml-preview-container');
+        const lineElements = container.querySelectorAll('.line-numbers-rows > span');
+
+        if (lineElements.length >= lineNumber) {
+          const targetLine = lineElements[lineNumber - 1];
+          if (targetLine) {
+            targetLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      },
+
+      /**
+       * Copy XML content to clipboard using Clipboard API with fallback.
+       */
+      copyToClipboard() {
+        const xmlContent = document.querySelector('#xmlPreviewModal code').textContent;
+
+        navigator.clipboard.writeText(xmlContent).then(() => {
+          this.showToast('XML kopiran u clipboard', 'success');
+        }).catch(err => {
+          // Fallback for older browsers
+          this.fallbackCopy(xmlContent);
+        });
+      },
+
+      /**
+       * Fallback clipboard copy using deprecated execCommand.
+       * @param {string} text - The text to copy to clipboard.
+       */
+      fallbackCopy(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+
+        try {
+          document.execCommand('copy');
+          this.showToast('XML kopiran u clipboard', 'success');
+        } catch (err) {
+          console.error('Clipboard fallback failed:', err);
+          this.showToast('Greška pri kopiranju', 'danger');
+        }
+
+        document.body.removeChild(textArea);
+      },
+
+      /**
+       * Sanitize text for safe HTML insertion (prevent XSS).
+       * @param {string} text - The text to sanitize.
+       * @returns {string} HTML-escaped text.
+       */
+      escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      },
+
+      /**
+       * Show a Bootstrap toast notification.
+       * @param {string} message - The message to display (will be HTML-escaped).
+       * @param {string} type - Bootstrap color type ('success', 'danger', etc.).
+       */
+      showToast(message, type) {
+        const toastContainer = document.getElementById('xmlPreviewToast');
+        const toastId = 'toast-' + Date.now();
+        const safeMessage = this.escapeHtml(message);
+        const iconClass = type === 'success' ? 'check-circle' : 'x-circle';
+
+        const toastHtml = `
+          <div id="${toastId}" class="toast align-items-center text-bg-${type}" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+              <div class="toast-body">
+                <i class="bi bi-${iconClass} me-2"></i>
+                ${safeMessage}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Zatvori"></button>
+            </div>
+          </div>
+        `;
+
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+        toast.show();
+
+        // Remove toast element after hidden
+        toastElement.addEventListener('hidden.bs.toast', () => {
+          toastElement.remove();
+        });
+      }
+    };
+  }
+
+  // Auto-initialize modal and show it
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('xmlPreviewModal');
+    if (modal) {
+      const bsModal = new bootstrap.Modal(modal);
+      bsModal.show();
+
+      // Clean up modal from DOM when closed
+      modal.addEventListener('hidden.bs.modal', function() {
+        modal.remove();
+      });
+    }
+  });
+</script>

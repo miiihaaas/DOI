@@ -1,5 +1,6 @@
 {# Story 5.3: XML Generation for All Publication Types #}
 {# Story 5.4: XSD Validation - Updated with validation status #}
+{# Story 5.5: XML Preview with Syntax Highlighting #}
 {# Generation result template for Crossref XML generation #}
 
 {% if generating %}
@@ -20,15 +21,34 @@
 <div class="card mb-3" id="generation-result">
   {# Generation success header #}
   <div class="card-header bg-success-subtle">
-    <div class="d-flex align-items-center">
-      <i class="bi bi-check-circle-fill text-success me-2"></i>
-      <strong>{{ message }}</strong>
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <i class="bi bi-check-circle-fill text-success me-2"></i>
+        <strong>{{ message }}</strong>
+        {% if timestamp %}
+        <small class="text-muted d-block mt-1">
+          Generisano: {{ timestamp|date:"d.m.Y H:i" }}
+        </small>
+        {% endif %}
+      </div>
+      {# Story 5.5: XML Preview and Download buttons #}
+      {% if issue %}
+      <div class="d-flex gap-2">
+        <button type="button"
+                class="btn btn-sm btn-outline-info"
+                hx-get="{% url 'crossref:xml-preview' issue.pk %}"
+                hx-target="body"
+                hx-swap="beforeend">
+          <i class="bi bi-eye me-1"></i>Pregled XML
+        </button>
+        <a href="{% url 'crossref:xml-download' issue.pk %}"
+           class="btn btn-sm btn-outline-primary"
+           download>
+          <i class="bi bi-download me-1"></i>Preuzmi XML
+        </a>
+      </div>
+      {% endif %}
     </div>
-    {% if timestamp %}
-    <small class="text-muted">
-      Generisano: {{ timestamp|date:"d.m.Y H:i" }}
-    </small>
-    {% endif %}
   </div>
 
   {# XSD Validation Status (Story 5.4) #}

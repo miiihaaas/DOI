@@ -297,6 +297,8 @@ class IssueDetailView(PublisherScopedMixin, DetailView):
         """Scope queryset to user's publisher for non-admin roles."""
         queryset = super().get_queryset().select_related(
             "publication", "publication__publisher"
+        ).prefetch_related(
+            "articles__authors"  # Prefetch articles and their authors to avoid N+1
         )
         return self.get_scoped_queryset(queryset)
 

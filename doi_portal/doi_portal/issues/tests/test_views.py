@@ -767,16 +767,16 @@ class TestIssueDetailView:
         assert response_own.status_code == 200
         assert response_other.status_code == 404
 
-    def test_detail_shows_article_placeholder(
+    def test_detail_shows_empty_articles_message(
         self, client, admin_user, publication_a
     ):
-        """Detail view shows articles placeholder."""
+        """Detail view shows empty message when no articles."""
         issue = IssueFactory(publication=publication_a, volume="1", issue_number="1")
         client.force_login(admin_user)
         response = client.get(reverse("issues:detail", kwargs={"pk": issue.pk}))
         content = response.content.decode("utf-8")
-        assert "Članci" in content
-        assert "Članci će biti dostupni nakon implementacije" in content
+        assert "Članci (0)" in content
+        assert "Nema članaka u ovom izdanju" in content
 
     def test_bibliotekar_can_view_detail(
         self, client, bibliotekar_user, publication_a
