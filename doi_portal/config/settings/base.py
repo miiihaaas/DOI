@@ -373,3 +373,13 @@ ACCOUNT_PASSWORD_MIN_LENGTH = 8  # Minimum password length (NFR8 requirement)
 # ------------------------------------------------------------------------------
 CLAMAV_HOST = env("CLAMAV_HOST", default="clamav")
 CLAMAV_PORT = env.int("CLAMAV_PORT", default=3310)
+
+# Contact Form (Story 4.9)
+# ------------------------------------------------------------------------------
+# Email address where contact form messages are sent
+# Override in production settings with actual admin email
+CONTACT_FORM_RECIPIENT_EMAIL = env(
+    "CONTACT_FORM_RECIPIENT_EMAIL",
+    default="admin@example.com"
+)
+# DEFAULT_FROM_EMAIL is already defined by Cookiecutter Django in production settings

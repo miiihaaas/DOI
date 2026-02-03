@@ -78,7 +78,7 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: Public Portal Experience
-  epic-4: in-progress
+  epic-4: done
   4-1-portal-home-page: done
   4-2-article-search-functionality: done
   4-3-advanced-filtering-for-articles: done
@@ -87,7 +87,7 @@ development_status:
   4-6-pdf-download: done
   4-7-citation-modal: done
   4-8-about-page: done
-  4-9-contact-form: backlog
+  4-9-contact-form: done
   epic-4-retrospective: optional
 
   # Epic 5: Crossref XML Integration

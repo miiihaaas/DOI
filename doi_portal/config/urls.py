@@ -8,6 +8,7 @@ from django.views import defaults as default_views
 from doi_portal.core.views import DashboardView
 from doi_portal.portal.views import AboutView
 from doi_portal.portal.views import ArticleSearchView
+from doi_portal.portal.views import ContactView
 from doi_portal.portal.views import PortalHomeView
 
 urlpatterns = [
@@ -16,6 +17,8 @@ urlpatterns = [
     path("search/", ArticleSearchView.as_view(), name="article-search"),
     # Story 4.8: About page (public)
     path("about/", AboutView.as_view(), name="about"),
+    # Story 4.9: Contact form (public)
+    path("contact/", ContactView.as_view(), name="contact"),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management

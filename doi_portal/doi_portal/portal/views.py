@@ -12,17 +12,25 @@ Story 4.5: Floating Action Bar
 Story 4.6: PDF Download
 Story 4.7: Citation Modal
 Story 4.8: About Page
+Story 4.9: Contact Form
 
 These are PUBLIC views - no authentication required.
 CSRF protection is handled by Django middleware for GET requests (safe methods).
 """
 
+import logging
+import smtplib
+
+from django.conf import settings
+from django.contrib import messages
+from django.core.mail import send_mail
 from django.db import models
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
+from django.views.generic import FormView
 from django.views.generic import ListView
 from django.views.generic import TemplateView
 
@@ -718,3 +726,92 @@ def article_citation_download(request, pk):
     response = HttpResponse(citation_text, content_type=content_type)
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
+
+
+# =============================================================================
+# Story 4.9: Contact Form
+# =============================================================================
+
+
+logger = logging.getLogger(__name__)
+
+
+class ContactView(FormView):
+    """
+    Public Contact page for DOI Portal.
+
+    Story 4.9: FR44, FR45 - Kontakt forma sa email slanjem.
+    Public view - no authentication required.
+    """
+
+    template_name = "portal/contact.html"
+    success_url = reverse_lazy("contact")
+
+    def get_form_class(self):
+        """Import ContactForm lazily to avoid circular imports."""
+        from doi_portal.portal.forms import ContactForm
+        return ContactForm
+
+    def get_context_data(self, **kwargs):
+        """Add breadcrumbs to context."""
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {"label": "Kontakt", "url": None},
+        ]
+        return context
+
+    def form_valid(self, form):
+        """Send email on valid form submission."""
+        # Get form data
+        name = form.cleaned_data["name"]
+        email = form.cleaned_data["email"]
+        subject = form.cleaned_data["subject"]
+        message_body = form.cleaned_data["message"]
+
+        # Prepare email content
+        full_message = f"""
+Nova poruka sa kontakt forme DOI Portala:
+
+Ime: {name}
+Email: {email}
+Tema: {subject}
+
+Poruka:
+{message_body}
+
+---
+Ova poruka je automatski poslata sa DOI Portal kontakt forme.
+"""
+
+        # Truncate subject to avoid RFC 5322 line length issues
+        email_subject = f"[DOI Portal Kontakt] {subject[:150]}"
+
+        try:
+            send_mail(
+                subject=email_subject,
+                message=full_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.CONTACT_FORM_RECIPIENT_EMAIL],
+                fail_silently=False,
+            )
+            messages.success(
+                self.request,
+                "Hvala vam na poruci! Odgovorićemo u najkraćem mogućem roku."
+            )
+        except (OSError, smtplib.SMTPException) as e:
+            logger.error(f"Contact form email failed: {e}")
+            messages.error(
+                self.request,
+                "Došlo je do greške prilikom slanja poruke. Molimo pokušajte ponovo kasnije."
+            )
+
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        """Show error message on invalid form submission."""
+        messages.error(
+            self.request,
+            "Molimo ispravite greške u formi i pokušajte ponovo."
+        )
+        return super().form_invalid(form)
