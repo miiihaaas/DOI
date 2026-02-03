@@ -20,9 +20,13 @@ from jinja2 import select_autoescape
 if TYPE_CHECKING:
     from datetime import datetime
 
+    from doi_portal.articles.models import Article
+    from doi_portal.articles.models import Author
     from doi_portal.issues.models import Issue
 
-__all__ = ["CrossrefService"]
+from doi_portal.crossref.validation import ValidationResult
+
+__all__ = ["CrossrefService", "PreValidationService"]
 
 
 def xml_escape(value: str | None) -> str:
@@ -327,4 +331,308 @@ class CrossrefService:
         # Render template
         template = self.env.get_template(template_name)
         return template.render(**context)
+
+
+class PreValidationService:
+    """
+    Service for pre-generation validation of Crossref XML data.
+
+    Story 5.2: Pre-Generation Validation & Warnings.
+    Validates all required fields before XML generation to ensure
+    valid Crossref submissions.
+    """
+
+    def validate_issue(self, issue: Issue) -> ValidationResult:
+        """
+        Run all pre-generation validations for an issue.
+
+        Args:
+            issue: Issue model instance to validate
+
+        Returns:
+            ValidationResult with all errors and warnings
+        """
+        from doi_portal.articles.models import ArticleStatus
+
+        result = ValidationResult()
+
+        # Check depositor settings first (blocking)
+        result.merge(self._validate_depositor_settings())
+
+        # Check common fields
+        result.merge(self._validate_common_fields(issue))
+
+        # Check type-specific fields
+        pub_type = issue.publication.publication_type
+        if pub_type == "JOURNAL":
+            result.merge(self._validate_journal_fields(issue))
+        elif pub_type == "CONFERENCE":
+            result.merge(self._validate_conference_fields(issue))
+        elif pub_type == "BOOK":
+            result.merge(self._validate_book_fields(issue))
+
+        # Validate all PUBLISHED articles only
+        for article in issue.articles.filter(
+            status=ArticleStatus.PUBLISHED,
+            is_deleted=False,
+        ):
+            result.merge(self._validate_article(article))
+
+        return result
+
+    def _validate_depositor_settings(self) -> ValidationResult:
+        """
+        Validate depositor settings in SiteSettings (AC5).
+
+        Returns:
+            ValidationResult with depositor errors
+        """
+        from doi_portal.core.models import SiteSettings
+
+        result = ValidationResult()
+        settings = SiteSettings.get_settings()
+
+        if not settings.depositor_name:
+            result.add_error(
+                message="Nedostaju depositor podaci: naziv deponenta",
+                field_name="depositor_name",
+                fix_url="/admin/core/sitesettings/1/change/",
+            )
+
+        if not settings.depositor_email:
+            result.add_error(
+                message="Nedostaju depositor podaci: email deponenta",
+                field_name="depositor_email",
+                fix_url="/admin/core/sitesettings/1/change/",
+            )
+
+        return result
+
+    def _validate_common_fields(self, issue: Issue) -> ValidationResult:
+        """
+        Validate fields required for all publication types.
+
+        Args:
+            issue: Issue to validate
+
+        Returns:
+            ValidationResult with common field errors
+        """
+        result = ValidationResult()
+
+        # Publication date is required
+        if not issue.publication_date:
+            result.add_error(
+                message="Nedostaje datum objave izdanja",
+                field_name="publication_date",
+                fix_url=f"/admin/issues/issue/{issue.pk}/change/",
+            )
+
+        return result
+
+    def _validate_journal_fields(self, issue: Issue) -> ValidationResult:
+        """
+        Validate journal-specific fields (AC2).
+
+        Args:
+            issue: Issue to validate
+
+        Returns:
+            ValidationResult with journal field errors
+        """
+        result = ValidationResult()
+        publication = issue.publication
+
+        # ISSN (print or online) is required for journals
+        if not publication.issn_print and not publication.issn_online:
+            result.add_error(
+                message="Nedostaje ISSN (štampani ili online)",
+                field_name="issn",
+                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+            )
+
+        return result
+
+    def _validate_conference_fields(self, issue: Issue) -> ValidationResult:
+        """
+        Validate conference-specific fields (AC3).
+
+        Args:
+            issue: Issue to validate
+
+        Returns:
+            ValidationResult with conference field errors/warnings
+        """
+        result = ValidationResult()
+        publication = issue.publication
+
+        # Conference name is required
+        if not publication.conference_name:
+            result.add_error(
+                message="Nedostaje naziv konferencije",
+                field_name="conference_name",
+                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+            )
+
+        # Conference date is recommended (warning)
+        if not publication.conference_date:
+            result.add_warning(
+                message="Nedostaje datum konferencije",
+                field_name="conference_date",
+                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+            )
+
+        # Conference location is recommended (warning)
+        if not publication.conference_location:
+            result.add_warning(
+                message="Nedostaje lokacija konferencije",
+                field_name="conference_location",
+                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+            )
+
+        # Proceedings title is required (from Issue or Publication)
+        if not issue.proceedings_title and not publication.title:
+            result.add_error(
+                message="Nedostaje naslov zbornika",
+                field_name="proceedings_title",
+                fix_url=f"/admin/issues/issue/{issue.pk}/change/",
+            )
+
+        return result
+
+    def _validate_book_fields(self, issue: Issue) -> ValidationResult:
+        """
+        Validate book-specific fields (AC4).
+
+        Args:
+            issue: Issue to validate
+
+        Returns:
+            ValidationResult with book field errors
+        """
+        result = ValidationResult()
+        publication = issue.publication
+
+        # ISBN (print or online) is required for books
+        if not publication.isbn_print and not publication.isbn_online:
+            result.add_error(
+                message="Nedostaje ISBN (štampani ili online)",
+                field_name="isbn",
+                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+            )
+
+        # Book title is required
+        if not publication.title:
+            result.add_error(
+                message="Nedostaje naslov knjige",
+                field_name="book_title",
+                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+            )
+
+        return result
+
+    def _validate_article(self, article: Article) -> ValidationResult:
+        """
+        Validate article-level fields.
+
+        Args:
+            article: Article to validate
+
+        Returns:
+            ValidationResult with article errors
+        """
+        result = ValidationResult()
+
+        # Title is required
+        if not article.title:
+            result.add_error(
+                message=f"Nedostaje naslov članka (ID: {article.pk})",
+                field_name="title",
+                article_id=article.pk,
+                fix_url=f"/admin/articles/article/{article.pk}/change/",
+            )
+
+        # DOI suffix is required
+        if not article.doi_suffix:
+            result.add_error(
+                message=f"Nedostaje DOI sufiks (članak: {article.title or article.pk})",
+                field_name="doi_suffix",
+                article_id=article.pk,
+                fix_url=f"/admin/articles/article/{article.pk}/change/",
+            )
+
+        # At least one author is required
+        authors = list(article.authors.all().order_by("order"))
+        if not authors:
+            result.add_error(
+                message=f"Članak nema autore ({article.title or article.pk})",
+                field_name="authors",
+                article_id=article.pk,
+                fix_url=f"/admin/articles/article/{article.pk}/change/",
+            )
+        else:
+            # Validate each author (determine first author once to avoid N+1 queries)
+            first_author = authors[0] if authors else None
+            for author in authors:
+                is_first = (author == first_author)
+                result.merge(self._validate_author(author, article, is_first))
+
+        return result
+
+    def _validate_author(
+        self,
+        author: Author,
+        article: Article,
+        is_first_author: bool,
+    ) -> ValidationResult:
+        """
+        Validate author-level fields.
+
+        Args:
+            author: Author to validate
+            article: Parent article for context
+            is_first_author: Whether this is the first author (by order)
+
+        Returns:
+            ValidationResult with author errors/warnings
+        """
+        result = ValidationResult()
+
+        # Surname is required
+        if not author.surname:
+            result.add_error(
+                message=f"Autor nema prezime (članak: {article.title or article.pk})",
+                field_name="surname",
+                article_id=article.pk,
+                fix_url=f"/admin/articles/article/{article.pk}/change/",
+            )
+
+        # Given name is recommended (warning)
+        if not author.given_name:
+            result.add_warning(
+                message=f"Autor nema ime (članak: {article.title or article.pk})",
+                field_name="given_name",
+                article_id=article.pk,
+                fix_url=f"/admin/articles/article/{article.pk}/change/",
+            )
+
+        # First author must have sequence='first'
+        if is_first_author and author.sequence != "first":
+            result.add_error(
+                message=f"Prvi autor mora imati sequence='first' (članak: {article.title or article.pk})",
+                field_name="sequence",
+                article_id=article.pk,
+                fix_url=f"/admin/articles/article/{article.pk}/change/",
+            )
+
+        # Contributor role is required
+        if not author.contributor_role:
+            result.add_error(
+                message=f"Autor nema definisanu ulogu (članak: {article.title or article.pk})",
+                field_name="contributor_role",
+                article_id=article.pk,
+                fix_url=f"/admin/articles/article/{article.pk}/change/",
+            )
+
+        return result
 
