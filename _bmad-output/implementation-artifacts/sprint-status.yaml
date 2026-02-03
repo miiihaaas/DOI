@@ -91,8 +91,8 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: Crossref XML Integration
-  epic-5: backlog
-  5-1-crossref-service-infrastructure: backlog
+  epic-5: in-progress
+  5-1-crossref-service-infrastructure: done
   5-2-pre-generation-validation-warnings: backlog
   5-3-xml-generation-for-all-publication-types: backlog
   5-4-xsd-validation: backlog

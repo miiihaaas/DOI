@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doi_batch xmlns="http://www.crossref.org/schema/5.4.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:jats="http://www.ncbi.nlm.nih.gov/JATS1"
+           xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
+           xsi:schemaLocation="http://www.crossref.org/schema/5.4.0 https://www.crossref.org/schemas/crossref5.4.0.xsd"
+           version="5.4.0">
+  <head>
+    <doi_batch_id>{{ head.doi_batch_id }}</doi_batch_id>
+    <timestamp>{{ head.timestamp }}</timestamp>
+    <depositor>
+      <depositor_name>{{ head.depositor_name }}</depositor_name>
+      <email_address>{{ head.depositor_email }}</email_address>
+    </depositor>
+    <registrant>{{ head.registrant }}</registrant>
+  </head>
+  <body>
+    <journal>
+      <journal_metadata language="{{ publication.language }}">
+        <full_title>{{ publication.title }}</full_title>
+        {% if publication.abbreviation %}
+        <abbrev_title>{{ publication.abbreviation }}</abbrev_title>
+        {% endif %}
+        {% if publication.issn_print %}
+        <issn media_type="print">{{ publication.issn_print }}</issn>
+        {% endif %}
+        {% if publication.issn_online %}
+        <issn media_type="electronic">{{ publication.issn_online }}</issn>
+        {% endif %}
+      </journal_metadata>
+      <journal_issue>
+        {% if issue.publication_date %}
+        <publication_date media_type="online">
+          <month>{{ issue.publication_date|format_date('%m') }}</month>
+          <day>{{ issue.publication_date|format_date('%d') }}</day>
+          <year>{{ issue.year }}</year>
+        </publication_date>
+        {% else %}
+        <publication_date media_type="online">
+          <year>{{ issue.year }}</year>
+        </publication_date>
+        {% endif %}
+        {% if issue.volume %}
+        <journal_volume>
+          <volume>{{ issue.volume }}</volume>
+        </journal_volume>
+        {% endif %}
+        {% if issue.issue_number %}
+        <issue>{{ issue.issue_number }}</issue>
+        {% endif %}
+      </journal_issue>
+      {% for article in articles %}
+      <journal_article publication_type="{{ article.publication_type }}">
+        <titles>
+          <title>{{ article.title }}</title>
+          {% if article.subtitle %}
+          <subtitle>{{ article.subtitle }}</subtitle>
+          {% endif %}
+        </titles>
+        {% if article.authors %}
+        <contributors>
+          {% for author in article.authors %}
+          <person_name sequence="{{ author.sequence }}" contributor_role="{{ author.contributor_role }}">
+            {% if author.given_name %}
+            <given_name>{{ author.given_name }}</given_name>
+            {% endif %}
+            <surname>{{ author.surname }}</surname>
+            {% if author.suffix %}
+            <suffix>{{ author.suffix }}</suffix>
+            {% endif %}
+            {% if author.orcid %}
+            <ORCID{% if author.orcid_authenticated %} authenticated="true"{% endif %}>{{ author.orcid|format_orcid_url }}</ORCID>
+            {% endif %}
+            {% if author.affiliations %}
+            <affiliations>
+              {% for aff in author.affiliations %}
+              <institution>
+                <institution_name>{{ aff.institution_name }}</institution_name>
+                {% if aff.institution_ror_id %}
+                <institution_id type="ror">{{ aff.institution_ror_id }}</institution_id>
+                {% endif %}
+              </institution>
+              {% endfor %}
+            </affiliations>
+            {% endif %}
+          </person_name>
+          {% endfor %}
+        </contributors>
+        {% endif %}
+        {% if article.abstract %}
+        <jats:abstract>
+          <jats:p>{{ article.abstract }}</jats:p>
+        </jats:abstract>
+        {% endif %}
+        {% if issue.publication_date %}
+        <publication_date media_type="online">
+          <month>{{ issue.publication_date|format_date('%m') }}</month>
+          <day>{{ issue.publication_date|format_date('%d') }}</day>
+          <year>{{ issue.year }}</year>
+        </publication_date>
+        {% else %}
+        <publication_date media_type="online">
+          <year>{{ issue.year }}</year>
+        </publication_date>
+        {% endif %}
+        {% if article.first_page and article.last_page %}
+        <pages>
+          <first_page>{{ article.first_page }}</first_page>
+          <last_page>{{ article.last_page }}</last_page>
+        </pages>
+        {% elif article.article_number %}
+        <publisher_item>
+          <item_number item_number_type="article_number">{{ article.article_number }}</item_number>
+        </publisher_item>
+        {% endif %}
+        {% if article.license_url %}
+        <ai:program name="AccessIndicators">
+          <ai:license_ref{% if article.license_applies_to %} applies_to="{{ article.license_applies_to }}"{% endif %}>{{ article.license_url }}</ai:license_ref>
+          {% if article.free_to_read %}
+          <ai:free_to_read{% if article.free_to_read_start_date %} start_date="{{ article.free_to_read_start_date|format_date('%Y-%m-%d') }}"{% endif %}/>
+          {% endif %}
+        </ai:program>
+        {% endif %}
+        <doi_data>
+          <doi>{{ publisher.doi_prefix }}/{{ article.doi_suffix }}</doi>
+          <resource>https://doi.org/{{ publisher.doi_prefix }}/{{ article.doi_suffix }}</resource>
+        </doi_data>
+      </journal_article>
+      {% endfor %}
+    </journal>
+  </body>
+</doi_batch>

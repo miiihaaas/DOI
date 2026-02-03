@@ -92,6 +92,7 @@ LOCAL_APPS = [
     "doi_portal.articles",  # Story 3.1: Article model & basic metadata entry
     "doi_portal.portal",  # Story 2.2: Public portal
     "doi_portal.core",
+    "doi_portal.crossref",  # Story 5.1: Crossref XML generation
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
