@@ -111,6 +111,29 @@ class Issue(models.Model):
         help_text=_("Mesto izdavanja zbornika"),
     )
 
+    # === CROSSREF XML GENERATION FIELDS (Story 5.3) ===
+    crossref_xml = models.TextField(
+        blank=True,
+        verbose_name=_("Crossref XML"),
+        help_text=_("Generisani Crossref XML sadržaj"),
+    )
+    xml_generated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("XML generisan"),
+    )
+    xml_generation_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", _("Na čekanju")),
+            ("generating", _("Generiše se")),
+            ("completed", _("Završeno")),
+            ("failed", _("Neuspešno")),
+        ],
+        default="pending",
+        verbose_name=_("Status generisanja"),
+    )
+
     # === TIMESTAMPS ===
     created_at = models.DateTimeField(_("Kreirano"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Ažurirano"), auto_now=True)

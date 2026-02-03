@@ -1,0 +1,53 @@
+{# Story 5.3: XML Generation for All Publication Types #}
+{# Generation result template for Crossref XML generation #}
+{% if generating %}
+<div class="alert alert-info" id="generation-result">
+  <div class="d-flex align-items-center">
+    <div class="spinner-border spinner-border-sm me-2" role="status">
+      <span class="visually-hidden">Generisanje...</span>
+    </div>
+    <span>{{ message }}</span>
+  </div>
+  {# Task polling will be implemented in future stories #}
+  <small class="d-block text-muted mt-2">
+    Osvežite stranicu za pregled statusa.
+  </small>
+</div>
+{% elif success %}
+<div class="alert alert-success mb-0" id="generation-result">
+  <div class="d-flex align-items-center">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    <div>
+      <strong>{{ message }}</strong>
+      {% if timestamp %}
+        <small class="d-block text-muted mt-1">
+          Generisano: {{ timestamp|date:"d.m.Y H:i" }}
+        </small>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-danger mb-0" id="generation-result">
+  <div class="d-flex align-items-start">
+    <i class="bi bi-x-circle-fill me-2 mt-1"></i>
+    <div>
+      <strong>{{ message }}</strong>
+      {% if errors %}
+        <ul class="mb-0 mt-2 ps-3">
+          {% for error in errors %}
+            <li>
+              {{ error.message }}
+              {% if error.fix_url %}
+                <a href="{{ error.fix_url }}" class="ms-2 text-danger">
+                  <i class="bi bi-pencil-square"></i> Ispravi
+                </a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}

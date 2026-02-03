@@ -332,6 +332,43 @@ class CrossrefService:
         template = self.env.get_template(template_name)
         return template.render(**context)
 
+    def generate_and_store_xml(self, issue: Issue) -> tuple[bool, str]:
+        """
+        Generate and store XML for an issue.
+
+        Story 5.3: XML Generation for All Publication Types.
+        Generates XML using the existing generate_xml() method,
+        stores result in Issue model fields, and records timestamp.
+
+        Uses transaction.atomic to ensure database consistency.
+
+        Args:
+            issue: Issue model instance
+
+        Returns:
+            Tuple of (success, xml_or_error_message)
+        """
+        from django.db import transaction
+
+        try:
+            xml = self.generate_xml(issue)
+            with transaction.atomic():
+                issue.crossref_xml = xml
+                issue.xml_generated_at = timezone.now()
+                issue.xml_generation_status = "completed"
+                issue.save(update_fields=[
+                    "crossref_xml",
+                    "xml_generated_at",
+                    "xml_generation_status",
+                ])
+            return (True, xml)
+        except Exception as e:
+            # Use separate transaction for failure status update
+            with transaction.atomic():
+                issue.xml_generation_status = "failed"
+                issue.save(update_fields=["xml_generation_status"])
+            return (False, str(e))
+
 
 class PreValidationService:
     """
