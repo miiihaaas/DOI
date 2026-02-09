@@ -1,6 +1,7 @@
 {# Story 5.3: XML Generation for All Publication Types #}
 {# Story 5.4: XSD Validation - Updated with validation status #}
 {# Story 5.5: XML Preview with Syntax Highlighting #}
+{# Story 5.6: XML Download - Smart download button with warning check #}
 {# Generation result template for Crossref XML generation #}
 
 {% if generating %}
@@ -32,6 +33,7 @@
         {% endif %}
       </div>
       {# Story 5.5: XML Preview and Download buttons #}
+      {# Story 5.6: Smart download with warning check for invalid XML #}
       {% if issue %}
       <div class="d-flex gap-2">
         <button type="button"
@@ -41,11 +43,24 @@
                 hx-swap="beforeend">
           <i class="bi bi-eye me-1"></i>Pregled XML
         </button>
+        {% if xsd_valid %}
+        {# Direct download for valid XML #}
         <a href="{% url 'crossref:xml-download' issue.pk %}"
            class="btn btn-sm btn-outline-primary"
            download>
           <i class="bi bi-download me-1"></i>Preuzmi XML
         </a>
+        {% else %}
+        {# Show warning first for invalid XML (Story 5.6 AC4) #}
+        <button type="button"
+                class="btn btn-sm btn-outline-warning"
+                hx-get="{% url 'crossref:download-warning' issue.pk %}"
+                hx-target="body"
+                hx-swap="beforeend">
+          <i class="bi bi-download me-1"></i>Preuzmi XML
+          <i class="bi bi-exclamation-triangle ms-1"></i>
+        </button>
+        {% endif %}
       </div>
       {% endif %}
     </div>
@@ -56,6 +71,16 @@
     {% include "crossref/partials/_xsd_validation_result.html" %}
   </div>
 </div>
+
+{# Story 5.6: Export History Section (AC5) #}
+{% if issue %}
+<div id="export-history-container"
+     hx-get="{% url 'crossref:export-history' issue.pk %}"
+     hx-trigger="load, htmx:afterRequest from:body"
+     hx-swap="innerHTML">
+  {# Export history will be loaded via HTMX #}
+</div>
+{% endif %}
 
 {% else %}
 {# Generation failed #}

@@ -187,4 +187,9 @@ dependencies = [
     "structlog>=25.5.0",
     "lxml>=5.3.0",
     "Jinja2>=3.1.4",
+    # Production dependencies
+    "gunicorn==24.1.1",
+    "sentry-sdk==2.50.0",
+    "django-storages[s3]==1.14.6",
+    "django-anymail[mailgun]==14.0",
 ]

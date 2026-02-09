@@ -249,7 +249,9 @@ class TestXMLDownloadEndpoint:
         response = client.get(url)
 
         assert response.status_code == 200
-        assert response["Content-Type"] == "application/xml"
+        # Story 5.6: UTF-8 encoding added to Content-Type (AC2)
+        assert "application/xml" in response["Content-Type"]
+        assert "charset=utf-8" in response["Content-Type"].lower()
         assert "attachment" in response["Content-Disposition"]
 
     def test_download_has_correct_filename(self, client, user, issue_with_xml):

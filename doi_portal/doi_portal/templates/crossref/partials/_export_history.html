@@ -1,0 +1,54 @@
+{# Story 5.6: Export history list (AC5) #}
+<div class="card mt-4">
+  <div class="card-header">
+    <h6 class="mb-0">
+      <i class="bi bi-clock-history me-2"></i>Istorija eksporta
+    </h6>
+  </div>
+  <div class="card-body">
+    {% if exports %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover">
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Fajl</th>
+            <th>Korisnik</th>
+            <th>Status</th>
+            <th>Akcije</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for export in exports %}
+          <tr>
+            <td>{{ export.exported_at|date:"d.m.Y H:i" }}</td>
+            <td><small class="text-muted">{{ export.filename }}</small></td>
+            <td>{{ export.exported_by.get_full_name|default:export.exported_by.email }}</td>
+            <td>
+              {% if export.xsd_valid_at_export %}
+              <span class="badge bg-success">Validan</span>
+              {% elif export.xsd_valid_at_export is False %}
+              <span class="badge bg-danger">Nevažeći</span>
+              {% else %}
+              <span class="badge bg-secondary">Nepoznato</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'crossref:export-redownload' export.pk %}"
+                 class="btn btn-sm btn-outline-primary"
+                 title="Preuzmi ponovo">
+                <i class="bi bi-download"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">
+      <i class="bi bi-info-circle me-1"></i>Nema prethodnih eksporta
+    </p>
+    {% endif %}
+  </div>
+</div>

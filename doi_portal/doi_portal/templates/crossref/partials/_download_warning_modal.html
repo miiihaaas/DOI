@@ -1,0 +1,45 @@
+{# Story 5.6: Warning dialog for invalid XML download (AC4) #}
+<div class="modal fade" id="downloadWarningModal" tabindex="-1"
+     aria-labelledby="downloadWarningModalLabel" aria-hidden="true"
+     x-data="downloadWarningState()"
+     x-init="show()">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="downloadWarningModalLabel">
+          <i class="bi bi-exclamation-triangle me-2"></i>Upozorenje
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button>
+      </div>
+      <div class="modal-body">
+        <p>XML ima <strong>{{ error_count }}</strong> {% if error_count == 1 %}grešku{% else %}greške{% endif %} validacije.</p>
+        <p>Fajl možda neće biti prihvaćen od strane Crossref portala.</p>
+        <p>Da li želite da preuzmete XML sa greškama?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i>Otkaži
+        </button>
+        <a href="{% url 'crossref:xml-download-force' issue.pk %}"
+           class="btn btn-warning">
+          <i class="bi bi-download me-1"></i>Preuzmi svejedno
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function downloadWarningState() {
+  return {
+    show() {
+      const modal = new bootstrap.Modal(document.getElementById('downloadWarningModal'));
+      modal.show();
+      // Remove from DOM when hidden
+      document.getElementById('downloadWarningModal').addEventListener('hidden.bs.modal', function () {
+        this.remove();
+      });
+    }
+  }
+}
+</script>

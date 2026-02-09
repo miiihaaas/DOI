@@ -5,6 +5,7 @@ Story 5.1: Crossref Service Infrastructure.
 Story 5.2: Pre-Generation Validation & Warnings.
 Story 5.3: XML Generation for All Publication Types.
 Story 5.5: XML Preview with Syntax Highlighting.
+Story 5.6: XML Download - Export History Tracking.
 """
 
 from typing import TYPE_CHECKING
@@ -22,6 +23,7 @@ from django.utils.text import slugify
 from django.views import View
 
 from doi_portal.core.permissions import has_publisher_access
+from doi_portal.crossref.models import CrossrefExport
 from doi_portal.crossref.services import CrossrefService
 from doi_portal.crossref.services import PreValidationService
 from doi_portal.crossref.tasks import crossref_generate_xml_task
@@ -35,6 +37,10 @@ __all__ = [
     "IssueValidationView",
     "xml_preview",
     "xml_download",
+    "download_warning",
+    "xml_download_force",
+    "export_redownload",
+    "export_history",
 ]
 
 
@@ -213,12 +219,76 @@ def xml_preview(request: "HttpRequest", pk: int) -> HttpResponse:
     )
 
 
+def _generate_filename(issue: Issue) -> str:
+    """
+    Generate standardized filename for XML export.
+
+    Story 5.6: XML Download - Filename Generation.
+
+    Args:
+        issue: The Issue to generate filename for
+
+    Returns:
+        Filename in format: {publication-slug}_{volume}_{issue}_{timestamp}.xml
+    """
+    publication_slug = slugify(issue.publication.title)[:30]
+    volume = issue.volume or "v0"
+    issue_num = issue.issue_number or "i0"
+    timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
+    return f"{publication_slug}_{volume}_{issue_num}_{timestamp}.xml"
+
+
+def _create_xml_download_response(
+    request: "HttpRequest",
+    issue: Issue,
+) -> HttpResponse:
+    """
+    Create XML download response with export tracking.
+
+    Story 5.6: XML Download - Shared helper for xml_download and xml_download_force.
+    Eliminates code duplication between the two download views.
+
+    Args:
+        request: HTTP request (for user tracking)
+        issue: The Issue to download XML from
+
+    Returns:
+        HttpResponse with XML attachment
+
+    Raises:
+        Http404: If XML is not generated for the issue.
+    """
+    if not issue.crossref_xml:
+        raise Http404("XML nije generisan.")
+
+    # Generate filename
+    filename = _generate_filename(issue)
+
+    # Create export record (Story 5.6: Export History Tracking)
+    CrossrefExport.objects.create(
+        issue=issue,
+        xml_content=issue.crossref_xml,
+        exported_by=request.user,
+        filename=filename,
+        xsd_valid_at_export=issue.xsd_valid,
+    )
+
+    # Return XML with proper headers (AC2: UTF-8 encoding)
+    response = HttpResponse(
+        issue.crossref_xml,
+        content_type="application/xml; charset=utf-8",
+    )
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
 @login_required
 def xml_download(request: "HttpRequest", pk: int) -> HttpResponse:
     """
-    Download Crossref XML for an issue.
+    Download Crossref XML for an issue with export tracking.
 
-    Story 5.5: XML Preview with Syntax Highlighting.
+    Story 5.6: XML Download - Export History Tracking.
+    Creates a CrossrefExport record for each download.
 
     Args:
         request: HTTP request
@@ -229,6 +299,7 @@ def xml_download(request: "HttpRequest", pk: int) -> HttpResponse:
 
     Raises:
         PermissionDenied: If user does not have access to the issue's publisher.
+        Http404: If XML is not generated for the issue.
     """
     issue = get_object_or_404(Issue, pk=pk)
 
@@ -236,19 +307,127 @@ def xml_download(request: "HttpRequest", pk: int) -> HttpResponse:
     if not has_publisher_access(request.user, issue.publication.publisher):
         raise PermissionDenied
 
-    if not issue.crossref_xml:
-        raise Http404("XML nije generisan.")
+    return _create_xml_download_response(request, issue)
 
-    # Generate filename: {publication-slug}_{volume}_{issue}_{timestamp}.xml
-    publication_slug = slugify(issue.publication.title)[:30]
-    volume = issue.volume or "v0"
-    issue_num = issue.issue_number or "i0"
-    timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{publication_slug}_{volume}_{issue_num}_{timestamp}.xml"
+
+@login_required
+def download_warning(request: "HttpRequest", pk: int) -> HttpResponse:
+    """
+    Return warning modal for invalid XML download.
+
+    Story 5.6: Warning for Invalid XML (AC4).
+    Shows modal with error count and options to proceed or cancel.
+
+    Args:
+        request: HTTP request
+        pk: Issue primary key
+
+    Returns:
+        HTML partial with warning modal
+
+    Raises:
+        PermissionDenied: If user does not have access to the issue's publisher.
+    """
+    issue = get_object_or_404(Issue, pk=pk)
+
+    if not has_publisher_access(request.user, issue.publication.publisher):
+        raise PermissionDenied
+
+    error_count = len(issue.xsd_errors) if issue.xsd_errors else 0
+
+    return TemplateResponse(
+        request,
+        "crossref/partials/_download_warning_modal.html",
+        {"issue": issue, "error_count": error_count},
+    )
+
+
+@login_required
+def xml_download_force(request: "HttpRequest", pk: int) -> HttpResponse:
+    """
+    Download XML regardless of validation status.
+
+    Story 5.6: XML Download with Export Tracking.
+    Creates export history record even for invalid XML.
+    Uses same logic as xml_download, bypassing the xsd_valid check in template.
+
+    Args:
+        request: HTTP request
+        pk: Issue primary key
+
+    Returns:
+        XML file download response
+
+    Raises:
+        PermissionDenied: If user does not have access to the issue's publisher.
+        Http404: If XML is not generated for the issue.
+    """
+    issue = get_object_or_404(Issue, pk=pk)
+
+    if not has_publisher_access(request.user, issue.publication.publisher):
+        raise PermissionDenied
+
+    return _create_xml_download_response(request, issue)
+
+
+@login_required
+def export_redownload(request: "HttpRequest", pk: int) -> HttpResponse:
+    """
+    Re-download a previous export.
+
+    Story 5.6: Export History Re-download (AC5).
+    Serves stored XML content from CrossrefExport record.
+
+    Args:
+        request: HTTP request
+        pk: CrossrefExport primary key
+
+    Returns:
+        XML file download response
+
+    Raises:
+        PermissionDenied: If user does not have access to the export's issue publisher.
+    """
+    export = get_object_or_404(CrossrefExport, pk=pk)
+
+    if not has_publisher_access(request.user, export.issue.publication.publisher):
+        raise PermissionDenied
 
     response = HttpResponse(
-        issue.crossref_xml,
-        content_type="application/xml",
+        export.xml_content,
+        content_type="application/xml; charset=utf-8",
     )
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response["Content-Disposition"] = f'attachment; filename="{export.filename}"'
     return response
+
+
+@login_required
+def export_history(request: "HttpRequest", pk: int) -> HttpResponse:
+    """
+    Return export history partial for an issue.
+
+    Story 5.6: Export History Display (AC5).
+    Lists previous exports with timestamps, users, and validation status.
+
+    Args:
+        request: HTTP request
+        pk: Issue primary key
+
+    Returns:
+        HTML partial with export history table
+
+    Raises:
+        PermissionDenied: If user does not have access to the issue's publisher.
+    """
+    issue = get_object_or_404(Issue, pk=pk)
+
+    if not has_publisher_access(request.user, issue.publication.publisher):
+        raise PermissionDenied
+
+    exports = issue.crossref_exports.select_related("exported_by")[:10]
+
+    return TemplateResponse(
+        request,
+        "crossref/partials/_export_history.html",
+        {"issue": issue, "exports": exports},
+    )
