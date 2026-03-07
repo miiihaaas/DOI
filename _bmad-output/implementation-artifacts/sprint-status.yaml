@@ -105,7 +105,7 @@ development_status:
   5-4-xsd-validation: done
   5-5-xml-preview-with-syntax-highlighting: done
   5-6-xml-download: done
-  5-7-crossref-deposit-workflow-page: backlog  # Prošireno: uključuje regenerisanje XML dugme
+  5-7-crossref-deposit-workflow-page: done  # Prošireno: uključuje regenerisanje XML dugme
   epic-5-retrospective: optional
 
   # Epic 6: Compliance & Monitoring

@@ -119,6 +119,11 @@
                             <span class="badge {{ issue.status_badge_class }}">
                                 {{ issue.get_status_display }}
                             </span>
+                            {% if issue.is_crossref_deposited %}
+                            <span class="badge bg-success ms-1" title="Crossref deponovano {{ issue.crossref_deposited_at|date:'d.m.Y.' }}">
+                                <i class="bi bi-cloud-check me-1"></i>Deponovano
+                            </span>
+                            {% endif %}
                         </td>
                         <td>
                             <span class="badge bg-light text-dark">{{ issue.article_count }}</span>

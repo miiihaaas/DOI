@@ -6,15 +6,18 @@ Story 5.2: Pre-Generation Validation & Warnings.
 Story 5.3: XML Generation for All Publication Types.
 Story 5.5: XML Preview with Syntax Highlighting.
 Story 5.6: XML Download - Export History Tracking.
+Story 5.7: Crossref Deposit Workflow Page.
 """
 
 from django.urls import path
 
+from doi_portal.crossref.views import CrossrefDepositView
 from doi_portal.crossref.views import GenerateXMLView
 from doi_portal.crossref.views import IssueValidationView
 from doi_portal.crossref.views import download_warning
 from doi_portal.crossref.views import export_history
 from doi_portal.crossref.views import export_redownload
+from doi_portal.crossref.views import mark_deposited
 from doi_portal.crossref.views import xml_download
 from doi_portal.crossref.views import xml_download_force
 from doi_portal.crossref.views import xml_preview
@@ -65,5 +68,16 @@ urlpatterns = [
         "issues/<int:pk>/export-history/",
         export_history,
         name="export-history",
+    ),
+    # Story 5.7: Crossref Deposit Workflow Page
+    path(
+        "issues/<int:pk>/deposit/",
+        CrossrefDepositView.as_view(),
+        name="issue-deposit",
+    ),
+    path(
+        "issues/<int:pk>/mark-deposited/",
+        mark_deposited,
+        name="mark-deposited",
     ),
 ]

@@ -153,6 +153,22 @@ class Issue(models.Model):
         verbose_name=_("XSD validiran"),
     )
 
+    # === CROSSREF DEPOSIT TRACKING (Story 5.7) ===
+    crossref_deposited_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Crossref deponovano"),
+        help_text=_("Datum i vreme kada je XML deponovan na Crossref"),
+    )
+    crossref_deposited_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="crossref_deposits",
+        verbose_name=_("Deponovao"),
+    )
+
     # === TIMESTAMPS ===
     created_at = models.DateTimeField(_("Kreirano"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Ažurirano"), auto_now=True)
@@ -218,6 +234,11 @@ class Issue(models.Model):
             Number of non-deleted articles in this issue
         """
         return self.articles.count()
+
+    @property
+    def is_crossref_deposited(self) -> bool:
+        """Return True if this issue has been deposited to Crossref."""
+        return self.crossref_deposited_at is not None
 
     @property
     def status_badge_class(self) -> str:

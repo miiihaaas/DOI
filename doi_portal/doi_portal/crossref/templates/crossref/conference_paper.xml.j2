@@ -123,10 +123,10 @@
         {% endif %}
         {% if article.license_url %}
         <ai:program name="AccessIndicators">
-          <ai:license_ref{% if article.license_applies_to %} applies_to="{{ article.license_applies_to }}"{% endif %}>{{ article.license_url }}</ai:license_ref>
           {% if article.free_to_read %}
           <ai:free_to_read{% if article.free_to_read_start_date %} start_date="{{ article.free_to_read_start_date|format_date('%Y-%m-%d') }}"{% endif %}/>
           {% endif %}
+          <ai:license_ref{% if article.license_applies_to %} applies_to="{{ article.license_applies_to }}"{% endif %}>{{ article.license_url }}</ai:license_ref>
         </ai:program>
         {% endif %}
         <doi_data>

@@ -6,6 +6,7 @@ Story 5.2: Pre-Generation Validation & Warnings.
 Story 5.3: XML Generation for All Publication Types.
 Story 5.5: XML Preview with Syntax Highlighting.
 Story 5.6: XML Download - Export History Tracking.
+Story 5.7: Crossref Deposit Workflow Page.
 """
 
 from typing import TYPE_CHECKING
@@ -18,6 +19,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 from django.views import View
@@ -33,8 +35,10 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 __all__ = [
+    "CrossrefDepositView",
     "GenerateXMLView",
     "IssueValidationView",
+    "mark_deposited",
     "xml_preview",
     "xml_download",
     "download_warning",
@@ -63,8 +67,15 @@ class IssueValidationView(LoginRequiredMixin, View):
 
         Returns:
             HTML partial with validation results
+
+        Raises:
+            PermissionDenied: If user does not have access to the issue's publisher.
         """
         issue = get_object_or_404(Issue, pk=pk)
+
+        # Check publisher-level permission (RBAC model requires row-level access)
+        if not has_publisher_access(request.user, issue.publication.publisher):
+            raise PermissionDenied
 
         # Run validation
         service = PreValidationService()
@@ -106,8 +117,15 @@ class GenerateXMLView(LoginRequiredMixin, View):
 
         Returns:
             HTML partial with generation results
+
+        Raises:
+            PermissionDenied: If user does not have access to the issue's publisher.
         """
         issue = get_object_or_404(Issue, pk=pk)
+
+        # Check publisher-level permission (RBAC model requires row-level access)
+        if not has_publisher_access(request.user, issue.publication.publisher):
+            raise PermissionDenied
 
         # Run pre-validation first (AC7)
         validator = PreValidationService()
@@ -430,4 +448,151 @@ def export_history(request: "HttpRequest", pk: int) -> HttpResponse:
         request,
         "crossref/partials/_export_history.html",
         {"issue": issue, "exports": exports},
+    )
+
+
+class CrossrefDepositView(LoginRequiredMixin, View):
+    """
+    Dedicated Crossref Deposit workflow page.
+
+    Story 5.7: Crossref Deposit Workflow Page.
+    Orchestrates existing HTMX partials into a step-by-step workflow.
+    """
+
+    def get(self, request: "HttpRequest", pk: int) -> HttpResponse:
+        """
+        Render the deposit workflow page with computed step statuses.
+
+        Args:
+            request: HTTP request
+            pk: Issue primary key
+
+        Returns:
+            Rendered deposit workflow page
+
+        Raises:
+            PermissionDenied: If user does not have access to the issue's publisher.
+        """
+        issue = get_object_or_404(Issue, pk=pk)
+
+        if not has_publisher_access(request.user, issue.publication.publisher):
+            raise PermissionDenied
+
+        # Compute step statuses
+        has_xml = bool(issue.crossref_xml)
+        validator = PreValidationService()
+        validation_result = validator.validate_issue(issue)
+
+        steps = [
+            {
+                "number": 1,
+                "title": "Pre-validacija",
+                "completed": validation_result.is_valid,
+                "active": not validation_result.is_valid,
+                "icon": "clipboard-check",
+            },
+            {
+                "number": 2,
+                "title": "Generisanje XML",
+                "completed": has_xml,
+                "active": validation_result.is_valid and not has_xml,
+                "icon": "file-code",
+            },
+            {
+                "number": 3,
+                "title": "XSD Validacija",
+                "completed": has_xml and issue.xsd_valid is True,
+                "active": has_xml and issue.xsd_valid is not True,
+                "icon": "shield-check",
+            },
+            {
+                "number": 4,
+                "title": "Pregled XML",
+                "completed": False,  # Always available, never "completed"
+                "active": has_xml,
+                "icon": "eye",
+            },
+            {
+                "number": 5,
+                "title": "Preuzimanje XML",
+                "completed": issue.crossref_exports.exists(),
+                "active": has_xml,
+                "icon": "download",
+            },
+        ]
+
+        # Check if all critical steps are complete for "ready for Crossref"
+        all_ready = (
+            has_xml
+            and issue.xsd_valid is True
+            and issue.crossref_exports.exists()
+        )
+
+        # Breadcrumbs
+        breadcrumbs = [
+            {
+                "label": "Izdanja",
+                "url": reverse("issues:list"),
+            },
+            {
+                "label": str(issue),
+                "url": reverse("issues:detail", args=[issue.pk]),
+            },
+            {
+                "label": "Crossref Deposit",
+                "url": "",
+            },
+        ]
+
+        return TemplateResponse(
+            request,
+            "crossref/issue_crossref_deposit.html",
+            {
+                "issue": issue,
+                "steps": steps,
+                "has_xml": has_xml,
+                "validation_result": validation_result,
+                "is_deposited": issue.is_crossref_deposited,
+                "all_ready": all_ready,
+                "breadcrumbs": breadcrumbs,
+            },
+        )
+
+
+@login_required
+def mark_deposited(request: "HttpRequest", pk: int) -> HttpResponse:
+    """
+    Mark an issue as deposited to Crossref.
+
+    Story 5.7: Mark as Deposited (AC5).
+
+    Args:
+        request: HTTP request
+        pk: Issue primary key
+
+    Returns:
+        HTML partial with deposited status
+
+    Raises:
+        PermissionDenied: If user does not have access to the issue's publisher.
+    """
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    issue = get_object_or_404(Issue, pk=pk)
+
+    if not has_publisher_access(request.user, issue.publication.publisher):
+        raise PermissionDenied
+
+    issue.crossref_deposited_at = timezone.now()
+    issue.crossref_deposited_by = request.user
+    issue.save(update_fields=["crossref_deposited_at", "crossref_deposited_by"])
+
+    return render(
+        request,
+        "crossref/partials/_deposit_status.html",
+        {
+            "issue": issue,
+            "is_deposited": True,
+        },
     )

@@ -2,13 +2,6 @@
 
 {% block title %}{{ issue }} - DOI Portal{% endblock %}
 
-{% block extra_css %}
-{# Prism.js CSS for XML Preview (Story 5.5) #}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.css" />
-{% endblock %}
-
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">
@@ -187,66 +180,35 @@
             </div>
         </div>
 
-        <!-- Crossref XML Card -->
+        <!-- Crossref Deposit Card (Story 5.7) -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-code-square me-2"></i>Crossref XML</h5>
+                <h5 class="mb-0"><i class="bi bi-cloud-upload me-2"></i>Crossref Deposit</h5>
             </div>
             <div class="card-body">
-                {% if issue.crossref_xml %}
+                {% if issue.is_crossref_deposited %}
                 <div class="d-flex align-items-center mb-3">
                     <span class="badge bg-success me-2">
-                        <i class="bi bi-check-circle me-1"></i>Generisan
+                        <i class="bi bi-check-circle me-1"></i>Deponovano
                     </span>
-                    <small class="text-muted">{{ issue.xml_generated_at|date:"d.m.Y. H:i" }}</small>
+                    <small class="text-muted">{{ issue.crossref_deposited_at|date:"d.m.Y. H:i" }}</small>
                 </div>
-                {% if issue.xsd_valid %}
-                <div class="small text-success mb-3">
-                    <i class="bi bi-shield-check me-1"></i>XSD validacija uspešna
-                </div>
-                {% elif issue.xsd_valid is False %}
-                <div class="small text-danger mb-3">
-                    <i class="bi bi-shield-x me-1"></i>XSD validacija: {{ issue.xsd_errors|length }} greške
-                </div>
-                {% endif %}
-                <div class="d-grid gap-2">
-                    <button type="button"
-                            id="xmlPreviewBtn"
-                            class="btn btn-outline-primary"
-                            onclick="loadXmlPreview()">
-                        <i class="bi bi-eye me-1"></i>Pregled XML
-                    </button>
-                    <a href="{% url 'crossref:xml-download' issue.pk %}" class="btn btn-outline-secondary" download>
-                        <i class="bi bi-download me-1"></i>Preuzmi XML
-                    </a>
+                {% elif issue.crossref_xml %}
+                <div class="d-flex align-items-center mb-3">
+                    <span class="badge bg-info me-2">
+                        <i class="bi bi-file-code me-1"></i>XML generisan
+                    </span>
                 </div>
                 {% else %}
                 <p class="text-muted mb-3">
                     <i class="bi bi-info-circle me-1"></i>XML nije generisan.
                 </p>
-                {# Validation panel loads here via HTMX #}
-                <div id="validation-panel"
-                     hx-get="{% url 'crossref:issue-validate' issue.pk %}"
-                     hx-trigger="load"
-                     hx-swap="innerHTML">
-                    <div class="text-center py-2">
-                        <div class="spinner-border spinner-border-sm" role="status">
-                            <span class="visually-hidden">Učitavanje...</span>
-                        </div>
-                    </div>
-                </div>
-                {# Generate XML button #}
-                <div id="generation-result" class="mt-3">
-                    <button type="button"
-                            class="btn btn-primary w-100"
-                            hx-post="{% url 'crossref:issue-generate' issue.pk %}"
-                            hx-target="#generation-result"
-                            hx-swap="innerHTML"
-                            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-                        <i class="bi bi-file-code me-1"></i>Generiši XML
-                    </button>
-                </div>
                 {% endif %}
+                <div class="d-grid">
+                    <a href="{% url 'crossref:issue-deposit' issue.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-cloud-upload me-1"></i>Crossref Deposit
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -261,6 +223,9 @@
                     <i class="bi bi-pencil me-2"></i>Izmeni izdanje
                 </a>
                 {% endif %}
+                <a href="{% url 'crossref:issue-deposit' issue.pk %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-cloud-upload me-2"></i>Crossref Deposit
+                </a>
                 <a href="{% url 'issues:list' %}?publication={{ issue.publication.pk }}" class="list-group-item list-group-item-action">
                     <i class="bi bi-collection me-2"></i>Sva izdanja ove publikacije
                 </a>
@@ -271,101 +236,4 @@
         </div>
     </div>
 </div>
-
-{# Prism.js Scripts for XML Preview (Story 5.5) #}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.js"></script>
-
-<script>
-function loadXmlPreview() {
-    fetch('{% url "crossref:xml-preview" issue.pk %}')
-        .then(response => response.text())
-        .then(html => {
-            // Remove existing modal if present
-            const existingModal = document.getElementById('xmlPreviewModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-            // Insert modal HTML into body
-            document.body.insertAdjacentHTML('beforeend', html);
-            // Show the modal
-            const modal = document.getElementById('xmlPreviewModal');
-            if (modal) {
-                const bsModal = new bootstrap.Modal(modal);
-
-                // Initialize Prism.js syntax highlighting after modal is shown
-                modal.addEventListener('shown.bs.modal', function() {
-                    const codeBlock = modal.querySelector('code.language-xml');
-                    if (codeBlock && typeof Prism !== 'undefined') {
-                        Prism.highlightElement(codeBlock);
-                    }
-                });
-
-                // Clean up modal from DOM when closed
-                modal.addEventListener('hidden.bs.modal', function() {
-                    modal.remove();
-                });
-
-                bsModal.show();
-            }
-        })
-        .catch(error => {
-            console.error('Error loading XML preview:', error);
-            alert('Greška pri učitavanju XML pregleda');
-        });
-}
-
-function copyXmlToClipboard() {
-    const codeBlock = document.querySelector('#xmlPreviewModal code');
-    if (!codeBlock) return;
-
-    const xmlContent = codeBlock.textContent;
-
-    navigator.clipboard.writeText(xmlContent).then(() => {
-        showXmlToast('XML kopiran u clipboard', 'success');
-    }).catch(err => {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = xmlContent;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-9999px';
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-            document.execCommand('copy');
-            showXmlToast('XML kopiran u clipboard', 'success');
-        } catch (e) {
-            showXmlToast('Greška pri kopiranju', 'danger');
-        }
-        document.body.removeChild(textArea);
-    });
-}
-
-function showXmlToast(message, type) {
-    const toastContainer = document.getElementById('xmlPreviewToast');
-    if (!toastContainer) return;
-
-    const toastId = 'toast-' + Date.now();
-    const iconClass = type === 'success' ? 'check-circle' : 'x-circle';
-
-    const toastHtml = `
-        <div id="${toastId}" class="toast align-items-center text-bg-${type}" role="alert">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="bi bi-${iconClass} me-2"></i>${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    `;
-
-    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
-    const toastElement = document.getElementById(toastId);
-    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
-    toast.show();
-    toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
-}
-</script>
 {% endblock %}
