@@ -5,11 +5,13 @@ Story 3.1 - Task 7.5: Comprehensive form tests.
 """
 
 import pytest
+from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
 from doi_portal.articles.forms import ArticleForm
 from doi_portal.articles.models import ArticleStatus
+from doi_portal.core.constants import LANGUAGE_CHOICES
 from doi_portal.issues.tests.factories import IssueFactory
 from doi_portal.publications.tests.factories import PublicationFactory, PublisherFactory
 
@@ -332,6 +334,93 @@ class TestArticleFormIssueScoping:
         form = ArticleForm(user=user)
         queryset = form.fields["issue"].queryset
         assert queryset.count() == 0
+
+
+# =============================================================================
+# Story 2-4a: Test language Select widget
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestArticleFormLanguageWidget:
+    """Test ArticleForm language field uses Select widget."""
+
+    def test_language_field_is_select_widget(self):
+        """2-4a: Language field renders as Select widget, not TextInput."""
+        form = ArticleForm()
+        widget = form.fields["language"].widget
+        assert isinstance(widget, forms.Select)
+
+    def test_language_widget_has_form_select_class(self):
+        """2-4a: Language Select widget has Bootstrap form-select class."""
+        form = ArticleForm()
+        css_class = form.fields["language"].widget.attrs.get("class", "")
+        assert "form-select" in css_class
+
+    def test_language_widget_has_correct_choices(self):
+        """2-4a: Language Select widget has all LANGUAGE_CHOICES options."""
+        form = ArticleForm()
+        widget_choices = list(form.fields["language"].widget.choices)
+        for code, label in LANGUAGE_CHOICES:
+            assert (code, label) in widget_choices
+
+    def test_existing_language_en_selected(self, admin_user, issue_a):
+        """2-4a: Existing article with language='en' correctly selects that option."""
+        article = ArticleFactory(issue=issue_a, language="en")
+        form = ArticleForm(instance=article, user=admin_user)
+        assert form.initial["language"] == "en"
+        # Fix #5: verify rendered HTML contains selected option
+        rendered = str(form["language"])
+        assert 'selected' in rendered
+        assert '"en"' in rendered
+
+    def test_existing_language_sr_selected(self, admin_user, issue_a):
+        """2-4a: Existing article with language='sr' correctly selects that option."""
+        article = ArticleFactory(issue=issue_a, language="sr")
+        form = ArticleForm(instance=article, user=admin_user)
+        assert form.initial["language"] == "sr"
+        # Fix #5: verify rendered HTML contains selected option
+        rendered = str(form["language"])
+        assert 'selected' in rendered
+        assert '"sr"' in rendered
+
+    def test_invalid_language_code_rejected(self, admin_user, issue_a):
+        """2-4a: Submitting a language code not in LANGUAGE_CHOICES is rejected."""
+        form = ArticleForm(
+            data={
+                "issue": issue_a.pk,
+                "title": "Invalid lang test",
+                "doi_suffix": "invlang.001",
+                "subtitle": "",
+                "abstract": "",
+                "keywords": "[]",
+                "first_page": "",
+                "last_page": "",
+                "article_number": "",
+                "language": "xx",
+                "publication_type": "full_text",
+                "license_url": "",
+                "license_applies_to": "",
+                "free_to_read_start_date": "",
+            },
+            user=admin_user,
+        )
+        assert not form.is_valid()
+        assert "language" in form.errors
+
+    def test_unlisted_language_preserved_for_existing_instance(self, admin_user, issue_a):
+        """2-4a: Existing article with unlisted language code gets it injected into choices."""
+        article = ArticleFactory(issue=issue_a, language="pt")
+        form = ArticleForm(instance=article, user=admin_user)
+        widget_choices = list(form.fields["language"].widget.choices)
+        choice_codes = [code for code, _ in widget_choices]
+        assert "pt" in choice_codes
+
+    def test_language_help_text(self):
+        """2-4a: Language field has correct help text."""
+        form = ArticleForm()
+        help_text = form.fields["language"].help_text
+        assert help_text == "Jezik članka. Može se razlikovati od jezika publikacije."
 
 
 # =============================================================================

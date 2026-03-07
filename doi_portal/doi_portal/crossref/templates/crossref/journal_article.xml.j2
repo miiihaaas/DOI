@@ -123,7 +123,11 @@
         {% endif %}
         <doi_data>
           <doi>{{ publisher.doi_prefix }}/{{ article.doi_suffix }}</doi>
-          <resource>https://doi.org/{{ publisher.doi_prefix }}/{{ article.doi_suffix }}</resource>
+          {% if article.use_external_resource and article.external_landing_url %}
+          <resource>{{ article.external_landing_url }}</resource>
+          {% else %}
+          <resource>{{ site_url }}/articles/{{ article.pk }}/</resource>
+          {% endif %}
         </doi_data>
       </journal_article>
       {% endfor %}

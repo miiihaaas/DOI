@@ -29,6 +29,18 @@ from doi_portal.publications.tests.factories import PublisherFactory
 
 
 @pytest.fixture
+def site(db):
+    """Set explicit Site domain for reproducible tests."""
+    from django.contrib.sites.models import Site
+
+    site = Site.objects.get_current()
+    site.domain = "testserver.example.com"
+    site.name = "Test Server"
+    site.save()
+    return site
+
+
+@pytest.fixture
 def site_settings(db):
     """Create SiteSettings with test depositor data."""
     return SiteSettings.objects.create(
@@ -124,7 +136,7 @@ def book_issue(book_publication):
 
 
 @pytest.fixture
-def article_with_authors(journal_issue, site_settings):
+def article_with_authors(journal_issue, site_settings, site):
     """Create article with authors and affiliations."""
     article = ArticleFactory(
         issue=journal_issue,
@@ -471,14 +483,16 @@ class TestGenerateXmlJournal:
         expected_ror = '<institution_id type="ror">https://ror.org/12345678</institution_id>'
         assert expected_ror in xml
 
-    def test_generate_xml_has_doi_data(self, article_with_authors, site_settings):
-        """Test XML contains DOI data."""
+    def test_generate_xml_has_doi_data(self, article_with_authors, site_settings, site):
+        """Test XML contains DOI data with portal landing page URL (Story 5.3a)."""
         service = CrossrefService()
         xml = service.generate_xml(article_with_authors.issue)
 
         assert "<doi_data>" in xml
         assert "<doi>10.12345/test.2026.001</doi>" in xml
-        assert "<resource>https://doi.org/10.12345/test.2026.001</resource>" in xml
+        # Resource must point to portal landing page, NOT doi.org
+        expected_resource = f"<resource>https://{site.domain}/articles/{article_with_authors.pk}/</resource>"
+        assert expected_resource in xml
 
     def test_generate_xml_has_pages(self, article_with_authors, site_settings):
         """Test XML contains page information."""
@@ -494,7 +508,7 @@ class TestGenerateXmlJournal:
 class TestGenerateXmlConference:
     """Tests for generate_xml with CONFERENCE publication type."""
 
-    def test_generate_xml_conference_structure(self, conference_issue, site_settings):
+    def test_generate_xml_conference_structure(self, conference_issue, site_settings, site):
         """Test XML has conference structure."""
         # Create an article for the conference
         ArticleFactory(
@@ -510,7 +524,7 @@ class TestGenerateXmlConference:
         assert "<proceedings_metadata" in xml
         assert "<conference_paper" in xml
 
-    def test_generate_xml_has_event_metadata(self, conference_issue, site_settings):
+    def test_generate_xml_has_event_metadata(self, conference_issue, site_settings, site):
         """Test XML contains event metadata."""
         ArticleFactory(issue=conference_issue, title="Test", doi_suffix="test.001")
         service = CrossrefService()
@@ -522,7 +536,7 @@ class TestGenerateXmlConference:
         assert "<conference_location>Belgrade, Serbia</conference_location>" in xml
 
     def test_generate_xml_has_proceedings_metadata(
-        self, conference_issue, site_settings,
+        self, conference_issue, site_settings, site,
     ):
         """Test XML contains proceedings metadata."""
         ArticleFactory(issue=conference_issue, title="Test", doi_suffix="test.001")
@@ -538,7 +552,7 @@ class TestGenerateXmlConference:
 class TestGenerateXmlBook:
     """Tests for generate_xml with BOOK publication type."""
 
-    def test_generate_xml_book_structure(self, book_issue, site_settings):
+    def test_generate_xml_book_structure(self, book_issue, site_settings, site):
         """Test XML has book structure."""
         ArticleFactory(
             issue=book_issue,
@@ -552,7 +566,7 @@ class TestGenerateXmlBook:
         assert "<book_metadata" in xml
         assert "<content_item" in xml
 
-    def test_generate_xml_has_isbn(self, book_issue, site_settings):
+    def test_generate_xml_has_isbn(self, book_issue, site_settings, site):
         """Test XML contains ISBN."""
         ArticleFactory(issue=book_issue, title="Test", doi_suffix="test.001")
         service = CrossrefService()
@@ -560,7 +574,7 @@ class TestGenerateXmlBook:
 
         assert '<isbn media_type="print">978-86-7549-100-1</isbn>' in xml
 
-    def test_generate_xml_book_without_isbn(self, book_publication, site_settings):
+    def test_generate_xml_book_without_isbn(self, book_publication, site_settings, site):
         """Test XML has noisbn element when ISBN is missing."""
         book_publication.isbn_print = ""
         book_publication.isbn_online = ""
@@ -603,7 +617,7 @@ class TestXmlOutput:
 
         assert 'encoding="UTF-8"' in xml
 
-    def test_xml_escapes_special_characters(self, journal_issue, site_settings):
+    def test_xml_escapes_special_characters(self, journal_issue, site_settings, site):
         """Test special characters are properly escaped."""
         ArticleFactory(
             issue=journal_issue,
@@ -615,7 +629,7 @@ class TestXmlOutput:
 
         assert "Test &amp; Experiment &lt;Special&gt;" in xml
 
-    def test_xml_handles_empty_optional_fields(self, journal_issue, site_settings):
+    def test_xml_handles_empty_optional_fields(self, journal_issue, site_settings, site):
         """Test XML handles missing optional fields gracefully."""
         ArticleFactory(
             issue=journal_issue,
@@ -669,3 +683,82 @@ class TestBuildContext:
         first_author = context["articles"][0]["authors"][0]
         assert len(first_author["affiliations"]) == 1
         assert first_author["affiliations"][0]["institution_name"] == "Test University"
+
+    def test_build_context_contains_site_url(self, article_with_authors, site_settings):
+        """Test context contains site_url for resource links (Story 5.3a)."""
+        service = CrossrefService()
+        context = service._build_context(article_with_authors.issue)
+
+        assert "site_url" in context
+        assert context["site_url"].startswith("https://")
+        assert not context["site_url"].endswith("/")
+
+    def test_build_context_articles_have_pk(self, article_with_authors, site_settings):
+        """Test articles context includes pk for resource URL (Story 5.3a)."""
+        service = CrossrefService()
+        context = service._build_context(article_with_authors.issue)
+
+        assert "pk" in context["articles"][0]
+        assert context["articles"][0]["pk"] == article_with_authors.pk
+
+
+@pytest.mark.django_db
+class TestResourceUrlFix:
+    """Tests for Story 5.3a: Fix <resource> URL circular reference."""
+
+    def test_resource_url_not_doi_org_journal(self, article_with_authors, site_settings):
+        """Test journal XML resource does NOT contain doi.org URL."""
+        service = CrossrefService()
+        xml = service.generate_xml(article_with_authors.issue)
+
+        # Extract resource content
+        resource_match = re.search(r"<resource>(.*?)</resource>", xml)
+        assert resource_match is not None
+        resource_url = resource_match.group(1)
+        assert "doi.org" not in resource_url
+
+    def test_resource_url_points_to_portal_journal(
+        self, article_with_authors, site_settings,
+    ):
+        """Test journal XML resource points to portal landing page."""
+        service = CrossrefService()
+        xml = service.generate_xml(article_with_authors.issue)
+
+        expected = f"/articles/{article_with_authors.pk}/"
+        resource_match = re.search(r"<resource>(.*?)</resource>", xml)
+        assert resource_match is not None
+        assert expected in resource_match.group(1)
+
+    def test_resource_url_not_doi_org_conference(
+        self, conference_issue, site_settings, site,
+    ):
+        """Test conference XML resource does NOT contain doi.org URL."""
+        article = ArticleFactory(
+            issue=conference_issue,
+            title="Conference Paper",
+            doi_suffix="conf.2026.001",
+        )
+        service = CrossrefService()
+        xml = service.generate_xml(conference_issue)
+
+        resource_match = re.search(r"<resource>(.*?)</resource>", xml)
+        assert resource_match is not None
+        resource_url = resource_match.group(1)
+        assert "doi.org" not in resource_url
+        assert f"/articles/{article.pk}/" in resource_url
+
+    def test_resource_url_not_doi_org_book(self, book_issue, site_settings, site):
+        """Test book XML resource does NOT contain doi.org URL."""
+        article = ArticleFactory(
+            issue=book_issue,
+            title="Book Chapter",
+            doi_suffix="book.2026.001",
+        )
+        service = CrossrefService()
+        xml = service.generate_xml(book_issue)
+
+        resource_match = re.search(r"<resource>(.*?)</resource>", xml)
+        assert resource_match is not None
+        resource_url = resource_match.group(1)
+        assert "doi.org" not in resource_url
+        assert f"/articles/{article.pk}/" in resource_url

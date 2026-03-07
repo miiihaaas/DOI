@@ -8,6 +8,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from doi_portal.core.constants import LANGUAGE_CHOICES
+
 from .models import Publication, PublicationType
 from .validators import validate_isbn, validate_issn
 
@@ -54,6 +56,9 @@ class PublicationForm(forms.ModelForm):
             "edition",
             "series_title",
         ]
+        help_texts = {
+            "language": "Primarni jezik publikacije. Članci/radovi mogu biti na različitim jezicima.",
+        }
         widgets = {
             "title": forms.TextInput(
                 attrs={
@@ -84,10 +89,10 @@ class PublicationForm(forms.ModelForm):
                     "accept": "image/jpeg,image/png,image/webp",
                 }
             ),
-            "language": forms.TextInput(
+            "language": forms.Select(
+                choices=LANGUAGE_CHOICES,
                 attrs={
-                    "class": "form-control",
-                    "placeholder": "sr",
+                    "class": "form-select",
                 }
             ),
             "subject_area": forms.TextInput(
@@ -199,6 +204,15 @@ class PublicationForm(forms.ModelForm):
                 }
             ),
         }
+
+    def clean_language(self):
+        """Validate language code is in allowed choices."""
+        language = self.cleaned_data.get("language", "")
+        if language:
+            valid_codes = [code for code, _ in self.fields["language"].widget.choices]
+            if language not in valid_codes:
+                raise ValidationError(_("Izaberite jednu od ponuđenih vrednosti."))
+        return language
 
     def clean_cover_image(self):
         """
@@ -327,6 +341,15 @@ class PublicationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         """Add Bootstrap is-invalid class to fields with errors."""
         super().__init__(*args, **kwargs)
+        # Inject unlisted language code so editing doesn't silently change it
+        if self.instance and self.instance.pk:
+            current_lang = self.instance.language
+            if current_lang:
+                choice_codes = [code for code, _ in LANGUAGE_CHOICES]
+                if current_lang not in choice_codes:
+                    self.fields["language"].widget.choices = [
+                        (current_lang, f"{current_lang}")
+                    ] + list(LANGUAGE_CHOICES)
         # After form validation, add is-invalid class to fields with errors
         for field_name, field in self.fields.items():
             # Add form-control/form-select class to all fields

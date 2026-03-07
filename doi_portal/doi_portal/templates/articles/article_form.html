@@ -16,14 +16,14 @@
             </div>
             <div class="card-body">
                 {% if is_edit %}
-                <form method="post" novalidate
+                <form method="post" novalidate id="article-main-form"
                       x-data="autosaveManager()"
                       hx-post="{% url 'articles:article-autosave' pk=object.pk %}"
                       hx-trigger="change delay:2s from:input, change delay:2s from:select, change delay:2s from:textarea"
                       hx-target="#save-indicator"
                       hx-swap="outerHTML">
                 {% else %}
-                <form method="post" novalidate>
+                <form method="post" novalidate id="article-main-form">
                 {% endif %}
                     {% csrf_token %}
 
@@ -285,7 +285,69 @@
                 {% include "articles/partials/_pdf_upload.html" with article=object %}
             </div>
         </div>
+
         {% endif %}
+
+        <!-- External Resource Section (Story 3-1a) -->
+        <div class="card mt-4" x-data="{ useExternal: {% if form.use_external_resource.value %}true{% else %}false{% endif %} }">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-box-arrow-up-right me-2"></i>Eksterni resursi
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="form-check form-switch mb-3">
+                    <input type="checkbox" name="use_external_resource"
+                           id="id_use_external_resource"
+                           class="form-check-input" role="switch"
+                           {% if form.use_external_resource.value %}checked{% endif %}
+                           x-model="useExternal"
+                           form="article-main-form">
+                    <label class="form-check-label" for="id_use_external_resource">
+                        Članak se nalazi i na sajtu izdavača
+                    </label>
+                </div>
+
+                <div x-show="useExternal" x-cloak>
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        DOI broj će pokazivati na sajt izdavača. Podaci na portalu služe kao backup.
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_external_landing_url" class="form-label">
+                            Eksterna landing stranica <span class="text-danger">*</span>
+                        </label>
+                        <input type="url" name="external_landing_url"
+                               id="id_external_landing_url"
+                               class="form-control{% if form.external_landing_url.errors %} is-invalid{% endif %}"
+                               placeholder="https://casopis.example.com/clanak/123"
+                               value="{{ form.external_landing_url.value|default:'' }}"
+                               form="article-main-form">
+                        <div class="form-text">URL stranice članka na sajtu izdavača</div>
+                        {% if form.external_landing_url.errors %}
+                        <div class="invalid-feedback d-block">{{ form.external_landing_url.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_external_pdf_url" class="form-label">
+                            Eksterni PDF URL
+                        </label>
+                        <input type="url" name="external_pdf_url"
+                               id="id_external_pdf_url"
+                               class="form-control{% if form.external_pdf_url.errors %} is-invalid{% endif %}"
+                               placeholder="https://casopis.example.com/clanak/123.pdf"
+                               value="{{ form.external_pdf_url.value|default:'' }}"
+                               form="article-main-form">
+                        <div class="form-text">URL PDF fajla na sajtu izdavača (opciono)</div>
+                        {% if form.external_pdf_url.errors %}
+                        <div class="invalid-feedback d-block">{{ form.external_pdf_url.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </div>
 </div>

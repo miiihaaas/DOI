@@ -94,6 +94,28 @@
     </section>
     {% endif %}
 
+    <!-- External Resource Links (Story 3-1a) -->
+    {% if article.use_external_resource and article.external_landing_url %}
+    <section class="article-external-resource mb-4" aria-labelledby="external-heading">
+      <h2 id="external-heading" class="h5 mb-3">Originalni izvor</h2>
+      <div class="alert alert-info">
+        <i class="bi bi-box-arrow-up-right me-2" aria-hidden="true"></i>
+        Ovaj članak je dostupan i na sajtu izdavača:
+        <a href="{{ article.external_landing_url }}" rel="external noopener noreferrer" target="_blank" class="alert-link">
+          {{ article.external_landing_url }}
+        </a>
+        {% if article.external_pdf_url %}
+        <br>
+        <i class="bi bi-file-earmark-pdf me-2 mt-2" aria-hidden="true"></i>
+        PDF na sajtu izdavača:
+        <a href="{{ article.external_pdf_url }}" rel="external noopener noreferrer" target="_blank" class="alert-link">
+          Preuzmi PDF sa sajta izdavača
+        </a>
+        {% endif %}
+      </div>
+    </section>
+    {% endif %}
+
     <!-- Article Metadata -->
     <section class="article-metadata mb-4" aria-labelledby="metadata-heading">
       <h2 id="metadata-heading" class="h5 mb-3">Metapodaci</h2>

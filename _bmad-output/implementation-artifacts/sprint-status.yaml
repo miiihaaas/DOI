@@ -53,12 +53,14 @@ development_status:
 
   # Epic 2: Content Structure Management
   # NOTE: PRD revision 1.1 added Story 2-3a for Crossref compliance
-  epic-2: done
+  # NOTE: Sprint change 2026-03-07 added Story 2-4a for language select widget
+  epic-2: in-progress
   2-1-publisher-model-admin-crud: done
   2-2-public-publisher-page: done
   2-3-publication-model-with-type-specific-fields: done
   2-3a-crossref-depositor-fields-migration: done  # Patch story - PRD compliance update
   2-4-publication-admin-list-edit: done
+  2-4a-language-select-widget: done  # Patch story - Select umesto TextInput za language polje
   2-5-public-publication-list-with-filters: done
   2-6-issue-model-admin-crud: done
   2-7-public-issue-list-detail: done
@@ -66,8 +68,10 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Article Workflow
-  epic-3: done
+  # NOTE: Sprint change 2026-03-07 added Story 3-1a for external landing page/PDF URL
+  epic-3: in-progress
   3-1-article-model-basic-metadata-entry: done
+  3-1a-external-landing-page-pdf-url: done  # Patch story - eksterni URL za DOI resource
   3-2-author-management-with-drag-drop: done
   3-3-pdf-upload-with-virus-scanning: done
   3-4-auto-save-functionality: done
@@ -91,14 +95,17 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: Crossref XML Integration
+  # NOTE: Sprint change 2026-03-07 added Story 5-3a for resource URL fix (CRITICAL)
+  # NOTE: Sprint change 2026-03-07 - Story 5-7 proširena sa regenerisanje XML zahtevom
   epic-5: in-progress
   5-1-crossref-service-infrastructure: done
   5-2-pre-generation-validation-warnings: done
   5-3-xml-generation-for-all-publication-types: done
+  5-3a-fix-resource-url: done  # CRITICAL patch story - fix kružna referenca u <resource> elementu
   5-4-xsd-validation: done
   5-5-xml-preview-with-syntax-highlighting: done
   5-6-xml-download: done
-  5-7-crossref-deposit-workflow-page: backlog
+  5-7-crossref-deposit-workflow-page: backlog  # Prošireno: uključuje regenerisanje XML dugme
   epic-5-retrospective: optional
 
   # Epic 6: Compliance & Monitoring

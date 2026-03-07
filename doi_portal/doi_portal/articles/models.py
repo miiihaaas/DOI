@@ -196,6 +196,25 @@ class Article(models.Model):
         blank=True,
     )
 
+    # === EXTERNAL RESOURCE FIELDS (Story 3-1a) ===
+    use_external_resource = models.BooleanField(
+        _("Koristi eksterni URL za DOI"),
+        default=False,
+        help_text=_("Ako je uključeno, DOI će pokazivati na sajt izdavača umesto na portal."),
+    )
+    external_landing_url = models.URLField(
+        _("Eksterna landing stranica"),
+        max_length=500,
+        blank=True,
+        help_text=_("URL stranice članka na sajtu izdavača"),
+    )
+    external_pdf_url = models.URLField(
+        _("Eksterni PDF URL"),
+        max_length=500,
+        blank=True,
+        help_text=_("URL PDF fajla na sajtu izdavača (opciono)"),
+    )
+
     # === STATUS ===
     status = models.CharField(
         _("Status"),

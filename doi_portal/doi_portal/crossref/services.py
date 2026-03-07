@@ -215,6 +215,46 @@ class CrossrefService:
         """
         return self.TEMPLATE_MAP.get(publication_type, self.TEMPLATE_MAP["JOURNAL"])
 
+    def _get_site_url(self) -> str:
+        """
+        Get the site URL for resource links in Crossref XML.
+
+        Uses Django Sites framework to construct the base URL.
+        Protocol is controlled by CROSSREF_SITE_PROTOCOL setting (default: "https").
+
+        Returns:
+            Site URL without trailing slash (e.g., 'https://publikacije.doi.rs')
+
+        Raises:
+            ValueError: If Site is not configured or domain is the default 'example.com'.
+        """
+        if hasattr(self, "_cached_site_url"):
+            return self._cached_site_url
+
+        from django.conf import settings
+        from django.contrib.sites.models import Site
+
+        try:
+            site = Site.objects.get_current()
+        except Site.DoesNotExist:
+            raise ValueError(
+                "Django Site is not configured. "
+                "Please add a Site via admin or run: "
+                "Site.objects.create(domain='your-domain.com', name='Your Site')"
+            )
+
+        if site.domain == "example.com":
+            raise ValueError(
+                "Django Site domain is still the default 'example.com'. "
+                "Please update it to your actual domain."
+            )
+
+        protocol = getattr(settings, "CROSSREF_SITE_PROTOCOL", "https")
+        domain = site.domain.strip("/")
+        result = f"{protocol}://{domain}"
+        self._cached_site_url = result
+        return result
+
     def _build_context(self, issue: Issue) -> dict[str, Any]:
         """
         Build the full template context from an Issue.
@@ -252,6 +292,7 @@ class CrossrefService:
                     "affiliations": affiliations_data,
                 })
             articles_data.append({
+                "pk": article.pk,
                 "title": article.title,
                 "subtitle": article.subtitle,
                 "abstract": article.abstract,
@@ -265,11 +306,15 @@ class CrossrefService:
                 "license_applies_to": article.license_applies_to,
                 "free_to_read": article.free_to_read,
                 "free_to_read_start_date": article.free_to_read_start_date,
+                "use_external_resource": article.use_external_resource,
+                "external_landing_url": article.external_landing_url,
+                "external_pdf_url": article.external_pdf_url,
                 "authors": authors_data,
             })
 
         # Build full context
         return {
+            "site_url": self._get_site_url(),
             "head": self.generate_head(issue),
             "publisher": {
                 "name": publisher.name,
@@ -631,6 +676,15 @@ class PreValidationService:
             for author in authors:
                 is_first = (author == first_author)
                 result.merge(self._validate_author(author, article, is_first))
+
+        # Check external resource consistency
+        if article.use_external_resource and not article.external_landing_url:
+            result.add_warning(
+                message=f"Eksterni URL je uključen ali landing URL nije popunjen (članak: {article.title or article.pk})",
+                field_name="external_landing_url",
+                article_id=article.pk,
+                fix_url=f"/admin/articles/article/{article.pk}/change/",
+            )
 
         return result
 

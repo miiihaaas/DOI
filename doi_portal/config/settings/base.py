@@ -384,3 +384,8 @@ CONTACT_FORM_RECIPIENT_EMAIL = env(
     default="admin@example.com"
 )
 # DEFAULT_FROM_EMAIL is already defined by Cookiecutter Django in production settings
+
+# Crossref XML Generation (Story 5.3a)
+# ------------------------------------------------------------------------------
+# Protocol for resource URLs in Crossref XML. Override to "http" in local.py.
+CROSSREF_SITE_PROTOCOL = "https"
