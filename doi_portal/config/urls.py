@@ -3,7 +3,9 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include
 from django.urls import path
+from django.urls import re_path
 from django.views import defaults as default_views
+from django.views.static import serve
 
 from doi_portal.core.views import DashboardView
 from doi_portal.portal.views import AboutView
@@ -45,9 +47,20 @@ urlpatterns = [
     path("publications/", include("doi_portal.portal.urls_publications", namespace="portal-publications")),
     # Story 4.4: Public article landing page (no authentication required)
     path("articles/", include("doi_portal.portal.urls_articles", namespace="portal-articles")),
-    # Media files
-    *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]
+
+# Media files — static() only works when DEBUG=True.
+# In production (no nginx, Traefik → Gunicorn), Django must serve media directly.
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    urlpatterns += [
+        re_path(
+            r"^media/(?P<path>.*)$",
+            serve,
+            {"document_root": settings.MEDIA_ROOT},
+        ),
+    ]
 
 
 if settings.DEBUG:

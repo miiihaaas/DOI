@@ -76,9 +76,6 @@
             {% if author.suffix %}
             <suffix>{{ author.suffix }}</suffix>
             {% endif %}
-            {% if author.orcid %}
-            <ORCID{% if author.orcid_authenticated %} authenticated="true"{% endif %}>{{ author.orcid|format_orcid_url }}</ORCID>
-            {% endif %}
             {% if author.affiliations %}
             <affiliations>
               {% for aff in author.affiliations %}
@@ -90,6 +87,9 @@
               </institution>
               {% endfor %}
             </affiliations>
+            {% endif %}
+            {% if author.orcid %}
+            <ORCID{% if author.orcid_authenticated %} authenticated="true"{% endif %}>{{ author.orcid|format_orcid_url }}</ORCID>
             {% endif %}
           </person_name>
           {% endfor %}

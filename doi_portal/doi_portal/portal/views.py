@@ -25,7 +25,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.db import models
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_GET
@@ -620,7 +620,13 @@ def article_pdf_download(request, pk):
     if article.pdf_status in (PdfStatus.INFECTED, PdfStatus.SCANNING, PdfStatus.UPLOADING):
         raise Http404("PDF nije dostupan za ovaj članak.")
 
-    return HttpResponseRedirect(article.pdf_file.url)
+    filename = get_pdf_download_filename(article)
+    return FileResponse(
+        article.pdf_file.open("rb"),
+        content_type="application/pdf",
+        as_attachment=True,
+        filename=filename,
+    )
 
 
 # =============================================================================

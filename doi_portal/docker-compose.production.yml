@@ -2,9 +2,10 @@ volumes:
   production_postgres_data: {}
   production_postgres_data_backups: {}
   production_traefik: {}
-  
+  production_django_media: {}
   production_redis_data: {}
-  
+  production_clamav_data: {}
+
 
 
 services:
@@ -12,11 +13,13 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
-
     image: doi_portal_production_django
+    restart: unless-stopped
     depends_on:
       - postgres
       - redis
+    volumes:
+      - production_django_media:/app/doi_portal/media
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
@@ -27,6 +30,7 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: doi_portal_production_postgres
+    restart: unless-stopped
     volumes:
       - production_postgres_data:/var/lib/postgresql/data
       - production_postgres_data_backups:/backups
@@ -38,6 +42,7 @@ services:
       context: .
       dockerfile: ./compose/production/traefik/Dockerfile
     image: doi_portal_production_traefik
+    restart: unless-stopped
     depends_on:
       - django
     volumes:
@@ -49,14 +54,23 @@ services:
 
   redis:
     image: docker.io/redis:7.2
-    
+    restart: unless-stopped
     volumes:
       - production_redis_data:/data
-    
+
+  clamav:
+    image: clamav/clamav:latest
+    restart: unless-stopped
+    volumes:
+      - production_clamav_data:/var/lib/clamav
 
   celeryworker:
     <<: *django
     image: doi_portal_production_celeryworker
+    depends_on:
+      - postgres
+      - redis
+      - clamav
     command: /start-celeryworker
 
   celerybeat:

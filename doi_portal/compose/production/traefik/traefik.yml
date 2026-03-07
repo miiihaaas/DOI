@@ -6,10 +6,11 @@ entryPoints:
     # http
     address: ':80'
     http:
-      # https://doc.traefik.io/traefik/routing/entrypoints/#entrypoint
       redirections:
         entryPoint:
           to: web-secure
+          scheme: https
+          permanent: true
 
   web-secure:
     # https
@@ -20,35 +21,29 @@ entryPoints:
 
 certificatesResolvers:
   letsencrypt:
-    # https://doc.traefik.io/traefik/https/acme/#lets-encrypt
     acme:
-      email: 'admin@doi-portal.example.com'
+      email: miiihaaas@gmail.com
       storage: /etc/traefik/acme/acme.json
-      # https://doc.traefik.io/traefik/https/acme/#httpchallenge
       httpChallenge:
         entryPoint: web
 
 http:
   routers:
     web-secure-router:
-      rule: 'Host(`doi-portal.example.com`)'
+      rule: 'Host(`publikacije.doi.rs`)'
       entryPoints:
         - web-secure
       middlewares:
         - csrf
       service: django
       tls:
-        # https://doc.traefik.io/traefik/routing/routers/#certresolver
         certResolver: letsencrypt
 
-    flower-secure-router:
-      rule: 'Host(`doi-portal.example.com`)'
+    flower-router:
+      rule: 'PathPrefix(`/`)'
       entryPoints:
         - flower
       service: flower
-      tls:
-        # https://doc.traefik.io/traefik/master/routing/routers/#certresolver
-        certResolver: letsencrypt
 
   middlewares:
     csrf:

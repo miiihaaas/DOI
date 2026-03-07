@@ -16,6 +16,8 @@ Tests cover:
 """
 
 import pytest
+from django.core.files.base import ContentFile
+from django.test import override_settings
 from django.urls import reverse
 
 from doi_portal.articles.models import ArticleStatus, PdfStatus
@@ -27,6 +29,12 @@ from doi_portal.publications.tests.factories import (
     PublicationFactory,
     PublisherFactory,
 )
+
+
+@pytest.fixture(autouse=True)
+def _media_root(tmp_path, settings):
+    """Use a temporary directory for MEDIA_ROOT so test files are cleaned up."""
+    settings.MEDIA_ROOT = str(tmp_path / "media")
 
 
 def _create_article(status=ArticleStatus.PUBLISHED, has_pdf=False, doi_suffix="pdf-test-001", title=None):
@@ -43,8 +51,11 @@ def _create_article(status=ArticleStatus.PUBLISHED, has_pdf=False, doi_suffix="p
         kwargs["title"] = title
     article = ArticleFactory(**kwargs)
     if has_pdf:
-        article.pdf_file = "articles/pdfs/test.pdf"
-        article.save()
+        article.pdf_file.save(
+            "test.pdf",
+            ContentFile(b"%PDF-1.4 test content"),
+            save=True,
+        )
     return article
 
 
@@ -57,13 +68,14 @@ def _create_article(status=ArticleStatus.PUBLISHED, has_pdf=False, doi_suffix="p
 class TestArticlePdfDownloadView:
     """Tests for article_pdf_download view."""
 
-    def test_download_redirects_to_pdf_url(self, client):
-        """6.1: Download view returns redirect to PDF URL for PUBLISHED article with PDF."""
+    def test_download_serves_pdf_file(self, client):
+        """6.1: Download view returns PDF FileResponse for PUBLISHED article with PDF."""
         article = _create_article(status=ArticleStatus.PUBLISHED, has_pdf=True)
         url = reverse("portal-articles:article-pdf-download", kwargs={"pk": article.pk})
         response = client.get(url)
-        assert response.status_code == 302
-        assert "articles/pdfs/test.pdf" in response.url
+        assert response.status_code == 200
+        assert response["Content-Type"] == "application/pdf"
+        assert "attachment" in response["Content-Disposition"]
 
     def test_download_404_without_pdf(self, client):
         """6.2: Download view returns 404 for article without PDF."""
@@ -97,10 +109,9 @@ class TestArticlePdfDownloadView:
         article = _create_article(status=ArticleStatus.PUBLISHED, has_pdf=True, doi_suffix="pdf-noauth-001")
         url = reverse("portal-articles:article-pdf-download", kwargs={"pk": article.pk})
         response = client.get(url)
-        # Should redirect to PDF, not redirect to login
-        assert response.status_code == 302
-        assert "login" not in response.url
-        assert "account" not in response.url
+        # Should serve PDF directly, not redirect to login
+        assert response.status_code == 200
+        assert response["Content-Type"] == "application/pdf"
 
     def test_download_rejects_post_method(self, client):
         """Security: Download view rejects POST requests (only GET allowed)."""
