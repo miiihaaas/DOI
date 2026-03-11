@@ -33,6 +33,9 @@ class ArticleForm(forms.ModelForm):
             "issue",
             "title",
             "subtitle",
+            "original_language_title",
+            "original_language_subtitle",
+            "original_language_title_language",
             "abstract",
             "keywords",
             "doi_suffix",
@@ -96,7 +99,24 @@ class ArticleForm(forms.ModelForm):
             "article_number": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "placeholder": "Za online-only članke",
+                    "placeholder": "e12345",
+                }
+            ),
+            "original_language_title": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Naslov na originalnom jeziku",
+                }
+            ),
+            "original_language_subtitle": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Podnaslov na originalnom jeziku",
+                }
+            ),
+            "original_language_title_language": forms.Select(
+                attrs={
+                    "class": "form-select",
                 }
             ),
             "language": forms.Select(
@@ -153,6 +173,10 @@ class ArticleForm(forms.ModelForm):
         }
         help_texts = {
             "language": "Jezik članka. Može se razlikovati od jezika publikacije.",
+            "article_number": _("Alternativa za stranice kod članaka bez paginacije (npr. e12345)"),
+            "original_language_title": _("Naslov na jeziku članka (opciono)"),
+            "original_language_subtitle": _("Podnaslov na jeziku članka (opciono)"),
+            "original_language_title_language": _("Jezik originalnog naslova za Crossref registraciju"),
         }
         labels = {
             "issue": _("Izdanje"),
@@ -164,6 +188,9 @@ class ArticleForm(forms.ModelForm):
             "first_page": _("Prva stranica"),
             "last_page": _("Poslednja stranica"),
             "article_number": _("Broj članka"),
+            "original_language_title": _("Naslov na originalnom jeziku"),
+            "original_language_subtitle": _("Podnaslov na originalnom jeziku"),
+            "original_language_title_language": _("Jezik originalnog naslova"),
             "language": _("Jezik"),
             "publication_type": _("Tip sadržaja"),
             "license_url": _("URL licence"),
@@ -192,6 +219,10 @@ class ArticleForm(forms.ModelForm):
                     self.fields["language"].widget.choices = [
                         (current_lang, f"{current_lang}")
                     ] + list(LANGUAGE_CHOICES)
+        # Set choices for original_language_title_language field
+        self.fields["original_language_title_language"].widget.choices = [
+            ("", "---------")
+        ] + list(LANGUAGE_CHOICES)
         if user:
             if user.is_superuser or user.groups.filter(
                 name__in=["Administrator", "Superadmin"]
@@ -220,6 +251,15 @@ class ArticleForm(forms.ModelForm):
             )
 
         return cleaned_data
+
+    def clean_original_language_title_language(self):
+        """Validate original_language_title_language is in allowed choices."""
+        lang = self.cleaned_data.get("original_language_title_language", "")
+        if lang:
+            valid_codes = [code for code, _ in LANGUAGE_CHOICES]
+            if lang not in valid_codes:
+                raise ValidationError(_("Izaberite jednu od ponuđenih vrednosti."))
+        return lang
 
     def clean_language(self):
         """Validate language code is in allowed choices."""

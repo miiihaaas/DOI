@@ -56,6 +56,12 @@
           {% if article.subtitle %}
           <subtitle>{{ article.subtitle }}</subtitle>
           {% endif %}
+          {% if article.original_language_title %}
+          <original_language_title{% if article.original_language_title_language %} language="{{ article.original_language_title_language|xml_escape }}"{% endif %}>{{ article.original_language_title }}</original_language_title>
+          {% if article.original_language_subtitle %}
+          <subtitle>{{ article.original_language_subtitle }}</subtitle>
+          {% endif %}
+          {% endif %}
         </titles>
         {% if article.authors %}
         <contributors>

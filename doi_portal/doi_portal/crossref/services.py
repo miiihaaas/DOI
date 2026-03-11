@@ -295,6 +295,9 @@ class CrossrefService:
                 "pk": article.pk,
                 "title": article.title,
                 "subtitle": article.subtitle,
+                "original_language_title": article.original_language_title,
+                "original_language_subtitle": article.original_language_subtitle,
+                "original_language_title_language": article.original_language_title_language,
                 "abstract": article.abstract,
                 "doi_suffix": article.doi_suffix,
                 "first_page": article.first_page,
@@ -682,6 +685,29 @@ class PreValidationService:
             result.add_warning(
                 message=f"Eksterni URL je uključen ali landing URL nije popunjen (članak: {article.title or article.pk})",
                 field_name="external_landing_url",
+                article_id=article.pk,
+                fix_url=f"/admin/articles/article/{article.pk}/change/",
+            )
+
+        # Validate original language title consistency
+        if article.original_language_title and not article.original_language_title_language:
+            result.add_warning(
+                message=f"Naslov na originalnom jeziku je popunjen ali jezik nije izabran (članak: {article.title or article.pk})",
+                field_name="original_language_title_language",
+                article_id=article.pk,
+                fix_url=f"/admin/articles/article/{article.pk}/change/",
+            )
+        if article.original_language_title_language and not article.original_language_title:
+            result.add_warning(
+                message=f"Jezik originalnog naslova je izabran ali naslov nije popunjen (članak: {article.title or article.pk})",
+                field_name="original_language_title",
+                article_id=article.pk,
+                fix_url=f"/admin/articles/article/{article.pk}/change/",
+            )
+        if article.original_language_subtitle and not article.original_language_title:
+            result.add_warning(
+                message=f"Podnaslov na originalnom jeziku je popunjen ali naslov nije (članak: {article.title or article.pk})",
+                field_name="original_language_title",
                 article_id=article.pk,
                 fix_url=f"/admin/articles/article/{article.pk}/change/",
             )

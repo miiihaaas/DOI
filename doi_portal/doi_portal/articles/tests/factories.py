@@ -40,6 +40,9 @@ class ArticleFactory(DjangoModelFactory):
     issue = factory.SubFactory(IssueFactory)
     created_by = factory.SubFactory(UserFactory)
     language = "sr"
+    original_language_title = ""
+    original_language_subtitle = ""
+    original_language_title_language = ""
     publication_type = ArticleContentType.FULL_TEXT
 
 

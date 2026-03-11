@@ -579,3 +579,187 @@ class TestGenerateXMLView:
 
         content = response.content.decode()
         assert "uspešno" in content.lower() or "success" in content.lower()
+
+
+# =============================================================================
+# Original Language Title - XML Generation Tests
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestOriginalLanguageTitleXML:
+    """Tests for Crossref XML generation with original_language_title fields."""
+
+    def test_xml_without_original_language_title(self, valid_journal_issue):
+        """XML without original_language_title has only title and optional subtitle in <titles>."""
+        from doi_portal.crossref.services import CrossrefService
+
+        service = CrossrefService()
+        success, xml = service.generate_and_store_xml(valid_journal_issue)
+
+        assert success is True
+        assert "<original_language_title" not in xml
+
+    def test_xml_with_original_language_title_and_language(self, valid_journal_issue):
+        """XML with original_language_title includes <original_language_title language='sr'>."""
+        article = valid_journal_issue.articles.first()
+        article.original_language_title = "Srpski naslov"
+        article.original_language_title_language = "sr"
+        article.save()
+
+        from doi_portal.crossref.services import CrossrefService
+
+        service = CrossrefService()
+        success, xml = service.generate_and_store_xml(valid_journal_issue)
+
+        assert success is True
+        assert '<original_language_title language="sr">Srpski naslov</original_language_title>' in xml
+
+    def test_xml_with_original_language_title_without_language(self, valid_journal_issue):
+        """XML with original_language_title but no language omits language attribute."""
+        article = valid_journal_issue.articles.first()
+        article.original_language_title = "Naslov bez jezika"
+        article.original_language_title_language = ""
+        article.save()
+
+        from doi_portal.crossref.services import CrossrefService
+
+        service = CrossrefService()
+        success, xml = service.generate_and_store_xml(valid_journal_issue)
+
+        assert success is True
+        assert "<original_language_title>Naslov bez jezika</original_language_title>" in xml
+        assert 'language=""' not in xml
+
+    def test_xml_with_original_language_title_and_subtitle(self, valid_journal_issue):
+        """XML with original_language_title and subtitle has two <subtitle> elements."""
+        article = valid_journal_issue.articles.first()
+        article.subtitle = "English subtitle"
+        article.original_language_title = "Srpski naslov"
+        article.original_language_subtitle = "Srpski podnaslov"
+        article.original_language_title_language = "sr"
+        article.save()
+
+        from doi_portal.crossref.services import CrossrefService
+
+        service = CrossrefService()
+        success, xml = service.generate_and_store_xml(valid_journal_issue)
+
+        assert success is True
+        # First subtitle (for main title)
+        assert "<subtitle>English subtitle</subtitle>" in xml
+        # Second subtitle (for original language title)
+        assert "<subtitle>Srpski podnaslov</subtitle>" in xml
+        # Correct order: title -> subtitle -> original_language_title -> subtitle
+        title_pos = xml.index("<title>")
+        first_subtitle_pos = xml.index("<subtitle>English subtitle</subtitle>")
+        olt_pos = xml.index("<original_language_title")
+        second_subtitle_pos = xml.index("<subtitle>Srpski podnaslov</subtitle>")
+        assert title_pos < first_subtitle_pos < olt_pos < second_subtitle_pos
+
+    def test_xml_escapes_special_characters_in_original_language_title(self, valid_journal_issue):
+        """XML properly escapes special characters via Jinja2 autoescape."""
+        article = valid_journal_issue.articles.first()
+        article.original_language_title = "Naslov sa <tag> & entitetom"
+        article.original_language_title_language = "sr"
+        article.save()
+
+        from doi_portal.crossref.services import CrossrefService
+
+        service = CrossrefService()
+        success, xml = service.generate_and_store_xml(valid_journal_issue)
+
+        assert success is True
+        # Jinja2 autoescape should handle XML special characters
+        olt_section = xml.split("<original_language_title")[1].split("</original_language_title>")[0]
+        assert "&lt;tag&gt;" in olt_section
+        assert "&amp;" in olt_section
+        # Raw < should not appear in element content
+        assert "<tag>" not in olt_section
+
+    def test_xml_conference_with_original_language_title(self, valid_conference_issue):
+        """Conference XML includes original_language_title in <titles>."""
+        article = valid_conference_issue.articles.first()
+        article.original_language_title = "Konferencijski naslov"
+        article.original_language_title_language = "sr"
+        article.save()
+
+        from doi_portal.crossref.services import CrossrefService
+
+        service = CrossrefService()
+        success, xml = service.generate_and_store_xml(valid_conference_issue)
+
+        assert success is True
+        assert '<original_language_title language="sr">Konferencijski naslov</original_language_title>' in xml
+
+    def test_xml_book_with_original_language_title(self, valid_book_issue):
+        """Book XML includes original_language_title in <titles>."""
+        article = valid_book_issue.articles.first()
+        article.original_language_title = "Naslov poglavlja"
+        article.original_language_title_language = "sr"
+        article.save()
+
+        from doi_portal.crossref.services import CrossrefService
+
+        service = CrossrefService()
+        success, xml = service.generate_and_store_xml(valid_book_issue)
+
+        assert success is True
+        assert '<original_language_title language="sr">Naslov poglavlja</original_language_title>' in xml
+
+
+# =============================================================================
+# Original Language Title - PreValidation Tests
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestOriginalLanguageTitlePreValidation:
+    """Tests for PreValidationService with original_language_title fields."""
+
+    def test_warning_when_title_without_language(self, valid_journal_issue):
+        """Warning when original_language_title is set but language is not."""
+        from doi_portal.crossref.services import PreValidationService
+
+        article = valid_journal_issue.articles.first()
+        article.original_language_title = "Naslov bez jezika"
+        article.original_language_title_language = ""
+        article.save()
+
+        service = PreValidationService()
+        result = service.validate_issue(valid_journal_issue)
+
+        warning_messages = [w.message for w in result.warnings]
+        assert any("jezik nije izabran" in msg for msg in warning_messages)
+
+    def test_warning_when_subtitle_without_title(self, valid_journal_issue):
+        """Warning when original_language_subtitle is set but title is not."""
+        from doi_portal.crossref.services import PreValidationService
+
+        article = valid_journal_issue.articles.first()
+        article.original_language_subtitle = "Podnaslov bez naslova"
+        article.original_language_title = ""
+        article.save()
+
+        service = PreValidationService()
+        result = service.validate_issue(valid_journal_issue)
+
+        warning_messages = [w.message for w in result.warnings]
+        assert any("naslov nije" in msg.lower() for msg in warning_messages)
+
+    def test_no_warning_when_consistent(self, valid_journal_issue):
+        """No warning when all original_language fields are consistent."""
+        from doi_portal.crossref.services import PreValidationService
+
+        article = valid_journal_issue.articles.first()
+        article.original_language_title = "Srpski naslov"
+        article.original_language_subtitle = "Srpski podnaslov"
+        article.original_language_title_language = "sr"
+        article.save()
+
+        service = PreValidationService()
+        result = service.validate_issue(valid_journal_issue)
+
+        warning_messages = [w.message for w in result.warnings]
+        assert not any("jezik nije izabran" in msg for msg in warning_messages)
+        assert not any("naslov nije" in msg.lower() for msg in warning_messages)

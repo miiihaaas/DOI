@@ -69,6 +69,7 @@
                     <div class="mb-3">
                         <label for="id_title" class="form-label">Naslov <span class="text-danger">*</span></label>
                         {{ form.title }}
+                        <div class="form-text">Naslov koji će se prikazivati u međunarodnim citatnim bazama</div>
                         {% if form.title.errors %}
                         <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
                         {% endif %}
@@ -80,6 +81,34 @@
                         {% if form.subtitle.errors %}
                         <div class="invalid-feedback d-block">{{ form.subtitle.errors.0 }}</div>
                         {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_original_language_title" class="form-label">Naslov na originalnom jeziku</label>
+                        {{ form.original_language_title }}
+                        <div class="form-text">Naslov na jeziku članka (opciono)</div>
+                        {% if form.original_language_title.errors %}
+                        <div class="invalid-feedback d-block">{{ form.original_language_title.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="id_original_language_subtitle" class="form-label">Podnaslov na originalnom jeziku</label>
+                            {{ form.original_language_subtitle }}
+                            <div class="form-text">Podnaslov na jeziku članka (opciono)</div>
+                            {% if form.original_language_subtitle.errors %}
+                            <div class="invalid-feedback d-block">{{ form.original_language_subtitle.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_original_language_title_language" class="form-label">Jezik originalnog naslova</label>
+                            {{ form.original_language_title_language }}
+                            <div class="form-text">Jezik originalnog naslova za Crossref registraciju</div>
+                            {% if form.original_language_title_language.errors %}
+                            <div class="invalid-feedback d-block">{{ form.original_language_title_language.errors.0 }}</div>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <!-- Abstract with character count -->
@@ -122,25 +151,46 @@
                     <!-- Page/Article Number Fields -->
                     <h6 class="text-muted mb-3 border-bottom pb-2">Stranice i identifikacija</h6>
 
-                    <div class="row">
+                    <div class="row" x-data="paginationToggle()">
                         <div class="col-md-3 mb-3">
                             <label for="id_first_page" class="form-label">Prva stranica</label>
-                            {{ form.first_page }}
+                            <input type="text" name="first_page" id="id_first_page"
+                                   class="form-control{% if form.first_page.errors %} is-invalid{% endif %}"
+                                   placeholder="npr. 1"
+                                   maxlength="20"
+                                   value="{{ form.first_page.value|default:'' }}"
+                                   @change="onPageChange()"
+                                   :class="{ 'pagination-inactive': hasArticleNumber }"
+                                   :readonly="hasArticleNumber">
                             {% if form.first_page.errors %}
                             <div class="invalid-feedback d-block">{{ form.first_page.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="id_last_page" class="form-label">Poslednja stranica</label>
-                            {{ form.last_page }}
+                            <input type="text" name="last_page" id="id_last_page"
+                                   class="form-control{% if form.last_page.errors %} is-invalid{% endif %}"
+                                   placeholder="npr. 15"
+                                   maxlength="20"
+                                   value="{{ form.last_page.value|default:'' }}"
+                                   @change="onPageChange()"
+                                   :class="{ 'pagination-inactive': hasArticleNumber }"
+                                   :readonly="hasArticleNumber">
                             {% if form.last_page.errors %}
                             <div class="invalid-feedback d-block">{{ form.last_page.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="id_article_number" class="form-label">Broj članka</label>
-                            {{ form.article_number }}
-                            <div class="form-text">Za online-only članke</div>
+                            <input type="text" name="article_number" id="id_article_number"
+                                   class="form-control{% if form.article_number.errors %} is-invalid{% endif %}"
+                                   placeholder="e12345"
+                                   maxlength="50"
+                                   value="{{ form.article_number.value|default:'' }}"
+                                   @change="onArticleNumberChange()"
+                                   :class="{ 'pagination-inactive': hasPages }"
+                                   :readonly="hasPages">
+                            <div class="form-text">Alternativa za stranice kod članaka bez paginacije</div>
                             {% if form.article_number.errors %}
                             <div class="invalid-feedback d-block">{{ form.article_number.errors.0 }}</div>
                             {% endif %}
@@ -207,7 +257,55 @@
                     </div>
                 </form>
 
+                <style>
+                    .pagination-inactive {
+                        opacity: 0.5;
+                        background-color: #e9ecef !important;
+                    }
+                </style>
                 <script>
+                    function paginationToggle() {
+                        return {
+                            hasPages: false,
+                            hasArticleNumber: false,
+                            init() {
+                                const fp = document.getElementById('id_first_page');
+                                const lp = document.getElementById('id_last_page');
+                                const an = document.getElementById('id_article_number');
+                                this.hasPages = !!(fp?.value || lp?.value);
+                                this.hasArticleNumber = !!an?.value;
+                            },
+                            onPageChange() {
+                                const fp = document.getElementById('id_first_page');
+                                const lp = document.getElementById('id_last_page');
+                                this.hasPages = !!(fp?.value || lp?.value);
+                                if (this.hasPages) {
+                                    const an = document.getElementById('id_article_number');
+                                    if (an && an.value) {
+                                        an.value = '';
+                                        an.dispatchEvent(new Event('change', { bubbles: true }));
+                                    }
+                                    this.hasArticleNumber = false;
+                                }
+                            },
+                            onArticleNumberChange() {
+                                const an = document.getElementById('id_article_number');
+                                this.hasArticleNumber = !!an?.value;
+                                if (this.hasArticleNumber) {
+                                    const fp = document.getElementById('id_first_page');
+                                    const lp = document.getElementById('id_last_page');
+                                    [fp, lp].forEach(el => {
+                                        if (el && el.value) {
+                                            el.value = '';
+                                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                                        }
+                                    });
+                                    this.hasPages = false;
+                                }
+                            }
+                        }
+                    }
+
                     function keywordsInput() {
                         return {
                             keywords: [],

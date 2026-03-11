@@ -387,3 +387,58 @@ class TestIssueArticleCountWithArticles:
         ArticleFactory(issue=issue, doi_suffix="del.002")
         article1.soft_delete()
         assert issue.article_count == 1
+
+
+# =============================================================================
+# Original Language Title Fields Tests
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestArticleOriginalLanguageTitleFields:
+    """Test original_language_title, original_language_subtitle, original_language_title_language fields."""
+
+    def test_create_article_with_original_language_title(self):
+        """Article can be created with original_language_title fields."""
+        article = ArticleFactory(
+            original_language_title="Originalni naslov",
+            original_language_subtitle="Originalni podnaslov",
+            original_language_title_language="sr",
+        )
+        assert article.pk is not None
+        assert article.original_language_title == "Originalni naslov"
+        assert article.original_language_subtitle == "Originalni podnaslov"
+        assert article.original_language_title_language == "sr"
+
+    def test_default_values_are_empty_strings(self):
+        """Default values for original_language fields are empty strings (not NULL)."""
+        article = ArticleFactory()
+        assert article.original_language_title == ""
+        assert article.original_language_subtitle == ""
+        assert article.original_language_title_language == ""
+
+    def test_original_language_title_max_length(self):
+        """original_language_title max_length is 500."""
+        field = Article._meta.get_field("original_language_title")
+        assert field.max_length == 500
+
+    def test_original_language_subtitle_max_length(self):
+        """original_language_subtitle max_length is 500."""
+        field = Article._meta.get_field("original_language_subtitle")
+        assert field.max_length == 500
+
+    def test_original_language_title_language_max_length(self):
+        """original_language_title_language max_length is 10."""
+        field = Article._meta.get_field("original_language_title_language")
+        assert field.max_length == 10
+
+    def test_fields_are_blank_not_null(self):
+        """All three fields allow blank but not null."""
+        for field_name in [
+            "original_language_title",
+            "original_language_subtitle",
+            "original_language_title_language",
+        ]:
+            field = Article._meta.get_field(field_name)
+            assert field.blank is True
+            assert field.null is False

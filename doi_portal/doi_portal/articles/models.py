@@ -143,12 +143,30 @@ class Article(models.Model):
         _("Broj članka"),
         max_length=50,
         blank=True,
-        help_text=_("Za online-only članke"),
+        help_text=_("Alternativa za stranice kod članaka bez paginacije (npr. e12345)"),
     )
     language = models.CharField(
         _("Jezik"),
         max_length=10,
         default="sr",
+    )
+    original_language_title = models.CharField(
+        _("Naslov na originalnom jeziku"),
+        max_length=500,
+        blank=True,
+        help_text=_("Naslov na jeziku članka (opciono)"),
+    )
+    original_language_subtitle = models.CharField(
+        _("Podnaslov na originalnom jeziku"),
+        max_length=500,
+        blank=True,
+        help_text=_("Podnaslov na jeziku članka (opciono)"),
+    )
+    original_language_title_language = models.CharField(
+        _("Jezik originalnog naslova"),
+        max_length=10,
+        blank=True,
+        help_text=_("ISO 639 jezički kod za originalni naslov (npr. sr, en)"),
     )
     publication_type = models.CharField(
         _("Tip sadržaja"),
