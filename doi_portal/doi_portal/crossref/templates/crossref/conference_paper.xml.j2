@@ -3,6 +3,7 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xmlns:jats="http://www.ncbi.nlm.nih.gov/JATS1"
            xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
+           xmlns:fr="http://www.crossref.org/fundref.xsd"
            xsi:schemaLocation="http://www.crossref.org/schema/5.4.0 https://www.crossref.org/schemas/crossref5.4.0.xsd"
            version="5.4.0">
   <head>
@@ -59,6 +60,7 @@
       </proceedings_metadata>
       {% for article in articles %}
       <conference_paper publication_type="{{ article.publication_type }}">
+        {# PAŽNJA: title/subtitle sadrže face markup — NE dodavati xml_escape filter, Markup() wrapper upravlja escape-om #}
         <titles>
           <title>{{ article.title }}</title>
           {% if article.subtitle %}
@@ -101,6 +103,7 @@
           {% endfor %}
         </contributors>
         {% endif %}
+        {# PAŽNJA: abstract sadrži JATS inline markup — NE dodavati xml_escape filter #}
         {% if article.abstract %}
         <jats:abstract>
           <jats:p>{{ article.abstract }}</jats:p>
@@ -134,6 +137,21 @@
           {% endif %}
           <ai:license_ref{% if article.license_applies_to %} applies_to="{{ article.license_applies_to }}"{% endif %}>{{ article.license_url }}</ai:license_ref>
         </ai:program>
+        {% endif %}
+        {% if article.fundings %}
+        <fr:program name="fundref">
+          {% for funding in article.fundings %}
+          <fr:assertion name="fundgroup">
+            <fr:assertion name="funder_name">{{ funding.funder_name }}</fr:assertion>
+            {% if funding.funder_doi %}
+            <fr:assertion name="funder_identifier">{{ funding.funder_doi }}</fr:assertion>
+            {% endif %}
+            {% if funding.award_number %}
+            <fr:assertion name="award_number">{{ funding.award_number }}</fr:assertion>
+            {% endif %}
+          </fr:assertion>
+          {% endfor %}
+        </fr:program>
         {% endif %}
         <doi_data>
           <doi>{{ publisher.doi_prefix }}/{{ article.doi_suffix }}</doi>

@@ -11,9 +11,12 @@ Story 3.7: Article Publishing & Withdrawal - publish/withdraw FBVs with admin ro
 """
 
 import json
+import logging
 import re
 
 from django.contrib import messages
+
+logger = logging.getLogger(__name__)
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.validators import URLValidator
@@ -36,10 +39,11 @@ from doi_portal.publishers.mixins import (
     PublisherScopedMixin,
 )
 
-from .forms import AffiliationForm, ArticleForm, AuthorForm
+from .forms import AffiliationForm, ArticleFundingForm, ArticleForm, AuthorForm
 from .models import (
     Affiliation,
     Article,
+    ArticleFunding,
     ArticleStatus,
     Author,
     AuthorSequence,
@@ -340,6 +344,7 @@ class ArticleUpdateView(PublisherScopedEditMixin, UpdateView):
         context["is_edit"] = True
         # Prefetch authors with affiliations to avoid N+1 queries (Story 3.2)
         context["authors"] = self.object.authors.prefetch_related("affiliations").all()
+        context["fundings"] = self.object.fundings.all()
         return context
 
     def form_valid(self, form):
@@ -927,13 +932,16 @@ def article_autosave(request, pk):
         "title", "subtitle", "abstract", "doi_suffix",
         "first_page", "last_page", "article_number", "language",
         "publication_type", "license_url", "license_applies_to",
+        "original_language_title", "original_language_subtitle",
+        "original_language_title_language",
+        "external_landing_url", "external_pdf_url",
     ]
     url_validator = URLValidator()
     for field_name in text_fields:
         if field_name in request.POST:
             value = request.POST[field_name]
             # Validate URL fields before saving
-            if field_name == "license_url" and value:
+            if field_name in ("license_url", "external_landing_url", "external_pdf_url") and value:
                 try:
                     url_validator(value)
                 except ValidationError:
@@ -942,16 +950,18 @@ def article_autosave(request, pk):
             setattr(article, field_name, value)
             update_fields.append(field_name)
 
-    # Boolean field
-    if "free_to_read" in request.POST:
-        article.free_to_read = request.POST.get("free_to_read") in (
-            "on", "true", "True", "1",
-        )
-        update_fields.append("free_to_read")
-    elif any(k for k in request.POST if k != "csrfmiddlewaretoken"):
-        # Checkbox not present means unchecked (only if other fields submitted)
-        article.free_to_read = False
-        update_fields.append("free_to_read")
+    # Boolean fields
+    boolean_fields = ["free_to_read", "use_external_resource"]
+    for bool_field in boolean_fields:
+        if bool_field in request.POST:
+            setattr(article, bool_field, request.POST.get(bool_field) in (
+                "on", "true", "True", "1",
+            ))
+            update_fields.append(bool_field)
+        elif any(k for k in request.POST if k != "csrfmiddlewaretoken"):
+            # Checkbox not present means unchecked (only if other fields submitted)
+            setattr(article, bool_field, False)
+            update_fields.append(bool_field)
 
     # Date field
     if "free_to_read_start_date" in request.POST:
@@ -1275,3 +1285,219 @@ def article_withdraw(request, pk):
         messages.error(request, str(e))
 
     return HttpResponseRedirect(reverse("articles:detail", kwargs={"pk": pk}))
+
+
+# =============================================================================
+# API Proxy endpoints for ROR and Funder Registry
+# =============================================================================
+
+
+@login_required
+@require_GET
+def ror_search(request):
+    """Proxy search to ROR API for institution autocomplete."""
+    import requests as http_requests
+
+    from django.core.cache import cache
+    from django.http import JsonResponse
+
+    query = request.GET.get("q", "").strip()
+    if len(query) < 2:
+        return JsonResponse({"items": []})
+
+    cache_key = f"ror_search:{query.lower()}"
+    cached = cache.get(cache_key)
+    if cached:
+        return JsonResponse(cached)
+
+    try:
+        response = http_requests.get(
+            "https://api.ror.org/v2/organizations",
+            params={"query": query},
+            timeout=5,
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        results = []
+        for item in data.get("items", [])[:10]:
+            name = ""
+            for n in item.get("names", []):
+                if "ror_display" in n.get("types", []):
+                    name = n["value"]
+                    break
+            if not name:
+                name = item.get("names", [{}])[0].get("value", "")
+
+            location = item.get("locations", [{}])[0].get("geonames_details", {})
+            results.append({
+                "id": item.get("id", ""),
+                "name": name,
+                "city": location.get("name", ""),
+                "country": location.get("country_name", ""),
+            })
+
+        result = {"items": results}
+        cache.set(cache_key, result, 3600)
+        return JsonResponse(result)
+    except Exception:
+        return JsonResponse({"items": []})
+
+
+@login_required
+@require_GET
+def funder_search(request):
+    """Proxy search to Crossref Funder Registry for autocomplete."""
+    import requests as http_requests
+
+    from django.core.cache import cache
+    from django.http import JsonResponse
+
+    query = request.GET.get("q", "").strip()
+    if len(query) < 2:
+        return JsonResponse({"items": []})
+
+    cache_key = f"funder_search:{query.lower()}"
+    cached = cache.get(cache_key)
+    if cached:
+        return JsonResponse(cached)
+
+    try:
+        response = http_requests.get(
+            "https://api.crossref.org/funders",
+            params={"query": query, "rows": 10},
+            headers={"User-Agent": "DOIPortal/1.0 (mailto:admin@publikacije.doi.rs)"},
+            timeout=5,
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        results = []
+        for item in data.get("message", {}).get("items", []):
+            results.append({
+                "name": item.get("name", ""),
+                "doi": item.get("uri", ""),
+                "location": item.get("location", ""),
+                "alt_names": item.get("alt-names", [])[:2],
+            })
+
+        result = {"items": results}
+        cache.set(cache_key, result, 3600)
+        return JsonResponse(result)
+    except Exception:
+        return JsonResponse({"items": []})
+
+
+# =============================================================================
+# Funding HTMX CRUD views
+# =============================================================================
+
+
+@login_required
+@require_POST
+def funding_add(request, article_pk):
+    """Add funding to article via HTMX POST."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    form = ArticleFundingForm(request.POST)
+    if form.is_valid():
+        funding = form.save(commit=False)
+        funding.article = article
+        max_order = article.fundings.aggregate(
+            max_order=models.Max("order")
+        )["max_order"] or 0
+        funding.order = max_order + 1
+        funding.save()
+
+        fundings = article.fundings.all()
+        return render(request, "articles/partials/_funding_list.html", {
+            "article": article,
+            "fundings": fundings,
+        })
+
+    # Return form with errors — HTMX retargets to form container
+    response = render(request, "articles/partials/_funding_form.html", {
+        "article": article,
+        "funding_form": form,
+    })
+    response["HX-Retarget"] = "#funding-form-container"
+    response["HX-Reswap"] = "innerHTML"
+    return response
+
+
+@login_required
+@require_POST
+def funding_delete(request, pk):
+    """Delete funding via HTMX POST."""
+    funding = get_object_or_404(
+        ArticleFunding.objects.select_related(
+            "article", "article__issue",
+            "article__issue__publication",
+            "article__issue__publication__publisher",
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, funding.article)
+
+    article = funding.article
+    funding.delete()
+
+    fundings = article.fundings.all()
+    return render(request, "articles/partials/_funding_list.html", {
+        "article": article,
+        "fundings": fundings,
+    })
+
+
+@login_required
+@require_POST
+def funding_reorder(request, article_pk):
+    """Reorder funding entries via HTMX POST with JSON body."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    try:
+        data = json.loads(request.body)
+        order_list = data.get("order", [])
+        for idx, funding_pk in enumerate(order_list):
+            ArticleFunding.objects.filter(
+                pk=int(funding_pk), article=article
+            ).update(order=idx)
+    except (json.JSONDecodeError, TypeError, ValueError, OverflowError):
+        logger.warning("Invalid funding reorder data for article %s", article_pk)
+
+    fundings = article.fundings.all()
+    return render(request, "articles/partials/_funding_list.html", {
+        "article": article,
+        "fundings": fundings,
+    })
+
+
+@login_required
+@require_GET
+def funding_form_view(request, article_pk):
+    """Return empty funding form for inline editing via HTMX GET."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    form = ArticleFundingForm()
+    return render(request, "articles/partials/_funding_form.html", {
+        "article": article,
+        "funding_form": form,
+    })

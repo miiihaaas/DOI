@@ -28,6 +28,7 @@ __all__ = [
     "Affiliation",
     "Article",
     "ArticleContentType",
+    "ArticleFunding",
     "ArticleStatus",
     "Author",
     "AuthorSequence",
@@ -505,6 +506,16 @@ class Affiliation(models.Model):
         max_length=500,
         blank=True,
     )
+    city = models.CharField(
+        _("Grad"),
+        max_length=255,
+        blank=True,
+    )
+    country = models.CharField(
+        _("Država"),
+        max_length=255,
+        blank=True,
+    )
     order = models.PositiveIntegerField(
         _("Redni broj"),
         default=0,
@@ -519,3 +530,47 @@ class Affiliation(models.Model):
         if self.department:
             return f"{self.department}, {self.institution_name}"
         return self.institution_name
+
+
+class ArticleFunding(models.Model):
+    """Funding/grant information for an article (Crossref FundRef)."""
+
+    article = models.ForeignKey(
+        Article,
+        on_delete=models.CASCADE,
+        related_name="fundings",
+        verbose_name=_("Članak"),
+    )
+    funder_name = models.CharField(
+        _("Naziv finansijera"),
+        max_length=500,
+    )
+    funder_doi = models.URLField(
+        _("Funder Registry DOI"),
+        blank=True,
+        help_text=_("DOI iz Open Funder Registry (npr. https://doi.org/10.13039/501100004564)"),
+    )
+    funder_ror_id = models.URLField(
+        _("Funder ROR ID"),
+        blank=True,
+    )
+    award_number = models.CharField(
+        _("Broj projekta"),
+        max_length=255,
+        blank=True,
+    )
+    order = models.PositiveIntegerField(
+        _("Redosled"),
+        default=0,
+    )
+
+    class Meta:
+        verbose_name = _("Finansiranje")
+        verbose_name_plural = _("Finansiranja")
+        ordering = ["order"]
+
+    def __str__(self) -> str:
+        s = self.funder_name
+        if self.award_number:
+            s += f" — {self.award_number}"
+        return s

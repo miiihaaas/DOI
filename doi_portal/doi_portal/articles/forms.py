@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from doi_portal.core.constants import LANGUAGE_CHOICES
 from doi_portal.issues.models import Issue
 
-from .models import Affiliation, Article, Author
+from .models import Affiliation, Article, ArticleFunding, Author
 
 
 class ArticleForm(forms.ModelForm):
@@ -385,6 +385,8 @@ class AffiliationForm(forms.ModelForm):
             "institution_name",
             "institution_ror_id",
             "department",
+            "city",
+            "country",
         ]
         widgets = {
             "institution_name": forms.TextInput(
@@ -405,9 +407,57 @@ class AffiliationForm(forms.ModelForm):
                     "placeholder": "Departman (opciono)",
                 }
             ),
+            "city": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "npr. Beograd",
+                }
+            ),
+            "country": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "npr. Srbija",
+                }
+            ),
         }
         labels = {
             "institution_name": _("Naziv institucije"),
             "institution_ror_id": _("ROR ID"),
             "department": _("Departman"),
+            "city": _("Grad"),
+            "country": _("Država"),
+        }
+
+
+class ArticleFundingForm(forms.ModelForm):
+    """Form for article funding/grant information."""
+
+    class Meta:
+        model = ArticleFunding
+        fields = ["funder_name", "funder_doi", "funder_ror_id", "award_number"]
+        widgets = {
+            "funder_name": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Naziv finansijera",
+            }),
+            "funder_doi": forms.URLInput(attrs={
+                "class": "form-control",
+                "placeholder": "https://doi.org/10.13039/...",
+                "readonly": "readonly",
+            }),
+            "funder_ror_id": forms.URLInput(attrs={
+                "class": "form-control",
+                "placeholder": "https://ror.org/...",
+                "readonly": "readonly",
+            }),
+            "award_number": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Broj projekta/granta",
+            }),
+        }
+        labels = {
+            "funder_name": _("Naziv finansijera"),
+            "funder_doi": _("Funder DOI"),
+            "funder_ror_id": _("Funder ROR ID"),
+            "award_number": _("Broj projekta"),
         }

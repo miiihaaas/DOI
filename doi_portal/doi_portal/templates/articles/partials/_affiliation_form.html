@@ -14,14 +14,54 @@
             {% csrf_token %}
 
             <div class="row">
-                <div class="col-md-5 mb-2">
+                <div class="col-md-5 mb-2" x-data="autocompleteSearch('{% url 'articles:ror-search' %}')"
+                     @autocomplete-selected.stop="
+                        document.getElementById('id_institution_name').value = $event.detail.name;
+                        document.getElementById('id_institution_ror_id').value = $event.detail.id;
+                        document.getElementById('id_city').value = $event.detail.city;
+                        document.getElementById('id_country').value = $event.detail.country;
+                     ">
                     <label for="id_institution_name" class="form-label">
                         {{ affiliation_form.institution_name.label }} <span class="text-danger">*</span>
                     </label>
-                    {{ affiliation_form.institution_name }}
+                    <div class="position-relative">
+                        {{ affiliation_form.institution_name }}
+                        <div class="position-absolute w-100 bg-white border rounded shadow-sm mt-1"
+                             style="z-index: 1050; max-height: 250px; overflow-y: auto;"
+                             x-show="isOpen" x-cloak
+                             @click.outside="close()">
+                            <template x-for="item in results" :key="item.id">
+                                <div class="px-3 py-2 border-bottom cursor-pointer"
+                                     style="cursor: pointer;"
+                                     @click="select(item)">
+                                    <div class="fw-semibold" x-text="item.name"></div>
+                                    <small class="text-muted" x-text="[item.city, item.country].filter(Boolean).join(', ')"></small>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
                     {% if affiliation_form.institution_name.errors %}
                     <div class="invalid-feedback d-block">{{ affiliation_form.institution_name.errors.0 }}</div>
                     {% endif %}
+                    <script>
+                        // Wire up autocomplete — runs immediately since this partial is HTMX-injected after Alpine boot
+                        (function() {
+                            // Initialize Alpine on dynamically injected x-data elements
+                            document.querySelectorAll('#author-form-container [x-data]').forEach(el => {
+                                if (!el._x_dataStack) Alpine.initTree(el);
+                            });
+                            const nameInput = document.getElementById('id_institution_name');
+                            if (nameInput) {
+                                nameInput.addEventListener('input', (e) => {
+                                    const component = Alpine.$data(nameInput.closest('[x-data]'));
+                                    if (component) {
+                                        component.query = e.target.value;
+                                        component.search();
+                                    }
+                                });
+                            }
+                        })();
+                    </script>
                 </div>
                 <div class="col-md-4 mb-2">
                     <label for="id_institution_ror_id" class="form-label">{{ affiliation_form.institution_ror_id.label }}</label>
@@ -30,6 +70,17 @@
                 <div class="col-md-3 mb-2">
                     <label for="id_department" class="form-label">{{ affiliation_form.department.label }}</label>
                     {{ affiliation_form.department }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <label for="id_city" class="form-label">{{ affiliation_form.city.label }}</label>
+                    {{ affiliation_form.city }}
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label for="id_country" class="form-label">{{ affiliation_form.country.label }}</label>
+                    {{ affiliation_form.country }}
                 </div>
             </div>
 

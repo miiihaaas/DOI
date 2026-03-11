@@ -151,4 +151,28 @@ urlpatterns = [
         views.article_withdraw,
         name="article-withdraw",
     ),
+    # API Proxy endpoints (autocomplete)
+    path("api/ror-search/", views.ror_search, name="ror-search"),
+    path("api/funder-search/", views.funder_search, name="funder-search"),
+    # Funding HTMX endpoints
+    path(
+        "<int:article_pk>/funding/add/",
+        views.funding_add,
+        name="funding-add",
+    ),
+    path(
+        "funding/<int:pk>/delete/",
+        views.funding_delete,
+        name="funding-delete",
+    ),
+    path(
+        "<int:article_pk>/funding/reorder/",
+        views.funding_reorder,
+        name="funding-reorder",
+    ),
+    path(
+        "<int:article_pk>/funding/form/",
+        views.funding_form_view,
+        name="funding-form",
+    ),
 ]

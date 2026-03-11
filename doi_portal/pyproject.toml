@@ -192,4 +192,5 @@ dependencies = [
     "sentry-sdk==2.50.0",
     "django-storages[s3]==1.14.6",
     "django-anymail[mailgun]==14.0",
+    "requests>=2.32.5",
 ]

@@ -7,7 +7,7 @@ Custom Bootstrap 5 views handle the main CRUD operations.
 
 from django.contrib import admin
 
-from .models import Article
+from .models import Article, ArticleFunding
 
 
 @admin.register(Article)
@@ -25,3 +25,11 @@ class ArticleAdmin(admin.ModelAdmin):
         return self.model.all_objects.select_related(
             "issue", "issue__publication", "created_by"
         )
+
+
+@admin.register(ArticleFunding)
+class ArticleFundingAdmin(admin.ModelAdmin):
+    list_display = ("funder_name", "award_number", "article", "order")
+    list_filter = ("funder_name",)
+    search_fields = ("funder_name", "award_number")
+    raw_id_fields = ("article",)

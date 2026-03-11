@@ -124,15 +124,16 @@
                         {% endif %}
                     </div>
 
-                    <!-- Keywords tag input -->
+                    <!-- Keywords tag input with drag-and-drop reordering -->
                     {% if form.instance.pk and form.instance.keywords %}
                     {{ form.instance.keywords|json_script:"initial-keywords" }}
                     {% endif %}
                     <div x-data="keywordsInput()" class="mb-3">
                         <label class="form-label">Ključne reči</label>
-                        <div class="d-flex flex-wrap gap-1 mb-2">
-                            <template x-for="(keyword, index) in keywords" :key="index">
-                                <span class="badge bg-primary d-flex align-items-center gap-1">
+                        <div class="d-flex flex-wrap gap-1 mb-2" x-ref="keywordsList">
+                            <template x-for="(keyword, index) in keywords" :key="keyword + '-' + index">
+                                <span class="badge bg-primary d-flex align-items-center gap-1" :data-index="index">
+                                    <i class="bi bi-grip-vertical keyword-drag-handle"></i>
                                     <span x-text="keyword"></span>
                                     <button type="button" class="btn-close btn-close-white"
                                             @click="removeKeyword(index)" style="font-size: 0.6em;"></button>
@@ -145,7 +146,54 @@
                                    placeholder="Unesite ključnu reč i pritisnite Enter">
                             <button type="button" class="btn btn-outline-secondary" @click="addKeyword()">Dodaj</button>
                         </div>
-                        <input type="hidden" name="keywords" :value="JSON.stringify(keywords)">
+                        <input type="hidden" name="keywords" :value="JSON.stringify(keywords)" x-ref="keywordsHidden">
+                    </div>
+
+                    <!-- Markup Help Section -->
+                    <div class="mb-3">
+                      <a class="text-decoration-none" data-bs-toggle="collapse" href="#markupHelp" role="button" aria-expanded="false">
+                        <i class="bi bi-question-circle me-1"></i>Pomoć za formatiranje teksta
+                      </a>
+                      <div class="collapse" id="markupHelp">
+                        <div class="card card-body mt-2" x-data="markupHelp()">
+                          <h6 class="mb-2">Sintaksa formatiranja</h6>
+                          <table class="table table-sm table-bordered mb-3">
+                            <thead><tr><th>Unos</th><th>Rezultat</th><th>Opis</th></tr></thead>
+                            <tbody>
+                              <tr><td><code>_tekst_</code></td><td><em>tekst</em></td><td>Italic (kurziv)</td></tr>
+                              <tr><td><code>**tekst**</code></td><td><strong>tekst</strong></td><td>Bold (podebljano)</td></tr>
+                              <tr><td><code>~tekst~</code></td><td>X<sub>tekst</sub></td><td>Subscript (indeks dole, npr. H~2~O)</td></tr>
+                              <tr><td><code>^tekst^</code></td><td>X<sup>tekst</sup></td><td>Superscript (indeks gore, npr. x^2^)</td></tr>
+                              <tr><td><code>„tekst"</code></td><td>„tekst"</td><td>Navodnici</td></tr>
+                            </tbody>
+                          </table>
+                          <h6 class="mb-2">Kopiraj specijalne karaktere</h6>
+                          <div class="d-flex flex-wrap gap-2 mb-3">
+                            <template x-for="char in copyChars" :key="char.label">
+                              <button type="button" class="btn btn-outline-secondary btn-sm position-relative"
+                                      @click="copyToClipboard(char.value, char.label)"
+                                      :title="'Kopiraj: ' + char.label">
+                                <template x-if="!copyStatus[char.label]">
+                                  <span><code x-text="char.display"></code> <span class="small text-muted" x-text="char.label"></span></span>
+                                </template>
+                                <template x-if="copyStatus[char.label]">
+                                  <span class="text-success"><i class="bi bi-check"></i> Kopirano</span>
+                                </template>
+                              </button>
+                            </template>
+                          </div>
+                          <h6 class="mb-2">Probaj formatiranje</h6>
+                          <div class="row">
+                            <div class="col-md-6">
+                              <textarea class="form-control form-control-sm" rows="2" x-model="previewInput"
+                                        placeholder="Unesite tekst sa formatiranjem..."></textarea>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="border rounded p-2 bg-light" style="min-height: 58px;" x-html="previewOutput"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Page/Article Number Fields -->
@@ -247,13 +295,16 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between mt-4">
+                    <!-- Floating Action Bubble -->
+                    <div class="floating-action-bubble" aria-label="Akcije za članak" role="toolbar">
+                      <div class="btn-group btn-group-lg shadow-lg" role="group" aria-label="Nazad i sačuvaj">
                         <a href="{% url 'articles:list' %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>Nazad
+                          <i class="bi bi-arrow-left me-1"></i>Nazad
                         </a>
                         <button type="submit" class="btn btn-primary" hx-disinherit="*">
-                            <i class="bi bi-check-lg me-1"></i>{{ submit_text }}
+                          <i class="bi bi-check-lg me-1"></i>{{ submit_text }}
                         </button>
+                      </div>
                     </div>
                 </form>
 
@@ -261,6 +312,45 @@
                     .pagination-inactive {
                         opacity: 0.5;
                         background-color: #e9ecef !important;
+                    }
+                    .keyword-drag-handle { cursor: grab; }
+                    .sortable-ghost { opacity: 0.4; }
+                    .floating-action-bubble {
+                        position: fixed;
+                        bottom: 1.5rem;
+                        right: 1.5rem;
+                        z-index: 1060;
+                    }
+                    @media (max-width: 576px) {
+                        .floating-action-bubble {
+                            bottom: 1rem;
+                            right: 1rem;
+                            left: 1rem;
+                        }
+                        .floating-action-bubble .btn-group {
+                            width: 100%;
+                        }
+                        .floating-action-bubble .btn {
+                            flex: 1;
+                            padding: 0.5rem 0.8rem;
+                            font-size: 0.9rem;
+                        }
+                    }
+                    .floating-action-bubble .btn-group {
+                        border-radius: 50rem;
+                        overflow: hidden;
+                    }
+                    .floating-action-bubble .btn {
+                        border-radius: 0;
+                        padding: 0.6rem 1.2rem;
+                    }
+                    .floating-action-bubble .btn:first-child {
+                        border-top-left-radius: 50rem;
+                        border-bottom-left-radius: 50rem;
+                    }
+                    .floating-action-bubble .btn:last-child {
+                        border-top-right-radius: 50rem;
+                        border-bottom-right-radius: 50rem;
                     }
                 </style>
                 <script>
@@ -310,6 +400,7 @@
                         return {
                             keywords: [],
                             newKeyword: '',
+                            _sortableInstance: null,
                             init() {
                                 // Load existing keywords from json_script tag (safe JSON serialization)
                                 const jsonEl = document.getElementById('initial-keywords');
@@ -323,25 +414,50 @@
                                         this.keywords = [];
                                     }
                                 }
+                                this.initSortable();
+                            },
+                            _triggerAutoSave() {
+                                if (this.$refs.keywordsHidden) {
+                                    this.$refs.keywordsHidden.dispatchEvent(new Event('change', { bubbles: true }));
+                                }
                             },
                             addKeyword() {
                                 const trimmed = this.newKeyword.trim();
                                 if (trimmed && !this.keywords.includes(trimmed)) {
                                     this.keywords.push(trimmed);
-                                    // Trigger auto-save by dispatching change event on hidden input
                                     this.$nextTick(() => {
-                                        const hidden = document.querySelector('input[name="keywords"]');
-                                        if (hidden) hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                                        this._triggerAutoSave();
+                                        this.initSortable();
                                     });
                                 }
                                 this.newKeyword = '';
                             },
                             removeKeyword(index) {
                                 this.keywords.splice(index, 1);
-                                // Trigger auto-save by dispatching change event on hidden input
                                 this.$nextTick(() => {
-                                    const hidden = document.querySelector('input[name="keywords"]');
-                                    if (hidden) hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                                    this._triggerAutoSave();
+                                });
+                            },
+                            initSortable() {
+                                this.$nextTick(() => {
+                                    if (this._sortableInstance) {
+                                        this._sortableInstance.destroy();
+                                        this._sortableInstance = null;
+                                    }
+                                    if (this.$refs.keywordsList && typeof Sortable !== 'undefined') {
+                                        this._sortableInstance = Sortable.create(this.$refs.keywordsList, {
+                                            animation: 150,
+                                            handle: '.keyword-drag-handle',
+                                            ghostClass: 'sortable-ghost',
+                                            onEnd: (evt) => {
+                                                const item = this.keywords.splice(evt.oldIndex, 1)[0];
+                                                this.keywords.splice(evt.newIndex, 0, item);
+                                                this.$nextTick(() => {
+                                                    this._triggerAutoSave();
+                                                });
+                                            }
+                                        });
+                                    }
                                 });
                             }
                         }
@@ -368,6 +484,27 @@
                 <div id="author-form-container"></div>
                 <div id="authors-section-content">
                     {% include "articles/partials/_author_list.html" with authors=authors %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Funding Section -->
+        <div class="card mt-4" x-data="fundingList()">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-cash-stack me-2"></i>Finansiranje
+                </h5>
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                        hx-get="{% url 'articles:funding-form' article_pk=object.pk %}"
+                        hx-target="#funding-form-container"
+                        hx-swap="innerHTML">
+                    <i class="bi bi-plus-lg me-1"></i>Dodaj finansijera
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="funding-form-container"></div>
+                <div id="funding-section-content">
+                    {% include "articles/partials/_funding_list.html" with fundings=fundings %}
                 </div>
             </div>
         </div>
@@ -599,8 +736,133 @@ function pdfUpload() {
     }
 }
 
+// Markup help Alpine.js component
+function markupHelp() {
+    return {
+        copyChars: [
+            { value: '\u201E', display: '\u201E', label: 'Otvoreni navodnik' },
+            { value: '\u201C', display: '\u201C', label: 'Zatvoreni navodnik' },
+            { value: '_', display: '_..._', label: 'Italic' },
+            { value: '**', display: '**...**', label: 'Bold' },
+            { value: '~', display: '~...~', label: 'Subscript' },
+            { value: '^', display: '^...^', label: 'Superscript' },
+        ],
+        previewInput: '',
+        get previewOutput() {
+            let t = this.previewInput;
+            if (!t) return '<span class="text-muted">Ovde \u0107e se prikazati rezultat...</span>';
+            t = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            t = t.replace(/(?<!\w)_([^_]+)_(?!\w)/g, '<em>$1</em>');
+            t = t.replace(/\^([^^]+)\^/g, '<sup>$1</sup>');
+            t = t.replace(/~([^~]+)~/g, '<sub>$1</sub>');
+            return t;
+        },
+        copyStatus: {},
+        copyToClipboard(text, charLabel) {
+            navigator.clipboard.writeText(text).then(() => {
+                this.copyStatus[charLabel] = true;
+                setTimeout(() => { this.copyStatus[charLabel] = false; }, 1500);
+            });
+        }
+    }
+}
+
+// Generic autocomplete search component (reusable for ROR and Funder)
+function autocompleteSearch(endpoint, options = {}) {
+    return {
+        query: '',
+        results: [],
+        isOpen: false,
+        loading: false,
+        debounceTimer: null,
+        minChars: options.minChars || 2,
+
+        search() {
+            clearTimeout(this.debounceTimer);
+            if (this.query.length < this.minChars) {
+                this.results = [];
+                this.isOpen = false;
+                return;
+            }
+            this.debounceTimer = setTimeout(async () => {
+                this.loading = true;
+                try {
+                    const resp = await fetch(`${endpoint}?q=${encodeURIComponent(this.query)}`);
+                    const data = await resp.json();
+                    this.results = data.items || [];
+                    this.isOpen = this.results.length > 0;
+                } catch (e) {
+                    this.results = [];
+                }
+                this.loading = false;
+            }, 300);
+        },
+
+        select(item) {
+            this.isOpen = false;
+            this.query = '';
+            this.$dispatch('autocomplete-selected', item);
+        },
+
+        close() {
+            setTimeout(() => { this.isOpen = false; }, 200);
+        }
+    }
+}
+
+// Funding list with SortableJS
+function fundingList() {
+    return {
+        _sortableInstance: null,
+        init() {
+            this.$nextTick(() => {
+                this.initSortable();
+            });
+            document.body.addEventListener('htmx:afterSwap', (evt) => {
+                if (evt.detail.target.id === 'funding-section-content') {
+                    this.$nextTick(() => {
+                        this.initSortable();
+                    });
+                }
+            });
+        },
+        initSortable() {
+            if (this._sortableInstance) {
+                this._sortableInstance.destroy();
+                this._sortableInstance = null;
+            }
+            const el = document.getElementById('funding-container');
+            if (el && el.children.length > 0) {
+                this._sortableInstance = new Sortable(el, {
+                    handle: '.funding-drag-handle',
+                    animation: 150,
+                    ghostClass: 'bg-light',
+                    onEnd: (evt) => {
+                        const items = el.querySelectorAll('[data-funding-id]');
+                        const order = Array.from(items).map(item =>
+                            parseInt(item.dataset.fundingId)
+                        );
+                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        htmx.ajax('POST', '{% url "articles:funding-reorder" article_pk=object.pk %}', {
+                            target: '#funding-section-content',
+                            swap: 'innerHTML',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken,
+                            },
+                            body: JSON.stringify({order: order}),
+                        });
+                    }
+                });
+            }
+        }
+    }
+}
+
 function authorList() {
     return {
+        _sortableInstance: null,
         init() {
             this.$nextTick(() => {
                 this.initSortable();
@@ -615,9 +877,13 @@ function authorList() {
             });
         },
         initSortable() {
+            if (this._sortableInstance) {
+                this._sortableInstance.destroy();
+                this._sortableInstance = null;
+            }
             const el = document.getElementById('authors-container');
             if (el && el.children.length > 0) {
-                new Sortable(el, {
+                this._sortableInstance = new Sortable(el, {
                     handle: '.drag-handle',
                     animation: 150,
                     ghostClass: 'bg-light',

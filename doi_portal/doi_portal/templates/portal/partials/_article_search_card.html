@@ -1,14 +1,15 @@
 {% load portal_tags %}
+{% load markup_tags %}
 
 <article class="card mb-3 shadow-sm">
   <div class="card-body">
     <h3 class="h5 card-title mb-1">
       <a href="{% url 'portal-articles:article-detail' article.pk %}" class="text-decoration-none">
-        {{ article.title|highlight_search:query }}
+        {{ article.title|strip_markup|highlight_search:query }}
       </a>
     </h3>
     {% if article.subtitle %}
-    <p class="text-muted small mb-2">{{ article.subtitle }}</p>
+    <p class="text-muted small mb-2">{{ article.subtitle|strip_markup }}</p>
     {% endif %}
 
     <!-- Authors -->

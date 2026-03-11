@@ -1,6 +1,7 @@
 {% extends "portal/base.html" %}
+{% load markup_tags %}
 
-{% block title %}{{ article.title }} - {{ article.issue.publication.title }} - DOI Portal{% endblock title %}
+{% block title %}{{ article.title|strip_markup }} - {{ article.issue.publication.title }} - DOI Portal{% endblock title %}
 
 {% block meta_description %}{{ article.abstract|truncatewords:30 }}{% endblock meta_description %}
 
@@ -23,9 +24,9 @@
   <!-- Main Content -->
   <article class="col-lg-8">
     <!-- Title -->
-    <h1 class="article-title mb-2">{{ article.title }}</h1>
+    <h1 class="article-title mb-2">{{ article.title|render_markup }}</h1>
     {% if article.subtitle %}
-    <p class="article-subtitle text-muted lead mb-3">{{ article.subtitle }}</p>
+    <p class="article-subtitle text-muted lead mb-3">{{ article.subtitle|render_markup }}</p>
     {% endif %}
 
     <!-- Status & Date -->
@@ -65,7 +66,7 @@
         {% endif %}
         {% for affiliation in author.affiliations.all %}
         <div class="text-muted small ms-3">
-          {{ affiliation.institution_name }}{% if affiliation.department %}, {{ affiliation.department }}{% endif %}
+          {{ affiliation.institution_name }}{% if affiliation.department %}, {{ affiliation.department }}{% endif %}{% if affiliation.city %}, {{ affiliation.city }}{% endif %}{% if affiliation.country %}, {{ affiliation.country }}{% endif %}
         </div>
         {% endfor %}
       </div>
@@ -78,7 +79,7 @@
     {% if article.abstract %}
     <section class="article-abstract mb-4" aria-labelledby="abstract-heading">
       <h2 id="abstract-heading" class="h5 mb-3">Apstrakt</h2>
-      <p>{{ article.abstract }}</p>
+      <p>{{ article.abstract|render_markup }}</p>
     </section>
     {% endif %}
 
@@ -91,6 +92,21 @@
         <span class="badge bg-light text-dark border me-1 mb-1 keyword-tag">{{ kw }}</span>
         {% endfor %}
       </div>
+    </section>
+    {% endif %}
+
+    <!-- Funding -->
+    {% if article.fundings.exists %}
+    <section class="article-funding mb-4" aria-labelledby="funding-heading">
+      <h2 id="funding-heading" class="h5 mb-3">Finansiranje</h2>
+      {% for funding in article.fundings.all %}
+      <div class="mb-1">
+        <span class="fw-semibold">{{ funding.funder_name }}</span>
+        {% if funding.award_number %}
+        <span class="text-muted">— Projekat br. {{ funding.award_number }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
     </section>
     {% endif %}
 

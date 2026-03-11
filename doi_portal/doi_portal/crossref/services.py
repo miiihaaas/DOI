@@ -16,6 +16,7 @@ from django.utils import timezone
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from jinja2 import select_autoescape
+from markupsafe import Markup
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
     from doi_portal.articles.models import Author
     from doi_portal.issues.models import Issue
 
+from doi_portal.core.markup import markup_to_crossref_xml, markup_to_jats_xml
 from doi_portal.crossref.validation import ValidationResult
 
 __all__ = ["CrossrefService", "PreValidationService"]
@@ -215,6 +217,24 @@ class CrossrefService:
         """
         return self.TEMPLATE_MAP.get(publication_type, self.TEMPLATE_MAP["JOURNAL"])
 
+    @staticmethod
+    def _normalize_funder_doi(doi_url: str) -> str:
+        """Normalize funder DOI to Crossref FundRef expected format.
+
+        Crossref expects http://dx.doi.org/10.13039/... format.
+        """
+        if not doi_url:
+            return ""
+        # Extract the DOI from various URL formats
+        for prefix in ("https://doi.org/", "http://doi.org/", "https://dx.doi.org/", "http://dx.doi.org/"):
+            if doi_url.startswith(prefix):
+                bare_doi = doi_url[len(prefix):]
+                return f"http://dx.doi.org/{bare_doi}"
+        # If it's already a bare DOI like 10.13039/...
+        if doi_url.startswith("10."):
+            return f"http://dx.doi.org/{doi_url}"
+        return doi_url
+
     def _get_site_url(self) -> str:
         """
         Get the site URL for resource links in Crossref XML.
@@ -270,7 +290,9 @@ class CrossrefService:
 
         # Build articles context with authors and affiliations
         articles_data = []
-        for article in issue.articles.filter(is_deleted=False):
+        for article in issue.articles.filter(is_deleted=False).prefetch_related(
+            "authors__affiliations", "fundings"
+        ):
             authors_data = []
             for author in article.authors.all().order_by("order"):
                 affiliations_data = [
@@ -291,14 +313,15 @@ class CrossrefService:
                     "contributor_role": author.contributor_role,
                     "affiliations": affiliations_data,
                 })
+            # Markup() prevents Jinja2 autoescape from double-escaping face markup tags
             articles_data.append({
                 "pk": article.pk,
-                "title": article.title,
-                "subtitle": article.subtitle,
-                "original_language_title": article.original_language_title,
-                "original_language_subtitle": article.original_language_subtitle,
+                "title": Markup(markup_to_crossref_xml(article.title)),
+                "subtitle": Markup(markup_to_crossref_xml(article.subtitle)),
+                "original_language_title": Markup(markup_to_crossref_xml(article.original_language_title)),
+                "original_language_subtitle": Markup(markup_to_crossref_xml(article.original_language_subtitle)),
                 "original_language_title_language": article.original_language_title_language,
-                "abstract": article.abstract,
+                "abstract": Markup(markup_to_jats_xml(article.abstract)),
                 "doi_suffix": article.doi_suffix,
                 "first_page": article.first_page,
                 "last_page": article.last_page,
@@ -313,6 +336,14 @@ class CrossrefService:
                 "external_landing_url": article.external_landing_url,
                 "external_pdf_url": article.external_pdf_url,
                 "authors": authors_data,
+                "fundings": [
+                    {
+                        "funder_name": f.funder_name,
+                        "funder_doi": self._normalize_funder_doi(f.funder_doi),
+                        "award_number": f.award_number,
+                    }
+                    for f in article.fundings.order_by("order")
+                ],
             })
 
         # Build full context
