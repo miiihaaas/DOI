@@ -708,6 +708,28 @@ class SentryTestView(SuperadminRequiredMixin, View):
         return render(request, "core/sentry_test.html", context)
 
 
+# ============================================================================
+# Story 6.6: System Health Dashboard
+# ============================================================================
+
+
+class SystemHealthView(SuperadminRequiredMixin, TemplateView):
+    """System health dashboard for Superadmin."""
+
+    template_name = "core/system_health.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from doi_portal.core.health import get_system_health
+
+        context["health_data"] = get_system_health()
+        context["breadcrumbs"] = [
+            {"label": "Kontrolna tabla", "url": "dashboard"},
+            {"label": "Zdravlje sistema", "url": None},
+        ]
+        return context
+
+
 @require_GET
 @role_required("Superadmin")
 def gdpr_request_download_report(request, pk):

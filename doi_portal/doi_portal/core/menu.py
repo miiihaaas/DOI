@@ -101,6 +101,12 @@ MENU_ITEMS: dict[str, dict] = {
         "url_name": "core:sentry-test",
         "roles": ["Superadmin"],
     },
+    "system_health": {
+        "label": "Zdravlje sistema",
+        "icon": "bi-heart-pulse",
+        "url_name": "core:system-health",
+        "roles": ["Superadmin"],
+    },
 }
 
 # Role hierarchy for determining user's effective role

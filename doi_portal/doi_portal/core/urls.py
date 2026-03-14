@@ -32,4 +32,6 @@ urlpatterns = [
 
     # Story 6.5: Sentry Test Endpoint
     path("system/sentry-test/", views.SentryTestView.as_view(), name="sentry-test"),
+    # Story 6.6: System Health Dashboard
+    path("system/health/", views.SystemHealthView.as_view(), name="system-health"),
 ]

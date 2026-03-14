@@ -109,11 +109,11 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: Compliance & Monitoring
-  epic-6: in-progress
+  epic-6: done
   6-1-audit-log-integration: done
   6-2-audit-log-viewer: done
   6-3-soft-delete-implementation: done
   6-4-gdpr-data-request-handling: done
   6-5-system-monitoring-with-sentry: done
-  6-6-system-health-dashboard: backlog
+  6-6-system-health-dashboard: done
   epic-6-retrospective: optional
