@@ -83,6 +83,12 @@ MENU_ITEMS: dict[str, dict] = {
         "url_name": "core:deleted-items",
         "roles": ["Superadmin"],
     },
+    "gdpr_requests": {
+        "label": "GDPR zahtevi",
+        "icon": "bi-shield-lock",
+        "url_name": "core:gdpr-request-list",
+        "roles": ["Superadmin"],
+    },
     "system_settings": {
         "label": "Podešavanja sistema",
         "icon": "bi-gear",

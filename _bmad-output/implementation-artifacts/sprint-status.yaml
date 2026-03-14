@@ -113,7 +113,7 @@ development_status:
   6-1-audit-log-integration: done
   6-2-audit-log-viewer: done
   6-3-soft-delete-implementation: done
-  6-4-gdpr-data-request-handling: backlog
+  6-4-gdpr-data-request-handling: done
   6-5-system-monitoring-with-sentry: backlog
   6-6-system-health-dashboard: backlog
   epic-6-retrospective: optional

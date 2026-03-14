@@ -4,6 +4,7 @@ Core views for DOI Portal.
 DashboardView - Admin dashboard with role-based content (Story 1.7, 3.8).
 AuditLogListView, AuditLogDetailView - Audit log viewer (Story 6.2).
 DeletedItemsView, deleted_item_restore, deleted_item_permanent_delete - Deleted items management (Story 6.3).
+GdprRequest views - GDPR data request handling (Story 6.4).
 """
 
 import json
@@ -15,9 +16,10 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.http import Http404, HttpResponse
-from django.shortcuts import get_object_or_404, render
-from django.views.decorators.http import require_POST
-from django.views.generic import DetailView
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
+from django.views.decorators.http import require_GET, require_POST
+from django.views.generic import CreateView, DetailView
 from django.views.generic import ListView
 from django.views.generic import TemplateView
 
@@ -493,3 +495,175 @@ def deleted_item_permanent_delete(request, model_type, pk):
     instance.delete()
     messages.success(request, f"Stavka '{label}' je trajno obrisana.")
     return HttpResponse("")
+
+
+# ============================================================================
+# Story 6.4: GDPR Data Request Handling
+# ============================================================================
+
+
+class GdprRequestListView(SuperadminRequiredMixin, ListView):
+    """
+    List view for GDPR data requests.
+
+    AC#1: Paginated list of all requests, reverse chronological.
+    AC#8: Superadmin only.
+    """
+
+    model = None  # Set dynamically to avoid circular import
+    paginate_by = 25
+    template_name = "core/gdpr_request_list.html"
+    context_object_name = "requests"
+
+    def get_queryset(self):
+        from doi_portal.core.models import GdprRequest
+
+        return GdprRequest.objects.all()
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Kontrolna tabla", "url": "dashboard"},
+            {"label": "GDPR zahtevi", "url": None},
+        ]
+        return context
+
+
+class GdprRequestCreateView(SuperadminRequiredMixin, CreateView):
+    """
+    Create view for new GDPR data request.
+
+    AC#2: Form for creating new GDPR request with auto-set created_by.
+    AC#8: Superadmin only.
+    """
+
+    template_name = "core/gdpr_request_form.html"
+    success_url = reverse_lazy("core:gdpr-request-list")
+
+    def get_form_class(self):
+        from doi_portal.core.forms import GdprRequestForm
+
+        return GdprRequestForm
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Kontrolna tabla", "url": "dashboard"},
+            {"label": "GDPR zahtevi", "url": "core:gdpr-request-list"},
+            {"label": "Novi zahtev", "url": None},
+        ]
+        return context
+
+
+class GdprRequestDetailView(SuperadminRequiredMixin, DetailView):
+    """
+    Detail view for a GDPR data request.
+
+    AC#3: Shows affected data section.
+    AC#8: Superadmin only.
+    """
+
+    template_name = "core/gdpr_request_detail.html"
+    context_object_name = "gdpr_request"
+
+    def get_queryset(self):
+        from doi_portal.core.models import GdprRequest
+
+        return GdprRequest.objects.all()
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        from doi_portal.core.models import GdprRequestStatus
+        from doi_portal.core.services import GdprService
+
+        affected_data = GdprService.identify_affected_data(
+            self.object.requester_email
+        )
+        # Pre-compute count to avoid extra query in template
+        affected_data["authors_count"] = affected_data["authors"].count()
+        context["affected_data"] = affected_data
+        context["GdprRequestStatus"] = GdprRequestStatus
+        context["breadcrumbs"] = [
+            {"label": "Kontrolna tabla", "url": "dashboard"},
+            {"label": "GDPR zahtevi", "url": "core:gdpr-request-list"},
+            {"label": f"GDPR-{self.object.pk}", "url": None},
+        ]
+        return context
+
+
+@require_POST
+@role_required("Superadmin")
+def gdpr_request_process(request, pk):
+    """
+    Process a GDPR deletion request.
+
+    AC#4, AC#5: Triggers soft delete + schedules anonymization.
+    """
+    from doi_portal.core.models import GdprRequest, GdprRequestStatus
+    from doi_portal.core.services import GdprService
+
+    gdpr_request = get_object_or_404(GdprRequest, pk=pk)
+
+    if gdpr_request.status != GdprRequestStatus.PENDING:
+        messages.error(request, "Zahtev nije u statusu 'Na čekanju'.")
+        return redirect("core:gdpr-request-detail", pk=pk)
+
+    if gdpr_request.request_type != "DELETION":
+        messages.error(request, "Samo zahtevi za brisanje mogu biti obrađeni.")
+        return redirect("core:gdpr-request-detail", pk=pk)
+
+    GdprService.process_deletion_request(gdpr_request, request.user)
+    messages.success(request, "Zahtev je uspešno obrađen. Grace period: 30 dana.")
+    return redirect("core:gdpr-request-detail", pk=pk)
+
+
+@require_POST
+@role_required("Superadmin")
+def gdpr_request_cancel(request, pk):
+    """
+    Cancel a GDPR request during grace period.
+
+    AC#5: Restores soft-deleted data, sets CANCELLED.
+    """
+    from doi_portal.core.models import GdprRequest, GdprRequestStatus
+    from doi_portal.core.services import GdprService
+
+    gdpr_request = get_object_or_404(GdprRequest, pk=pk)
+
+    if gdpr_request.status != GdprRequestStatus.PROCESSING:
+        messages.error(request, "Samo zahtevi u obradi mogu biti otkazani.")
+        return redirect("core:gdpr-request-detail", pk=pk)
+
+    reason = request.POST.get("cancellation_reason", "")
+    try:
+        GdprService.cancel_request(gdpr_request, reason, request.user)
+    except ValueError as e:
+        messages.error(request, str(e))
+        return redirect("core:gdpr-request-detail", pk=pk)
+    messages.success(request, "Zahtev je otkazan. Podaci su vraćeni.")
+    return redirect("core:gdpr-request-detail", pk=pk)
+
+
+@require_GET
+@role_required("Superadmin")
+def gdpr_request_download_report(request, pk):
+    """
+    Download confirmation report for a GDPR request.
+
+    AC#7: Generates and returns TXT report.
+    """
+    from doi_portal.core.models import GdprRequest
+    from doi_portal.core.services import GdprService
+
+    gdpr_request = get_object_or_404(GdprRequest, pk=pk)
+    report = GdprService.generate_confirmation_report(gdpr_request)
+
+    response = HttpResponse(report, content_type="text/plain; charset=utf-8")
+    response["Content-Disposition"] = (
+        f'attachment; filename="gdpr_report_{gdpr_request.pk}.txt"'
+    )
+    return response

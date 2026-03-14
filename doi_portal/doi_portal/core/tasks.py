@@ -2,6 +2,7 @@
 Core Celery tasks.
 
 Story 6.1: Audit log archive task for retention compliance.
+Story 6.4: GDPR permanent anonymization tasks.
 """
 
 import json
@@ -78,5 +79,91 @@ def audit_log_archive_task(self, days_threshold=365):
         raise self.retry(exc=exc)
 
     msg = f"Archived {count} audit log entries to {archive_filename}"
+    logger.info(msg)
+    return msg
+
+
+# ============================================================================
+# Story 6.4: GDPR Permanent Anonymization
+# ============================================================================
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=300)
+def gdpr_permanent_anonymize_task(self, gdpr_request_id):
+    """
+    Permanently anonymize data for a GDPR deletion request.
+
+    Checks that the request is PROCESSING and grace period has expired
+    before performing permanent anonymization.
+
+    Args:
+        gdpr_request_id: ID of the GdprRequest to process.
+
+    Returns:
+        str: Summary message.
+    """
+    from doi_portal.core.models import GdprRequest, GdprRequestStatus
+    from doi_portal.core.services import GdprService
+
+    try:
+        gdpr_request = GdprRequest.objects.get(pk=gdpr_request_id)
+    except GdprRequest.DoesNotExist:
+        msg = f"GDPR request {gdpr_request_id} not found."
+        logger.warning(msg)
+        return msg
+
+    # Only process PROCESSING requests
+    if gdpr_request.status != GdprRequestStatus.PROCESSING:
+        msg = (
+            f"GDPR request {gdpr_request_id} has status "
+            f"{gdpr_request.status}, skipping."
+        )
+        logger.info(msg)
+        return msg
+
+    # Check grace period
+    if (
+        gdpr_request.grace_period_end
+        and gdpr_request.grace_period_end > timezone.now().date()
+    ):
+        msg = (
+            f"GDPR request {gdpr_request_id} grace period not expired "
+            f"(ends {gdpr_request.grace_period_end}), skipping."
+        )
+        logger.info(msg)
+        return msg
+
+    # Execute permanent anonymization
+    GdprService.complete_request(gdpr_request)
+
+    msg = f"GDPR request {gdpr_request_id} permanently anonymized."
+    logger.info(msg)
+    return msg
+
+
+@shared_task
+def gdpr_check_grace_periods_task():
+    """
+    Periodic task - checks for expired GDPR grace periods.
+
+    Finds all PROCESSING requests where grace_period_end has passed
+    and completes them via permanent anonymization.
+
+    Returns:
+        str: Summary message.
+    """
+    from doi_portal.core.models import GdprRequest, GdprRequestStatus
+    from doi_portal.core.services import GdprService
+
+    expired = GdprRequest.objects.filter(
+        status=GdprRequestStatus.PROCESSING,
+        grace_period_end__lte=timezone.now().date(),
+    )
+    count = 0
+    for request in expired:
+        GdprService.complete_request(request)
+        count += 1
+
+    msg = f"GDPR grace period check: {count} requests completed."
     logger.info(msg)
     return msg

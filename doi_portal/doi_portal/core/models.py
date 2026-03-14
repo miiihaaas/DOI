@@ -1,13 +1,83 @@
 """
 Core models for DOI Portal.
 
-Contains global singleton settings used across the portal.
+Contains global singleton settings and GDPR request tracking.
 """
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-__all__ = ["SiteSettings"]
+__all__ = [
+    "GdprRequest",
+    "GdprRequestStatus",
+    "GdprRequestType",
+    "SiteSettings",
+]
+
+
+class GdprRequestType(models.TextChoices):
+    ACCESS = "ACCESS", _("Pristup podacima")
+    DELETION = "DELETION", _("Brisanje podataka")
+
+
+class GdprRequestStatus(models.TextChoices):
+    PENDING = "PENDING", _("Na čekanju")
+    PROCESSING = "PROCESSING", _("U obradi")
+    COMPLETED = "COMPLETED", _("Završeno")
+    CANCELLED = "CANCELLED", _("Otkazano")
+
+
+class GdprRequest(models.Model):
+    """
+    GDPR data request tracking model.
+
+    Story 6.4: Tracks GDPR access/deletion requests with full audit trail.
+    """
+
+    requester_email = models.EmailField(_("Email podnosioca"))
+    request_type = models.CharField(
+        _("Tip zahteva"),
+        max_length=20,
+        choices=GdprRequestType.choices,
+    )
+    status = models.CharField(
+        _("Status"),
+        max_length=20,
+        choices=GdprRequestStatus.choices,
+        default=GdprRequestStatus.PENDING,
+    )
+    notes = models.TextField(_("Napomene"), blank=True)
+    received_date = models.DateField(_("Datum prijema"))
+    created_at = models.DateTimeField(_("Kreirano"), auto_now_add=True)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="gdpr_requests_created",
+        verbose_name=_("Kreirao"),
+    )
+    processed_at = models.DateTimeField(_("Obrađeno"), null=True, blank=True)
+    processed_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="gdpr_requests_processed",
+        verbose_name=_("Obradio"),
+    )
+    completed_at = models.DateTimeField(_("Završeno"), null=True, blank=True)
+    grace_period_end = models.DateField(
+        _("Kraj grace perioda"), null=True, blank=True
+    )
+    cancellation_reason = models.TextField(_("Razlog otkazivanja"), blank=True)
+
+    class Meta:
+        verbose_name = _("GDPR zahtev")
+        verbose_name_plural = _("GDPR zahtevi")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"GDPR-{self.pk}: {self.requester_email} ({self.get_request_type_display()})"
 
 
 class SiteSettings(models.Model):

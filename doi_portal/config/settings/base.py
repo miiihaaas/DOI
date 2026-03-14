@@ -329,6 +329,11 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(day_of_month="1", hour="3", minute="0"),  # 1st of each month at 03:00
         "kwargs": {"days_threshold": 365},
     },
+    # Story 6.4: Daily check for expired GDPR grace periods
+    "gdpr-check-grace-periods": {
+        "task": "doi_portal.core.tasks.gdpr_check_grace_periods_task",
+        "schedule": crontab(hour=2, minute=0),  # Every day at 02:00
+    },
 }
 # django-allauth
 # ------------------------------------------------------------------------------

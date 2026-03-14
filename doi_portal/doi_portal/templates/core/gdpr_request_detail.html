@@ -1,0 +1,171 @@
+{% extends "admin_base.html" %}
+
+{% block title %}GDPR-{{ gdpr_request.pk }} - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-shield-lock me-2"></i>GDPR-{{ gdpr_request.pk }}
+    </h1>
+    <a href="{% url 'core:gdpr-request-list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Nazad na listu
+    </a>
+</div>
+
+{# Metapodaci #}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Podaci o zahtevu</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Zahtev br.:</dt>
+                    <dd class="col-sm-7">GDPR-{{ gdpr_request.pk }}</dd>
+
+                    <dt class="col-sm-5">Email podnosioca:</dt>
+                    <dd class="col-sm-7">{{ gdpr_request.requester_email }}</dd>
+
+                    <dt class="col-sm-5">Tip zahteva:</dt>
+                    <dd class="col-sm-7">{{ gdpr_request.get_request_type_display }}</dd>
+
+                    <dt class="col-sm-5">Status:</dt>
+                    <dd class="col-sm-7">
+                        {% if gdpr_request.status == "PENDING" %}
+                            <span class="badge bg-warning text-dark">Na čekanju</span>
+                        {% elif gdpr_request.status == "PROCESSING" %}
+                            <span class="badge bg-info">U obradi</span>
+                        {% elif gdpr_request.status == "COMPLETED" %}
+                            <span class="badge bg-success">Završeno</span>
+                        {% elif gdpr_request.status == "CANCELLED" %}
+                            <span class="badge bg-secondary">Otkazano</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Datum prijema:</dt>
+                    <dd class="col-sm-7">{{ gdpr_request.received_date }}</dd>
+
+                    <dt class="col-sm-5">Kreirao:</dt>
+                    <dd class="col-sm-7">{{ gdpr_request.created_by.email|default:"-" }}</dd>
+
+                    <dt class="col-sm-5">Obrađeno:</dt>
+                    <dd class="col-sm-7">{{ gdpr_request.processed_at|default:"-" }}</dd>
+
+                    {% if gdpr_request.grace_period_end %}
+                    <dt class="col-sm-5">Kraj grace perioda:</dt>
+                    <dd class="col-sm-7">{{ gdpr_request.grace_period_end }}</dd>
+                    {% endif %}
+
+                    {% if gdpr_request.completed_at %}
+                    <dt class="col-sm-5">Završeno:</dt>
+                    <dd class="col-sm-7">{{ gdpr_request.completed_at }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+        {% if gdpr_request.notes %}
+        <hr>
+        <h6>Napomene:</h6>
+        <p class="mb-0">{{ gdpr_request.notes }}</p>
+        {% endif %}
+        {% if gdpr_request.cancellation_reason %}
+        <hr>
+        <h6>Razlog otkazivanja:</h6>
+        <p class="mb-0">{{ gdpr_request.cancellation_reason }}</p>
+        {% endif %}
+    </div>
+</div>
+
+{# Pogodeni podaci #}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Pogođeni podaci</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card border-0 bg-light">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person fs-2 mb-2 d-block"></i>
+                        <h6>Korisnički nalog</h6>
+                        {% if affected_data.user %}
+                            <span class="badge bg-primary">Pronađen</span>
+                            <p class="small mt-1 mb-0">{{ affected_data.user.email }}</p>
+                        {% else %}
+                            <span class="badge bg-secondary">Nije pronađen</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 bg-light">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people fs-2 mb-2 d-block"></i>
+                        <h6>Autorski zapisi</h6>
+                        <span class="badge bg-primary">{{ affected_data.authors_count }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 bg-light">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock-history fs-2 mb-2 d-block"></i>
+                        <h6>Revizioni log zapisi</h6>
+                        <span class="badge bg-primary">{{ affected_data.audit_entries_count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Akcije #}
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Akcije</h5>
+    </div>
+    <div class="card-body">
+        <div class="d-flex gap-2 flex-wrap">
+            {% if gdpr_request.status == "PENDING" and gdpr_request.request_type == "DELETION" %}
+            <form method="post" action="{% url 'core:gdpr-request-process' gdpr_request.pk %}"
+                  onsubmit="return confirm('Da li ste sigurni da želite da obradite ovaj zahtev? Podaci će biti soft-delete-ovani sa grace periodom od 30 dana.')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning">
+                    <i class="bi bi-play-circle me-1"></i>Obradi zahtev
+                </button>
+            </form>
+            {% endif %}
+
+            {% if gdpr_request.status == "PROCESSING" %}
+            <form method="post" action="{% url 'core:gdpr-request-cancel' gdpr_request.pk %}"
+                  onsubmit="return confirm('Da li ste sigurni da želite da otkažete ovaj zahtev? Soft-delete-ovani podaci će biti vraćeni.')">
+                {% csrf_token %}
+                <div class="mb-2">
+                    <input type="text" name="cancellation_reason" class="form-control form-control-sm"
+                           placeholder="Razlog otkazivanja (opciono)" style="max-width: 350px; display: inline-block;">
+                </div>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-x-circle me-1"></i>Otkaži zahtev
+                </button>
+            </form>
+            {% endif %}
+
+            {% if gdpr_request.status == "COMPLETED" or gdpr_request.status == "PROCESSING" %}
+            <a href="{% url 'core:gdpr-request-report' gdpr_request.pk %}" class="btn btn-outline-primary">
+                <i class="bi bi-download me-1"></i>Preuzmi izveštaj
+            </a>
+            {% endif %}
+        </div>
+
+        {% if gdpr_request.status == "PENDING" and gdpr_request.request_type == "ACCESS" %}
+        <div class="alert alert-info mt-3 mb-0">
+            <i class="bi bi-info-circle me-2"></i>Zahtev za pristup podacima - pregledajte pogođene podatke iznad.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
