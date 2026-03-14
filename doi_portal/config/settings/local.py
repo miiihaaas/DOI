@@ -78,5 +78,10 @@ INSTALLED_APPS += ["django_extensions"]
 
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-eager-propagates
 CELERY_TASK_EAGER_PROPAGATES = True
+# Sentry
+# ------------------------------------------------------------------------------
+# Sentry is disabled in local environment (no SENTRY_DSN set).
+# This is the default behavior - sentry_sdk.init() is only called in production.py.
+
 # Your stuff...
 # ------------------------------------------------------------------------------

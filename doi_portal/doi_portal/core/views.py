@@ -19,6 +19,7 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_GET, require_POST
+from django.views import View
 from django.views.generic import CreateView, DetailView
 from django.views.generic import ListView
 from django.views.generic import TemplateView
@@ -646,6 +647,65 @@ def gdpr_request_cancel(request, pk):
         return redirect("core:gdpr-request-detail", pk=pk)
     messages.success(request, "Zahtev je otkazan. Podaci su vraćeni.")
     return redirect("core:gdpr-request-detail", pk=pk)
+
+
+# ============================================================================
+# Story 6.5: Sentry Test Endpoint
+# ============================================================================
+
+
+class SentryTestView(SuperadminRequiredMixin, View):
+    """
+    Sentry test endpoint for verifying Sentry integration.
+
+    AC#7: Superadmin-only endpoint that generates a test error
+    and sends it to Sentry for verification.
+    """
+
+    def get(self, request):
+        sentry_active = False
+        sentry_dsn_configured = False
+        event_id = None
+        sentry_environment = None
+
+        try:
+            import sentry_sdk
+
+            client = sentry_sdk.get_client()
+            sentry_dsn_configured = bool(client.dsn)
+            sentry_active = client.is_active()
+            if sentry_active:
+                from django.conf import settings
+
+                sentry_environment = getattr(settings, "SENTRY_ENVIRONMENT", None)
+                if sentry_environment is None:
+                    import os
+
+                    sentry_environment = os.environ.get(
+                        "SENTRY_ENVIRONMENT", "production"
+                    )
+        except ImportError:
+            pass
+
+        if sentry_active and request.GET.get("send_test"):
+            try:
+                raise Exception("DOI Portal - Sentry test event")  # noqa: TRY002, TRY301
+            except Exception:
+                import sentry_sdk
+
+                event_id = sentry_sdk.capture_exception()
+
+        context = {
+            "sentry_active": sentry_active,
+            "sentry_dsn_configured": sentry_dsn_configured,
+            "sentry_environment": sentry_environment,
+            "event_id": event_id,
+            "breadcrumbs": [
+                {"label": "Kontrolna tabla", "url": "dashboard"},
+                {"label": "Sentry test", "url": None},
+            ],
+        }
+        return render(request, "core/sentry_test.html", context)
 
 
 @require_GET

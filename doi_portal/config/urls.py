@@ -41,7 +41,7 @@ urlpatterns = [
     path("dashboard/articles/", include("doi_portal.articles.urls", namespace="articles")),
     # Story 5.2: Crossref validation routes (under dashboard)
     path("dashboard/crossref/", include("doi_portal.crossref.urls", namespace="crossref")),
-    # Story 6.2: Audit Log Viewer (under dashboard)
+    # Story 6.2: Audit Log Viewer + Story 6.5: System monitoring (under dashboard)
     path("dashboard/audit-log/", include("doi_portal.core.urls", namespace="core")),
     # Story 2.2: Public portal routes (no authentication required)
     path("publishers/", include("doi_portal.portal.urls", namespace="portal")),

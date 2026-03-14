@@ -1,4 +1,4 @@
-"""URL configuration for the core app (Story 6.2, 6.3, 6.4)."""
+"""URL configuration for the core app (Story 6.2, 6.3, 6.4, 6.5)."""
 
 from django.urls import path
 
@@ -29,4 +29,7 @@ urlpatterns = [
     path("gdpr/<int:pk>/process/", views.gdpr_request_process, name="gdpr-request-process"),
     path("gdpr/<int:pk>/cancel/", views.gdpr_request_cancel, name="gdpr-request-cancel"),
     path("gdpr/<int:pk>/report/", views.gdpr_request_download_report, name="gdpr-request-report"),
+
+    # Story 6.5: Sentry Test Endpoint
+    path("system/sentry-test/", views.SentryTestView.as_view(), name="sentry-test"),
 ]

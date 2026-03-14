@@ -95,6 +95,12 @@ MENU_ITEMS: dict[str, dict] = {
         "url_name": None,  # Not implemented yet
         "roles": ["Superadmin"],
     },
+    "sentry_test": {
+        "label": "Sentry test",
+        "icon": "bi-bug",
+        "url_name": "core:sentry-test",
+        "roles": ["Superadmin"],
+    },
 }
 
 # Role hierarchy for determining user's effective role

@@ -169,6 +169,8 @@ LOGGING = {
 SENTRY_DSN = env("SENTRY_DSN", default="")
 
 if HAS_SENTRY and SENTRY_DSN:
+    from doi_portal.core.sentry import before_send  # Story 6.5
+
     SENTRY_LOG_LEVEL = env.int("DJANGO_SENTRY_LOG_LEVEL", logging.INFO)
 
     sentry_logging = LoggingIntegration(
@@ -178,7 +180,7 @@ if HAS_SENTRY and SENTRY_DSN:
     integrations = [
         sentry_logging,
         DjangoIntegration(),
-        CeleryIntegration(),
+        CeleryIntegration(propagate_traces=True),  # Story 6.5: distributed tracing
         RedisIntegration(),
     ]
     sentry_sdk.init(
@@ -186,6 +188,11 @@ if HAS_SENTRY and SENTRY_DSN:
         integrations=integrations,
         environment=env("SENTRY_ENVIRONMENT", default="production"),
         traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
+        profiles_sample_rate=env.float("SENTRY_PROFILES_SAMPLE_RATE", default=0.0),  # Story 6.5
+        release=env("SENTRY_RELEASE", default=None),  # Story 6.5
+        send_default_pii=False,  # Story 6.5: GDPR - no email/IP
+        server_name=None,  # Story 6.5: no hostname leak
+        before_send=before_send,  # Story 6.5: custom scrubbing
     )
 
 

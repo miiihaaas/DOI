@@ -1,0 +1,95 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Sentry test - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-bug me-2"></i>Sentry test
+    </h1>
+</div>
+
+{# Sentry status card #}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Status Sentry integracije</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-2">
+                    <strong>Status:</strong>
+                    {% if sentry_active %}
+                        <span class="badge bg-success">Aktivan</span>
+                    {% else %}
+                        <span class="badge bg-danger">Neaktivan</span>
+                    {% endif %}
+                </p>
+                <p class="mb-2">
+                    <strong>DSN konfigurisan:</strong>
+                    {% if sentry_dsn_configured %}
+                        <span class="badge bg-success">Da</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Ne</span>
+                    {% endif %}
+                </p>
+                {% if sentry_environment %}
+                <p class="mb-2">
+                    <strong>Okruženje:</strong>
+                    <span class="badge bg-info text-dark">{{ sentry_environment }}</span>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Test action card #}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Pošalji test error</h5>
+    </div>
+    <div class="card-body">
+        {% if sentry_active %}
+            {% if event_id %}
+                <div class="alert alert-success" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Test event je uspešno poslat u Sentry.
+                    <br>
+                    <strong>Event ID:</strong> <code>{{ event_id }}</code>
+                    <br>
+                    <small class="text-body-secondary">Proverite u Sentry dashboard-u da li je event primljen.</small>
+                </div>
+            {% endif %}
+            <p class="mb-3">
+                Kliknite dugme ispod da pošaljete test error u Sentry.
+                Ovo će kreirati test exception i poslati je kao event.
+            </p>
+            <a href="{% url 'core:sentry-test' %}?send_test=1" class="btn btn-warning">
+                <i class="bi bi-send me-1"></i>Pošalji test error
+            </a>
+        {% else %}
+            <div class="alert alert-warning" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Sentry nije konfigurisan. Postavite <code>SENTRY_DSN</code> environment varijablu da aktivirate Sentry integraciju.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{# Info card #}
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Informacije o konfiguraciji</h5>
+    </div>
+    <div class="card-body">
+        <ul class="list-unstyled mb-0">
+            <li class="mb-1"><code>SENTRY_DSN</code> - DSN za Sentry projekat (obavezno)</li>
+            <li class="mb-1"><code>SENTRY_ENVIRONMENT</code> - Okruženje (local/staging/production)</li>
+            <li class="mb-1"><code>SENTRY_RELEASE</code> - Verzija aplikacije (opciono)</li>
+            <li class="mb-1"><code>SENTRY_TRACES_SAMPLE_RATE</code> - Procenat performance trace-ova (0.0-1.0)</li>
+            <li class="mb-1"><code>SENTRY_PROFILES_SAMPLE_RATE</code> - Procenat profiling-a (0.0-1.0)</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

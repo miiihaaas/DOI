@@ -63,5 +63,10 @@ CELERY_TASK_EAGER_PROPAGATES = False
 CLAMAV_HOST = "localhost"
 CLAMAV_PORT = 3310
 
+# Sentry
+# ------------------------------------------------------------------------------
+# Sentry is NOT active in test environment (no SENTRY_DSN set).
+# sentry_sdk.init() is only called in production.py when SENTRY_DSN is present.
+
 # Your stuff...
 # ------------------------------------------------------------------------------
