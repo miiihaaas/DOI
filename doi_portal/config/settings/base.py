@@ -4,6 +4,8 @@
 import ssl
 from pathlib import Path
 
+from celery.schedules import crontab
+
 import environ
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
@@ -158,6 +160,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "auditlog.middleware.AuditlogMiddleware",  # Story 6.1: Audit log actor/IP tracking
 ]
 
 # STATIC
@@ -318,6 +321,15 @@ CELERY_WORKER_SEND_TASK_EVENTS = True
 CELERY_TASK_SEND_SENT_EVENT = True
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#worker-hijack-root-logger
 CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+# https://docs.celeryq.dev/en/stable/userguide/configuration.html#beat-schedule
+# Story 6.1: Monthly audit log archival task
+CELERY_BEAT_SCHEDULE = {
+    "audit-log-archive-monthly": {
+        "task": "doi_portal.core.tasks.audit_log_archive_task",
+        "schedule": crontab(day_of_month="1", hour="3", minute="0"),  # 1st of each month at 03:00
+        "kwargs": {"days_threshold": 365},
+    },
+}
 # django-allauth
 # ------------------------------------------------------------------------------
 ACCOUNT_ALLOW_REGISTRATION = False  # Interni korisnici - Superadmin kreira naloge

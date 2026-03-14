@@ -17,8 +17,11 @@ class PublishersConfig(AppConfig):
 
     def ready(self):
         """Register Publisher model with auditlog for audit trail."""
-        from auditlog.registry import auditlog
+        try:
+            from auditlog.registry import auditlog
 
-        from .models import Publisher
+            from .models import Publisher
 
-        auditlog.register(Publisher)
+            auditlog.register(Publisher)
+        except ImportError:
+            pass
