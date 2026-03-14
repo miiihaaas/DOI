@@ -71,6 +71,24 @@
                         {% if issue.publication_day %}{{ issue.publication_day }}.{% endif %}{{ issue.publication_month }}.{{ issue.year }}.
                     </dd>
                     {% endif %}
+
+                    {% if issue.doi_suffix %}
+                    <dt class="col-sm-3">DOI izdanja</dt>
+                    <dd class="col-sm-9">
+                        <a href="https://doi.org/{{ issue.publication.publisher.doi_prefix }}/{{ issue.doi_suffix }}" target="_blank">
+                            {{ issue.publication.publisher.doi_prefix }}/{{ issue.doi_suffix }}
+                        </a>
+                    </dd>
+                    {% endif %}
+
+                    {% if issue.pdf_file %}
+                    <dt class="col-sm-3">PDF publikacije</dt>
+                    <dd class="col-sm-9">
+                        <a href="{{ issue.pdf_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-file-earmark-pdf me-1"></i>{{ issue.pdf_original_filename|default:"Preuzmi PDF" }}
+                        </a>
+                    </dd>
+                    {% endif %}
                 </dl>
             </div>
         </div>

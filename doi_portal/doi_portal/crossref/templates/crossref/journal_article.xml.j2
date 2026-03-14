@@ -47,6 +47,12 @@
         {% if issue.issue_number %}
         <issue>{{ issue.issue_number }}</issue>
         {% endif %}
+        {% if issue.doi_suffix %}
+        <doi_data>
+          <doi>{{ publisher.doi_prefix }}/{{ issue.doi_suffix }}</doi>
+          <resource>{{ site_url }}/publications/{{ publication.slug }}/issues/{{ issue.pk }}/</resource>
+        </doi_data>
+        {% endif %}
       </journal_issue>
       {% for article in articles %}
       <journal_article publication_type="{{ article.publication_type }}">

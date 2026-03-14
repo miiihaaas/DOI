@@ -17,6 +17,7 @@
 
                     <!-- Publication type map for Alpine.js proceedings toggle -->
                     <script type="application/json" id="pub-type-map">{{ form.publication_type_map_json }}</script>
+                    <script type="application/json" id="pub-doi-prefix-map">{{ pub_doi_prefix_map_json }}</script>
 
                     <!-- Form Errors Summary -->
                     {% if form.errors %}
@@ -119,6 +120,38 @@
                         </div>
                     </div>
 
+                    <!-- DOI i PDF sekcija -->
+                    <h6 class="text-muted mb-3 border-bottom pb-2">DOI i PDF izdanja</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_doi_suffix" class="form-label">DOI sufiks izdanja</label>
+                            <div class="input-group">
+                                <span class="input-group-text" x-text="doiPrefix + '/'">{{ publisher_doi_prefix }}/</span>
+                                {{ form.doi_suffix }}
+                            </div>
+                            <div class="form-text">Opciono. Ako popunite, izdanje će dobiti sopstveni DOI.</div>
+                            {% if form.doi_suffix.errors %}
+                            <div class="invalid-feedback d-block">{{ form.doi_suffix.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_pdf_file" class="form-label">PDF publikacije</label>
+                            {% if form.instance.pdf_file %}
+                            <div class="mb-2">
+                                <a href="{{ form.instance.pdf_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>{{ form.instance.pdf_original_filename|default:"Preuzmi PDF" }}
+                                </a>
+                            </div>
+                            {% endif %}
+                            {{ form.pdf_file }}
+                            <div class="form-text">Opciono. PDF fajl cele publikacije (max 50 MB).</div>
+                            {% if form.pdf_file.errors %}
+                            <div class="invalid-feedback d-block">{{ form.pdf_file.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
                     <!-- Conference Proceedings Fields (shown only for CONFERENCE type) -->
                     <div id="proceedings-fields" x-show="isConference" x-transition>
                         <h6 class="text-muted mb-3 border-bottom pb-2">Podaci o zborniku</h6>
@@ -166,8 +199,10 @@
                     function issueForm() {
                         return {
                             pubTypeMap: {},
+                            doiPrefixMap: {},
                             isConference: false,
                             hasMonth: false,
+                            doiPrefix: '',
                             init() {
                                 const mapEl = document.getElementById('pub-type-map');
                                 if (mapEl) {
@@ -175,6 +210,14 @@
                                         this.pubTypeMap = JSON.parse(mapEl.textContent);
                                     } catch (e) {
                                         this.pubTypeMap = {};
+                                    }
+                                }
+                                const prefixEl = document.getElementById('pub-doi-prefix-map');
+                                if (prefixEl) {
+                                    try {
+                                        this.doiPrefixMap = JSON.parse(prefixEl.textContent);
+                                    } catch (e) {
+                                        this.doiPrefixMap = {};
                                     }
                                 }
                                 const select = document.getElementById('id_publication');
@@ -194,6 +237,7 @@
                             },
                             updateType(pubId) {
                                 this.isConference = this.pubTypeMap[String(pubId)] === 'CONFERENCE';
+                                this.doiPrefix = this.doiPrefixMap[String(pubId)] || '';
                             }
                         }
                     }

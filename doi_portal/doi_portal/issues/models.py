@@ -88,6 +88,25 @@ class Issue(SoftDeleteMixin, models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(31)],
         help_text=_("Dan objave izdanja (opciono)"),
     )
+    doi_suffix = models.CharField(
+        _("DOI sufiks"),
+        max_length=255,
+        blank=True,
+        help_text=_("DOI sufiks za izdanje (opciono). Koristi se za registraciju DOI-ja na nivou izdanja."),
+    )
+    pdf_file = models.FileField(
+        _("PDF fajl"),
+        upload_to="issues/pdfs/",
+        blank=True,
+        null=True,
+        help_text=_("PDF fajl cele publikacije"),
+    )
+    pdf_original_filename = models.CharField(
+        _("Originalno ime PDF fajla"),
+        max_length=500,
+        blank=True,
+        help_text=_("Originalno ime PDF fajla"),
+    )
     status = models.CharField(
         _("Status"),
         max_length=20,

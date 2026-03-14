@@ -58,6 +58,12 @@
         {% if not publication.isbn_print and not publication.isbn_online %}
         <noisbn reason="simple_series"/>
         {% endif %}
+        {% if issue.doi_suffix %}
+        <doi_data>
+          <doi>{{ publisher.doi_prefix }}/{{ issue.doi_suffix }}</doi>
+          <resource>{{ site_url }}/publications/{{ publication.slug }}/issues/{{ issue.pk }}/</resource>
+        </doi_data>
+        {% endif %}
       </proceedings_metadata>
       {% for article in articles %}
       <conference_paper publication_type="{{ article.publication_type }}">

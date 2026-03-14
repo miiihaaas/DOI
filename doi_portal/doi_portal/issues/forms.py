@@ -37,6 +37,8 @@ class IssueForm(forms.ModelForm):
             "cover_image",
             "publication_month",
             "publication_day",
+            "doi_suffix",
+            "pdf_file",
             "status",
             "proceedings_title",
             "proceedings_publisher_name",
@@ -99,6 +101,18 @@ class IssueForm(forms.ModelForm):
                     "class": "form-select",
                 }
             ),
+            "doi_suffix": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "npr. zbornik-2025-vol1",
+                }
+            ),
+            "pdf_file": forms.ClearableFileInput(
+                attrs={
+                    "class": "form-control",
+                    "accept": "application/pdf",
+                }
+            ),
             "proceedings_title": forms.TextInput(
                 attrs={
                     "class": "form-control",
@@ -128,6 +142,8 @@ class IssueForm(forms.ModelForm):
             "publication_month": _("Mesec objave"),
             "publication_day": _("Dan objave"),
             "status": _("Status"),
+            "doi_suffix": _("DOI sufiks izdanja"),
+            "pdf_file": _("PDF publikacije"),
             "proceedings_title": _("Naslov zbornika"),
             "proceedings_publisher_name": _("Naziv izdavača zbornika"),
             "proceedings_publisher_place": _("Mesto izdavanja"),
@@ -142,6 +158,7 @@ class IssueForm(forms.ModelForm):
         """
         super().__init__(*args, **kwargs)
         self._pub_type_map = {}
+        self._pub_doi_prefix_map = {}
         if user:
             if user.is_superuser or user.groups.filter(
                 name__in=["Administrator", "Superadmin"]
@@ -158,6 +175,11 @@ class IssueForm(forms.ModelForm):
             self._pub_type_map = dict(
                 queryset.values_list("pk", "publication_type")
             )
+            # Build publication DOI prefix map for Alpine.js
+            self._pub_doi_prefix_map = {
+                str(pk): prefix
+                for pk, prefix in queryset.values_list("pk", "publisher__doi_prefix")
+            }
 
     @property
     def publication_type_map_json(self):
@@ -166,8 +188,15 @@ class IssueForm(forms.ModelForm):
             {str(k): v for k, v in self._pub_type_map.items()}
         )
 
+    @property
+    def pub_doi_prefix_map_json(self):
+        """Return JSON map of publication PK to publisher DOI prefix for Alpine.js."""
+        return json.dumps(self._pub_doi_prefix_map)
+
     # Maximum cover image file size: 5 MB
     MAX_COVER_IMAGE_SIZE = 5 * 1024 * 1024
+    # Maximum PDF file size: 50 MB
+    MAX_PDF_FILE_SIZE = 50 * 1024 * 1024
 
     def clean_cover_image(self):
         """Validate cover image file size (max 5 MB)."""
@@ -178,6 +207,21 @@ class IssueForm(forms.ModelForm):
                     _("Naslovna slika ne sme biti veća od 5 MB.")
                 )
         return cover_image
+
+    def clean_pdf_file(self):
+        """Validate PDF file: content type and size (max 50 MB)."""
+        pdf_file = self.cleaned_data.get("pdf_file")
+        # Only validate newly uploaded files (UploadedFile has content_type)
+        if pdf_file and hasattr(pdf_file, "content_type"):
+            if pdf_file.content_type != "application/pdf":
+                raise ValidationError(
+                    _("Dozvoljeni su samo PDF fajlovi.")
+                )
+            if pdf_file.size > self.MAX_PDF_FILE_SIZE:
+                raise ValidationError(
+                    _("PDF fajl ne sme biti veći od 50 MB.")
+                )
+        return pdf_file
 
     def clean(self):
         """
@@ -202,11 +246,25 @@ class IssueForm(forms.ModelForm):
                 _("Morate izabrati mesec ako birate dan."),
             )
         elif pub_month and pub_day and year:
-            _, max_day = calendar.monthrange(year, pub_month)
+            _weekday, max_day = calendar.monthrange(year, pub_month)
             if pub_day > max_day:
                 self.add_error(
                     "publication_day",
                     _(f"Mesec {pub_month} u godini {year} ima samo {max_day} dana."),
+                )
+
+        # Validate doi_suffix format
+        doi_suffix = cleaned_data.get("doi_suffix")
+        if doi_suffix:
+            if doi_suffix.startswith("/"):
+                self.add_error(
+                    "doi_suffix",
+                    _("DOI sufiks ne sme počinjati sa '/'."),
+                )
+            if " " in doi_suffix:
+                self.add_error(
+                    "doi_suffix",
+                    _("DOI sufiks ne sme sadržati razmake."),
                 )
 
         if publication is not None:
@@ -227,6 +285,20 @@ class IssueForm(forms.ModelForm):
                 )
 
         return cleaned_data
+
+    def save(self, commit=True):
+        """Override save to populate pdf_original_filename from uploaded file."""
+        instance = super().save(commit=False)
+        pdf_file = self.cleaned_data.get("pdf_file")
+        # Only update filename for newly uploaded files (UploadedFile has content_type)
+        if pdf_file and hasattr(pdf_file, "content_type"):
+            instance.pdf_original_filename = pdf_file.name
+        elif not instance.pdf_file:
+            # PDF was cleared
+            instance.pdf_original_filename = ""
+        if commit:
+            instance.save()
+        return instance
 
     def add_error_classes(self):
         """Add is-invalid class to fields with errors after validation."""

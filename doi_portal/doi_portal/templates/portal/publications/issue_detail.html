@@ -30,6 +30,24 @@
                 {% endif %}
             </div>
 
+            {% if issue.doi_suffix %}
+            <div class="mb-3">
+                <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>
+                <strong>DOI:</strong>
+                <a href="https://doi.org/{{ issue.publication.publisher.doi_prefix }}/{{ issue.doi_suffix }}">
+                    {{ issue.publication.publisher.doi_prefix }}/{{ issue.doi_suffix }}
+                </a>
+            </div>
+            {% endif %}
+
+            {% if issue.pdf_file %}
+            <div class="mb-3">
+                <a href="{{ issue.pdf_file.url }}" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>Preuzmi PDF
+                </a>
+            </div>
+            {% endif %}
+
             {% if issue.cover_image %}
             <div class="mb-4">
                 <img src="{{ issue.cover_image.url }}"

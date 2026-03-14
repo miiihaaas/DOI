@@ -372,6 +372,7 @@ class CrossrefService:
             },
             "publication": {
                 "title": publication.title,
+                "slug": publication.slug,
                 "publication_type": publication.publication_type,
                 "language": publication.language,
                 # Journal fields
@@ -392,12 +393,14 @@ class CrossrefService:
                 "series_title": publication.series_title,
             },
             "issue": {
+                "pk": issue.pk,
                 "volume": issue.volume,
                 "issue_number": issue.issue_number,
                 "year": issue.year,
                 "title": issue.title,
                 "publication_month": issue.publication_month,
                 "publication_day": issue.publication_day,
+                "doi_suffix": issue.doi_suffix,
                 # Conference proceedings fields
                 "proceedings_title": issue.proceedings_title,
                 "proceedings_publisher_name": issue.proceedings_publisher_name,
@@ -522,6 +525,9 @@ class PreValidationService:
         elif pub_type == "BOOK":
             result.merge(self._validate_book_fields(issue))
 
+        # Validate issue DOI suffix
+        result.merge(self._validate_issue_doi_suffix(issue))
+
         # Validate all PUBLISHED articles only
         for article in issue.articles.filter(
             status=ArticleStatus.PUBLISHED,
@@ -556,6 +562,45 @@ class PreValidationService:
                 field_name="depositor_email",
                 fix_url="/admin/core/sitesettings/1/change/",
             )
+
+        return result
+
+    def _validate_issue_doi_suffix(self, issue: Issue) -> ValidationResult:
+        """
+        Validate issue-level DOI suffix: check for duplicates and resource URL.
+
+        Args:
+            issue: Issue to validate
+
+        Returns:
+            ValidationResult with issue DOI suffix errors/warnings
+        """
+        from doi_portal.issues.models import Issue as IssueModel
+
+        result = ValidationResult()
+
+        if not issue.doi_suffix:
+            return result
+
+        # Check for duplicate DOI suffix within same publisher
+        publisher = issue.publication.publisher
+        duplicates = IssueModel.objects.filter(
+            doi_suffix=issue.doi_suffix,
+            publication__publisher=publisher,
+        ).exclude(pk=issue.pk)
+
+        if duplicates.exists():
+            result.add_error(
+                message=f"DOI sufiks '{issue.doi_suffix}' se već koristi u drugom izdanju istog izdavača",
+                field_name="doi_suffix",
+                fix_url=f"/dashboard/issues/{issue.pk}/edit/",
+            )
+
+        # Warning about resource URL
+        result.add_warning(
+            message=f"Izdanje ima DOI sufiks '{issue.doi_suffix}' — proverite da je portal stranica dostupna",
+            field_name="doi_suffix",
+        )
 
         return result
 

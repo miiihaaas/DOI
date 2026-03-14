@@ -188,6 +188,7 @@ class IssueCreateView(PublisherScopedEditMixin, CreateView):
         ]
         context["form_title"] = "Novo izdanje"
         context["submit_text"] = "Kreiraj izdanje"
+        context["pub_doi_prefix_map_json"] = context["form"].pub_doi_prefix_map_json
         return context
 
     def form_valid(self, form):
@@ -253,6 +254,9 @@ class IssueUpdateView(PublisherScopedEditMixin, UpdateView):
         ]
         context["form_title"] = f"Izmeni izdanje: {self.object}"
         context["submit_text"] = "Sačuvaj izmene"
+        context["pub_doi_prefix_map_json"] = context["form"].pub_doi_prefix_map_json
+        # For edit, also provide publisher_doi_prefix directly
+        context["publisher_doi_prefix"] = self.object.publication.publisher.doi_prefix
         return context
 
     def form_valid(self, form):
