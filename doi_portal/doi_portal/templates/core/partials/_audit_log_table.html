@@ -1,0 +1,54 @@
+<div id="audit-log-table" hx-boost="true" hx-target="#audit-log-table" hx-select="#audit-log-table" hx-swap="outerHTML">
+  {% if entries %}
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Vreme</th>
+          <th>Korisnik</th>
+          <th>Akcija</th>
+          <th>Model</th>
+          <th>Objekat</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+        <tr>
+          <td>
+            <a href="{% url 'core:audit-log-detail' entry.pk %}">
+              {{ entry.timestamp|date:"d.m.Y. H:i:s" }}
+            </a>
+          </td>
+          <td>
+            {% if entry.actor %}
+              {{ entry.actor.email }}
+            {% else %}
+              <span class="text-muted">Sistem</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if entry.action == 0 %}
+              <span class="badge bg-success">Kreiranje</span>
+            {% elif entry.action == 1 %}
+              <span class="badge bg-warning text-dark">Izmena</span>
+            {% elif entry.action == 2 %}
+              <span class="badge bg-danger">Brisanje</span>
+            {% endif %}
+          </td>
+          <td>{{ entry.content_type }}</td>
+          <td>{{ entry.object_repr|truncatechars:80 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include "components/_pagination.html" %}
+
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-clock-history display-4 mb-3 d-block"></i>
+    <p class="mb-0">Nema pronađenih log unosa.</p>
+  </div>
+  {% endif %}
+</div>

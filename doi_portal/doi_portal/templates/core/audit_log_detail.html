@@ -1,0 +1,144 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Detalj #{{ entry.pk }} - Revizioni log - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-clock-history me-2"></i>Detalj #{{ entry.pk }}</h1>
+    <a href="{% url 'core:audit-log-list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Nazad na listu
+    </a>
+</div>
+
+<!-- Metadata -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Metapodaci</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th class="text-muted" style="width: 40%;">Vreme</th>
+                        <td>{{ entry.timestamp|date:"d.m.Y. H:i:s" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Korisnik</th>
+                        <td>
+                            {% if entry.actor %}
+                                {{ entry.actor.email }}
+                            {% else %}
+                                <span class="text-muted">Sistem</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Akcija</th>
+                        <td>
+                            {% if entry.action == 0 %}
+                                <span class="badge bg-success">Kreiranje</span>
+                            {% elif entry.action == 1 %}
+                                <span class="badge bg-warning text-dark">Izmena</span>
+                            {% elif entry.action == 2 %}
+                                <span class="badge bg-danger">Brisanje</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th class="text-muted" style="width: 40%;">Model</th>
+                        <td>{{ entry.content_type }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Object ID</th>
+                        <td>{{ entry.object_pk }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Objekat</th>
+                        <td>{{ entry.object_repr }}</td>
+                    </tr>
+                    {% if entry.remote_addr %}
+                    <tr>
+                        <th class="text-muted">IP adresa</th>
+                        <td>{{ entry.remote_addr }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Changes -->
+{% if entry.action == 1 and changes_data %}
+<!-- UPDATE: Side by side old vs new -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Izmene</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Polje</th>
+                        <th>Stara vrednost</th>
+                        <th>Nova vrednost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field, vals in changes_data.items %}
+                    <tr>
+                        <td><strong>{{ field }}</strong></td>
+                        <td class="text-danger">{{ vals.old|default:"-" }}</td>
+                        <td class="text-success">{{ vals.new|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% elif entry.action == 0 and changes_data %}
+<!-- CREATE: Show set values -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Postavljene vrednosti</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Polje</th>
+                        <th>Vrednost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field, vals in changes_data.items %}
+                    <tr>
+                        <td><strong>{{ field }}</strong></td>
+                        <td>{{ vals.new|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% elif entry.action == 2 %}
+<!-- DELETE: Show object repr -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Obrisani objekat</h5>
+    </div>
+    <div class="card-body">
+        <p class="mb-0">{{ entry.object_repr }}</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

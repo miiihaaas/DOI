@@ -71,6 +71,12 @@ MENU_ITEMS: dict[str, dict] = {
         "url_name": "users:manage-list",  # Implemented in Story 1.6
         "roles": ["Superadmin"],
     },
+    "audit_log": {
+        "label": "Revizioni log",
+        "icon": "bi-clock-history",
+        "url_name": "core:audit-log-list",
+        "roles": ["Superadmin"],
+    },
     "system_settings": {
         "label": "Podešavanja sistema",
         "icon": "bi-gear",
