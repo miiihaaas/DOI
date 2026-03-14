@@ -3,16 +3,20 @@ Core views for DOI Portal.
 
 DashboardView - Admin dashboard with role-based content (Story 1.7, 3.8).
 AuditLogListView, AuditLogDetailView - Audit log viewer (Story 6.2).
+DeletedItemsView, deleted_item_restore, deleted_item_permanent_delete - Deleted items management (Story 6.3).
 """
 
 import json
 from typing import Any
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
-from django.shortcuts import render
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404, render
+from django.views.decorators.http import require_POST
 from django.views.generic import DetailView
 from django.views.generic import ListView
 from django.views.generic import TemplateView
@@ -21,6 +25,7 @@ from auditlog.models import LogEntry
 from auditlog.registry import auditlog
 
 from doi_portal.core.menu import get_user_role
+from doi_portal.core.permissions import role_required
 from doi_portal.users.models import User
 from doi_portal.dashboard.services import (
     get_dashboard_statistics,
@@ -355,3 +360,136 @@ class AuditLogDetailView(SuperadminRequiredMixin, DetailView):
         context["changes_data"] = changes_data
 
         return context
+
+
+# ============================================================================
+# Story 6.3: Deleted Items Management
+# ============================================================================
+
+# Lazy imports to avoid circular dependencies
+MODEL_TYPE_MAP = None
+
+
+def _get_model_type_map():
+    """Lazy-load model type mapping to avoid circular imports."""
+    global MODEL_TYPE_MAP
+    if MODEL_TYPE_MAP is None:
+        from doi_portal.articles.models import Article, Author
+        from doi_portal.issues.models import Issue
+        from doi_portal.publications.models import Publication
+        from doi_portal.publishers.models import Publisher
+
+        MODEL_TYPE_MAP = {
+            "publisher": Publisher,
+            "publication": Publication,
+            "issue": Issue,
+            "article": Article,
+            "author": Author,
+        }
+    return MODEL_TYPE_MAP
+
+
+# Section config: (key, label, icon)
+MODEL_TYPE_SECTIONS = [
+    ("publisher", "Izdavači", "bi-building"),
+    ("publication", "Publikacije", "bi-journal-text"),
+    ("issue", "Izdanja", "bi-collection"),
+    ("article", "Članci", "bi-file-earmark-text"),
+    ("author", "Autori", "bi-person"),
+]
+
+
+class DeletedItemsView(SuperadminRequiredMixin, TemplateView):
+    """
+    View for managing soft-deleted items across all models.
+
+    AC#5: Superadmin can access "Obrisane stavke" page.
+    AC#8: Superadmin only access.
+    """
+
+    template_name = "core/deleted_items.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+
+        model_map = _get_model_type_map()
+        type_filter = self.request.GET.get("type", "")
+
+        # Build sections with pre-computed counts to avoid N+1 in template
+        sections = []
+        total_deleted_count = 0
+        for key, label, icon in MODEL_TYPE_SECTIONS:
+            model_class = model_map[key]
+            if type_filter and type_filter != key:
+                items = model_class.all_objects.none()
+            else:
+                items = (
+                    model_class.all_objects.filter(is_deleted=True)
+                    .select_related("deleted_by")
+                    .order_by("-deleted_at")
+                )
+            count = items.count()
+            total_deleted_count += count
+            sections.append({
+                "key": key,
+                "type": key,
+                "label": label,
+                "icon": icon,
+                "items": items,
+                "count": count,
+            })
+
+        context["deleted_sections"] = sections
+        context["total_deleted_count"] = total_deleted_count
+        context["type_filter"] = type_filter
+
+        # Breadcrumbs
+        context["breadcrumbs"] = [
+            {"label": "Kontrolna tabla", "url": "dashboard"},
+            {"label": "Obrisane stavke", "url": None},
+        ]
+
+        return context
+
+
+@require_POST
+@role_required("Superadmin")
+def deleted_item_restore(request, model_type, pk):
+    """
+    Restore a soft-deleted item.
+
+    AC#6: Superadmin can restore deleted records via HTMX POST.
+    """
+    model_map = _get_model_type_map()
+    model_class = model_map.get(model_type)
+    if not model_class:
+        raise Http404
+
+    instance = get_object_or_404(
+        model_class.all_objects, pk=pk, is_deleted=True
+    )
+    instance.restore()
+    messages.success(request, f"Stavka '{instance}' je uspešno vraćena.")
+    return HttpResponse("")
+
+
+@require_POST
+@role_required("Superadmin")
+def deleted_item_permanent_delete(request, model_type, pk):
+    """
+    Permanently delete a soft-deleted item.
+
+    AC#7: Superadmin can permanently delete records via HTMX POST.
+    """
+    model_map = _get_model_type_map()
+    model_class = model_map.get(model_type)
+    if not model_class:
+        raise Http404
+
+    instance = get_object_or_404(
+        model_class.all_objects, pk=pk, is_deleted=True
+    )
+    label = str(instance)
+    instance.delete()
+    messages.success(request, f"Stavka '{label}' je trajno obrisana.")
+    return HttpResponse("")

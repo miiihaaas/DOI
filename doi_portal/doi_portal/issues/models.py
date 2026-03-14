@@ -2,22 +2,17 @@
 Issue models for DOI Portal.
 
 Story 2.6: Issue Model & Admin CRUD.
+Story 6.3: Refactored to use SoftDeleteMixin from core.mixins.
 Supports: Volume/Issue tracking within Publications for Crossref DOI registration.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from doi_portal.core.mixins import SoftDeleteManager, SoftDeleteMixin
 from doi_portal.publications.models import Publication
-from doi_portal.publishers.models import SoftDeleteManager
-
-if TYPE_CHECKING:
-    from doi_portal.users.models import User
 
 __all__ = [
     "Issue",
@@ -34,7 +29,7 @@ class IssueStatus(models.TextChoices):
     ARCHIVE = "ARCHIVE", _("Arhivirano")
 
 
-class Issue(models.Model):
+class Issue(SoftDeleteMixin, models.Model):
     """
     Issue model for DOI Portal.
 
@@ -173,18 +168,6 @@ class Issue(models.Model):
     created_at = models.DateTimeField(_("Kreirano"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Ažurirano"), auto_now=True)
 
-    # === SOFT DELETE ===
-    is_deleted = models.BooleanField(_("Obrisano"), default=False)
-    deleted_at = models.DateTimeField(_("Vreme brisanja"), null=True, blank=True)
-    deleted_by = models.ForeignKey(
-        "users.User",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="deleted_issues",
-        verbose_name=_("Obrisao"),
-    )
-
     # === MANAGERS ===
     objects = SoftDeleteManager()
     all_objects = models.Manager()
@@ -224,25 +207,6 @@ class Issue(models.Model):
         if vol_no:
             return f"{self.publication.title} - {vol_no} ({self.year})"
         return f"{self.publication.title} ({self.year})"
-
-    def soft_delete(self, user: User | None = None) -> None:
-        """
-        Perform soft delete instead of actual deletion.
-
-        Args:
-            user: User performing the delete operation
-        """
-        self.is_deleted = True
-        self.deleted_at = timezone.now()
-        self.deleted_by = user
-        self.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])
-
-    def restore(self) -> None:
-        """Restore a soft-deleted issue."""
-        self.is_deleted = False
-        self.deleted_at = None
-        self.deleted_by = None
-        self.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])
 
     @property
     def article_count(self) -> int:

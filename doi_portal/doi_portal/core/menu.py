@@ -77,6 +77,12 @@ MENU_ITEMS: dict[str, dict] = {
         "url_name": "core:audit-log-list",
         "roles": ["Superadmin"],
     },
+    "deleted_items": {
+        "label": "Obrisane stavke",
+        "icon": "bi-trash",
+        "url_name": "core:deleted-items",
+        "roles": ["Superadmin"],
+    },
     "system_settings": {
         "label": "Podešavanja sistema",
         "icon": "bi-gear",

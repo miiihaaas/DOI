@@ -11,18 +11,12 @@ Supports: Article tracking within Issues for Crossref DOI registration.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from doi_portal.publishers.models import SoftDeleteManager
+from doi_portal.core.mixins import SoftDeleteManager, SoftDeleteMixin
 
 from .validators import validate_orcid
-
-if TYPE_CHECKING:
-    from doi_portal.users.models import User
 
 __all__ = [
     "Affiliation",
@@ -92,7 +86,7 @@ class PdfStatus(models.TextChoices):
     SCAN_FAILED = "scan_failed", _("Skeniranje neuspešno")
 
 
-class Article(models.Model):
+class Article(SoftDeleteMixin, models.Model):
     """
     Article model for DOI Portal.
 
@@ -328,18 +322,6 @@ class Article(models.Model):
     created_at = models.DateTimeField(_("Kreirano"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Ažurirano"), auto_now=True)
 
-    # === SOFT DELETE ===
-    is_deleted = models.BooleanField(_("Obrisano"), default=False)
-    deleted_at = models.DateTimeField(_("Vreme brisanja"), null=True, blank=True)
-    deleted_by = models.ForeignKey(
-        "users.User",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="deleted_articles",
-        verbose_name=_("Obrisao"),
-    )
-
     # === MANAGERS ===
     objects = SoftDeleteManager()
     all_objects = models.Manager()
@@ -359,25 +341,6 @@ class Article(models.Model):
     def __str__(self) -> str:
         return self.title
 
-    def soft_delete(self, user: User | None = None) -> None:
-        """
-        Perform soft delete instead of actual deletion.
-
-        Args:
-            user: User performing the delete operation
-        """
-        self.is_deleted = True
-        self.deleted_at = timezone.now()
-        self.deleted_by = user
-        self.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])
-
-    def restore(self) -> None:
-        """Restore a soft-deleted article."""
-        self.is_deleted = False
-        self.deleted_at = None
-        self.deleted_by = None
-        self.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])
-
     @property
     def status_badge_class(self) -> str:
         """Return Bootstrap CSS class for status badge."""
@@ -396,7 +359,7 @@ class Article(models.Model):
         return self.authors.count()
 
 
-class Author(models.Model):
+class Author(SoftDeleteMixin, models.Model):
     """
     Author/Contributor model for articles.
 
@@ -467,10 +430,15 @@ class Author(models.Model):
         default=0,
     )
 
+    # Managers
+    objects = SoftDeleteManager()
+    all_objects = models.Manager()
+
     class Meta:
         verbose_name = _("Autor")
         verbose_name_plural = _("Autori")
         ordering = ["order"]
+        default_manager_name = "objects"
 
     def __str__(self) -> str:
         if self.given_name:

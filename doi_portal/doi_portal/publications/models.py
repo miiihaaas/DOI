@@ -2,25 +2,21 @@
 Publication models for DOI Portal.
 
 Story 2.3: Publication Model with Type-Specific Fields.
+Story 6.3: Refactored to use SoftDeleteMixin from core.mixins.
 Supports: Journal, Conference proceedings, Book/Monograph, Other.
 Each type has specific fields required by Crossref schema 5.4.0.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from django.db import models
-from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
-from doi_portal.publishers.models import Publisher, SoftDeleteManager
+from doi_portal.core.mixins import SoftDeleteManager, SoftDeleteMixin
+from doi_portal.publishers.models import Publisher
 
 from .validators import validate_isbn, validate_issn
-
-if TYPE_CHECKING:
-    from doi_portal.users.models import User
 
 __all__ = [
     "Publication",
@@ -45,7 +41,7 @@ class AccessType(models.TextChoices):
     RESTRICTED = "RESTRICTED", _("Ograničeni pristup")
 
 
-class Publication(models.Model):
+class Publication(SoftDeleteMixin, models.Model):
     """
     Publication model with type-specific fields for Crossref compliance.
 
@@ -204,18 +200,6 @@ class Publication(models.Model):
     created_at = models.DateTimeField(_("Kreirano"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Ažurirano"), auto_now=True)
 
-    # === SOFT DELETE ===
-    is_deleted = models.BooleanField(_("Obrisano"), default=False)
-    deleted_at = models.DateTimeField(_("Vreme brisanja"), null=True, blank=True)
-    deleted_by = models.ForeignKey(
-        "users.User",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="deleted_publications",
-        verbose_name=_("Obrisao"),
-    )
-
     # === MANAGERS ===
     objects = SoftDeleteManager()
     all_objects = models.Manager()
@@ -243,25 +227,6 @@ class Publication(models.Model):
                 self.slug = f"{original_slug}-{counter}"
                 counter += 1
         super().save(*args, **kwargs)
-
-    def soft_delete(self, user: User | None = None) -> None:
-        """
-        Perform soft delete instead of actual deletion.
-
-        Args:
-            user: User performing the delete operation
-        """
-        self.is_deleted = True
-        self.deleted_at = timezone.now()
-        self.deleted_by = user
-        self.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])
-
-    def restore(self) -> None:
-        """Restore a soft-deleted publication."""
-        self.is_deleted = False
-        self.deleted_at = None
-        self.deleted_by = None
-        self.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])
 
     @property
     def issue_count(self) -> int:

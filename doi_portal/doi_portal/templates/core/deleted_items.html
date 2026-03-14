@@ -1,0 +1,105 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Obrisane stavke - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-trash me-2"></i>Obrisane stavke</h1>
+</div>
+
+{% comment %}Filter by model type{% endcomment %}
+<div class="mb-4">
+    <div class="btn-group" role="group">
+        <a href="{% url 'core:deleted-items' %}"
+           class="btn btn-outline-secondary {% if not type_filter %}active{% endif %}">
+            Sve
+        </a>
+        <a href="{% url 'core:deleted-items' %}?type=publisher"
+           class="btn btn-outline-secondary {% if type_filter == 'publisher' %}active{% endif %}">
+            Izdavači
+        </a>
+        <a href="{% url 'core:deleted-items' %}?type=publication"
+           class="btn btn-outline-secondary {% if type_filter == 'publication' %}active{% endif %}">
+            Publikacije
+        </a>
+        <a href="{% url 'core:deleted-items' %}?type=issue"
+           class="btn btn-outline-secondary {% if type_filter == 'issue' %}active{% endif %}">
+            Izdanja
+        </a>
+        <a href="{% url 'core:deleted-items' %}?type=article"
+           class="btn btn-outline-secondary {% if type_filter == 'article' %}active{% endif %}">
+            Članci
+        </a>
+        <a href="{% url 'core:deleted-items' %}?type=author"
+           class="btn btn-outline-secondary {% if type_filter == 'author' %}active{% endif %}">
+            Autori
+        </a>
+    </div>
+</div>
+
+{% if not total_deleted_count %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+        <p class="mt-3 mb-0 text-muted">Nema obrisanih stavki</p>
+    </div>
+</div>
+{% else %}
+
+{% for section in deleted_sections %}
+{% if section.count %}
+<div class="card mb-3">
+    <div class="card-header" data-bs-toggle="collapse" data-bs-target="#{{ section.key }}-collapse"
+         role="button" aria-expanded="true" aria-controls="{{ section.key }}-collapse">
+        <h5 class="mb-0">
+            <i class="bi {{ section.icon }} me-2"></i>{{ section.label }}
+            <span class="badge bg-danger ms-2">{{ section.count }}</span>
+        </h5>
+    </div>
+    <div class="collapse show" id="{{ section.key }}-collapse">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Naziv</th>
+                        <th>Obrisao</th>
+                        <th>Datum brisanja</th>
+                        <th>Akcije</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in section.items %}
+                    <tr>
+                        <td>{{ item }}</td>
+                        <td>{{ item.deleted_by.email|default:"-" }}</td>
+                        <td>{{ item.deleted_at|date:"d.m.Y H:i" }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-success me-1"
+                                    hx-post="{% url 'core:deleted-item-restore' model_type=section.type pk=item.pk %}"
+                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                    hx-target="closest tr"
+                                    hx-swap="outerHTML"
+                                    hx-confirm="Da li ste sigurni da želite da vratite ovu stavku?">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Vrati
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    hx-post="{% url 'core:deleted-item-permanent-delete' model_type=section.type pk=item.pk %}"
+                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                    hx-target="closest tr"
+                                    hx-swap="outerHTML"
+                                    hx-confirm="PAŽNJA: Ova akcija je nepovratna! Da li ste sigurni da želite trajno obrisati ovu stavku?">
+                                <i class="bi bi-x-circle me-1"></i>Trajno obriši
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% endif %}
+{% endblock %}

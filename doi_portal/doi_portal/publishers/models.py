@@ -2,21 +2,19 @@
 Publisher models for DOI Portal.
 
 Story 2.1: Publisher Model & Admin CRUD
+Story 6.3: Refactored to use SoftDeleteMixin from core.mixins
 """
 
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
-if TYPE_CHECKING:
-    from doi_portal.users.models import User
+from doi_portal.core.mixins import SoftDeleteManager, SoftDeleteMixin  # noqa: F401
 
 __all__ = [
     "Publisher",
@@ -43,23 +41,7 @@ def validate_doi_prefix(value: str) -> None:
         )
 
 
-class SoftDeleteManager(models.Manager):
-    """Manager that filters out soft-deleted records by default."""
-
-    def get_queryset(self):
-        """Return queryset excluding soft-deleted records."""
-        return super().get_queryset().filter(is_deleted=False)
-
-    def all_with_deleted(self):
-        """Return queryset including soft-deleted records."""
-        return super().get_queryset()
-
-    def deleted_only(self):
-        """Return queryset with only soft-deleted records."""
-        return super().get_queryset().filter(is_deleted=True)
-
-
-class Publisher(models.Model):
+class Publisher(SoftDeleteMixin, models.Model):
     """
     Publisher model for DOI Portal.
 
@@ -124,18 +106,6 @@ class Publisher(models.Model):
     created_at = models.DateTimeField(_("Kreirano"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Ažurirano"), auto_now=True)
 
-    # Soft delete
-    is_deleted = models.BooleanField(_("Obrisano"), default=False)
-    deleted_at = models.DateTimeField(_("Vreme brisanja"), null=True, blank=True)
-    deleted_by = models.ForeignKey(
-        "users.User",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="deleted_publishers",
-        verbose_name=_("Obrisao"),
-    )
-
     # Managers
     objects = SoftDeleteManager()
     all_objects = models.Manager()  # Includes soft-deleted
@@ -164,25 +134,6 @@ class Publisher(models.Model):
                 self.slug = f"{original_slug}-{counter}"
                 counter += 1
         super().save(*args, **kwargs)
-
-    def soft_delete(self, user: User | None = None) -> None:
-        """
-        Perform soft delete instead of actual deletion.
-
-        Args:
-            user: User performing the delete operation
-        """
-        self.is_deleted = True
-        self.deleted_at = timezone.now()
-        self.deleted_by = user
-        self.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])
-
-    def restore(self) -> None:
-        """Restore a soft-deleted publisher."""
-        self.is_deleted = False
-        self.deleted_at = None
-        self.deleted_by = None
-        self.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])
 
     @property
     def publication_count(self) -> int:
