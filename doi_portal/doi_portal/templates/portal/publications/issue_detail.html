@@ -1,9 +1,9 @@
 {% extends "portal/base.html" %}
-{% load static i18n %}
+{% load static i18n portal_tags %}
 
-{% block title %}{{ issue.publication.title }} - Vol. {{ issue.volume }}, No. {{ issue.issue_number }} ({{ issue.year }}) - DOI Portal{% endblock title %}
+{% block title %}{{ issue.publication.title }} - {{ issue|issue_label }} - DOI Portal{% endblock title %}
 
-{% block meta_description %}Izdanje Vol. {{ issue.volume }}, No. {{ issue.issue_number }} ({{ issue.year }}) publikacije {{ issue.publication.title }} na DOI Portalu.{% endblock meta_description %}
+{% block meta_description %}Izdanje {{ issue|issue_label }} publikacije {{ issue.publication.title }} na DOI Portalu.{% endblock meta_description %}
 
 {% block portal_content %}
 <div class="row">
@@ -12,7 +12,7 @@
             <h1 class="h3 mb-3">
                 {{ issue.publication.title }}
                 <small class="text-muted d-block mt-1">
-                    Vol. {{ issue.volume }}, No. {{ issue.issue_number }} ({{ issue.year }})
+                    {{ issue|issue_label }}
                 </small>
             </h1>
 
@@ -34,7 +34,7 @@
             <div class="mb-4">
                 <img src="{{ issue.cover_image.url }}"
                      class="img-fluid rounded"
-                     alt="Naslovna slika: {{ issue.publication.title }} Vol. {{ issue.volume }}, No. {{ issue.issue_number }}"
+                     alt="Naslovna slika: {{ issue.publication.title }} {{ issue|issue_label }}"
                      style="max-height: 300px;">
             </div>
             {% endif %}

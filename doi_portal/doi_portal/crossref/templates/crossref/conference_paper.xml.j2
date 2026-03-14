@@ -57,6 +57,9 @@
         {% if publication.isbn_online %}
         <isbn media_type="electronic">{{ publication.isbn_online }}</isbn>
         {% endif %}
+        {% if not publication.isbn_print and not publication.isbn_online %}
+        <noisbn reason="simple_series"/>
+        {% endif %}
       </proceedings_metadata>
       {% for article in articles %}
       <conference_paper publication_type="{{ article.publication_type }}">

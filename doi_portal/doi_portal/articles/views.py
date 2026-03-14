@@ -790,6 +790,66 @@ def affiliation_form_view(request, author_pk):
     })
 
 
+@login_required
+@require_GET
+def affiliation_edit_form_view(request, pk):
+    """Return pre-populated affiliation form for editing via HTMX GET."""
+    affiliation = get_object_or_404(
+        Affiliation.objects.select_related(
+            "author", "author__article",
+            "author__article__issue",
+            "author__article__issue__publication",
+            "author__article__issue__publication__publisher",
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, affiliation.author.article)
+
+    form = AffiliationForm(instance=affiliation)
+    return render(request, "articles/partials/_affiliation_form.html", {
+        "author": affiliation.author,
+        "affiliation_form": form,
+        "affiliation": affiliation,
+    })
+
+
+@login_required
+@require_POST
+def affiliation_update(request, pk):
+    """Update existing affiliation via HTMX POST."""
+    affiliation = get_object_or_404(
+        Affiliation.objects.select_related(
+            "author", "author__article",
+            "author__article__issue",
+            "author__article__issue__publication",
+            "author__article__issue__publication__publisher",
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, affiliation.author.article)
+
+    form = AffiliationForm(request.POST, instance=affiliation)
+    if form.is_valid():
+        form.save()
+    else:
+        response = render(request, "articles/partials/_affiliation_form.html", {
+            "author": affiliation.author,
+            "affiliation_form": form,
+            "affiliation": affiliation,
+        })
+        response["HX-Retarget"] = "#author-form-container"
+        response["HX-Reswap"] = "innerHTML"
+        return response
+
+    article = affiliation.author.article
+    authors = article.authors.prefetch_related("affiliations").all()
+    return render(request, "articles/partials/_author_list.html", {
+        "article": article,
+        "authors": authors,
+        "author_form": AuthorForm(),
+    })
+
+
 # =============================================================================
 # HTMX FBV views for PDF Upload (Story 3.3)
 # =============================================================================

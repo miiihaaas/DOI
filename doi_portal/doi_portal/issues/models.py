@@ -201,8 +201,29 @@ class Issue(models.Model):
             ),
         ]
 
+    @property
+    def label(self) -> str:
+        """Build issue label showing only populated fields (Vol., No.)."""
+        parts = []
+        if self.volume:
+            parts.append(f"Vol. {self.volume}")
+        if self.issue_number:
+            parts.append(f"No. {self.issue_number}")
+        vol_no = ", ".join(parts)
+        if vol_no:
+            return f"{vol_no} ({self.year})"
+        return f"({self.year})"
+
     def __str__(self) -> str:
-        return f"{self.publication.title} - Vol. {self.volume}, No. {self.issue_number} ({self.year})"
+        parts = []
+        if self.volume:
+            parts.append(f"Vol. {self.volume}")
+        if self.issue_number:
+            parts.append(f"No. {self.issue_number}")
+        vol_no = ", ".join(parts)
+        if vol_no:
+            return f"{self.publication.title} - {vol_no} ({self.year})"
+        return f"{self.publication.title} ({self.year})"
 
     def soft_delete(self, user: User | None = None) -> None:
         """

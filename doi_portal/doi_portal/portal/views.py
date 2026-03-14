@@ -25,6 +25,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.db import models
+from django.db.models.functions import Cast
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
@@ -311,7 +312,7 @@ class IssuePublicDetailView(DetailView):
                 ),
             },
             {
-                "label": f"Vol. {issue.volume}, No. {issue.issue_number} ({issue.year})",
+                "label": issue.label,
                 "url": None,
             },
         ]
@@ -323,7 +324,17 @@ class IssuePublicDetailView(DetailView):
             )
             .select_related("issue__publication__publisher")
             .prefetch_related("authors")
-            .order_by("first_page", "title")
+            .annotate(
+                first_page_numeric=models.Case(
+                    models.When(
+                        first_page__regex=r"^\d+$",
+                        then=Cast("first_page", output_field=models.IntegerField()),
+                    ),
+                    default=models.Value(999999),
+                    output_field=models.IntegerField(),
+                ),
+            )
+            .order_by("first_page_numeric", "title")
         )
         return context
 
@@ -546,7 +557,7 @@ class ArticleLandingView(DetailView):
                 ),
             },
             {
-                "label": f"Vol. {issue.volume}, No. {issue.issue_number} ({issue.year})",
+                "label": issue.label,
                 "url": reverse(
                     "portal-publications:issue-detail",
                     kwargs={"slug": publication.slug, "pk": issue.pk},

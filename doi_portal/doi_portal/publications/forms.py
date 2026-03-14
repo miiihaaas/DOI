@@ -325,6 +325,8 @@ class PublicationForm(forms.ModelForm):
                 "conference_location",
                 "conference_date",
                 "conference_date_end",
+                "isbn_print",
+                "isbn_online",
                 "series_issn",
             ],
             PublicationType.BOOK: [

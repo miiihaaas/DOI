@@ -1,5 +1,5 @@
 {% extends "portal/base.html" %}
-{% load markup_tags %}
+{% load markup_tags portal_tags %}
 
 {% block title %}{{ article.title|strip_markup }} - {{ article.issue.publication.title }} - DOI Portal{% endblock title %}
 
@@ -190,7 +190,7 @@
         </p>
         <p class="small text-muted mb-2">
           <a href="{% url 'portal-publications:issue-detail' slug=article.issue.publication.slug pk=article.issue.pk %}">
-            Vol. {{ article.issue.volume }}, No. {{ article.issue.issue_number }} ({{ article.issue.year }})
+            {{ article.issue|issue_label }}
           </a>
         </p>
         <span class="badge bg-secondary">

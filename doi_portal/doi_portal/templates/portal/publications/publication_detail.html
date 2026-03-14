@@ -1,5 +1,5 @@
 {% extends "portal/base.html" %}
-{% load static i18n %}
+{% load static i18n portal_tags %}
 
 {% block title %}{{ publication.title }} - DOI Portal{% endblock title %}
 
@@ -138,6 +138,16 @@
                         <dd class="col-sm-8">{{ publication.conference_number }}.</dd>
                         {% endif %}
 
+                        {% if publication.isbn_print %}
+                        <dt class="col-sm-4">ISBN (štampano)</dt>
+                        <dd class="col-sm-8">{{ publication.isbn_print }}</dd>
+                        {% endif %}
+
+                        {% if publication.isbn_online %}
+                        <dt class="col-sm-4">ISBN (online)</dt>
+                        <dd class="col-sm-8">{{ publication.isbn_online }}</dd>
+                        {% endif %}
+
                         {% if publication.series_issn %}
                         <dt class="col-sm-4">ISSN serije</dt>
                         <dd class="col-sm-8">{{ publication.series_issn }}</dd>
@@ -194,11 +204,10 @@
                                     {% if issue.cover_image %}
                                     <img src="{{ issue.cover_image.url }}"
                                          class="me-2 rounded"
-                                         alt="Vol. {{ issue.volume }}, No. {{ issue.issue_number }}"
+                                         alt="{{ issue|issue_label }}"
                                          style="max-height: 40px; width: auto; display: inline-block; vertical-align: middle;">
                                     {% endif %}
-                                    <strong>Vol. {{ issue.volume }}, No. {{ issue.issue_number }}</strong>
-                                    <span class="text-muted ms-2">({{ issue.year }})</span>
+                                    <strong>{{ issue|issue_label }}</strong>
                                     {% if issue.title %}
                                     <br><span class="text-muted">{{ issue.title }}</span>
                                     {% endif %}

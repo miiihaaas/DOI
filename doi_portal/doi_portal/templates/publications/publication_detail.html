@@ -147,12 +147,22 @@
                     <dd class="col-sm-9">{{ publication.conference_number }}.</dd>
                     {% endif %}
 
+                    {% if publication.isbn_print %}
+                    <dt class="col-sm-3">ISBN (štampano)</dt>
+                    <dd class="col-sm-9"><code>{{ publication.isbn_print }}</code></dd>
+                    {% endif %}
+
+                    {% if publication.isbn_online %}
+                    <dt class="col-sm-3">ISBN (online)</dt>
+                    <dd class="col-sm-9"><code>{{ publication.isbn_online }}</code></dd>
+                    {% endif %}
+
                     {% if publication.series_issn %}
                     <dt class="col-sm-3">ISSN serije</dt>
                     <dd class="col-sm-9"><code>{{ publication.series_issn }}</code></dd>
                     {% endif %}
                 </dl>
-                {% if not publication.conference_name and not publication.conference_acronym and not publication.conference_location and not publication.conference_date and not publication.conference_date_end and not publication.conference_number and not publication.series_issn %}
+                {% if not publication.conference_name and not publication.conference_acronym and not publication.conference_location and not publication.conference_date and not publication.conference_date_end and not publication.conference_number and not publication.isbn_print and not publication.isbn_online and not publication.series_issn %}
                 <p class="text-muted mb-0">Nema unetih podataka specifičnih za konferenciju.</p>
                 {% endif %}
             </div>

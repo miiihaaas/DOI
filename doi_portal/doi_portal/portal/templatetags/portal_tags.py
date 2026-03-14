@@ -13,6 +13,18 @@ from django.utils.safestring import mark_safe
 register = template.Library()
 
 
+@register.filter(name="issue_label")
+def issue_label(issue):
+    """
+    Generate issue label showing only populated fields.
+
+    Delegates to Issue.label property for single source of truth.
+
+    Usage: {{ issue|issue_label }}
+    """
+    return issue.label
+
+
 @register.filter(name="highlight_search")
 def highlight_search(text, query):
     """

@@ -70,6 +70,28 @@
     </div>
     <div class="row">
         <div class="col-md-6 mb-3">
+            <label for="id_isbn_print" class="form-label">ISBN (štampano izdanje)</label>
+            <input type="text" name="isbn_print" id="id_isbn_print"
+                   class="form-control {% if form.isbn_print.errors %}is-invalid{% endif %}"
+                   placeholder="978-XX-XXXX-XXX-X"
+                   value="{% if form.isbn_print.value %}{{ form.isbn_print.value }}{% endif %}">
+            {% if form.isbn_print.errors %}
+            <div class="invalid-feedback">{{ form.isbn_print.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="id_isbn_online" class="form-label">ISBN (elektronsko izdanje)</label>
+            <input type="text" name="isbn_online" id="id_isbn_online"
+                   class="form-control {% if form.isbn_online.errors %}is-invalid{% endif %}"
+                   placeholder="978-XX-XXXX-XXX-X"
+                   value="{% if form.isbn_online.value %}{{ form.isbn_online.value }}{% endif %}">
+            {% if form.isbn_online.errors %}
+            <div class="invalid-feedback">{{ form.isbn_online.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
             <label for="id_series_issn" class="form-label">ISSN serije</label>
             <input type="text" name="series_issn" id="id_series_issn"
                    class="form-control {% if form.series_issn.errors %}is-invalid{% endif %}"

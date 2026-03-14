@@ -76,6 +76,16 @@ urlpatterns = [
         views.affiliation_delete,
         name="affiliation-delete",
     ),
+    path(
+        "affiliations/<int:pk>/edit-form/",
+        views.affiliation_edit_form_view,
+        name="affiliation-edit-form",
+    ),
+    path(
+        "affiliations/<int:pk>/update/",
+        views.affiliation_update,
+        name="affiliation-update",
+    ),
     # Auto-save HTMX endpoint (Story 3.4)
     path(
         "<int:pk>/autosave/",
