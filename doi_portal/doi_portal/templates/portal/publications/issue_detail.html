@@ -22,10 +22,10 @@
 
             <div class="mb-3">
                 <span class="badge {{ issue.status_badge_class }}">{{ issue.get_status_display }}</span>
-                {% if issue.publication_date %}
+                {% if issue.publication_month %}
                 <span class="text-muted ms-2">
                     <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>
-                    {{ issue.publication_date|date:"d.m.Y." }}
+                    {% if issue.publication_day %}{{ issue.publication_day }}.{% endif %}{{ issue.publication_month }}.{{ issue.year }}.
                 </span>
                 {% endif %}
             </div>

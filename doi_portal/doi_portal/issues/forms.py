@@ -4,6 +4,7 @@ Issue forms for DOI Portal.
 Story 2.6: Issue form with publication scoping and validation.
 """
 
+import calendar
 import json
 
 from django import forms
@@ -34,7 +35,8 @@ class IssueForm(forms.ModelForm):
             "year",
             "title",
             "cover_image",
-            "publication_date",
+            "publication_month",
+            "publication_day",
             "status",
             "proceedings_title",
             "proceedings_publisher_name",
@@ -78,11 +80,19 @@ class IssueForm(forms.ModelForm):
                     "accept": "image/*",
                 }
             ),
-            "publication_date": forms.DateInput(
-                attrs={
-                    "class": "form-control",
-                    "type": "date",
-                }
+            "publication_month": forms.Select(
+                choices=[("", "—")] + [
+                    (i, name) for i, name in enumerate(
+                        ["januar", "februar", "mart", "april", "maj", "jun",
+                         "jul", "avgust", "septembar", "oktobar", "novembar", "decembar"],
+                        start=1,
+                    )
+                ],
+                attrs={"class": "form-select"},
+            ),
+            "publication_day": forms.Select(
+                choices=[("", "—")] + [(i, str(i)) for i in range(1, 32)],
+                attrs={"class": "form-select"},
             ),
             "status": forms.Select(
                 attrs={
@@ -115,7 +125,8 @@ class IssueForm(forms.ModelForm):
             "year": _("Godina"),
             "title": _("Naslov"),
             "cover_image": _("Naslovna slika"),
-            "publication_date": _("Datum objave"),
+            "publication_month": _("Mesec objave"),
+            "publication_day": _("Dan objave"),
             "status": _("Status"),
             "proceedings_title": _("Naslov zbornika"),
             "proceedings_publisher_name": _("Naziv izdavača zbornika"),
@@ -179,6 +190,24 @@ class IssueForm(forms.ModelForm):
         publication = cleaned_data.get("publication")
         volume = cleaned_data.get("volume")
         issue_number = cleaned_data.get("issue_number")
+
+        # Validate publication_month / publication_day consistency
+        pub_month = cleaned_data.get("publication_month")
+        pub_day = cleaned_data.get("publication_day")
+        year = cleaned_data.get("year")
+
+        if pub_day and not pub_month:
+            self.add_error(
+                "publication_month",
+                _("Morate izabrati mesec ako birate dan."),
+            )
+        elif pub_month and pub_day and year:
+            _, max_day = calendar.monthrange(year, pub_month)
+            if pub_day > max_day:
+                self.add_error(
+                    "publication_day",
+                    _(f"Mesec {pub_month} u godini {year} ima samo {max_day} dana."),
+                )
 
         if publication is not None:
             qs = Issue.objects.filter(

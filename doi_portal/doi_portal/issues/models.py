@@ -8,6 +8,7 @@ Supports: Volume/Issue tracking within Publications for Crossref DOI registratio
 
 from __future__ import annotations
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -73,11 +74,19 @@ class Issue(SoftDeleteMixin, models.Model):
         null=True,
         help_text=_("Naslovna slika izdanja"),
     )
-    publication_date = models.DateField(
-        _("Datum objave"),
+    publication_month = models.PositiveSmallIntegerField(
+        _("Mesec objave"),
         blank=True,
         null=True,
-        help_text=_("Datum objave izdanja"),
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+        help_text=_("Mesec objave izdanja (opciono)"),
+    )
+    publication_day = models.PositiveSmallIntegerField(
+        _("Dan objave"),
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1), MaxValueValidator(31)],
+        help_text=_("Dan objave izdanja (opciono)"),
     )
     status = models.CharField(
         _("Status"),

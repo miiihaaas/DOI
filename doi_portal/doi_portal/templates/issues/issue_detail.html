@@ -65,9 +65,11 @@
                         </span>
                     </dd>
 
-                    {% if issue.publication_date %}
+                    {% if issue.publication_month %}
                     <dt class="col-sm-3">Datum objave</dt>
-                    <dd class="col-sm-9">{{ issue.publication_date|date:"d.m.Y." }}</dd>
+                    <dd class="col-sm-9">
+                        {% if issue.publication_day %}{{ issue.publication_day }}.{% endif %}{{ issue.publication_month }}.{{ issue.year }}.
+                    </dd>
                     {% endif %}
                 </dl>
             </div>

@@ -213,8 +213,8 @@
                                     {% endif %}
                                 </div>
                                 <div class="text-end">
-                                    {% if issue.publication_date %}
-                                    <small class="text-muted d-block">{{ issue.publication_date|date:"d.m.Y." }}</small>
+                                    {% if issue.publication_month %}
+                                    <small class="text-muted d-block">{% if issue.publication_day %}{{ issue.publication_day }}.{% endif %}{{ issue.publication_month }}.{{ issue.year }}.</small>
                                     {% endif %}
                                     <small class="text-muted">
                                         <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>

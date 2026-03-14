@@ -34,17 +34,15 @@
         <publisher>
           <publisher_name>{{ publisher.name }}</publisher_name>
         </publisher>
-        {% if issue.publication_date %}
         <publication_date media_type="online">
-          <month>{{ issue.publication_date|format_date('%m') }}</month>
-          <day>{{ issue.publication_date|format_date('%d') }}</day>
+          {% if issue.publication_month %}
+          <month>{{ issue.publication_month|format_month }}</month>
+          {% endif %}
+          {% if issue.publication_day %}
+          <day>{{ issue.publication_day|format_day }}</day>
+          {% endif %}
           <year>{{ issue.year }}</year>
         </publication_date>
-        {% else %}
-        <publication_date media_type="online">
-          <year>{{ issue.year }}</year>
-        </publication_date>
-        {% endif %}
       </book_metadata>
       {% for article in articles %}
       <content_item component_type="chapter">

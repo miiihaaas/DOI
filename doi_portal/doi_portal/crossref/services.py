@@ -72,6 +72,20 @@ def format_date(date_value: datetime | None, fmt: str = "%Y%m%d") -> str:
     return date_value.strftime(fmt)
 
 
+def format_month(value: int | None) -> str:
+    """Format month number as two-digit string (e.g., 3 → '03')."""
+    if value is None:
+        return ""
+    return f"{int(value):02d}"
+
+
+def format_day(value: int | None) -> str:
+    """Format day number as two-digit string (e.g., 5 → '05')."""
+    if value is None:
+        return ""
+    return f"{int(value):02d}"
+
+
 def format_orcid_url(orcid: str | None) -> str:
     """
     Format ORCID as full URL.
@@ -112,13 +126,13 @@ class CrossrefService:
     REQUIRED_FIELDS = {
         "JOURNAL": {
             "publication": ["title", "issn_print", "issn_online"],
-            "issue": ["volume", "year", "publication_date"],
+            "issue": ["volume", "year"],
             "article": ["title", "doi_suffix"],
             "author": ["surname", "sequence", "contributor_role"],
         },
         "CONFERENCE": {
             "publication": ["title", "conference_name"],
-            "issue": ["year", "publication_date"],
+            "issue": ["year"],
             "article": ["title", "doi_suffix"],
             "author": ["surname", "sequence", "contributor_role"],
         },
@@ -150,6 +164,8 @@ class CrossrefService:
         self.env.filters["xml_escape"] = xml_escape
         self.env.filters["format_date"] = format_date
         self.env.filters["format_orcid_url"] = format_orcid_url
+        self.env.filters["format_month"] = format_month
+        self.env.filters["format_day"] = format_day
 
     def generate_doi_batch_id(self) -> str:
         """
@@ -380,7 +396,8 @@ class CrossrefService:
                 "issue_number": issue.issue_number,
                 "year": issue.year,
                 "title": issue.title,
-                "publication_date": issue.publication_date,
+                "publication_month": issue.publication_month,
+                "publication_day": issue.publication_day,
                 # Conference proceedings fields
                 "proceedings_title": issue.proceedings_title,
                 "proceedings_publisher_name": issue.proceedings_publisher_name,
@@ -553,15 +570,6 @@ class PreValidationService:
             ValidationResult with common field errors
         """
         result = ValidationResult()
-
-        # Publication date is required
-        if not issue.publication_date:
-            result.add_error(
-                message="Nedostaje datum objave izdanja",
-                field_name="publication_date",
-                fix_url=f"/admin/issues/issue/{issue.pk}/change/",
-            )
-
         return result
 
     def _validate_journal_fields(self, issue: Issue) -> ValidationResult:
@@ -582,7 +590,7 @@ class PreValidationService:
             result.add_error(
                 message="Nedostaje ISSN (štampani ili online)",
                 field_name="issn",
-                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+                fix_url=f"/dashboard/publications/{publication.slug}/edit/",
             )
 
         return result
@@ -605,7 +613,7 @@ class PreValidationService:
             result.add_error(
                 message="Nedostaje naziv konferencije",
                 field_name="conference_name",
-                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+                fix_url=f"/dashboard/publications/{publication.slug}/edit/",
             )
 
         # Conference date is recommended (warning)
@@ -613,7 +621,7 @@ class PreValidationService:
             result.add_warning(
                 message="Nedostaje datum konferencije",
                 field_name="conference_date",
-                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+                fix_url=f"/dashboard/publications/{publication.slug}/edit/",
             )
 
         # Conference location is recommended (warning)
@@ -621,7 +629,7 @@ class PreValidationService:
             result.add_warning(
                 message="Nedostaje lokacija konferencije",
                 field_name="conference_location",
-                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+                fix_url=f"/dashboard/publications/{publication.slug}/edit/",
             )
 
         # Proceedings title is required (from Issue or Publication)
@@ -629,7 +637,7 @@ class PreValidationService:
             result.add_error(
                 message="Nedostaje naslov zbornika",
                 field_name="proceedings_title",
-                fix_url=f"/admin/issues/issue/{issue.pk}/change/",
+                fix_url=f"/dashboard/issues/{issue.pk}/edit/",
             )
 
         return result
@@ -652,7 +660,7 @@ class PreValidationService:
             result.add_error(
                 message="Nedostaje ISBN (štampani ili online)",
                 field_name="isbn",
-                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+                fix_url=f"/dashboard/publications/{publication.slug}/edit/",
             )
 
         # Book title is required
@@ -660,7 +668,7 @@ class PreValidationService:
             result.add_error(
                 message="Nedostaje naslov knjige",
                 field_name="book_title",
-                fix_url=f"/admin/publications/publication/{publication.pk}/change/",
+                fix_url=f"/dashboard/publications/{publication.slug}/edit/",
             )
 
         return result
@@ -683,7 +691,7 @@ class PreValidationService:
                 message=f"Nedostaje naslov članka (ID: {article.pk})",
                 field_name="title",
                 article_id=article.pk,
-                fix_url=f"/admin/articles/article/{article.pk}/change/",
+                fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
 
         # DOI suffix is required
@@ -692,7 +700,7 @@ class PreValidationService:
                 message=f"Nedostaje DOI sufiks (članak: {article.title or article.pk})",
                 field_name="doi_suffix",
                 article_id=article.pk,
-                fix_url=f"/admin/articles/article/{article.pk}/change/",
+                fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
 
         # At least one author is required
@@ -702,7 +710,7 @@ class PreValidationService:
                 message=f"Članak nema autore ({article.title or article.pk})",
                 field_name="authors",
                 article_id=article.pk,
-                fix_url=f"/admin/articles/article/{article.pk}/change/",
+                fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
         else:
             # Validate each author (determine first author once to avoid N+1 queries)
@@ -717,7 +725,7 @@ class PreValidationService:
                 message=f"Eksterni URL je uključen ali landing URL nije popunjen (članak: {article.title or article.pk})",
                 field_name="external_landing_url",
                 article_id=article.pk,
-                fix_url=f"/admin/articles/article/{article.pk}/change/",
+                fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
 
         # Validate original language title consistency
@@ -726,21 +734,21 @@ class PreValidationService:
                 message=f"Naslov na originalnom jeziku je popunjen ali jezik nije izabran (članak: {article.title or article.pk})",
                 field_name="original_language_title_language",
                 article_id=article.pk,
-                fix_url=f"/admin/articles/article/{article.pk}/change/",
+                fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
         if article.original_language_title_language and not article.original_language_title:
             result.add_warning(
                 message=f"Jezik originalnog naslova je izabran ali naslov nije popunjen (članak: {article.title or article.pk})",
                 field_name="original_language_title",
                 article_id=article.pk,
-                fix_url=f"/admin/articles/article/{article.pk}/change/",
+                fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
         if article.original_language_subtitle and not article.original_language_title:
             result.add_warning(
                 message=f"Podnaslov na originalnom jeziku je popunjen ali naslov nije (članak: {article.title or article.pk})",
                 field_name="original_language_title",
                 article_id=article.pk,
-                fix_url=f"/admin/articles/article/{article.pk}/change/",
+                fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
 
         return result
@@ -770,7 +778,7 @@ class PreValidationService:
                 message=f"Autor nema prezime (članak: {article.title or article.pk})",
                 field_name="surname",
                 article_id=article.pk,
-                fix_url=f"/admin/articles/article/{article.pk}/change/",
+                fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
 
         # Given name is recommended (warning)
@@ -779,7 +787,7 @@ class PreValidationService:
                 message=f"Autor nema ime (članak: {article.title or article.pk})",
                 field_name="given_name",
                 article_id=article.pk,
-                fix_url=f"/admin/articles/article/{article.pk}/change/",
+                fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
 
         # First author must have sequence='first'
@@ -788,7 +796,7 @@ class PreValidationService:
                 message=f"Prvi autor mora imati sequence='first' (članak: {article.title or article.pk})",
                 field_name="sequence",
                 article_id=article.pk,
-                fix_url=f"/admin/articles/article/{article.pk}/change/",
+                fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
 
         # Contributor role is required
@@ -797,7 +805,7 @@ class PreValidationService:
                 message=f"Autor nema definisanu ulogu (članak: {article.title or article.pk})",
                 field_name="contributor_role",
                 article_id=article.pk,
-                fix_url=f"/admin/articles/article/{article.pk}/change/",
+                fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
 
         return result

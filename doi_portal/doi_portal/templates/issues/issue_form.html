@@ -80,13 +80,21 @@
                             {% endif %}
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="id_publication_date" class="form-label">Datum objave</label>
-                            {{ form.publication_date }}
-                            {% if form.publication_date.errors %}
-                            <div class="invalid-feedback d-block">{{ form.publication_date.errors.0 }}</div>
+                            <label for="id_publication_month" class="form-label">Mesec objave</label>
+                            {{ form.publication_month }}
+                            {% if form.publication_month.errors %}
+                            <div class="invalid-feedback d-block">{{ form.publication_month.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3 mb-3" x-show="hasMonth" x-transition>
+                            <label for="id_publication_day" class="form-label">Dan objave</label>
+                            {{ form.publication_day }}
+                            {% if form.publication_day.errors %}
+                            <div class="invalid-feedback d-block">{{ form.publication_day.errors.0 }}</div>
                             {% endif %}
                         </div>
                     </div>
+                    <div class="form-text text-muted mb-3">Datum objave: godina je obavezna, mesec i dan su opcioni.</div>
 
                     <div class="row">
                         <div class="col-md-8 mb-3">
@@ -159,6 +167,7 @@
                         return {
                             pubTypeMap: {},
                             isConference: false,
+                            hasMonth: false,
                             init() {
                                 const mapEl = document.getElementById('pub-type-map');
                                 if (mapEl) {
@@ -173,6 +182,13 @@
                                     this.updateType(select.value);
                                     select.addEventListener('change', (e) => {
                                         this.updateType(e.target.value);
+                                    });
+                                }
+                                const monthSelect = document.getElementById('id_publication_month');
+                                if (monthSelect) {
+                                    this.hasMonth = monthSelect.value !== '';
+                                    monthSelect.addEventListener('change', (e) => {
+                                        this.hasMonth = e.target.value !== '';
                                     });
                                 }
                             },
