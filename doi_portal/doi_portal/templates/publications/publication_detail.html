@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">
+    <h1 class="h3 mb-0 page-title">
         <i class="{{ publication.type_icon }} me-2"></i>{{ publication.title }}
     </h1>
     <div>
@@ -24,9 +24,9 @@
 <div class="row">
     <!-- Main Info Card -->
     <div class="col-lg-8">
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header">
-                <h5 class="mb-0">Osnovne informacije</h5>
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
@@ -42,7 +42,7 @@
 
                     <dt class="col-sm-3">Tip publikacije</dt>
                     <dd class="col-sm-9">
-                        <span class="badge bg-secondary">
+                        <span class="badge bg-doi-teal">
                             <i class="{{ publication.type_icon }} me-1"></i>{{ publication.type_display }}
                         </span>
                     </dd>
@@ -74,7 +74,7 @@
 
         <!-- Type-Specific Fields Card -->
         {% if publication.publication_type == 'JOURNAL' %}
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Polja za časopis</h5>
             </div>
@@ -106,7 +106,7 @@
             </div>
         </div>
         {% elif publication.publication_type == 'CONFERENCE' %}
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-people me-2"></i>Polja za konferenciju</h5>
             </div>
@@ -168,7 +168,7 @@
             </div>
         </div>
         {% elif publication.publication_type == 'BOOK' %}
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-book me-2"></i>Polja za knjigu</h5>
             </div>
@@ -206,9 +206,9 @@
     <div class="col-lg-4">
         <!-- Cover Image -->
         {% if publication.cover_image %}
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header">
-                <h5 class="mb-0">Naslovna slika</h5>
+                <h5 class="mb-0"><i class="bi bi-image me-2"></i>Naslovna slika</h5>
             </div>
             <div class="card-body text-center">
                 <img src="{{ publication.cover_image.url }}" alt="{{ publication.title }}"
@@ -218,9 +218,9 @@
         {% endif %}
 
         <!-- Metadata Card -->
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header">
-                <h5 class="mb-0">Metapodaci</h5>
+                <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Metapodaci</h5>
             </div>
             <div class="card-body">
                 <dl class="mb-0">
@@ -234,17 +234,17 @@
                     <dd><code>{{ publication.slug }}</code></dd>
 
                     <dt>Broj izdanja</dt>
-                    <dd>{{ publication.issue_count }}</dd>
+                    <dd><span class="badge bg-doi-teal">{{ publication.issue_count }}</span></dd>
                 </dl>
             </div>
         </div>
 
         <!-- Issues Card -->
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Izdanja</h5>
-                <a href="{% url 'issues:list' %}?publication={{ publication.pk }}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-collection me-1"></i>Sva izdanja ({{ publication.issue_count }})
+                <h5 class="mb-0"><i class="bi bi-collection me-2"></i>Izdanja</h5>
+                <a href="{% url 'issues:list' %}?publication={{ publication.pk }}" class="btn btn-sm">
+                    Sva izdanja ({{ publication.issue_count }})
                 </a>
             </div>
             <div class="card-body">
@@ -255,9 +255,9 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="card">
+        <div class="card shadow-sm quick-actions">
             <div class="card-header">
-                <h5 class="mb-0">Brze akcije</h5>
+                <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Brze akcije</h5>
             </div>
             <div class="list-group list-group-flush">
                 {% if can_edit %}

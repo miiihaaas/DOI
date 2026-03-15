@@ -162,6 +162,7 @@ class PublisherDetailView(
         context["contacts"] = self.object.contacts.all()
         context["notes"] = self.object.notes.select_related("author").all()
         context["note_form"] = PublisherNoteForm()
+        context["publications"] = self.object.publications.all()
         return context
 
 

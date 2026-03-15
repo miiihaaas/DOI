@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">
+    <h1 class="h3 mb-0 page-title">
         <i class="bi bi-collection me-2"></i>{{ issue }}
     </h1>
     <div>
@@ -25,9 +25,9 @@
 <div class="row">
     <!-- Main Info Card -->
     <div class="col-lg-8">
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header">
-                <h5 class="mb-0">Osnovne informacije</h5>
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
@@ -96,7 +96,7 @@
 
         <!-- Conference Proceedings Fields -->
         {% if issue.publication.publication_type == "CONFERENCE" %}
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-people me-2"></i>Podaci o zborniku</h5>
             </div>
@@ -125,11 +125,11 @@
         {% endif %}
 
         <!-- Articles Section -->
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Članci ({{ issue.articles.count }})</h5>
                 {% if can_edit %}
-                <a href="{% url 'articles:create' %}?issue={{ issue.pk }}" class="btn btn-sm btn-outline-primary">
+                <a href="{% url 'articles:create' %}?issue={{ issue.pk }}" class="btn btn-sm">
                     <i class="bi bi-plus-lg me-1"></i>Dodaj članak
                 </a>
                 {% endif %}
@@ -171,9 +171,9 @@
     <div class="col-lg-4">
         <!-- Cover Image -->
         {% if issue.cover_image %}
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header">
-                <h5 class="mb-0">Naslovna slika</h5>
+                <h5 class="mb-0"><i class="bi bi-image me-2"></i>Naslovna slika</h5>
             </div>
             <div class="card-body text-center">
                 <img src="{{ issue.cover_image.url }}" alt="{{ issue }} naslovna slika"
@@ -183,9 +183,9 @@
         {% endif %}
 
         <!-- Metadata Card -->
-        <div class="card mb-4">
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header">
-                <h5 class="mb-0">Metapodaci</h5>
+                <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Metapodaci</h5>
             </div>
             <div class="card-body">
                 <dl class="mb-0">
@@ -196,13 +196,13 @@
                     <dd>{{ issue.updated_at|date:"d.m.Y. H:i" }}</dd>
 
                     <dt>Broj članaka</dt>
-                    <dd>{{ issue.article_count }}</dd>
+                    <dd><span class="badge bg-doi-teal">{{ issue.article_count }}</span></dd>
                 </dl>
             </div>
         </div>
 
-        <!-- Crossref Deposit Card (Story 5.7) -->
-        <div class="card mb-4">
+        <!-- Crossref Deposit Card -->
+        <div class="card shadow-sm mb-4 section-card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-cloud-upload me-2"></i>Crossref Deposit</h5>
             </div>
@@ -226,7 +226,7 @@
                 </p>
                 {% endif %}
                 <div class="d-grid">
-                    <a href="{% url 'crossref:issue-deposit' issue.pk %}" class="btn btn-outline-primary">
+                    <a href="{% url 'crossref:issue-deposit' issue.pk %}" class="btn btn-primary">
                         <i class="bi bi-cloud-upload me-1"></i>Crossref Deposit
                     </a>
                 </div>
@@ -234,9 +234,9 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="card">
+        <div class="card shadow-sm quick-actions">
             <div class="card-header">
-                <h5 class="mb-0">Brze akcije</h5>
+                <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Brze akcije</h5>
             </div>
             <div class="list-group list-group-flush">
                 {% if can_edit %}

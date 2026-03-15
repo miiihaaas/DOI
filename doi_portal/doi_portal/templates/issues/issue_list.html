@@ -4,7 +4,8 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">
+    <h1 class="h3 mb-0 page-title">
+        <i class="bi bi-collection me-2"></i>
         {% if publication %}
             Izdanja: {{ publication.title }}
         {% else %}
@@ -19,7 +20,7 @@
 </div>
 
 <!-- Filters -->
-<div class="card mb-4">
+<div class="card shadow-sm mb-4 filter-card">
     <div class="card-body">
         <form method="get" class="row g-3">
             <div class="col-md-4">
@@ -37,7 +38,7 @@
             <input type="hidden" name="publication" value="{{ current_publication }}">
             {% endif %}
             <div class="col-md-8 d-flex align-items-end">
-                <button type="submit" class="btn btn-outline-primary me-2">
+                <button type="submit" class="btn btn-primary me-2">
                     <i class="bi bi-search me-1"></i>Filtriraj
                 </button>
                 <a href="{% url 'issues:list' %}{% if current_publication %}?publication={{ current_publication }}{% endif %}" class="btn btn-outline-secondary">
@@ -48,16 +49,16 @@
     </div>
 </div>
 
-<div class="card">
+<div class="card shadow-sm">
     <div class="card-body">
         {% if issues %}
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
                         <th>
                             <a href="?sort=volume&order={% if current_sort == 'volume' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_publication %}&publication={{ current_publication }}{% endif %}"
-                               class="text-decoration-none text-dark"
+                               class="text-decoration-none"
                                aria-label="Sortiraj po volumenu">
                                 Volumen
                                 {% if current_sort == 'volume' %}
@@ -67,7 +68,7 @@
                         </th>
                         <th>
                             <a href="?sort=issue_number&order={% if current_sort == 'issue_number' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_publication %}&publication={{ current_publication }}{% endif %}"
-                               class="text-decoration-none text-dark"
+                               class="text-decoration-none"
                                aria-label="Sortiraj po broju">
                                 Broj
                                 {% if current_sort == 'issue_number' %}
@@ -77,7 +78,7 @@
                         </th>
                         <th>
                             <a href="?sort=year&order={% if current_sort == 'year' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_publication %}&publication={{ current_publication }}{% endif %}"
-                               class="text-decoration-none text-dark"
+                               class="text-decoration-none"
                                aria-label="Sortiraj po godini">
                                 Godina
                                 {% if current_sort == 'year' %}
@@ -88,7 +89,7 @@
                         <th>Naslov</th>
                         <th>
                             <a href="?sort=status&order={% if current_sort == 'status' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_publication %}&publication={{ current_publication }}{% endif %}"
-                               class="text-decoration-none text-dark"
+                               class="text-decoration-none"
                                aria-label="Sortiraj po statusu">
                                 Status
                                 {% if current_sort == 'status' %}
@@ -111,7 +112,7 @@
                         <td>{{ issue.issue_number|default:"-" }}</td>
                         <td>{{ issue.year }}</td>
                         <td>
-                            <a href="{% url 'issues:detail' issue.pk %}">
+                            <a href="{% url 'issues:detail' issue.pk %}" class="fw-semibold">
                                 {{ issue.title|default:issue }}
                             </a>
                         </td>
@@ -126,7 +127,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <span class="badge bg-light text-dark">{{ issue.article_count }}</span>
+                            <span class="badge bg-doi-teal">{{ issue.article_count }}</span>
                         </td>
                         <td>
                             {% if issue.cover_image %}

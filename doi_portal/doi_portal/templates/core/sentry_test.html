@@ -4,15 +4,15 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">
+    <h1 class="h3 mb-0 page-title">
         <i class="bi bi-bug me-2"></i>Sentry test
     </h1>
 </div>
 
 {# Sentry status card #}
-<div class="card mb-4">
+<div class="card shadow-sm mb-4 section-card">
     <div class="card-header">
-        <h5 class="card-title mb-0">Status Sentry integracije</h5>
+        <h5 class="card-title mb-0"><i class="bi bi-activity me-2"></i>Status Sentry integracije</h5>
     </div>
     <div class="card-body">
         <div class="row">
@@ -36,7 +36,7 @@
                 {% if sentry_environment %}
                 <p class="mb-2">
                     <strong>Okruženje:</strong>
-                    <span class="badge bg-info text-dark">{{ sentry_environment }}</span>
+                    <span class="badge bg-info">{{ sentry_environment }}</span>
                 </p>
                 {% endif %}
             </div>
@@ -45,9 +45,9 @@
 </div>
 
 {# Test action card #}
-<div class="card mb-4">
+<div class="card shadow-sm mb-4 section-card">
     <div class="card-header">
-        <h5 class="card-title mb-0">Pošalji test error</h5>
+        <h5 class="card-title mb-0"><i class="bi bi-send me-2"></i>Pošalji test error</h5>
     </div>
     <div class="card-body">
         {% if sentry_active %}
@@ -78,9 +78,9 @@
 </div>
 
 {# Info card #}
-<div class="card">
+<div class="card shadow-sm section-card">
     <div class="card-header">
-        <h5 class="card-title mb-0">Informacije o konfiguraciji</h5>
+        <h5 class="card-title mb-0"><i class="bi bi-gear me-2"></i>Informacije o konfiguraciji</h5>
     </div>
     <div class="card-body">
         <ul class="list-unstyled mb-0">

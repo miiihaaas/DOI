@@ -3,11 +3,17 @@
 {% block title %}{{ form_title }} - DOI Portal{% endblock %}
 
 {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 page-title">
+        <i class="bi bi-collection me-2"></i>{{ form_title }}
+    </h1>
+</div>
+
 <div class="row justify-content-center">
     <div class="col-lg-10">
-        <div class="card">
+        <div class="card shadow-sm section-card">
             <div class="card-header">
-                <h5 class="card-title mb-0">{{ form_title }}</h5>
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
             </div>
             <div class="card-body">
                 <form method="post" enctype="multipart/form-data" novalidate
@@ -37,9 +43,6 @@
                         </ul>
                     </div>
                     {% endif %}
-
-                    <!-- Basic Fields Section -->
-                    <h6 class="text-muted mb-3 border-bottom pb-2">Osnovne informacije</h6>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -121,7 +124,10 @@
                     </div>
 
                     <!-- DOI i PDF sekcija -->
-                    <h6 class="text-muted mb-3 border-bottom pb-2">DOI i PDF izdanja</h6>
+                    <div class="form-section-divider"></div>
+                    <h6 class="form-section-title">
+                        <i class="bi bi-link-45deg me-2"></i>DOI i PDF izdanja
+                    </h6>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -154,7 +160,10 @@
 
                     <!-- Conference Proceedings Fields (shown only for CONFERENCE type) -->
                     <div id="proceedings-fields" x-show="isConference" x-transition>
-                        <h6 class="text-muted mb-3 border-bottom pb-2">Podaci o zborniku</h6>
+                        <div class="form-section-divider"></div>
+                        <h6 class="form-section-title">
+                            <i class="bi bi-people me-2"></i>Podaci o zborniku
+                        </h6>
 
                         <div class="row">
                             <div class="col-md-12 mb-3">
@@ -185,7 +194,7 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between mt-4">
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
                         <a href="{% url 'issues:list' %}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-1"></i>Nazad
                         </a>
@@ -204,7 +213,7 @@
                             hasMonth: false,
                             doiPrefix: '',
                             init() {
-                                const mapEl = document.getElementById('pub-type-map');
+                                var mapEl = document.getElementById('pub-type-map');
                                 if (mapEl) {
                                     try {
                                         this.pubTypeMap = JSON.parse(mapEl.textContent);
@@ -212,7 +221,7 @@
                                         this.pubTypeMap = {};
                                     }
                                 }
-                                const prefixEl = document.getElementById('pub-doi-prefix-map');
+                                var prefixEl = document.getElementById('pub-doi-prefix-map');
                                 if (prefixEl) {
                                     try {
                                         this.doiPrefixMap = JSON.parse(prefixEl.textContent);
@@ -220,14 +229,14 @@
                                         this.doiPrefixMap = {};
                                     }
                                 }
-                                const select = document.getElementById('id_publication');
+                                var select = document.getElementById('id_publication');
                                 if (select) {
                                     this.updateType(select.value);
                                     select.addEventListener('change', (e) => {
                                         this.updateType(e.target.value);
                                     });
                                 }
-                                const monthSelect = document.getElementById('id_publication_month');
+                                var monthSelect = document.getElementById('id_publication_month');
                                 if (monthSelect) {
                                     this.hasMonth = monthSelect.value !== '';
                                     monthSelect.addEventListener('change', (e) => {

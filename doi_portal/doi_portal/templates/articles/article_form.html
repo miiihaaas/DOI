@@ -3,11 +3,17 @@
 {% block title %}{{ form_title }} - DOI Portal{% endblock %}
 
 {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 page-title">
+        <i class="bi bi-file-earmark-text me-2"></i>{{ form_title }}
+    </h1>
+</div>
+
 <div class="row justify-content-center">
     <div class="col-lg-10">
-        <div class="card">
+        <div class="card shadow-sm section-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">{{ form_title }}</h5>
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
                 {% if is_edit %}
                 <div id="save-indicator">
                     <!-- Auto-save indicator will be injected here by HTMX -->
@@ -47,7 +53,6 @@
                     {% endif %}
 
                     <!-- Basic Fields Section -->
-                    <h6 class="text-muted mb-3 border-bottom pb-2">Osnovne informacije</h6>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -197,7 +202,8 @@
                     </div>
 
                     <!-- Page/Article Number Fields -->
-                    <h6 class="text-muted mb-3 border-bottom pb-2">Stranice i identifikacija</h6>
+                    <div class="form-section-divider"></div>
+                    <h6 class="form-section-title"><i class="bi bi-bookmark me-2"></i>Stranice i identifikacija</h6>
 
                     <div class="row" x-data="paginationToggle()">
                         <div class="col-md-3 mb-3">
@@ -253,7 +259,8 @@
                     </div>
 
                     <!-- Content Type and License Section -->
-                    <h6 class="text-muted mb-3 border-bottom pb-2">Tip sadržaja i licenca</h6>
+                    <div class="form-section-divider"></div>
+                    <h6 class="form-section-title"><i class="bi bi-shield-check me-2"></i>Tip sadržaja i licenca</h6>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -468,7 +475,7 @@
 
         <!-- Author Section (Edit Mode Only) - Story 3.2 -->
         {% if is_edit %}
-        <div class="card mt-4" x-data="authorList()">
+        <div class="card shadow-sm mt-4 section-card" x-data="authorList()">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-people me-2"></i>Autori
@@ -489,7 +496,7 @@
         </div>
 
         <!-- Funding Section -->
-        <div class="card mt-4" x-data="fundingList()">
+        <div class="card shadow-sm mt-4 section-card" x-data="fundingList()">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-cash-stack me-2"></i>Finansiranje
@@ -510,7 +517,7 @@
         </div>
 
         <!-- PDF Upload Section (Story 3.3) -->
-        <div class="card mt-4">
+        <div class="card shadow-sm mt-4 section-card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-file-earmark-pdf me-2"></i>PDF fajl
@@ -524,10 +531,11 @@
         {% endif %}
 
         <!-- External Resource Section (Story 3-1a) -->
-        <div class="card mt-4" x-data="{ useExternal: {% if form.use_external_resource.value %}true{% else %}false{% endif %} }">
+        <div class="card shadow-sm mt-4 section-card" x-data="{ useExternal: {% if form.use_external_resource.value %}true{% else %}false{% endif %} }">
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-box-arrow-up-right me-2"></i>Eksterni resursi
+
                 </h5>
             </div>
             <div class="card-body">

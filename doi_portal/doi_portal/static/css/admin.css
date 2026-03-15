@@ -1,12 +1,119 @@
-/* Admin Panel Styles for DOI Portal - Story 1.7 */
+/* Admin Panel Styles for DOI Portal
+   Brand colors aligned with doi.rs website */
 
-/* Wrapper and Layout */
+/* =============================================
+   1. CSS Variables & Bootstrap Overrides
+   ============================================= */
+:root {
+  --doi-primary: #5CB46A;
+  --doi-primary-hover: #4a9a57;
+  --doi-primary-light: rgba(92, 180, 106, 0.1);
+  --doi-teal: #033333;
+  --doi-teal-light: #065656;
+  --doi-light: #F9F9FF;
+  --doi-accent-orange: #FFA726;
+  --doi-accent-teal: #26A69A;
+
+  /* Bootstrap overrides */
+  --bs-primary: #5CB46A;
+  --bs-primary-rgb: 92, 180, 106;
+  --bs-info: #26A69A;
+  --bs-info-rgb: 38, 166, 154;
+  --bs-link-color: #5CB46A;
+  --bs-link-hover-color: #4a9a57;
+}
+
+/* Override Bootstrap primary button */
+.btn-primary {
+  --bs-btn-bg: var(--doi-primary);
+  --bs-btn-border-color: var(--doi-primary);
+  --bs-btn-hover-bg: var(--doi-primary-hover);
+  --bs-btn-hover-border-color: var(--doi-primary-hover);
+  --bs-btn-active-bg: #3f8a4a;
+  --bs-btn-active-border-color: #3f8a4a;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--doi-primary);
+  --bs-btn-border-color: var(--doi-primary);
+  --bs-btn-hover-bg: var(--doi-primary);
+  --bs-btn-hover-border-color: var(--doi-primary);
+  --bs-btn-active-bg: var(--doi-primary-hover);
+  --bs-btn-active-border-color: var(--doi-primary-hover);
+}
+
+/* Override Bootstrap info */
+.btn-info {
+  --bs-btn-bg: var(--doi-accent-teal);
+  --bs-btn-border-color: var(--doi-accent-teal);
+  --bs-btn-hover-bg: #1e8c82;
+  --bs-btn-hover-border-color: #1e8c82;
+  --bs-btn-active-bg: #1a7a71;
+  --bs-btn-active-border-color: #1a7a71;
+  --bs-btn-color: #fff;
+}
+
+.btn-outline-info {
+  --bs-btn-color: var(--doi-accent-teal);
+  --bs-btn-border-color: var(--doi-accent-teal);
+  --bs-btn-hover-bg: var(--doi-accent-teal);
+  --bs-btn-hover-border-color: var(--doi-accent-teal);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-bg: #1e8c82;
+  --bs-btn-active-border-color: #1e8c82;
+}
+
+.badge.bg-info {
+  background-color: var(--doi-accent-teal) !important;
+  color: white !important;
+}
+
+.text-info {
+  color: var(--doi-accent-teal) !important;
+}
+
+.border-info {
+  border-color: var(--doi-accent-teal) !important;
+}
+
+.alert-info {
+  background-color: rgba(38, 166, 154, 0.1);
+  border-color: rgba(38, 166, 154, 0.3);
+  color: #065656;
+}
+
+/* Override Bootstrap links */
+a {
+  color: var(--doi-primary);
+}
+a:hover {
+  color: var(--doi-primary-hover);
+}
+
+/* Badge primary override */
+.badge.bg-primary {
+  background-color: var(--doi-primary) !important;
+}
+
+.text-primary {
+  color: var(--doi-primary) !important;
+}
+
+.border-primary {
+  border-color: var(--doi-primary) !important;
+}
+
+/* =============================================
+   2. Wrapper and Layout
+   ============================================= */
 #wrapper {
   overflow-x: hidden;
   transition: margin-left 0.25s ease-out;
 }
 
-/* Sidebar */
+/* =============================================
+   3. Sidebar - doi.rs Teal Theme
+   ============================================= */
 #sidebar-wrapper {
   position: fixed;
   left: 0;
@@ -16,6 +123,52 @@
   z-index: 1000;
   transition: transform 0.25s ease-out;
   overflow-y: auto;
+  background: linear-gradient(180deg, #022828 0%, var(--doi-teal) 100%);
+}
+
+/* Sidebar heading */
+.sidebar-heading {
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(92, 180, 106, 0.3) !important;
+  padding-right: 3.5rem !important;
+}
+
+.sidebar-heading i {
+  color: var(--doi-primary);
+}
+
+/* Sidebar menu styling */
+.sidebar-menu .list-group-item {
+  background-color: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 0.75rem 1.25rem;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.sidebar-menu .list-group-item:hover:not(.disabled) {
+  background-color: rgba(92, 180, 106, 0.15);
+  color: white;
+  border-left-color: var(--doi-primary);
+}
+
+.sidebar-menu .list-group-item.active {
+  background-color: rgba(92, 180, 106, 0.2);
+  color: white;
+  border-left-color: var(--doi-primary);
+  font-weight: 500;
+}
+
+.sidebar-menu .list-group-item.disabled {
+  color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.sidebar-menu .list-group-item i {
+  width: 1.25rem;
+  text-align: center;
 }
 
 /* Page Content */
@@ -24,6 +177,7 @@
   min-width: 0;
   width: calc(100% - 250px);
   transition: margin-left 0.25s ease-out, width 0.25s ease-out;
+  background-color: var(--doi-light);
 }
 
 /* Sidebar collapsed state */
@@ -36,7 +190,7 @@
   width: 100%;
 }
 
-/* Mobile responsiveness - sidebar hidden by default on small screens */
+/* Mobile responsiveness */
 @media (max-width: 768px) {
   #sidebar-wrapper {
     transform: translateX(-250px);
@@ -47,120 +201,448 @@
     width: 100%;
   }
 
-  /* Show sidebar when toggled on mobile */
   #wrapper.toggled #sidebar-wrapper {
     transform: translateX(0);
   }
 }
 
-/* Sidebar menu styling */
-.sidebar-menu .list-group-item {
-  background-color: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.8);
-  padding: 0.75rem 1.25rem;
-  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+/* =============================================
+   4. Top Navbar
+   ============================================= */
+.navbar {
+  border-top: 3px solid var(--doi-primary) !important;
 }
 
-.sidebar-menu .list-group-item:hover:not(.disabled) {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 51, 51, 0.5);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  backdrop-filter: blur(2px);
 }
 
-.sidebar-menu .list-group-item.active {
-  background-color: var(--bs-primary);
-  color: white;
+.sidebar-overlay.active {
+  display: block;
+  opacity: 1;
 }
 
-.sidebar-menu .list-group-item.disabled {
-  color: rgba(255, 255, 255, 0.4);
-  pointer-events: none;
-  cursor: not-allowed;
+/* Animated hamburger toggle button */
+.sidebar-toggle {
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  background: transparent;
+  border: 2px solid var(--doi-primary);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  transition: border-color 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+  position: relative;
+  z-index: 1001;
 }
 
-/* Sidebar heading */
-.sidebar-heading {
-  background-color: rgba(0, 0, 0, 0.1);
+/* On mobile when open: float the button inside the sidebar header area */
+@media (max-width: 768px) {
+  .sidebar-toggle.is-open {
+    position: fixed;
+    top: 12px;
+    left: 198px;
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .sidebar-toggle.is-open .toggle-bar {
+    background-color: white;
+  }
+
+  .sidebar-toggle.is-open:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
 }
 
-/* Breadcrumb styling */
+.sidebar-toggle:hover {
+  background-color: var(--doi-primary);
+}
+
+.sidebar-toggle:hover .toggle-bar {
+  background-color: white;
+}
+
+.sidebar-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.4);
+}
+
+/* Hamburger bars */
+.toggle-bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background-color: var(--doi-primary);
+  border-radius: 2px;
+  transition: all 0.35s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  transform-origin: center;
+}
+
+/* Animated X state */
+.sidebar-toggle.is-open {
+  background-color: var(--doi-primary);
+  border-color: var(--doi-primary);
+}
+
+.sidebar-toggle.is-open .toggle-bar {
+  background-color: white;
+}
+
+.sidebar-toggle.is-open .toggle-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.sidebar-toggle.is-open .toggle-bar:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.sidebar-toggle.is-open .toggle-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.navbar .nav-link {
+  color: var(--doi-teal);
+}
+
+.navbar .nav-link:hover {
+  color: var(--doi-primary);
+}
+
+.navbar .dropdown-menu {
+  min-width: 200px;
+  border-top: 2px solid var(--doi-primary);
+}
+
+/* =============================================
+   5. Breadcrumbs
+   ============================================= */
 .breadcrumb {
   background-color: transparent;
   padding: 0;
   margin-bottom: 0;
 }
 
-/* User dropdown in header */
-.navbar .dropdown-menu {
-  min-width: 200px;
+.breadcrumb a {
+  color: var(--doi-primary);
+  text-decoration: none;
 }
 
-/* Alert message styling for admin */
+.breadcrumb a:hover {
+  color: var(--doi-primary-hover);
+}
+
+/* =============================================
+   6. Welcome Card
+   ============================================= */
+.welcome-card {
+  background: linear-gradient(135deg, var(--doi-primary) 0%, var(--doi-teal) 100%);
+  color: white;
+  border: none;
+}
+
+.welcome-card .card-title {
+  color: white;
+}
+
+.welcome-card .card-text {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.welcome-card strong {
+  color: white;
+}
+
+/* =============================================
+   7. Dashboard Statistics Cards
+   ============================================= */
+.dashboard-stat-card {
+  border-left: 4px solid;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.dashboard-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12) !important;
+}
+
+.dashboard-stat-card .card-body i {
+  font-size: 2.5rem;
+}
+
+.dashboard-stat-card .display-6 {
+  color: var(--doi-teal);
+}
+
+/* Card color variants */
+.dashboard-stat-card.stat-publications {
+  border-left-color: var(--doi-primary);
+}
+.dashboard-stat-card.stat-publications i {
+  color: var(--doi-primary) !important;
+}
+
+.dashboard-stat-card.stat-articles {
+  border-left-color: var(--doi-teal);
+}
+.dashboard-stat-card.stat-articles i {
+  color: var(--doi-teal) !important;
+}
+
+.dashboard-stat-card.stat-pending {
+  border-left-color: var(--doi-accent-orange);
+}
+.dashboard-stat-card.stat-pending i {
+  color: var(--doi-accent-orange) !important;
+}
+
+.dashboard-stat-card.stat-ready {
+  border-left-color: var(--doi-accent-teal);
+}
+.dashboard-stat-card.stat-ready i {
+  color: var(--doi-accent-teal) !important;
+}
+
+.dashboard-stat-card.stat-drafts {
+  border-left-color: #78909C;
+}
+.dashboard-stat-card.stat-drafts i {
+  color: #78909C !important;
+}
+
+.dashboard-stat-card.stat-submitted {
+  border-left-color: var(--doi-accent-teal);
+}
+.dashboard-stat-card.stat-submitted i {
+  color: var(--doi-accent-teal) !important;
+}
+
+.dashboard-stat-card.stat-total {
+  border-left-color: var(--doi-primary);
+}
+.dashboard-stat-card.stat-total i {
+  color: var(--doi-primary) !important;
+}
+
+/* =============================================
+   8. Section Cards (Pending, Ready, Drafts)
+   ============================================= */
+.section-card .card-header {
+  background: var(--doi-teal);
+  color: white;
+  border-bottom: none;
+}
+
+.section-card .card-header h5 {
+  color: white;
+}
+
+.section-card .card-header i {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.section-card .card-header .badge {
+  background-color: var(--doi-primary) !important;
+  color: white;
+}
+
+.section-card .card-header .btn {
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.section-card .card-header .btn:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.section-card .list-group-item-action:hover {
+  background-color: var(--doi-primary-light);
+}
+
+/* =============================================
+   9. Quick Actions
+   ============================================= */
+.quick-actions .card-header {
+  background: var(--doi-light);
+  border-bottom: 2px solid var(--doi-primary);
+}
+
+.quick-actions .card-header h5 {
+  color: var(--doi-teal);
+}
+
+.quick-actions .card-header i {
+  color: var(--doi-primary);
+}
+
+.quick-actions .list-group-item-action {
+  border-left: 3px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.quick-actions .list-group-item-action:hover {
+  border-left-color: var(--doi-primary);
+  background-color: var(--doi-primary-light);
+}
+
+.quick-actions .list-group-item-action i {
+  color: var(--doi-primary);
+}
+
+/* =============================================
+   10. Footer
+   ============================================= */
+.footer {
+  background-color: var(--doi-teal) !important;
+  border-top: 2px solid var(--doi-primary) !important;
+}
+
+.footer .text-muted {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* =============================================
+   11. General UI
+   ============================================= */
+
+/* Cards */
+.card {
+  transition: box-shadow 0.2s ease;
+}
+
+/* Alert styling */
 .alert {
   border-radius: 0.375rem;
 }
 
-/* Card shadows for dashboard */
-.card {
-  transition: box-shadow 0.15s ease-in-out;
-}
-
-.card:hover {
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-}
-
-/* Sidebar toggle button */
-#sidebarToggle {
-  border-width: 2px;
-}
-
-#sidebarToggle:focus {
-  box-shadow: none;
-}
-
-/* Dashboard statistics cards */
-.dashboard-stat-card {
-  border-left: 4px solid;
-  border-radius: 0.375rem;
-}
-
-.dashboard-stat-card.primary {
-  border-left-color: var(--bs-primary);
-}
-
-.dashboard-stat-card.success {
-  border-left-color: var(--bs-success);
-}
-
-.dashboard-stat-card.warning {
-  border-left-color: var(--bs-warning);
-}
-
-.dashboard-stat-card.info {
-  border-left-color: var(--bs-info);
-}
-
-/* Content area minimum height */
-main.container-fluid {
-  min-height: 60vh;
-}
-
-/* Table improvements */
+/* Tables */
 .table th {
   font-weight: 600;
-  background-color: #f8f9fa;
+  background-color: var(--doi-light);
+  color: var(--doi-teal);
+  border-bottom: 2px solid var(--doi-primary);
 }
 
-/* Badge sizing */
+.table-hover tbody tr:hover {
+  background-color: var(--doi-primary-light);
+}
+
+.table a {
+  text-decoration: none;
+}
+
+.table a:hover {
+  text-decoration: underline;
+}
+
+/* Badges */
 .badge {
   font-weight: 500;
 }
 
-/* Form styling in admin */
+.badge.bg-doi-teal {
+  background-color: var(--doi-teal) !important;
+  color: white;
+}
+
+/* Page titles */
+.page-title {
+  color: var(--doi-teal);
+}
+
+.page-title i {
+  color: var(--doi-primary);
+}
+
+/* Filter cards */
+.filter-card {
+  border-top: 3px solid var(--doi-primary);
+}
+
+/* Pagination */
+.page-link {
+  color: var(--doi-primary);
+}
+
+.page-link:hover {
+  color: var(--doi-primary-hover);
+  background-color: var(--doi-primary-light);
+}
+
+.page-item.active .page-link {
+  background-color: var(--doi-primary);
+  border-color: var(--doi-primary);
+}
+
+/* Form sections */
+.form-section-divider {
+  border-top: 2px solid var(--doi-primary);
+  margin: 1.5rem 0;
+  opacity: 0.3;
+}
+
+.form-section-title {
+  color: var(--doi-teal);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.form-section-title i {
+  color: var(--doi-primary);
+}
+
+/* Definition lists in detail views */
+.section-card dt {
+  color: var(--doi-teal);
+  font-weight: 600;
+}
+
+.section-card dd code {
+  background-color: var(--doi-light);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  color: var(--doi-teal);
+}
+
+/* HTMX inline cards (contacts, notes) */
+#contacts-section .card,
+#notes-section .card {
+  border-left: 3px solid var(--doi-primary);
+}
+
+#contacts-section .card:hover,
+#notes-section .card:hover {
+  background-color: var(--doi-primary-light);
+}
+
+/* Form focus states */
 .form-control:focus,
 .form-select:focus {
-  border-color: var(--bs-primary);
-  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+  border-color: var(--doi-primary);
+  box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.25);
+}
+
+/* Content area */
+main.container-fluid {
+  min-height: 60vh;
 }
 
 /* Responsive tables */

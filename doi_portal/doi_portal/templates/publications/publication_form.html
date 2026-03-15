@@ -3,11 +3,17 @@
 {% block title %}{{ form_title }} - DOI Portal{% endblock %}
 
 {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 page-title">
+        <i class="bi bi-journal-text me-2"></i>{{ form_title }}
+    </h1>
+</div>
+
 <div class="row justify-content-center">
     <div class="col-lg-10">
-        <div class="card">
+        <div class="card shadow-sm section-card">
             <div class="card-header">
-                <h5 class="card-title mb-0">{{ form_title }}</h5>
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
             </div>
             <div class="card-body">
                 <form method="post" enctype="multipart/form-data" novalidate>
@@ -31,9 +37,6 @@
                         </ul>
                     </div>
                     {% endif %}
-
-                    <!-- Common Fields Section -->
-                    <h6 class="text-muted mb-3 border-bottom pb-2">Osnovne informacije</h6>
 
                     <div class="row">
                         <div class="col-md-8 mb-3">
@@ -134,7 +137,7 @@
                         {% endif %}
                     </div>
 
-                    <div class="d-flex justify-content-between mt-4">
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
                         <a href="{% url 'publications:list' %}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-1"></i>Nazad
                         </a>
@@ -174,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Type changed to:', this.value);
             // Check if HTMX request was made
             setTimeout(function() {
-                const target = document.getElementById('type-specific-fields');
+                var target = document.getElementById('type-specific-fields');
                 console.log('Target content length:', target ? target.innerHTML.length : 0);
             }, 500);
         });

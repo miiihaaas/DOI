@@ -11,7 +11,7 @@
   </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="DOI Portal - Administrativni panel" />
-  <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
+  <link rel="icon" type="image/png" href="{% static 'images/favicons/doi-favicon-final.png' %}" />
 
   {% block css %}
     <!-- Bootstrap 5 CSS -->
@@ -47,22 +47,27 @@
 <body>
   <div class="d-flex" id="wrapper">
     <!-- Sidebar -->
-    <div class="bg-dark text-white" id="sidebar-wrapper">
-      <div class="sidebar-heading py-4 px-3 fs-5 fw-bold border-bottom border-secondary">
+    <div class="text-white" id="sidebar-wrapper">
+      <a href="{% url 'home' %}" class="sidebar-heading py-4 px-3 fs-5 fw-bold d-block text-white text-decoration-none">
         <i class="bi bi-journal-bookmark-fill me-2"></i>DOI Portal
-      </div>
+      </a>
       <div class="list-group list-group-flush sidebar-menu">
         {% render_sidebar_menu %}
       </div>
     </div>
+
+    <!-- Sidebar overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Page Content -->
     <div id="page-content-wrapper" class="flex-grow-1 d-flex flex-column min-vh-100">
       <!-- Top Navigation -->
       <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
         <div class="container-fluid">
-          <button class="btn btn-outline-primary me-2" id="sidebarToggle" type="button">
-            <i class="bi bi-list"></i>
+          <button class="sidebar-toggle me-2" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+            <span class="toggle-bar"></span>
+            <span class="toggle-bar"></span>
+            <span class="toggle-bar"></span>
           </button>
 
           <!-- Mobile brand -->
@@ -98,7 +103,7 @@
       </main>
 
       <!-- Footer -->
-      <footer class="footer mt-auto py-3 bg-light border-top">
+      <footer class="footer mt-auto py-3">
         <div class="container-fluid">
           <span class="text-muted">DOI Portal © {% now "Y" %}</span>
         </div>
@@ -109,22 +114,56 @@
   {% block inline_javascript %}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const sidebarToggle = document.getElementById('sidebarToggle');
-      const wrapper = document.getElementById('wrapper');
+      var sidebarToggle = document.getElementById('sidebarToggle');
+      var wrapper = document.getElementById('wrapper');
+      var overlay = document.getElementById('sidebarOverlay');
+      var isMobile = function() { return window.innerWidth <= 768; };
+
+      function updateToggleState() {
+        if (isMobile()) {
+          // On mobile: toggled = sidebar visible
+          var isOpen = wrapper.classList.contains('toggled');
+          sidebarToggle.classList.toggle('is-open', isOpen);
+          overlay.classList.toggle('active', isOpen);
+        } else {
+          // On desktop: toggled = sidebar hidden
+          sidebarToggle.classList.remove('is-open');
+          overlay.classList.remove('active');
+        }
+      }
 
       if (sidebarToggle && wrapper) {
         sidebarToggle.addEventListener('click', function(e) {
           e.preventDefault();
           wrapper.classList.toggle('toggled');
+          updateToggleState();
 
-          // Store preference in localStorage
-          localStorage.setItem('sidebar-collapsed', wrapper.classList.contains('toggled'));
+          // Store preference only on desktop
+          if (!isMobile()) {
+            localStorage.setItem('sidebar-collapsed', wrapper.classList.contains('toggled'));
+          }
         });
 
-        // Restore preference
-        if (localStorage.getItem('sidebar-collapsed') === 'true') {
+        // Overlay click closes sidebar on mobile
+        if (overlay) {
+          overlay.addEventListener('click', function() {
+            wrapper.classList.remove('toggled');
+            updateToggleState();
+          });
+        }
+
+        // Restore desktop preference
+        if (!isMobile() && localStorage.getItem('sidebar-collapsed') === 'true') {
           wrapper.classList.add('toggled');
         }
+
+        // Handle resize
+        window.addEventListener('resize', function() {
+          if (!isMobile()) {
+            overlay.classList.remove('active');
+            sidebarToggle.classList.remove('is-open');
+          }
+        });
       }
     });
   </script>

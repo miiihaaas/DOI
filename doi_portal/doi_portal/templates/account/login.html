@@ -1,103 +1,388 @@
-{% extends "base.html" %}
-{% load crispy_forms_tags %}
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="sr-latn">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <title>Prijava - DOI Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="{% static 'images/favicons/doi-favicon-final.png' %}" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+        integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer" />
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <style>
+    :root {
+      --doi-primary: #5CB46A;
+      --doi-primary-hover: #4a9a57;
+      --doi-teal: #033333;
+    }
 
-{% block title %}Prijava - DOI Portal{% endblock title %}
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #022828 0%, var(--doi-teal) 40%, var(--doi-primary) 100%);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
 
-{% block bodyclass %}bg-light{% endblock bodyclass %}
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      padding: 1rem;
+    }
 
-{% block body %}
-<div class="container">
-  <div class="row justify-content-center mt-5">
-    <div class="col-md-6 col-lg-4">
-      <div class="card shadow">
-        <div class="card-body p-4">
-          <div class="text-center mb-4">
-            <h2 class="card-title h4">Prijava</h2>
-            <p class="text-muted">Pristupite vašem DOI Portal nalogu</p>
-          </div>
+    .login-card {
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 1rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
 
-          {% if form.errors %}
-            <div class="alert alert-danger" role="alert">
-              Email adresa i/ili lozinka nisu tačni.
-            </div>
-          {% endif %}
+    .login-header {
+      background: var(--doi-teal);
+      padding: 2rem 2rem 1.75rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
 
-          <form method="post" action="{% url 'account_login' %}">
-            {% csrf_token %}
+    .login-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(92, 180, 106, 0.15) 0%, transparent 70%);
+    }
 
-            <div class="mb-3">
-              <label for="id_login" class="form-label">Email</label>
+    .login-logo {
+      width: 56px;
+      height: 56px;
+      background: var(--doi-primary);
+      border-radius: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+      font-size: 1.5rem;
+      color: white;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(92, 180, 106, 0.4);
+    }
+
+    .login-header h1 {
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 0 0.25rem;
+      position: relative;
+    }
+
+    .login-header p {
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 0.875rem;
+      margin: 0;
+      position: relative;
+    }
+
+    .login-body {
+      padding: 2rem;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--doi-teal);
+      font-size: 0.875rem;
+    }
+
+    .form-control {
+      border: 2px solid #e2e8f0;
+      border-radius: 0.5rem;
+      padding: 0.625rem 0.875rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-control:focus {
+      border-color: var(--doi-primary);
+      box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.2);
+    }
+
+    .form-control::placeholder {
+      color: #a0aec0;
+    }
+
+    .input-icon-wrapper {
+      position: relative;
+    }
+
+    .input-icon-wrapper .form-control {
+      padding-left: 2.5rem;
+    }
+
+    .input-icon-wrapper .input-icon {
+      position: absolute;
+      left: 0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #a0aec0;
+      font-size: 1rem;
+      transition: color 0.2s ease;
+      pointer-events: none;
+    }
+
+    .input-icon-wrapper .form-control:focus + .input-icon,
+    .input-icon-wrapper:focus-within .input-icon {
+      color: var(--doi-primary);
+    }
+
+    .btn-login {
+      background: var(--doi-primary);
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 0.7rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-login:hover {
+      background: var(--doi-primary-hover);
+      color: white;
+      box-shadow: 0 4px 12px rgba(92, 180, 106, 0.35);
+    }
+
+    .btn-login:active {
+      transform: scale(0.98);
+    }
+
+    .form-check-input:checked {
+      background-color: var(--doi-primary);
+      border-color: var(--doi-primary);
+    }
+
+    .form-check-input:focus {
+      box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.25);
+      border-color: var(--doi-primary);
+    }
+
+    .login-link {
+      color: var(--doi-primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .login-link:hover {
+      color: var(--doi-primary-hover);
+      text-decoration: underline;
+    }
+
+    .back-link {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .back-link:hover {
+      color: white;
+    }
+
+    .alert-danger {
+      background-color: rgba(220, 53, 69, 0.08);
+      border: 1px solid rgba(220, 53, 69, 0.2);
+      color: #842029;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: #a0aec0;
+      font-size: 0.8rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+    /* Floating particles decoration */
+    .bg-decoration {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .bg-decoration span {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(92, 180, 106, 0.08);
+      animation: float 20s infinite ease-in-out;
+    }
+
+    .bg-decoration span:nth-child(1) {
+      width: 300px;
+      height: 300px;
+      top: -10%;
+      left: -5%;
+      animation-delay: 0s;
+    }
+
+    .bg-decoration span:nth-child(2) {
+      width: 200px;
+      height: 200px;
+      bottom: 10%;
+      right: -5%;
+      animation-delay: -5s;
+    }
+
+    .bg-decoration span:nth-child(3) {
+      width: 150px;
+      height: 150px;
+      top: 50%;
+      left: 50%;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -30px) scale(1.05); }
+      66% { transform: translate(-20px, 20px) scale(0.95); }
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background decoration -->
+  <div class="bg-decoration">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">
+          <i class="bi bi-journal-bookmark-fill"></i>
+        </div>
+        <h1>DOI Portal</h1>
+        <p>Sistem za upravljanje DOI identifikatorima</p>
+      </div>
+
+      <div class="login-body">
+        {% if form.errors %}
+        <div class="alert alert-danger" role="alert">
+          <i class="bi bi-exclamation-circle me-1"></i>
+          Email adresa i/ili lozinka nisu tačni.
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'account_login' %}">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="id_login" class="form-label">Email</label>
+            <div class="input-icon-wrapper">
               <input type="email"
                      name="login"
                      id="id_login"
                      class="form-control {% if form.login.errors %}is-invalid{% endif %}"
-                     placeholder="Email adresa"
+                     placeholder="vasa@email.adresa"
                      autocomplete="email"
                      required />
-              {% if form.login.errors %}
-                <div class="invalid-feedback">{{ form.login.errors.0 }}</div>
-              {% endif %}
+              <i class="bi bi-envelope input-icon"></i>
             </div>
+            {% if form.login.errors %}
+            <div class="invalid-feedback d-block">{{ form.login.errors.0 }}</div>
+            {% endif %}
+          </div>
 
-            <div class="mb-3">
-              <label for="id_password" class="form-label">Lozinka</label>
+          <div class="mb-3">
+            <label for="id_password" class="form-label">Lozinka</label>
+            <div class="input-icon-wrapper">
               <input type="password"
                      name="password"
                      id="id_password"
                      class="form-control {% if form.password.errors %}is-invalid{% endif %}"
-                     placeholder="Lozinka"
+                     placeholder="Unesite lozinku"
                      autocomplete="current-password"
                      required />
-              {% if form.password.errors %}
-                <div class="invalid-feedback">{{ form.password.errors.0 }}</div>
-              {% endif %}
+              <i class="bi bi-lock input-icon"></i>
             </div>
+            {% if form.password.errors %}
+            <div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>
+            {% endif %}
+          </div>
 
+          <div class="d-flex justify-content-between align-items-center mb-3">
             {% if form.remember %}
-              <div class="mb-3 form-check">
-                <input type="checkbox"
-                       name="remember"
-                       id="id_remember"
-                       class="form-check-input" />
-                <label for="id_remember" class="form-check-label">
-                  Zapamti me
-                </label>
-              </div>
+            <div class="form-check">
+              <input type="checkbox"
+                     name="remember"
+                     id="id_remember"
+                     class="form-check-input" />
+              <label for="id_remember" class="form-check-label small">
+                Zapamti me
+              </label>
+            </div>
             {% endif %}
-
-            {% if redirect_field_value %}
-              <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-            {% endif %}
-
-            <button type="submit" class="btn btn-primary w-100 mt-3">
-              Prijava
-            </button>
-          </form>
-
-          <div class="text-center mt-3">
-            <a href="{% url 'account_reset_password' %}" class="text-decoration-none">
+            <a href="{% url 'account_reset_password' %}" class="login-link small">
               Zaboravili ste lozinku?
             </a>
           </div>
 
-          {% if ACCOUNT_ALLOW_REGISTRATION %}
-            <hr class="my-4" />
-            <div class="text-center">
-              <span class="text-muted">Nemate nalog?</span>
-              <a href="{% url 'account_signup' %}" class="text-decoration-none ms-1">
-                Registracija
-              </a>
-            </div>
+          {% if redirect_field_value %}
+          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
           {% endif %}
-        </div>
-      </div>
 
-      <div class="text-center mt-3">
-        <a href="{% url 'home' %}" class="text-muted text-decoration-none">
-          &larr; Nazad na početnu
-        </a>
+          <button type="submit" class="btn btn-login w-100">
+            <i class="bi bi-box-arrow-in-right me-1"></i>Prijava
+          </button>
+        </form>
+
+        {% if ACCOUNT_ALLOW_REGISTRATION %}
+        <div class="divider my-4">ili</div>
+        <div class="text-center">
+          <span class="text-muted small">Nemate nalog?</span>
+          <a href="{% url 'account_signup' %}" class="login-link ms-1 small">
+            Registrujte se
+          </a>
+        </div>
+        {% endif %}
       </div>
     </div>
+
+    <div class="text-center mt-4">
+      <a href="{% url 'home' %}" class="back-link">
+        <i class="bi bi-arrow-left"></i>
+        Nazad na početnu
+      </a>
+    </div>
   </div>
-</div>
-{% endblock body %}
+</body>
+</html>

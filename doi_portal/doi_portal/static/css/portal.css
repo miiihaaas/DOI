@@ -5,12 +5,13 @@
    =========================== */
 
 :root {
-    --portal-primary: #1a365d;
-    --portal-secondary: #3182ce;
+    --portal-primary: #033333;
+    --portal-secondary: #5CB46A;
+    --portal-secondary-hover: #4a9a57;
     --portal-text: #1a202c;
     --portal-text-muted: #4a5568;
     --portal-bg: #ffffff;
-    --portal-bg-secondary: #f7fafc;
+    --portal-bg-secondary: #F9F9FF;
     --portal-border: #e2e8f0;
 }
 
@@ -38,6 +39,7 @@ body {
 
 .portal-header {
     border-bottom: 1px solid var(--portal-border);
+    border-top: 3px solid var(--portal-secondary);
 }
 
 .portal-header .navbar-brand {
@@ -142,10 +144,19 @@ body {
 
 .portal-footer {
     background-color: var(--portal-primary) !important;
+    border-top: 3px solid var(--portal-secondary);
 }
 
 .portal-footer h5 {
     font-weight: 600;
+}
+
+.portal-footer a {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.portal-footer a:hover {
+    color: var(--portal-secondary) !important;
 }
 
 /* ===========================
@@ -191,7 +202,7 @@ body {
 }
 
 .hero-section .form-control:focus {
-    box-shadow: 0 0 0 0.25rem rgba(49, 130, 206, 0.25);
+    box-shadow: 0 0 0 0.25rem rgba(92, 180, 106, 0.25);
     border-color: var(--portal-secondary);
 }
 
@@ -218,6 +229,44 @@ body {
 .quick-link-card:focus-within {
     outline: 2px solid var(--portal-secondary);
     outline-offset: 2px;
+}
+
+/* Override Bootstrap .text-primary on portal for green accent */
+.portal-content .text-primary {
+    color: var(--portal-secondary) !important;
+}
+
+.portal-content .btn-primary {
+    background-color: var(--portal-secondary);
+    border-color: var(--portal-secondary);
+}
+
+.portal-content .btn-primary:hover {
+    background-color: var(--portal-secondary-hover);
+    border-color: var(--portal-secondary-hover);
+}
+
+.portal-content .btn-outline-primary {
+    color: var(--portal-secondary);
+    border-color: var(--portal-secondary);
+}
+
+.portal-content .btn-outline-primary:hover {
+    background-color: var(--portal-secondary);
+    border-color: var(--portal-secondary);
+    color: #fff;
+}
+
+.portal-content a:not(.btn):not(.nav-link):not(.navbar-brand):not(.breadcrumb-item a):not(.list-group-item) {
+    color: var(--portal-secondary);
+}
+
+.portal-content a:not(.btn):not(.nav-link):not(.navbar-brand):not(.breadcrumb-item a):not(.list-group-item):hover {
+    color: var(--portal-secondary-hover);
+}
+
+.portal-content .badge.bg-secondary {
+    background-color: var(--portal-primary) !important;
 }
 
 .publication-card .card-title a {
@@ -441,6 +490,18 @@ mark {
     font-size: 0.8rem;
     font-weight: 400;
     padding: 0.35em 0.65em;
+    border-color: var(--portal-secondary) !important;
+    color: var(--portal-primary) !important;
+}
+
+/* List group items hover on portal */
+.portal-content .list-group-item-action:hover {
+    background-color: rgba(92, 180, 106, 0.08);
+}
+
+/* Cards on portal - subtle green accent on hover */
+.portal-content .card:hover {
+    border-color: rgba(92, 180, 106, 0.3);
 }
 
 /* ===========================
@@ -477,6 +538,17 @@ mark {
     font-size: 1.25rem;
     padding: 0;
     position: relative;
+}
+
+.fab-btn {
+    color: var(--portal-primary);
+    border-color: var(--portal-secondary);
+}
+
+.fab-btn:hover {
+    background-color: var(--portal-secondary);
+    color: #fff;
+    border-color: var(--portal-secondary);
 }
 
 .fab-btn:focus-visible {
