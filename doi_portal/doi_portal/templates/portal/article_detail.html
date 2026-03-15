@@ -28,6 +28,12 @@
     {% if article.subtitle %}
     <p class="article-subtitle text-muted lead mb-3">{{ article.subtitle|render_markup }}</p>
     {% endif %}
+    {% if article.original_language_title %}
+    <h2 class="h4 text-muted mb-2">{{ article.original_language_title|render_markup }}</h2>
+    {% endif %}
+    {% if article.original_language_subtitle %}
+    <p class="text-muted mb-3">{{ article.original_language_subtitle|render_markup }}</p>
+    {% endif %}
 
     <!-- Status & Date -->
     <div class="mb-3">

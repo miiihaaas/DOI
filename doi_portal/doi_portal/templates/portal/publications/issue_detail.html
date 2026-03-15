@@ -1,5 +1,5 @@
 {% extends "portal/base.html" %}
-{% load static i18n portal_tags %}
+{% load static i18n portal_tags markup_tags %}
 
 {% block title %}{{ issue.publication.title }} - {{ issue|issue_label }} - DOI Portal{% endblock title %}
 
@@ -97,7 +97,10 @@
                            class="list-group-item list-group-item-action">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h3 class="h6 mb-1">{{ article.title }}</h3>
+                                    <h3 class="h6 mb-1">{{ article.title|render_markup }}</h3>
+                                    {% if article.original_language_title %}
+                                    <p class="small text-muted fst-italic mb-1">{{ article.original_language_title|render_markup }}</p>
+                                    {% endif %}
                                     <p class="small text-muted mb-0">
                                         {% for author in article.authors.all|slice:":3" %}
                                             {{ author.surname }} {{ author.given_name|default:"" }}{% if not forloop.last %}, {% endif %}

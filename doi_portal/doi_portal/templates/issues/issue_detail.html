@@ -1,4 +1,5 @@
 {% extends "admin_base.html" %}
+{% load markup_tags %}
 
 {% block title %}{{ issue }} - DOI Portal{% endblock %}
 
@@ -139,7 +140,7 @@
                 <a href="{% url 'articles:detail' article.pk %}" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between align-items-start">
                         <div class="me-3" style="min-width: 0;">
-                            <h6 class="mb-1 text-truncate">{{ article.title }}</h6>
+                            <h6 class="mb-1 text-truncate">{{ article.title|render_markup }}</h6>
                             <small class="text-muted">
                                 {% for author in article.authors.all %}
                                     {{ author.surname }} {{ author.given_name|slice:":1" }}.{% if not forloop.last %}, {% endif %}

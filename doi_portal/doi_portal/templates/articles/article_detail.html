@@ -1,11 +1,12 @@
 {% extends "admin_base.html" %}
+{% load markup_tags %}
 
-{% block title %}{{ article.title }} - DOI Portal{% endblock %}
+{% block title %}{{ article.title|strip_markup }} - DOI Portal{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">
-        <i class="bi bi-file-earmark-text me-2"></i>{{ article.title }}
+        <i class="bi bi-file-earmark-text me-2"></i>{{ article.title|render_markup }}
     </h1>
     <div>
         {% if can_edit %}
@@ -90,11 +91,26 @@
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-sm-3">Naslov</dt>
-                    <dd class="col-sm-9">{{ article.title }}</dd>
+                    <dd class="col-sm-9">{{ article.title|render_markup }}</dd>
 
                     {% if article.subtitle %}
                     <dt class="col-sm-3">Podnaslov</dt>
-                    <dd class="col-sm-9">{{ article.subtitle }}</dd>
+                    <dd class="col-sm-9">{{ article.subtitle|render_markup }}</dd>
+                    {% endif %}
+
+                    {% if article.original_language_title %}
+                    <dt class="col-sm-3">Naslov (orig. jezik)</dt>
+                    <dd class="col-sm-9">
+                        {{ article.original_language_title|render_markup }}
+                        {% if article.original_language_title_language %}
+                        <span class="badge bg-secondary ms-1">{{ article.original_language_title_language }}</span>
+                        {% endif %}
+                    </dd>
+                    {% endif %}
+
+                    {% if article.original_language_subtitle %}
+                    <dt class="col-sm-3">Podnaslov (orig. jezik)</dt>
+                    <dd class="col-sm-9">{{ article.original_language_subtitle|render_markup }}</dd>
                     {% endif %}
 
                     <dt class="col-sm-3">Izdanje</dt>
@@ -138,7 +154,7 @@
                 <h5 class="mb-0"><i class="bi bi-text-paragraph me-2"></i>Apstrakt</h5>
             </div>
             <div class="card-body">
-                <p class="mb-0">{{ article.abstract }}</p>
+                <p class="mb-0">{{ article.abstract|render_markup }}</p>
             </div>
         </div>
         {% endif %}

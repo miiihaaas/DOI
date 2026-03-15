@@ -36,6 +36,7 @@ from django.views.generic import ListView
 from django.views.generic import TemplateView
 
 from doi_portal.articles.models import Article, ArticleStatus
+from doi_portal.core.markup import strip_markup
 from doi_portal.portal.services import generate_citation
 from doi_portal.portal.services import get_pdf_download_filename
 from doi_portal.portal.services import get_portal_statistics
@@ -563,7 +564,7 @@ class ArticleLandingView(DetailView):
                     kwargs={"slug": publication.slug, "pk": issue.pk},
                 ),
             },
-            {"label": article.title[:80], "url": None},
+            {"label": strip_markup(article.title)[:80], "url": None},
         ]
 
         context["is_withdrawn"] = article.status == ArticleStatus.WITHDRAWN
