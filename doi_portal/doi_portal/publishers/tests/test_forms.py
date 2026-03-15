@@ -10,7 +10,11 @@ from io import BytesIO
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from doi_portal.publishers.forms import PublisherForm
+from doi_portal.publishers.forms import (
+    PublisherContactForm,
+    PublisherForm,
+    PublisherNoteForm,
+)
 from doi_portal.publishers.models import Publisher
 
 
@@ -305,3 +309,165 @@ class TestPublisherFormWidgets:
         form = PublisherForm()
         accept = form.fields["logo"].widget.attrs.get("accept", "")
         assert "image/jpeg" in accept or "image/png" in accept
+
+
+# =============================================================================
+# Test Crossref fields in PublisherForm
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestPublisherFormCrossref:
+    """Test Crossref fields in PublisherForm."""
+
+    def test_crossref_username_in_form(self):
+        """Test crossref_username field exists in form."""
+        form = PublisherForm()
+        assert "crossref_username" in form.fields
+
+    def test_crossref_password_in_form(self):
+        """Test crossref_password field exists in form."""
+        form = PublisherForm()
+        assert "crossref_password" in form.fields
+
+    def test_crossref_password_is_password_input(self):
+        """Test crossref_password uses PasswordInput widget."""
+        form = PublisherForm()
+        widget = form.fields["crossref_password"].widget
+        assert widget.input_type == "password"
+
+    def test_crossref_fields_optional(self):
+        """Test crossref fields are not required."""
+        data = {"name": "Test", "doi_prefix": "10.3030"}
+        form = PublisherForm(data=data)
+        assert form.is_valid(), form.errors
+
+    def test_save_with_password(self):
+        """Test saving form with crossref password."""
+        data = {
+            "name": "Crossref Test",
+            "doi_prefix": "10.3031",
+            "crossref_username": "myuser",
+            "crossref_password": "mypass",
+        }
+        form = PublisherForm(data=data)
+        assert form.is_valid(), form.errors
+        publisher = form.save()
+        publisher.refresh_from_db()
+        assert publisher.crossref_username == "myuser"
+        assert publisher.crossref_password == "mypass"
+
+    def test_empty_password_preserves_existing(self):
+        """Test empty password on update does not overwrite existing."""
+        publisher = Publisher.objects.create(
+            name="Preserve Test",
+            doi_prefix="10.3032",
+            crossref_password="original_pass",
+        )
+        data = {
+            "name": "Preserve Test",
+            "doi_prefix": "10.3032",
+            "crossref_username": "user",
+            "crossref_password": "",  # Empty = no change
+        }
+        form = PublisherForm(data=data, instance=publisher)
+        assert form.is_valid(), form.errors
+        form.save()
+        publisher.refresh_from_db()
+        assert publisher.crossref_password == "original_pass"
+
+
+# =============================================================================
+# Test PublisherContactForm
+# =============================================================================
+
+
+class TestPublisherContactForm:
+    """Test PublisherContactForm validation."""
+
+    def test_valid_with_required_fields(self):
+        """Test form valid with only required fields."""
+        data = {"first_name": "Petar", "last_name": "Petrović"}
+        form = PublisherContactForm(data=data)
+        assert form.is_valid(), form.errors
+
+    def test_valid_with_all_fields(self):
+        """Test form valid with all fields."""
+        data = {
+            "first_name": "Petar",
+            "last_name": "Petrović",
+            "email": "petar@test.rs",
+            "phone": "+381111234567",
+            "role": "direktor",
+        }
+        form = PublisherContactForm(data=data)
+        assert form.is_valid(), form.errors
+
+    def test_first_name_required(self):
+        """Test first_name is required."""
+        data = {"last_name": "Petrović"}
+        form = PublisherContactForm(data=data)
+        assert not form.is_valid()
+        assert "first_name" in form.errors
+
+    def test_last_name_required(self):
+        """Test last_name is required."""
+        data = {"first_name": "Petar"}
+        form = PublisherContactForm(data=data)
+        assert not form.is_valid()
+        assert "last_name" in form.errors
+
+    def test_invalid_email_rejected(self):
+        """Test invalid email is rejected."""
+        data = {
+            "first_name": "Petar",
+            "last_name": "Petrović",
+            "email": "not-an-email",
+        }
+        form = PublisherContactForm(data=data)
+        assert not form.is_valid()
+        assert "email" in form.errors
+
+    def test_widgets_have_bootstrap_class(self):
+        """Test widgets have form-control class."""
+        form = PublisherContactForm()
+        for field_name in ["first_name", "last_name", "email", "phone", "role"]:
+            assert "form-control" in form.fields[field_name].widget.attrs.get("class", "")
+
+    def test_role_has_placeholder(self):
+        """Test role field has placeholder with examples."""
+        form = PublisherContactForm()
+        placeholder = form.fields["role"].widget.attrs.get("placeholder", "")
+        assert "direktor" in placeholder
+
+
+# =============================================================================
+# Test PublisherNoteForm
+# =============================================================================
+
+
+class TestPublisherNoteForm:
+    """Test PublisherNoteForm validation."""
+
+    def test_valid_with_text(self):
+        """Test form valid with text."""
+        data = {"text": "Ovo je napomena."}
+        form = PublisherNoteForm(data=data)
+        assert form.is_valid(), form.errors
+
+    def test_text_required(self):
+        """Test text is required."""
+        data = {"text": ""}
+        form = PublisherNoteForm(data=data)
+        assert not form.is_valid()
+        assert "text" in form.errors
+
+    def test_widget_has_bootstrap_class(self):
+        """Test textarea has form-control class."""
+        form = PublisherNoteForm()
+        assert "form-control" in form.fields["text"].widget.attrs.get("class", "")
+
+    def test_widget_has_placeholder(self):
+        """Test textarea has placeholder."""
+        form = PublisherNoteForm()
+        assert form.fields["text"].widget.attrs.get("placeholder")

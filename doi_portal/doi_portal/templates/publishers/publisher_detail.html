@@ -75,6 +75,61 @@
             </div>
         </div>
 
+        {% if publisher.crossref_username or publisher.crossref_password %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Crossref kredencijali</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    {% if publisher.crossref_username %}
+                    <dt class="col-sm-4">Korisničko ime</dt>
+                    <dd class="col-sm-8"><code>{{ publisher.crossref_username }}</code></dd>
+                    {% endif %}
+
+                    {% if publisher.crossref_password %}
+                    <dt class="col-sm-4">Lozinka</dt>
+                    <dd class="col-sm-8" id="crossref-password-cell">
+                        {% include "publishers/partials/_crossref_password_masked.html" %}
+                    </dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Kontakt osobe (interne)</h5>
+            </div>
+            <div class="card-body">
+                <div id="contacts-section"
+                     hx-get="{% url 'publishers:contact-list' publisher_pk=publisher.pk %}"
+                     hx-trigger="load"
+                     hx-swap="innerHTML">
+                    <div class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Napomene</h5>
+            </div>
+            <div class="card-body">
+                <div id="notes-section"
+                     hx-get="{% url 'publishers:note-list' publisher_pk=publisher.pk %}"
+                     hx-trigger="load"
+                     hx-swap="innerHTML">
+                    <div class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">Sistemske informacije</h5>

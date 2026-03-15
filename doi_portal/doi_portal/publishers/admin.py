@@ -5,9 +5,25 @@ Story 2.1: Admin interface for Publisher model with soft delete support.
 """
 
 from django.contrib import admin
-from django.utils.html import format_html
 
-from .models import Publisher
+from .models import Publisher, PublisherContact, PublisherNote
+
+
+class PublisherContactInline(admin.TabularInline):
+    """Inline admin for publisher contact persons."""
+
+    model = PublisherContact
+    extra = 0
+    fields = ["first_name", "last_name", "email", "phone", "role", "order"]
+
+
+class PublisherNoteInline(admin.TabularInline):
+    """Inline admin for publisher notes."""
+
+    model = PublisherNote
+    extra = 0
+    fields = ["text", "author", "created_at"]
+    readonly_fields = ["author", "created_at"]
 
 
 @admin.register(Publisher)
@@ -31,6 +47,7 @@ class PublisherAdmin(admin.ModelAdmin):
     list_filter = ["is_deleted", "created_at"]
     search_fields = ["name", "doi_prefix", "contact_email"]
     readonly_fields = ["slug", "created_at", "updated_at", "deleted_at", "deleted_by"]
+    inlines = [PublisherContactInline, PublisherNoteInline]
 
     fieldsets = [
         (None, {
@@ -41,6 +58,11 @@ class PublisherAdmin(admin.ModelAdmin):
         }),
         ("DOI", {
             "fields": ["doi_prefix"]
+        }),
+        ("Crossref", {
+            "fields": ["crossref_username"],
+            "classes": ["collapse"],
+            "description": "Crossref lozinka se ne prikazuje u admin panelu iz bezbednosnih razloga. Koristite dashboard za upravljanje lozinkom.",
         }),
         ("Status", {
             "fields": ["is_deleted", "deleted_at", "deleted_by"],

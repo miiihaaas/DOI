@@ -15,9 +15,12 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from doi_portal.core.mixins import SoftDeleteManager, SoftDeleteMixin  # noqa: F401
+from doi_portal.publishers.fields import EncryptedCharField
 
 __all__ = [
     "Publisher",
+    "PublisherContact",
+    "PublisherNote",
     "SoftDeleteManager",
     "validate_doi_prefix",
 ]
@@ -75,7 +78,7 @@ class Publisher(SoftDeleteMixin, models.Model):
         help_text=_("Logo izdavača (JPG, PNG, SVG, max 2MB)"),
     )
 
-    # Contact info
+    # Contact info (public)
     contact_email = models.EmailField(
         _("Kontakt email"),
         blank=True,
@@ -91,6 +94,20 @@ class Publisher(SoftDeleteMixin, models.Model):
         _("Web sajt"),
         blank=True,
         help_text=_("URL web sajta izdavača"),
+    )
+
+    # Crossref credentials (internal only)
+    crossref_username = models.CharField(
+        _("Crossref korisničko ime"),
+        max_length=100,
+        blank=True,
+        help_text=_("Korisničko ime za Crossref API"),
+    )
+    crossref_password = EncryptedCharField(
+        _("Crossref lozinka"),
+        max_length=255,
+        blank=True,
+        help_text=_("Lozinka za Crossref API (enkriptovana u bazi)"),
     )
 
     # DOI prefix (REQUIRED, UNIQUE)
@@ -148,3 +165,66 @@ class Publisher(SoftDeleteMixin, models.Model):
         if hasattr(self, "publications"):
             return self.publications.count()
         return 0
+
+
+class PublisherContact(SoftDeleteMixin, models.Model):
+    """Internal contact person for a publisher."""
+
+    publisher = models.ForeignKey(
+        Publisher,
+        on_delete=models.CASCADE,
+        related_name="contacts",
+    )
+    first_name = models.CharField(_("Ime"), max_length=100)
+    last_name = models.CharField(_("Prezime"), max_length=100)
+    email = models.EmailField(_("Email"), blank=True)
+    phone = models.CharField(_("Telefon"), max_length=50, blank=True)
+    role = models.CharField(
+        _("Funkcija"),
+        max_length=100,
+        blank=True,
+        help_text=_("npr. direktor, urednik, kontakt za Crossref"),
+    )
+    order = models.PositiveIntegerField(_("Redosled"), default=0)
+    created_at = models.DateTimeField(_("Kreirano"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Ažurirano"), auto_now=True)
+
+    objects = SoftDeleteManager()
+    all_objects = models.Manager()
+
+    class Meta:
+        verbose_name = _("Kontakt osoba")
+        verbose_name_plural = _("Kontakt osobe")
+        ordering = ["order", "last_name"]
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
+
+class PublisherNote(models.Model):
+    """Internal note/comment for a publisher. Comment thread style."""
+
+    publisher = models.ForeignKey(
+        Publisher,
+        on_delete=models.CASCADE,
+        related_name="notes",
+    )
+    text = models.TextField(_("Tekst napomene"))
+    author = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="publisher_notes",
+        verbose_name=_("Autor"),
+    )
+    is_edited = models.BooleanField(_("Izmenjeno"), default=False)
+    created_at = models.DateTimeField(_("Kreirano"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Ažurirano"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("Napomena")
+        verbose_name_plural = _("Napomene")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Napomena za {self.publisher.name} ({self.created_at:%d.%m.%Y})"

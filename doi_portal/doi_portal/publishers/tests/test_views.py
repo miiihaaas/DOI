@@ -9,7 +9,7 @@ import pytest
 from django.urls import reverse
 from django.contrib.auth.models import Group
 
-from doi_portal.publishers.models import Publisher
+from doi_portal.publishers.models import Publisher, PublisherContact, PublisherNote
 from doi_portal.users.tests.factories import UserFactory
 
 
@@ -369,3 +369,256 @@ class TestPublisherURLs:
         login_user(client, "admin@test.com")
         response = client.get(f"/dashboard/publishers/{sample_publisher.pk}/delete/")
         assert response.status_code == 200
+
+
+# =============================================================================
+# Test Contact HTMX views
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestContactViews:
+    """Test PublisherContact HTMX views."""
+
+    def test_contact_list_returns_partial(self, client, admin_user, sample_publisher):
+        """Test contact list view returns HTML partial."""
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:contact-list", args=[sample_publisher.pk])
+        response = client.get(url)
+        assert response.status_code == 200
+
+    def test_contact_add_form(self, client, admin_user, sample_publisher):
+        """Test contact add form renders."""
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:contact-add-form", args=[sample_publisher.pk])
+        response = client.get(url)
+        assert response.status_code == 200
+
+    def test_contact_add_creates_contact(self, client, admin_user, sample_publisher):
+        """Test adding a contact via POST."""
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:contact-add", args=[sample_publisher.pk])
+        data = {"first_name": "Petar", "last_name": "Petrović", "email": "p@test.rs"}
+        response = client.post(url, data)
+        assert response.status_code == 200
+        assert PublisherContact.objects.filter(publisher=sample_publisher).count() == 1
+
+    def test_contact_edit_form(self, client, admin_user, sample_publisher):
+        """Test contact edit form renders with data."""
+        contact = PublisherContact.objects.create(
+            publisher=sample_publisher, first_name="Edit", last_name="Me"
+        )
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:contact-edit-form", args=[contact.pk])
+        response = client.get(url)
+        assert response.status_code == 200
+        assert "Edit" in response.content.decode()
+
+    def test_contact_update(self, client, admin_user, sample_publisher):
+        """Test updating a contact."""
+        contact = PublisherContact.objects.create(
+            publisher=sample_publisher, first_name="Old", last_name="Name"
+        )
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:contact-update", args=[contact.pk])
+        data = {"first_name": "New", "last_name": "Name"}
+        response = client.post(url, data)
+        assert response.status_code == 200
+        contact.refresh_from_db()
+        assert contact.first_name == "New"
+
+    def test_contact_delete_soft_deletes(self, client, admin_user, sample_publisher):
+        """Test deleting a contact performs soft delete."""
+        contact = PublisherContact.objects.create(
+            publisher=sample_publisher, first_name="Del", last_name="Me"
+        )
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:contact-delete", args=[contact.pk])
+        response = client.post(url)
+        assert response.status_code == 200
+        contact.refresh_from_db()
+        assert contact.is_deleted is True
+
+    def test_contact_views_denied_for_urednik(self, client, urednik_user, sample_publisher):
+        """Test contact views return 403 for non-admin users."""
+        login_user(client, "urednik@test.com")
+        url = reverse("publishers:contact-list", args=[sample_publisher.pk])
+        response = client.get(url)
+        assert response.status_code == 403
+
+    def test_contact_add_denied_for_urednik(self, client, urednik_user, sample_publisher):
+        """Test contact add returns 403 for non-admin users."""
+        login_user(client, "urednik@test.com")
+        url = reverse("publishers:contact-add", args=[sample_publisher.pk])
+        data = {"first_name": "Nope", "last_name": "Denied"}
+        response = client.post(url, data)
+        assert response.status_code == 403
+
+
+# =============================================================================
+# Test Note HTMX views
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestNoteViews:
+    """Test PublisherNote HTMX views."""
+
+    def test_note_list_returns_partial(self, client, admin_user, sample_publisher):
+        """Test note list view returns HTML partial."""
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:note-list", args=[sample_publisher.pk])
+        response = client.get(url)
+        assert response.status_code == 200
+
+    def test_note_add_creates_note_with_author(self, client, admin_user, sample_publisher):
+        """Test adding a note sets author to current user."""
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:note-add", args=[sample_publisher.pk])
+        data = {"text": "Test napomena"}
+        response = client.post(url, data)
+        assert response.status_code == 200
+        note = PublisherNote.objects.get(publisher=sample_publisher)
+        assert note.text == "Test napomena"
+        assert note.author == admin_user
+
+    def test_note_edit_form(self, client, admin_user, sample_publisher):
+        """Test note edit form renders."""
+        note = PublisherNote.objects.create(
+            publisher=sample_publisher, text="Edit me", author=admin_user
+        )
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:note-edit-form", args=[note.pk])
+        response = client.get(url)
+        assert response.status_code == 200
+
+    def test_note_update_sets_is_edited(self, client, admin_user, sample_publisher):
+        """Test updating a note sets is_edited flag."""
+        note = PublisherNote.objects.create(
+            publisher=sample_publisher, text="Original", author=admin_user
+        )
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:note-update", args=[note.pk])
+        data = {"text": "Updated"}
+        response = client.post(url, data)
+        assert response.status_code == 200
+        note.refresh_from_db()
+        assert note.text == "Updated"
+        assert note.is_edited is True
+
+    def test_note_delete_hard_deletes(self, client, admin_user, sample_publisher):
+        """Test deleting a note performs hard delete."""
+        note = PublisherNote.objects.create(
+            publisher=sample_publisher, text="Delete me", author=admin_user
+        )
+        note_pk = note.pk
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:note-delete", args=[note_pk])
+        response = client.post(url)
+        assert response.status_code == 200
+        assert PublisherNote.objects.filter(pk=note_pk).count() == 0
+
+    def test_note_views_denied_for_urednik(self, client, urednik_user, sample_publisher):
+        """Test note views return 403 for non-admin users."""
+        login_user(client, "urednik@test.com")
+        url = reverse("publishers:note-list", args=[sample_publisher.pk])
+        response = client.get(url)
+        assert response.status_code == 403
+
+
+# =============================================================================
+# Test Crossref password reveal/hide views
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestRevealPasswordViews:
+    """Test Crossref password reveal/hide HTMX views."""
+
+    def test_reveal_password_returns_decrypted(self, client, admin_user):
+        """Test reveal endpoint returns decrypted password."""
+        publisher = Publisher.objects.create(
+            name="Reveal Test",
+            doi_prefix="10.5050",
+            crossref_password="secret123",
+        )
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:reveal-crossref-password", args=[publisher.pk])
+        response = client.post(url, HTTP_HX_REQUEST="true")
+        assert response.status_code == 200
+        assert "secret123" in response.content.decode()
+
+    def test_reveal_requires_htmx_header(self, client, admin_user):
+        """Test reveal endpoint rejects non-HTMX requests."""
+        publisher = Publisher.objects.create(
+            name="No HTMX Test", doi_prefix="10.5054", crossref_password="secret"
+        )
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:reveal-crossref-password", args=[publisher.pk])
+        response = client.post(url)  # No HX-Request header
+        assert response.status_code == 403
+
+    def test_hide_password_returns_masked(self, client, admin_user):
+        """Test hide endpoint returns masked password."""
+        publisher = Publisher.objects.create(
+            name="Hide Test",
+            doi_prefix="10.5051",
+            crossref_password="secret123",
+        )
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:hide-crossref-password", args=[publisher.pk])
+        response = client.post(url)
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "secret123" not in content
+        assert "••••••••" in content
+
+    def test_reveal_denied_for_urednik(self, client, urednik_user):
+        """Test reveal endpoint returns 403 for non-admin."""
+        publisher = Publisher.objects.create(
+            name="Denied Test",
+            doi_prefix="10.5052",
+            crossref_password="secret",
+        )
+        login_user(client, "urednik@test.com")
+        url = reverse("publishers:reveal-crossref-password", args=[publisher.pk])
+        response = client.post(url)
+        assert response.status_code == 403
+
+    def test_reveal_requires_post(self, client, admin_user):
+        """Test reveal endpoint rejects GET requests."""
+        publisher = Publisher.objects.create(
+            name="Get Test", doi_prefix="10.5053"
+        )
+        login_user(client, "admin@test.com")
+        url = reverse("publishers:reveal-crossref-password", args=[publisher.pk])
+        response = client.get(url)
+        assert response.status_code == 405  # Method Not Allowed
+
+
+# =============================================================================
+# Test publisher detail includes new sections
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestPublisherDetailNewSections:
+    """Test PublisherDetailView includes contacts, notes, crossref."""
+
+    def test_detail_context_has_contacts(self, client, admin_user, sample_publisher):
+        """Test detail view context includes contacts."""
+        login_user(client, "admin@test.com")
+        response = client.get(reverse("publishers:detail", args=[sample_publisher.pk]))
+        assert "contacts" in response.context
+
+    def test_detail_context_has_notes(self, client, admin_user, sample_publisher):
+        """Test detail view context includes notes."""
+        login_user(client, "admin@test.com")
+        response = client.get(reverse("publishers:detail", args=[sample_publisher.pk]))
+        assert "notes" in response.context
+
+    def test_detail_context_has_note_form(self, client, admin_user, sample_publisher):
+        """Test detail view context includes note form."""
+        login_user(client, "admin@test.com")
+        response = client.get(reverse("publishers:detail", args=[sample_publisher.pk]))
+        assert "note_form" in response.context

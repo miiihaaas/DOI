@@ -80,6 +80,40 @@
                         {% endif %}
                     </div>
 
+                    <hr>
+                    <h6 class="mb-3">Crossref kredencijali</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_crossref_username" class="form-label">Korisničko ime</label>
+                            {{ form.crossref_username }}
+                            {% if form.crossref_username.errors %}
+                            <div class="invalid-feedback d-block">{{ form.crossref_username.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_crossref_password" class="form-label">Lozinka</label>
+                            {{ form.crossref_password }}
+                            <div class="form-text">Ostavite prazno ako ne želite da menjate lozinku.</div>
+                            {% if form.crossref_password.errors %}
+                            <div class="invalid-feedback d-block">{{ form.crossref_password.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if form.instance.pk %}
+                    <hr>
+                    <h6 class="mb-3">Kontakt osobe (interne)</h6>
+                    <div id="contacts-section"
+                         hx-get="{% url 'publishers:contact-list' publisher_pk=form.instance.pk %}"
+                         hx-trigger="load"
+                         hx-swap="innerHTML">
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{% url 'publishers:list' %}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-1"></i>Nazad

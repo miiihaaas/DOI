@@ -10,7 +10,14 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
-from doi_portal.publishers.models import Publisher, validate_doi_prefix, SoftDeleteManager
+from doi_portal.publishers.models import (
+    Publisher,
+    PublisherContact,
+    PublisherNote,
+    SoftDeleteManager,
+    validate_doi_prefix,
+)
+from doi_portal.publishers.fields import EncryptedCharField
 
 User = get_user_model()
 
@@ -382,3 +389,274 @@ class TestPublisherPublicationCount:
             doi_prefix="10.7070",
         )
         assert publisher.publication_count == 0
+
+
+# =============================================================================
+# Test Crossref fields on Publisher
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestPublisherCrossrefFields:
+    """Test Crossref credentials on Publisher model."""
+
+    def test_crossref_fields_blank_by_default(self):
+        """Test crossref fields can be blank."""
+        publisher = Publisher.objects.create(
+            name="No Crossref",
+            doi_prefix="10.8080",
+        )
+        assert publisher.crossref_username == ""
+        assert publisher.crossref_password == ""
+
+    def test_crossref_username_saved(self):
+        """Test crossref_username is saved correctly."""
+        publisher = Publisher.objects.create(
+            name="With Crossref",
+            doi_prefix="10.8081",
+            crossref_username="myuser",
+        )
+        publisher.refresh_from_db()
+        assert publisher.crossref_username == "myuser"
+
+    def test_crossref_password_encrypted_in_db(self):
+        """Test crossref_password is encrypted in database."""
+        publisher = Publisher.objects.create(
+            name="Encrypted Test",
+            doi_prefix="10.8082",
+            crossref_password="secretpass123",
+        )
+        # Read raw value from database
+        from django.db import connection
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT crossref_password FROM publishers_publisher WHERE id = %s",
+                [publisher.pk],
+            )
+            raw_value = cursor.fetchone()[0]
+
+        # Raw value should NOT be the plain text
+        assert raw_value != "secretpass123"
+        assert raw_value != ""
+
+        # But the model property should decrypt it
+        publisher.refresh_from_db()
+        assert publisher.crossref_password == "secretpass123"
+
+
+# =============================================================================
+# Test PublisherContact model
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestPublisherContact:
+    """Test PublisherContact model."""
+
+    @pytest.fixture
+    def publisher(self):
+        return Publisher.objects.create(name="Test Pub", doi_prefix="10.9001")
+
+    @pytest.fixture
+    def admin_user(self):
+        user = User.objects.create_user(email="admin@test.com", password="test123")
+        group, _ = Group.objects.get_or_create(name="Administrator")
+        user.groups.add(group)
+        return user
+
+    def test_create_contact(self, publisher):
+        """Test creating a contact person."""
+        contact = PublisherContact.objects.create(
+            publisher=publisher,
+            first_name="Petar",
+            last_name="Petrović",
+            email="petar@example.com",
+            phone="+381111234567",
+            role="direktor",
+        )
+        assert contact.pk is not None
+        assert contact.publisher == publisher
+
+    def test_contact_str(self, publisher):
+        """Test __str__ returns full name."""
+        contact = PublisherContact.objects.create(
+            publisher=publisher,
+            first_name="Petar",
+            last_name="Petrović",
+        )
+        assert str(contact) == "Petar Petrović"
+
+    def test_contact_ordering(self, publisher):
+        """Test contacts are ordered by order, then last_name."""
+        c2 = PublisherContact.objects.create(
+            publisher=publisher, first_name="B", last_name="B", order=1
+        )
+        c1 = PublisherContact.objects.create(
+            publisher=publisher, first_name="A", last_name="A", order=0
+        )
+        contacts = list(publisher.contacts.all())
+        assert contacts[0] == c1
+        assert contacts[1] == c2
+
+    def test_contact_soft_delete(self, publisher, admin_user):
+        """Test contact soft delete."""
+        contact = PublisherContact.objects.create(
+            publisher=publisher, first_name="Del", last_name="Test"
+        )
+        contact.soft_delete(user=admin_user)
+        contact.refresh_from_db()
+
+        assert contact.is_deleted is True
+        assert contact.deleted_by == admin_user
+        assert PublisherContact.objects.filter(pk=contact.pk).count() == 0
+
+    def test_contact_restore(self, publisher, admin_user):
+        """Test contact restore after soft delete."""
+        contact = PublisherContact.objects.create(
+            publisher=publisher, first_name="Restore", last_name="Test"
+        )
+        contact.soft_delete(user=admin_user)
+        contact.restore()
+        contact.refresh_from_db()
+
+        assert contact.is_deleted is False
+        assert PublisherContact.objects.filter(pk=contact.pk).count() == 1
+
+    def test_contact_cascade_delete_with_publisher(self, publisher):
+        """Test contacts are deleted when publisher is hard-deleted."""
+        PublisherContact.objects.create(
+            publisher=publisher, first_name="Cascade", last_name="Test"
+        )
+        publisher_pk = publisher.pk
+        Publisher.all_objects.filter(pk=publisher_pk).delete()
+        assert PublisherContact.all_objects.filter(publisher_id=publisher_pk).count() == 0
+
+    def test_optional_fields_blank(self, publisher):
+        """Test optional fields can be blank."""
+        contact = PublisherContact.objects.create(
+            publisher=publisher,
+            first_name="Only",
+            last_name="Required",
+        )
+        assert contact.email == ""
+        assert contact.phone == ""
+        assert contact.role == ""
+
+
+# =============================================================================
+# Test PublisherNote model
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestPublisherNote:
+    """Test PublisherNote model."""
+
+    @pytest.fixture
+    def publisher(self):
+        return Publisher.objects.create(name="Note Pub", doi_prefix="10.9002")
+
+    @pytest.fixture
+    def admin_user(self):
+        return User.objects.create_user(email="noteadmin@test.com", password="test123")
+
+    def test_create_note(self, publisher, admin_user):
+        """Test creating a note."""
+        note = PublisherNote.objects.create(
+            publisher=publisher,
+            text="Test napomena",
+            author=admin_user,
+        )
+        assert note.pk is not None
+        assert note.publisher == publisher
+        assert note.author == admin_user
+
+    def test_note_str(self, publisher, admin_user):
+        """Test __str__ format."""
+        note = PublisherNote.objects.create(
+            publisher=publisher,
+            text="Test",
+            author=admin_user,
+        )
+        assert "Note Pub" in str(note)
+
+    def test_note_ordering_newest_first(self, publisher, admin_user):
+        """Test notes are ordered by -created_at."""
+        n1 = PublisherNote.objects.create(
+            publisher=publisher, text="First", author=admin_user
+        )
+        n2 = PublisherNote.objects.create(
+            publisher=publisher, text="Second", author=admin_user
+        )
+        notes = list(publisher.notes.all())
+        assert notes[0] == n2  # Newest first
+        assert notes[1] == n1
+
+    def test_note_hard_delete(self, publisher, admin_user):
+        """Test notes are hard deleted (not soft)."""
+        note = PublisherNote.objects.create(
+            publisher=publisher, text="Delete me", author=admin_user
+        )
+        note_pk = note.pk
+        note.delete()
+        assert PublisherNote.objects.filter(pk=note_pk).count() == 0
+
+    def test_note_is_edited_default_false(self, publisher, admin_user):
+        """Test is_edited defaults to False."""
+        note = PublisherNote.objects.create(
+            publisher=publisher, text="Not edited", author=admin_user
+        )
+        assert note.is_edited is False
+
+    def test_note_author_set_null_on_user_delete(self, publisher, admin_user):
+        """Test author is set to NULL when user is deleted."""
+        note = PublisherNote.objects.create(
+            publisher=publisher, text="Orphan note", author=admin_user
+        )
+        admin_user.delete()
+        note.refresh_from_db()
+        assert note.author is None
+        assert note.text == "Orphan note"  # Note survives
+
+    def test_note_cascade_delete_with_publisher(self, publisher, admin_user):
+        """Test notes are deleted when publisher is hard-deleted."""
+        PublisherNote.objects.create(
+            publisher=publisher, text="Cascade", author=admin_user
+        )
+        publisher_pk = publisher.pk
+        Publisher.all_objects.filter(pk=publisher_pk).delete()
+        assert PublisherNote.objects.filter(publisher_id=publisher_pk).count() == 0
+
+
+# =============================================================================
+# Test EncryptedCharField
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestEncryptedCharField:
+    """Test custom EncryptedCharField."""
+
+    def test_empty_string_not_encrypted(self):
+        """Test empty string passes through unchanged."""
+        publisher = Publisher.objects.create(
+            name="Empty Pass", doi_prefix="10.9010", crossref_password=""
+        )
+        publisher.refresh_from_db()
+        assert publisher.crossref_password == ""
+
+    def test_none_not_encrypted(self):
+        """Test None passes through unchanged."""
+        field = EncryptedCharField(max_length=255)
+        assert field.get_prep_value(None) is None
+
+    def test_round_trip_encryption(self):
+        """Test value survives encrypt → store → decrypt cycle."""
+        publisher = Publisher.objects.create(
+            name="Round Trip",
+            doi_prefix="10.9011",
+            crossref_password="myS3cretP@ss!",
+        )
+        publisher.refresh_from_db()
+        assert publisher.crossref_password == "myS3cretP@ss!"

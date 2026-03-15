@@ -8,7 +8,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from .models import Publisher, validate_doi_prefix
+from .models import Publisher, PublisherContact, PublisherNote, validate_doi_prefix
 
 
 class PublisherForm(forms.ModelForm):
@@ -24,6 +24,18 @@ class PublisherForm(forms.ModelForm):
     - Website URL format
     """
 
+    crossref_password = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Unesite novu lozinku (ostavite prazno za bez promene)",
+                "autocomplete": "new-password",
+            }
+        ),
+        label=_("Crossref lozinka"),
+    )
+
     class Meta:
         model = Publisher
         fields = [
@@ -33,6 +45,7 @@ class PublisherForm(forms.ModelForm):
             "contact_email",
             "contact_phone",
             "website",
+            "crossref_username",
             "doi_prefix",
         ]
         widgets = {
@@ -73,6 +86,12 @@ class PublisherForm(forms.ModelForm):
                     "placeholder": "https://www.izdavač.rs",
                 }
             ),
+            "crossref_username": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Crossref korisničko ime",
+                }
+            ),
             "doi_prefix": forms.TextInput(
                 attrs={
                     "class": "form-control",
@@ -80,6 +99,16 @@ class PublisherForm(forms.ModelForm):
                 }
             ),
         }
+
+    def save(self, commit=True):
+        """Save publisher, handling crossref_password separately."""
+        publisher = super().save(commit=False)
+        password = self.cleaned_data.get("crossref_password")
+        if password:
+            publisher.crossref_password = password
+        if commit:
+            publisher.save()
+        return publisher
 
     def clean_logo(self):
         """
@@ -132,3 +161,60 @@ class PublisherForm(forms.ModelForm):
                 )
 
         return doi_prefix
+
+
+class PublisherContactForm(forms.ModelForm):
+    """Form for adding/editing internal contact persons."""
+
+    class Meta:
+        model = PublisherContact
+        fields = ["first_name", "last_name", "email", "phone", "role"]
+        widgets = {
+            "first_name": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Ime",
+                }
+            ),
+            "last_name": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Prezime",
+                }
+            ),
+            "email": forms.EmailInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "email@primer.rs",
+                }
+            ),
+            "phone": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "+381 11 123 4567",
+                }
+            ),
+            "role": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "npr. direktor, urednik, kontakt za Crossref",
+                }
+            ),
+        }
+
+
+class PublisherNoteForm(forms.ModelForm):
+    """Form for adding/editing publisher notes."""
+
+    class Meta:
+        model = PublisherNote
+        fields = ["text"]
+        widgets = {
+            "text": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Unesite napomenu...",
+                }
+            ),
+        }

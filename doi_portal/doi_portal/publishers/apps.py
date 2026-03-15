@@ -16,12 +16,14 @@ class PublishersConfig(AppConfig):
     verbose_name = _("Publishers")
 
     def ready(self):
-        """Register Publisher model with auditlog for audit trail."""
+        """Register models with auditlog for audit trail."""
         try:
             from auditlog.registry import auditlog
 
-            from .models import Publisher
+            from .models import Publisher, PublisherContact, PublisherNote
 
-            auditlog.register(Publisher)
+            auditlog.register(Publisher, exclude_fields=["crossref_password"])
+            auditlog.register(PublisherContact)
+            auditlog.register(PublisherNote)
         except ImportError:
             pass

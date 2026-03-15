@@ -1,0 +1,36 @@
+<div class="card mb-2" id="note-{{ note.pk }}">
+  <div class="card-body py-2">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <strong>{{ note.author.get_full_name|default:note.author.username }}</strong>
+        <span class="text-muted small ms-2">
+          {{ note.created_at|date:"d.m.Y. H:i" }}
+          {% if note.is_edited %}
+            <em>(izmenjeno {{ note.updated_at|date:"d.m.Y. H:i" }})</em>
+          {% endif %}
+        </span>
+      </div>
+      <div class="d-flex gap-1">
+        <button type="button"
+                class="btn btn-sm btn-outline-primary"
+                hx-get="{% url 'publishers:note-edit-form' pk=note.pk %}"
+                hx-target="#note-{{ note.pk }}"
+                hx-swap="outerHTML">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <form method="post"
+              class="d-inline"
+              hx-post="{% url 'publishers:note-delete' pk=note.pk %}"
+              hx-target="#notes-section"
+              hx-swap="innerHTML"
+              hx-confirm="Obrisati napomenu?">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-trash"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+    <p class="mb-0 mt-1">{{ note.text|linebreaksbr }}</p>
+  </div>
+</div>

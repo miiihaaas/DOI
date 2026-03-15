@@ -1,0 +1,38 @@
+<div class="card mb-2" id="contact-{{ contact.pk }}">
+  <div class="card-body py-2 d-flex align-items-center">
+    <div class="flex-grow-1">
+      <strong>{{ contact.first_name }} {{ contact.last_name }}</strong>
+      {% if contact.role %}
+        <span class="text-muted ms-2">- {{ contact.role }}</span>
+      {% endif %}
+      <div class="small text-muted">
+        {% if contact.email %}
+          <i class="bi bi-envelope me-1"></i>{{ contact.email }}
+        {% endif %}
+        {% if contact.phone %}
+          <i class="bi bi-telephone ms-2 me-1"></i>{{ contact.phone }}
+        {% endif %}
+      </div>
+    </div>
+    <div class="ms-2 d-flex gap-1">
+      <button type="button"
+              class="btn btn-sm btn-outline-primary"
+              hx-get="{% url 'publishers:contact-edit-form' pk=contact.pk %}"
+              hx-target="#contact-form-container"
+              hx-swap="innerHTML">
+        <i class="bi bi-pencil"></i>
+      </button>
+      <form method="post"
+            class="d-inline"
+            hx-post="{% url 'publishers:contact-delete' pk=contact.pk %}"
+            hx-target="#contacts-section"
+            hx-swap="innerHTML"
+            hx-confirm="Obrisati kontakt osobu?">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-danger">
+          <i class="bi bi-trash"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
