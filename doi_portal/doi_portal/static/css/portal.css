@@ -1,29 +1,67 @@
 /* ===========================
    DOI Portal - Public Theme
-   Style: Clean Academic
-   Story 2.2: Public Publisher Page
+   Design System: doi.rs brand
    =========================== */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
+    /* Brand */
+    --color-primary:        #5cb46a;
+    --color-primary-light:  #68cc6c;
+    --color-dark:           #033333;
+    --color-darker:         #062727;
+
+    /* Text */
+    --color-text-primary:   #212121;
+    --color-text-secondary: #728383;
+    --color-text-on-dark:   #ffffff;
+    --color-text-muted-dark: rgba(255, 255, 255, 0.6);
+
+    /* Surfaces */
+    --color-surface-base:   #f9f9ff;
+    --color-surface-card:   #ffffff;
+
+    /* Borders */
+    --color-border:         #e2e8f0;
+    --color-border-subtle:  #ededed;
+
+    /* Bootstrap override */
+    --bs-primary:           #5cb46a;
+    --bs-primary-rgb:       92, 180, 106;
+    --bs-link-color:        #5cb46a;
+    --bs-link-hover-color:  #68cc6c;
+    --bs-body-bg:           #f9f9ff;
+
+    /* Legacy aliases for existing classes */
     --portal-primary: #033333;
-    --portal-secondary: #5CB46A;
-    --portal-secondary-hover: #4a9a57;
-    --portal-text: #1a202c;
-    --portal-text-muted: #4a5568;
+    --portal-secondary: #5cb46a;
+    --portal-secondary-hover: #68cc6c;
+    --portal-text: #212121;
+    --portal-text-muted: #728383;
     --portal-bg: #ffffff;
-    --portal-bg-secondary: #F9F9FF;
+    --portal-bg-secondary: #f9f9ff;
     --portal-border: #e2e8f0;
 }
 
 /* ===========================
-   Layout - Flex container for sticky footer
+   Global Typography
    =========================== */
 
 body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-text-primary);
+    background-color: var(--color-surface-base);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
 }
+
+/* ===========================
+   Layout
+   =========================== */
 
 .portal-content {
     flex: 1 0 auto;
@@ -34,27 +72,941 @@ body {
 }
 
 /* ===========================
-   Header
+   Navbar
    =========================== */
 
 .portal-header {
-    border-bottom: 1px solid var(--portal-border);
-    border-top: 3px solid var(--portal-secondary);
+    background-color: var(--color-dark) !important;
+    border-bottom: 3px solid var(--color-primary);
+    transition: box-shadow 0.3s ease;
+}
+
+.portal-header.scrolled {
+    box-shadow: 0 2px 16px rgba(3, 51, 51, 0.18);
 }
 
 .portal-header .navbar-brand {
     font-weight: 700;
-    color: var(--portal-primary);
+    color: var(--color-text-on-dark) !important;
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+}
+
+.portal-header .navbar-brand:hover {
+    color: var(--color-text-on-dark) !important;
 }
 
 .portal-header .nav-link {
-    color: var(--portal-text);
+    color: rgba(255, 255, 255, 0.85) !important;
     font-weight: 500;
+    font-size: 0.94rem;
+    padding: 0.5rem 1rem !important;
+    transition: color 0.2s ease;
 }
 
 .portal-header .nav-link:hover,
 .portal-header .nav-link.active {
-    color: var(--portal-secondary);
+    color: var(--color-text-on-dark) !important;
+}
+
+.portal-header .nav-link.active {
+    position: relative;
+}
+
+.portal-header .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 1rem;
+    right: 1rem;
+    height: 2px;
+    background-color: var(--color-primary);
+    border-radius: 1px;
+}
+
+/* Hamburger icon - white */
+.portal-header .navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.3);
+    padding: 0.4rem 0.65rem;
+}
+
+.portal-header .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.portal-header .navbar-toggler:focus {
+    box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.4);
+}
+
+/* ===========================
+   Breadcrumbs
+   =========================== */
+
+.portal-breadcrumb {
+    background-color: var(--color-surface-base);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.breadcrumb-item a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--color-primary-light);
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+    color: var(--color-text-secondary);
+}
+
+/* ===========================
+   Hero Section
+   =========================== */
+
+.hero-section {
+    background: linear-gradient(135deg, var(--color-dark) 0%, #0a4a4a 60%, var(--color-primary) 100%) !important;
+    border-radius: 12px !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(92, 180, 106, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hero-section h1 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-size: 2.75rem;
+}
+
+.hero-section .lead {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 400;
+    font-size: 1.15rem;
+}
+
+.hero-section .form-control {
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px 0 0 8px;
+    font-size: 1rem;
+    padding: 0.75rem 1.25rem;
+}
+
+.hero-section .form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(92, 180, 106, 0.3);
+    border-color: var(--color-primary);
+    background: #fff;
+}
+
+.hero-section .form-control::placeholder {
+    color: var(--color-text-secondary);
+    font-size: 0.94rem;
+}
+
+.hero-section .btn-search {
+    background-color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+    color: #fff;
+    border-radius: 0 8px 8px 0;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.hero-section .btn-search:hover {
+    background-color: var(--color-primary-light);
+    border-color: var(--color-primary-light);
+}
+
+/* ===========================
+   Section Headers
+   =========================== */
+
+.section-label {
+    color: var(--color-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.section-title {
+    color: var(--color-dark);
+    font-weight: 700;
+}
+
+.section-subtitle {
+    color: var(--color-dark);
+    font-weight: 600;
+}
+
+/* ===========================
+   Cards - Global
+   =========================== */
+
+.stat-card,
+.publication-card,
+.quick-link-card,
+.publisher-card {
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.stat-card:hover,
+.publication-card:hover,
+.quick-link-card:hover,
+.publisher-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 16px rgba(92, 180, 106, 0.12);
+    transform: translateY(-2px);
+}
+
+.stat-card:focus-within,
+.publication-card:focus-within,
+.quick-link-card:focus-within,
+.publisher-card:focus-within {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* ===========================
+   Stat Cards
+   =========================== */
+
+.stat-card .stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto 1rem;
+}
+
+.stat-card .stat-icon-publications {
+    background: rgba(92, 180, 106, 0.12);
+    color: var(--color-primary);
+}
+
+.stat-card .stat-icon-articles {
+    background: rgba(3, 51, 51, 0.08);
+    color: var(--color-dark);
+}
+
+.stat-card .stat-icon-publishers {
+    background: rgba(92, 180, 106, 0.12);
+    color: var(--color-primary);
+}
+
+.stat-card .stat-number {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--color-dark);
+    line-height: 1.1;
+}
+
+.stat-card .stat-label {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+/* ===========================
+   Publication Cards
+   =========================== */
+
+.publication-card {
+    overflow: hidden;
+}
+
+.publication-card .card-img-top {
+    height: 180px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.publication-card .card-img-placeholder {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-surface-base);
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.publication-card .card-img-placeholder i {
+    color: var(--color-text-secondary);
+    opacity: 0.4;
+}
+
+.publication-card .card-body {
+    padding: 1.25rem;
+}
+
+.publication-card .card-title {
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+}
+
+.publication-card .card-title a {
+    color: var(--color-dark);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.publication-card .card-title a:hover {
+    color: var(--color-primary);
+}
+
+.publication-card .card-text {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+}
+
+/* Type badges */
+.badge-type {
+    background-color: var(--color-dark);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 3px 10px;
+}
+
+.badge-access {
+    background-color: var(--color-primary);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 3px 10px;
+}
+
+/* ===========================
+   Quick Link Cards
+   =========================== */
+
+.quick-link-card .card-body {
+    padding: 1.75rem;
+}
+
+.quick-link-card .quick-link-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: rgba(92, 180, 106, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--color-primary);
+    margin: 0 auto 0.75rem;
+    transition: background 0.2s ease;
+}
+
+.quick-link-card:hover .quick-link-icon {
+    background: rgba(92, 180, 106, 0.2);
+}
+
+.quick-link-card h3 {
+    color: var(--color-dark);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* ===========================
+   Section Link (Show All)
+   =========================== */
+
+.section-link {
+    color: var(--color-primary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.section-link:hover {
+    color: var(--color-primary-light);
+    text-decoration: underline;
+}
+
+/* ===========================
+   Info Cards (metadata tables)
+   =========================== */
+
+.info-card-heading {
+    border-left: 3px solid var(--color-primary);
+    padding-left: 10px;
+    color: var(--color-dark);
+    font-weight: 600;
+}
+
+/* ===========================
+   Filter Sidebar
+   =========================== */
+
+.filter-sidebar-card {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    position: sticky;
+    top: 80px;
+}
+
+.filter-sidebar-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-dark);
+    margin-bottom: 1rem;
+}
+
+.filter-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.filter-divider {
+    height: 1px;
+    background: var(--color-border-subtle);
+    margin: 0.75rem 0;
+}
+
+.filter-sidebar-card .form-check-input:checked {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.filter-sidebar-card .form-check-label {
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+}
+
+.filter-sidebar-card .form-control {
+    border-color: var(--color-border);
+    font-size: 0.9rem;
+}
+
+.filter-sidebar-card .form-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.2);
+}
+
+/* ===========================
+   Detail Meta Cards
+   =========================== */
+
+.detail-meta-card {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+}
+
+.detail-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.detail-meta-row {
+    display: flex;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.detail-meta-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.detail-meta-row:first-child {
+    padding-top: 0;
+}
+
+.detail-meta-row dt {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    min-width: 140px;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+.detail-meta-row dd {
+    color: var(--color-text-secondary);
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+.detail-meta-row dd a {
+    color: var(--color-primary);
+    word-break: break-all;
+}
+
+.detail-meta-row dd a:hover {
+    color: var(--color-primary-light);
+}
+
+/* ===========================
+   Publication Detail
+   =========================== */
+
+.pub-detail-cover {
+    max-height: 300px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+}
+
+.pub-detail-description {
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+}
+
+.text-muted-custom {
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+/* ===========================
+   Issue List (on publication detail)
+   =========================== */
+
+.issue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.issue-list-item {
+    display: block;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--color-border-subtle);
+    text-decoration: none;
+    color: var(--color-text-primary);
+    transition: background-color 0.15s ease;
+}
+
+.issue-list-item:last-child {
+    border-bottom: none;
+}
+
+.issue-list-item:hover {
+    background-color: rgba(92, 180, 106, 0.06);
+    color: var(--color-text-primary);
+}
+
+.issue-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 8px;
+    background: rgba(92, 180, 106, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    font-size: 1rem;
+}
+
+.issue-thumb {
+    max-height: 40px;
+    width: auto;
+    border-radius: 4px;
+}
+
+.issue-label {
+    color: var(--color-dark);
+    font-size: 0.95rem;
+}
+
+.issue-title {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+}
+
+.issue-date {
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
+}
+
+.issue-article-count {
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
+}
+
+/* ===========================
+   Issue Detail
+   =========================== */
+
+.issue-volume-label {
+    color: var(--color-text-secondary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.issue-date-inline {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
+.issue-doi-box {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+}
+
+.issue-doi-box a {
+    color: var(--color-primary);
+}
+
+/* ===========================
+   Article List (on issue detail)
+   =========================== */
+
+.article-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.article-list-item {
+    display: block;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    text-decoration: none;
+    color: var(--color-text-primary);
+    background: var(--color-surface-card);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.article-list-item:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 16px rgba(92, 180, 106, 0.12);
+    color: var(--color-text-primary);
+}
+
+.article-list-content {
+    min-width: 0;
+}
+
+.article-list-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: 0.25rem;
+    line-height: 1.4;
+}
+
+.article-list-alt-title {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    font-style: italic;
+    margin-bottom: 0.25rem;
+}
+
+.article-list-authors {
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 0;
+}
+
+.article-list-pages {
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+/* ===========================
+   Back Button
+   =========================== */
+
+.btn-back {
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-back:hover {
+    color: var(--color-dark);
+    border-color: var(--color-primary);
+    background: rgba(92, 180, 106, 0.06);
+}
+
+/* ===========================
+   Sidebar Cards
+   =========================== */
+
+.sidebar-card {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+}
+
+.sidebar-card .card-body {
+    padding: 1.25rem;
+}
+
+.sidebar-card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.75rem;
+}
+
+.sidebar-cover-img {
+    max-height: 200px;
+    border-radius: 6px;
+}
+
+.sidebar-publisher-logo {
+    max-height: 60px;
+}
+
+.sidebar-external-link {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+}
+
+.sidebar-external-link:hover {
+    color: var(--color-primary);
+}
+
+/* ===========================
+   About Page
+   =========================== */
+
+.about-lead {
+    font-size: 1.1rem;
+    color: var(--color-text-primary);
+    line-height: 1.7;
+    font-weight: 500;
+}
+
+.about-text {
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+.services-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.service-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.service-item:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 16px rgba(92, 180, 106, 0.1);
+}
+
+.service-item strong {
+    color: var(--color-dark);
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.service-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 10px;
+    background: rgba(92, 180, 106, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    font-size: 1.1rem;
+}
+
+.about-sidebar-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.about-sidebar-list li:last-child {
+    margin-bottom: 0;
+}
+
+.about-sidebar-list a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.about-sidebar-list a:hover {
+    color: var(--color-primary-light);
+    text-decoration: underline;
+}
+
+.doi-info-card {
+    background: var(--color-surface-base);
+}
+
+/* ===========================
+   Contact Page
+   =========================== */
+
+.contact-label {
+    font-weight: 600;
+    color: var(--color-dark);
+    font-size: 0.875rem;
+}
+
+.btn-contact {
+    padding: 0.65rem 1.5rem;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.portal-content .form-control {
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.6rem 0.875rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portal-content .form-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.2);
+}
+
+.portal-content .form-control::placeholder {
+    color: var(--color-text-secondary);
+}
+
+/* ===========================
+   Article Detail
+   =========================== */
+
+.article-alt-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.article-alt-subtitle {
+    color: var(--color-text-secondary);
+}
+
+.author-card {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: var(--color-surface-base);
+    border: 1px solid var(--color-border-subtle);
+}
+
+.author-avatar {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 50%;
+    background: var(--color-dark);
+    color: var(--color-text-on-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.author-name {
+    font-weight: 600;
+    color: var(--color-dark);
+    font-size: 0.95rem;
+}
+
+.author-affiliation {
+    color: var(--color-text-secondary);
+    font-size: 0.82rem;
+    margin-top: 0.15rem;
+}
+
+.abstract-content {
+    padding: 1.25rem;
+    background: var(--color-surface-base);
+    border-radius: 8px;
+    border: 1px solid var(--color-border-subtle);
+    line-height: 1.7;
+    color: var(--color-text-primary);
+}
+
+.abstract-content p:last-child {
+    margin-bottom: 0;
+}
+
+.funding-item {
+    font-size: 0.9rem;
+}
+
+/* ===========================
+   Pagination
+   =========================== */
+
+.pagination .page-link {
+    color: var(--color-primary);
+    border-color: var(--color-border);
+    font-size: 0.9rem;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+.pagination .page-link:hover {
+    background-color: rgba(92, 180, 106, 0.1);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 /* ===========================
@@ -62,60 +1014,182 @@ body {
    =========================== */
 
 .publisher-card {
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-    border: 1px solid var(--portal-border);
+    overflow: hidden;
 }
 
-.publisher-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+.publisher-card .card-title {
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 .publisher-card .card-title a {
-    color: var(--portal-primary);
+    color: var(--color-dark);
     text-decoration: none;
+    transition: color 0.2s ease;
 }
 
 .publisher-card .card-title a:hover {
-    color: var(--portal-secondary);
+    color: var(--color-primary);
+}
+
+.publisher-card .card-text {
+    color: var(--color-text-secondary);
+    line-height: 1.55;
 }
 
 .publisher-card .card-img-placeholder {
-    height: 120px;
+    height: 140px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--portal-bg-secondary);
+    background: linear-gradient(135deg, var(--color-surface-base) 0%, #eef3f3 100%);
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.publisher-card .card-img-placeholder i {
+    font-size: 2.75rem;
+    color: var(--color-text-secondary);
+    opacity: 0.35;
+}
+
+.publisher-logo-wrap {
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-surface-base);
+    border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .publisher-card .card-img-top {
-    height: 120px;
+    height: 140px;
     object-fit: contain;
-    padding: 1rem;
-    background-color: var(--portal-bg-secondary);
+    padding: 1.25rem;
+}
+
+.publisher-card .card-footer {
+    border-top: 1px solid var(--color-border-subtle);
+    padding: 0.75rem 1.25rem;
+}
+
+.publisher-card .doi-prefix-badge {
+    color: var(--color-text-secondary);
+    font-size: 0.8rem;
 }
 
 /* ===========================
    Publisher Detail
    =========================== */
 
+.publisher-detail-card {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.publisher-detail-logo-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background-color: var(--color-surface-base);
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
 .publisher-detail-card .card-img-top {
     max-height: 200px;
     object-fit: contain;
-    padding: 1.5rem;
-    background-color: var(--portal-bg-secondary);
 }
 
-.publisher-info-list li {
+.publisher-detail-card .card-body {
+    padding: 1.5rem;
+}
+
+.publisher-detail-name {
+    color: var(--color-dark);
+    font-weight: 700;
     margin-bottom: 0.75rem;
 }
 
+.publisher-detail-description {
+    color: var(--color-text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+.publisher-detail-divider {
+    height: 1px;
+    background: var(--color-border-subtle);
+    margin: 1.25rem 0;
+}
+
+.publisher-detail-section-heading {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem;
+}
+
+.publisher-info-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.publisher-info-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+    background: rgba(92, 180, 106, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    font-size: 0.85rem;
+}
+
+.publisher-info-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.1rem;
+}
+
+.publisher-info-value {
+    color: var(--color-text-primary);
+}
+
 .publisher-info-list a {
-    color: var(--portal-secondary);
+    color: var(--color-primary);
+    text-decoration: none;
+    word-break: break-all;
 }
 
 .publisher-info-list a:hover {
-    color: var(--portal-primary);
+    color: var(--color-primary-light);
+    text-decoration: underline;
+}
+
+.publisher-pub-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(92, 180, 106, 0.12);
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 0.9rem;
 }
 
 /* ===========================
@@ -129,12 +1203,12 @@ body {
 
 .empty-state i {
     font-size: 4rem;
-    color: var(--portal-text-muted);
-    opacity: 0.5;
+    color: var(--color-text-secondary);
+    opacity: 0.4;
 }
 
 .empty-state p {
-    color: var(--portal-text-muted);
+    color: var(--color-text-secondary);
     margin-top: 1rem;
 }
 
@@ -143,44 +1217,74 @@ body {
    =========================== */
 
 .portal-footer {
-    background-color: var(--portal-primary) !important;
-    border-top: 3px solid var(--portal-secondary);
+    background-color: var(--color-dark) !important;
+    border-top: 3px solid var(--color-primary);
 }
 
 .portal-footer h5 {
-    font-weight: 600;
+    font-weight: 700;
+    color: var(--color-text-on-dark);
+}
+
+.portal-footer .footer-description {
+    color: var(--color-text-muted-dark);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.portal-footer .footer-copyright {
+    color: var(--color-text-muted-dark);
+    font-size: 0.9rem;
 }
 
 .portal-footer a {
     color: rgba(255, 255, 255, 0.8) !important;
+    transition: color 0.2s ease;
 }
 
 .portal-footer a:hover {
-    color: var(--portal-secondary) !important;
+    color: var(--color-primary) !important;
 }
 
 /* ===========================
-   Breadcrumbs
+   Global Link Overrides
    =========================== */
 
-.breadcrumb {
-    background: transparent;
-    padding: 0;
-    margin: 0;
+.portal-content .text-primary {
+    color: var(--color-primary) !important;
 }
 
-.breadcrumb-item a {
-    color: var(--portal-secondary);
-    text-decoration: none;
+.portal-content .btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
 }
 
-.breadcrumb-item a:hover {
-    color: var(--portal-primary);
-    text-decoration: underline;
+.portal-content .btn-primary:hover {
+    background-color: var(--color-primary-light);
+    border-color: var(--color-primary-light);
 }
 
-.breadcrumb-item.active {
-    color: var(--portal-text-muted);
+.portal-content .btn-outline-primary {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.portal-content .btn-outline-primary:hover {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+.portal-content a:not(.btn):not(.nav-link):not(.navbar-brand):not(.breadcrumb-item a):not(.list-group-item) {
+    color: var(--color-primary);
+}
+
+.portal-content a:not(.btn):not(.nav-link):not(.navbar-brand):not(.breadcrumb-item a):not(.list-group-item):hover {
+    color: var(--color-primary-light);
+}
+
+.portal-content .badge.bg-secondary {
+    background-color: var(--color-dark) !important;
 }
 
 /* ===========================
@@ -190,91 +1294,7 @@ body {
 .doi-prefix-badge {
     font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     font-size: 0.875rem;
-    color: var(--portal-text-muted);
-}
-
-/* ===========================
-   Home Page - Hero Section (Story 4.1)
-   =========================== */
-
-.hero-section {
-    background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-secondary) 100%) !important;
-}
-
-.hero-section .form-control:focus {
-    box-shadow: 0 0 0 0.25rem rgba(92, 180, 106, 0.25);
-    border-color: var(--portal-secondary);
-}
-
-/* ===========================
-   Home Page - Stat & Quick Link Cards (Story 4.1)
-   =========================== */
-
-.stat-card,
-.publication-card,
-.quick-link-card {
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-    border: 1px solid var(--portal-border);
-}
-
-.stat-card:hover,
-.publication-card:hover,
-.quick-link-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-}
-
-.stat-card:focus-within,
-.publication-card:focus-within,
-.quick-link-card:focus-within {
-    outline: 2px solid var(--portal-secondary);
-    outline-offset: 2px;
-}
-
-/* Override Bootstrap .text-primary on portal for green accent */
-.portal-content .text-primary {
-    color: var(--portal-secondary) !important;
-}
-
-.portal-content .btn-primary {
-    background-color: var(--portal-secondary);
-    border-color: var(--portal-secondary);
-}
-
-.portal-content .btn-primary:hover {
-    background-color: var(--portal-secondary-hover);
-    border-color: var(--portal-secondary-hover);
-}
-
-.portal-content .btn-outline-primary {
-    color: var(--portal-secondary);
-    border-color: var(--portal-secondary);
-}
-
-.portal-content .btn-outline-primary:hover {
-    background-color: var(--portal-secondary);
-    border-color: var(--portal-secondary);
-    color: #fff;
-}
-
-.portal-content a:not(.btn):not(.nav-link):not(.navbar-brand):not(.breadcrumb-item a):not(.list-group-item) {
-    color: var(--portal-secondary);
-}
-
-.portal-content a:not(.btn):not(.nav-link):not(.navbar-brand):not(.breadcrumb-item a):not(.list-group-item):hover {
-    color: var(--portal-secondary-hover);
-}
-
-.portal-content .badge.bg-secondary {
-    background-color: var(--portal-primary) !important;
-}
-
-.publication-card .card-title a {
-    color: var(--portal-primary);
-}
-
-.publication-card .card-title a:hover {
-    color: var(--portal-secondary);
+    color: var(--color-text-secondary);
 }
 
 /* ===========================
@@ -283,22 +1303,24 @@ body {
 
 .search-results .card {
     transition: box-shadow 0.2s ease;
+    border-radius: 10px;
 }
 
 .search-results .card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(92, 180, 106, 0.12);
+    border-color: var(--color-primary);
 }
 
 .search-results .card-title a {
-    color: var(--portal-primary);
+    color: var(--color-dark);
 }
 
 .search-results .card-title a:hover {
-    color: var(--portal-secondary);
+    color: var(--color-primary);
 }
 
 mark {
-    background-color: #fff3cd;
+    background-color: rgba(92, 180, 106, 0.2);
     padding: 0.1em 0.2em;
     border-radius: 2px;
 }
@@ -329,10 +1351,9 @@ mark {
 
 .filter-sidebar .form-check-label {
     font-size: 0.875rem;
-    color: var(--portal-text);
+    color: var(--color-text-primary);
 }
 
-/* Active filter tags */
 .filter-tag {
     display: inline-flex;
     align-items: center;
@@ -351,78 +1372,18 @@ mark {
     opacity: 0.7;
 }
 
-/* Year range inputs */
 .filter-sidebar .row .form-control-sm {
     font-size: 0.875rem;
-}
-
-/* ===========================
-   Responsive Adjustments
-   =========================== */
-
-@media (max-width: 767.98px) {
-    .portal-content {
-        padding-top: 1rem;
-        /* Note: padding-bottom for mobile is handled by the floating-action-bar
-           media query at 991.98px (5rem) on article pages. This rule only sets
-           the non-article-page default. The 991.98px rule has cascade priority
-           since it appears later in the file. */
-        padding-bottom: 1rem;
-    }
-
-    .publisher-card .card-img-top,
-    .publisher-card .card-img-placeholder {
-        height: 100px;
-    }
-
-    .portal-footer .text-md-end {
-        text-align: left !important;
-        margin-top: 1rem;
-    }
-
-    /* Home page hero responsive (Story 4.1) */
-    .hero-section {
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
-
-    .hero-section .input-group-lg .form-control,
-    .hero-section .input-group-lg .btn {
-        min-height: 48px;
-    }
-
-    /* Search results responsive (Story 4.2) */
-    .search-results .card-body {
-        padding: 0.75rem;
-    }
-
-    .search-results .btn,
-    .search-results .page-link,
-    .search-results .card-title a {
-        min-height: 44px;
-        min-width: 44px;
-    }
-
-    /* Filter offcanvas mobile (Story 4.3) */
-    .offcanvas .filter-sidebar .card {
-        border: none;
-        box-shadow: none;
-    }
-
-    .offcanvas .filter-sidebar .card-body {
-        padding: 0;
-    }
 }
 
 /* ===========================
    Article Landing Page (Story 4.4)
    =========================== */
 
-/* Article header */
 .article-title {
     font-size: 1.75rem;
     font-weight: 700;
-    color: var(--portal-primary);
+    color: var(--color-dark);
     line-height: 1.3;
 }
 
@@ -431,16 +1392,14 @@ mark {
     line-height: 1.4;
 }
 
-/* Author list */
 .article-authors .author-entry {
     padding: 0.25rem 0;
 }
 
 .article-authors .author-entry .fw-semibold {
-    color: var(--portal-text);
+    color: var(--color-text-primary);
 }
 
-/* ORCID icon link */
 .orcid-link {
     color: #a6ce39;
     text-decoration: none;
@@ -456,7 +1415,6 @@ mark {
     vertical-align: text-bottom;
 }
 
-/* Withdrawn banner */
 .withdrawn-banner {
     border-left: 4px solid #dc3545;
     background-color: #f8d7da;
@@ -466,40 +1424,36 @@ mark {
     color: #842029;
 }
 
-/* Metadata section */
 .article-metadata dl.row dt {
     font-weight: 600;
-    color: var(--portal-text);
+    color: var(--color-text-primary);
 }
 
 .article-metadata dl.row dd {
-    color: var(--portal-text-muted);
+    color: var(--color-text-secondary);
 }
 
 .article-metadata dl.row dd a {
-    color: var(--portal-secondary);
+    color: var(--color-primary);
     word-break: break-all;
 }
 
 .article-metadata dl.row dd a:hover {
-    color: var(--portal-primary);
+    color: var(--color-primary-light);
 }
 
-/* Keyword tags */
 .keyword-tag {
     font-size: 0.8rem;
     font-weight: 400;
     padding: 0.35em 0.65em;
-    border-color: var(--portal-secondary) !important;
-    color: var(--portal-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: var(--color-dark) !important;
 }
 
-/* List group items hover on portal */
 .portal-content .list-group-item-action:hover {
     background-color: rgba(92, 180, 106, 0.08);
 }
 
-/* Cards on portal - subtle green accent on hover */
 .portal-content .card:hover {
     border-color: rgba(92, 180, 106, 0.3);
 }
@@ -508,7 +1462,6 @@ mark {
    Floating Action Bar (Story 4.5)
    =========================== */
 
-/* Desktop: Vertical bar on right side */
 .floating-action-bar {
     position: fixed;
     right: 2rem;
@@ -521,11 +1474,10 @@ mark {
     padding: 0.75rem;
     background: white;
     border-radius: 2rem;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-    border: 1px solid var(--portal-border);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--color-border);
 }
 
-/* FAB buttons - round on desktop */
 .fab-btn {
     width: 48px;
     height: 48px;
@@ -538,21 +1490,19 @@ mark {
     font-size: 1.25rem;
     padding: 0;
     position: relative;
-}
-
-.fab-btn {
-    color: var(--portal-primary);
-    border-color: var(--portal-secondary);
+    color: var(--color-dark);
+    border-color: var(--color-primary);
+    transition: all 0.2s ease;
 }
 
 .fab-btn:hover {
-    background-color: var(--portal-secondary);
+    background-color: var(--color-primary);
     color: #fff;
-    border-color: var(--portal-secondary);
+    border-color: var(--color-primary);
 }
 
 .fab-btn:focus-visible {
-    outline: 2px solid var(--portal-secondary);
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
 }
 
@@ -561,22 +1511,20 @@ mark {
     cursor: not-allowed;
 }
 
-/* Label visible only on mobile */
 .fab-label {
     font-size: 0.7rem;
     margin-left: 0.25rem;
 }
 
-/* Share dropdown */
 .fab-share-dropdown {
     position: absolute;
     left: -200px;
     top: 50%;
     transform: translateY(-50%);
     background: white;
-    border: 1px solid var(--portal-border);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     min-width: 180px;
     z-index: 1031;
     padding: 0.5rem 0;
@@ -590,7 +1538,7 @@ mark {
     width: 100%;
     border: none;
     background: none;
-    color: var(--portal-text);
+    color: var(--color-text-primary);
     text-decoration: none;
     font-size: 0.875rem;
     cursor: pointer;
@@ -598,11 +1546,147 @@ mark {
 }
 
 .fab-share-option:hover {
-    background-color: var(--portal-bg-secondary);
-    color: var(--portal-primary);
+    background-color: var(--color-surface-base);
+    color: var(--color-dark);
 }
 
-/* Mobile: Horizontal bar at bottom */
+/* ===========================
+   Citation Modal (Story 4.7)
+   =========================== */
+
+.citation-text {
+    padding: 1rem;
+    background-color: var(--color-surface-base);
+    border-radius: 0.375rem;
+    border: 1px solid var(--color-border);
+    line-height: 1.6;
+    color: var(--color-text-primary);
+    user-select: all;
+    -webkit-user-select: all;
+}
+
+.citation-code pre {
+    padding: 1rem;
+    background-color: var(--color-surface-base);
+    border-radius: 0.375rem;
+    border: 1px solid var(--color-border);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.citation-code code {
+    color: var(--color-text-primary);
+}
+
+#citationTabs .nav-link {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+#citationTabs .nav-link:hover {
+    color: var(--color-dark);
+}
+
+#citationTabs .nav-link.active {
+    color: var(--color-dark);
+    border-bottom-color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* ===========================
+   Accessibility
+   =========================== */
+
+.portal-header .nav-link:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.publisher-card:focus-within,
+.breadcrumb-item a:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    background: var(--color-dark);
+    color: white;
+    padding: 0.5rem 1rem;
+    z-index: 9999;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* ===========================
+   Responsive
+   =========================== */
+
+@media (max-width: 767.98px) {
+    .portal-content {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+
+    .hero-section .lead {
+        font-size: 1rem;
+    }
+
+    .hero-section {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .hero-section .input-group-lg .form-control,
+    .hero-section .input-group-lg .btn {
+        min-height: 48px;
+    }
+
+    .stat-card .stat-number {
+        font-size: 1.75rem;
+    }
+
+    .publisher-card .card-img-top,
+    .publisher-card .card-img-placeholder {
+        height: 100px;
+    }
+
+    .portal-footer .text-md-end {
+        text-align: left !important;
+        margin-top: 1rem;
+    }
+
+    .search-results .card-body {
+        padding: 0.75rem;
+    }
+
+    .search-results .btn,
+    .search-results .page-link,
+    .search-results .card-title a {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .offcanvas .filter-sidebar .card {
+        border: none;
+        box-shadow: none;
+    }
+
+    .offcanvas .filter-sidebar .card-body {
+        padding: 0;
+    }
+}
+
 @media (max-width: 991.98px) {
     .floating-action-bar {
         position: fixed;
@@ -615,8 +1699,8 @@ mark {
         justify-content: space-around;
         border-radius: 0;
         padding: 0.75rem 1rem;
-        border-top: 1px solid var(--portal-border);
-        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        border-top: 1px solid var(--color-border);
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
         gap: 0;
     }
 
@@ -637,7 +1721,6 @@ mark {
         margin-left: 0;
     }
 
-    /* Share dropdown on mobile - above button */
     .fab-share-dropdown {
         left: 50%;
         transform: translateX(-50%);
@@ -646,84 +1729,33 @@ mark {
         margin-bottom: 0.5rem;
     }
 
-    /* Padding on main content so bar does not cover content.
-       Scoped to only apply when floating-action-bar is present on the page
-       using the :has() selector (supported in all modern browsers). */
     .portal-content:has(.floating-action-bar) {
         padding-bottom: 5rem;
     }
 }
 
 /* ===========================
-   Citation Modal (Story 4.7)
+   Animations
    =========================== */
 
-/* Plain text citation - selectable text with padding */
-.citation-text {
-    padding: 1rem;
-    background-color: var(--portal-bg-secondary);
-    border-radius: 0.375rem;
-    border: 1px solid var(--portal-border);
-    line-height: 1.6;
-    color: var(--portal-text);
-    user-select: all;
-    -webkit-user-select: all;
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* Code format (BibTeX/RIS) - monospace in code block */
-.citation-code pre {
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border-radius: 0.375rem;
-    border: 1px solid var(--portal-border);
-    font-size: 0.85rem;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-break: break-word;
+.fade-in-up {
+    animation: fadeInUp 0.5s ease-out both;
 }
 
-.citation-code code {
-    color: var(--portal-text);
-}
-
-/* Tab active state aligned with portal theme */
-#citationTabs .nav-link {
-    color: var(--portal-text-muted);
-    font-size: 0.9rem;
-}
-
-#citationTabs .nav-link:hover {
-    color: var(--portal-primary);
-}
-
-#citationTabs .nav-link.active {
-    color: var(--portal-primary);
-    border-bottom-color: var(--portal-primary);
-    font-weight: 600;
-}
-
-/* ===========================
-   Accessibility
-   =========================== */
-
-.portal-header .nav-link:focus,
-.publisher-card:focus-within,
-.breadcrumb-item a:focus {
-    outline: 2px solid var(--portal-secondary);
-    outline-offset: 2px;
-}
-
-/* Skip to content link for screen readers */
-.skip-link {
-    position: absolute;
-    top: -100%;
-    left: 0;
-    background: var(--portal-primary);
-    color: white;
-    padding: 0.5rem 1rem;
-    z-index: 9999;
-}
-
-.skip-link:focus {
-    top: 0;
-}
+.fade-in-up-1 { animation-delay: 0.05s; }
+.fade-in-up-2 { animation-delay: 0.1s; }
+.fade-in-up-3 { animation-delay: 0.15s; }
+.fade-in-up-4 { animation-delay: 0.2s; }
+.fade-in-up-5 { animation-delay: 0.25s; }
+.fade-in-up-6 { animation-delay: 0.3s; }

@@ -17,8 +17,8 @@
 <a href="#main-content" class="skip-link visually-hidden-focusable">{% trans "Preskoči na sadržaj" %}</a>
 
 <!-- Sticky Header -->
-<header class="portal-header sticky-top bg-white shadow-sm">
-    <nav class="navbar navbar-expand-lg">
+<header class="portal-header sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">DOI Portal</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{% trans 'Uključi/Isključi navigaciju' %}">
@@ -55,7 +55,7 @@
 
 <!-- Breadcrumbs -->
 {% if breadcrumbs %}
-<nav aria-label="breadcrumb" class="bg-light py-2 border-bottom">
+<nav aria-label="breadcrumb" class="portal-breadcrumb py-2">
     <div class="container">
         <ol class="breadcrumb mb-0">
             {% for crumb in breadcrumbs %}
@@ -88,15 +88,25 @@
 <!-- Footer -->
 <footer class="portal-footer text-light py-4 mt-auto">
     <div class="container">
-        <div class="row">
+        <div class="row align-items-center">
             <div class="col-md-6">
                 <h5>DOI Portal</h5>
-                <p class="mb-0" style="color: rgba(255,255,255,0.7);">Portal za registraciju DOI identifikatora naučnih publikacija.</p>
+                <p class="footer-description mb-0">Portal za registraciju DOI identifikatora naučnih publikacija.</p>
             </div>
             <div class="col-md-6 text-md-end">
-                <p class="mb-0" style="color: rgba(255,255,255,0.7);">&copy; 2026 DOI Portal</p>
+                <p class="footer-copyright mb-0">&copy; 2026 DOI Portal</p>
             </div>
         </div>
     </div>
 </footer>
+
+<script>
+    // Navbar shadow on scroll
+    window.addEventListener('scroll', function() {
+        var header = document.querySelector('.portal-header');
+        if (header) {
+            header.classList.toggle('scrolled', window.scrollY > 10);
+        }
+    });
+</script>
 {% endblock body %}

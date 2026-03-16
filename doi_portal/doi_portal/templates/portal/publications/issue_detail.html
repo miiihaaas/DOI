@@ -7,23 +7,21 @@
 
 {% block portal_content %}
 <div class="row">
-    <div class="col-lg-8">
+    <div class="col-lg-8 fade-in-up">
         <article>
-            <h1 class="h3 mb-3">
-                {{ issue.publication.title }}
-                <small class="text-muted d-block mt-1">
-                    {{ issue|issue_label }}
-                </small>
-            </h1>
+            <div class="mb-4">
+                <h1 class="section-title h3 mb-1">{{ issue.publication.title }}</h1>
+                <p class="issue-volume-label">{{ issue|issue_label }}</p>
+            </div>
 
             {% if issue.title %}
-            <p class="lead">{{ issue.title }}</p>
+            <p class="lead" style="color: var(--color-text-secondary);">{{ issue.title }}</p>
             {% endif %}
 
-            <div class="mb-3">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
                 <span class="badge {{ issue.status_badge_class }}">{{ issue.get_status_display }}</span>
                 {% if issue.publication_month %}
-                <span class="text-muted ms-2">
+                <span class="issue-date-inline">
                     <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>
                     {% if issue.publication_day %}{{ issue.publication_day }}.{% endif %}{{ issue.publication_month }}.{{ issue.year }}.
                 </span>
@@ -31,7 +29,7 @@
             </div>
 
             {% if issue.doi_suffix %}
-            <div class="mb-3">
+            <div class="issue-doi-box mb-4">
                 <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>
                 <strong>DOI:</strong>
                 <a href="https://doi.org/{{ issue.publication.publisher.doi_prefix }}/{{ issue.doi_suffix }}">
@@ -41,7 +39,7 @@
             {% endif %}
 
             {% if issue.pdf_file %}
-            <div class="mb-3">
+            <div class="mb-4">
                 <a href="{{ issue.pdf_file.url }}" class="btn btn-primary" target="_blank">
                     <i class="bi bi-file-earmark-pdf me-1"></i>Preuzmi PDF
                 </a>
@@ -51,32 +49,37 @@
             {% if issue.cover_image %}
             <div class="mb-4">
                 <img src="{{ issue.cover_image.url }}"
-                     class="img-fluid rounded"
-                     alt="Naslovna slika: {{ issue.publication.title }} {{ issue|issue_label }}"
-                     style="max-height: 300px;">
+                     class="pub-detail-cover"
+                     alt="Naslovna slika: {{ issue.publication.title }} {{ issue|issue_label }}">
             </div>
             {% endif %}
 
-            <!-- Conference Proceedings (samo za CONFERENCE tip) -->
+            <!-- Conference Proceedings -->
             {% if issue.publication.publication_type == "CONFERENCE" %}
             {% if issue.proceedings_title or issue.proceedings_publisher_name or issue.proceedings_publisher_place %}
-            <div class="card mb-4">
+            <div class="card detail-meta-card mb-4">
                 <div class="card-body">
-                    <h2 class="h5 card-title">
+                    <h2 class="info-card-heading h5 mb-3">
                         <i class="bi bi-people me-2" aria-hidden="true"></i>Podaci o zborniku
                     </h2>
-                    <dl class="row mb-0">
+                    <dl class="detail-meta-list mb-0">
                         {% if issue.proceedings_title %}
-                        <dt class="col-sm-4">Naslov zbornika</dt>
-                        <dd class="col-sm-8">{{ issue.proceedings_title }}</dd>
+                        <div class="detail-meta-row">
+                            <dt>Naslov zbornika</dt>
+                            <dd>{{ issue.proceedings_title }}</dd>
+                        </div>
                         {% endif %}
                         {% if issue.proceedings_publisher_name %}
-                        <dt class="col-sm-4">Izdavač zbornika</dt>
-                        <dd class="col-sm-8">{{ issue.proceedings_publisher_name }}</dd>
+                        <div class="detail-meta-row">
+                            <dt>Izdavač zbornika</dt>
+                            <dd>{{ issue.proceedings_publisher_name }}</dd>
+                        </div>
                         {% endif %}
                         {% if issue.proceedings_publisher_place %}
-                        <dt class="col-sm-4">Mesto izdavanja</dt>
-                        <dd class="col-sm-8">{{ issue.proceedings_publisher_place }}</dd>
+                        <div class="detail-meta-row">
+                            <dt>Mesto izdavanja</dt>
+                            <dd>{{ issue.proceedings_publisher_place }}</dd>
+                        </div>
                         {% endif %}
                     </dl>
                 </div>
@@ -84,53 +87,59 @@
             {% endif %}
             {% endif %}
 
-            <!-- Articles Section (Story 4.4: Article Landing Page links) -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h2 class="h5 card-title">
+            <!-- Articles Section -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="info-card-heading h5 mb-0">
                         <i class="bi bi-file-earmark-text me-2" aria-hidden="true"></i>Članci
                     </h2>
                     {% if articles %}
-                    <div class="list-group">
-                        {% for article in articles %}
-                        <a href="{% url 'portal-articles:article-detail' article.pk %}"
-                           class="list-group-item list-group-item-action">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h3 class="h6 mb-1">{{ article.title|render_markup }}</h3>
-                                    {% if article.original_language_title %}
-                                    <p class="small text-muted fst-italic mb-1">{{ article.original_language_title|render_markup }}</p>
-                                    {% endif %}
-                                    <p class="small text-muted mb-0">
-                                        {% for author in article.authors.all|slice:":3" %}
-                                            {{ author.surname }} {{ author.given_name|default:"" }}{% if not forloop.last %}, {% endif %}
-                                        {% endfor %}
-                                        {% if article.authors.all|length > 3 %}
-                                            <span>i dr.</span>
-                                        {% endif %}
-                                    </p>
-                                </div>
-                                <div class="text-end">
-                                    {% if article.first_page %}
-                                    <span class="text-muted small">str. {{ article.first_page }}{% if article.last_page %}-{{ article.last_page }}{% endif %}</span>
-                                    {% endif %}
-                                    {% if article.status == "WITHDRAWN" %}
-                                    <br><span class="badge bg-danger">Povučen</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </a>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <p class="text-muted mb-0">Članci će biti dostupni uskoro.</p>
+                    <span class="publisher-pub-count">{{ articles|length }}</span>
                     {% endif %}
                 </div>
+                {% if articles %}
+                <div class="article-list">
+                    {% for article in articles %}
+                    <a href="{% url 'portal-articles:article-detail' article.pk %}"
+                       class="article-list-item fade-in-up fade-in-up-{{ forloop.counter }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="article-list-content">
+                                <h3 class="article-list-title">{{ article.title|render_markup }}</h3>
+                                {% if article.original_language_title %}
+                                <p class="article-list-alt-title">{{ article.original_language_title|render_markup }}</p>
+                                {% endif %}
+                                <p class="article-list-authors">
+                                    {% for author in article.authors.all|slice:":3" %}
+                                        {{ author.surname }} {{ author.given_name|default:"" }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                    {% if article.authors.all|length > 3 %}
+                                        <span>i dr.</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="text-end flex-shrink-0 ms-3">
+                                {% if article.first_page %}
+                                <span class="article-list-pages">str. {{ article.first_page }}{% if article.last_page %}-{{ article.last_page }}{% endif %}</span>
+                                {% endif %}
+                                {% if article.status == "WITHDRAWN" %}
+                                <br><span class="badge bg-danger mt-1">Povučen</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                    <p>Članci će biti dostupni uskoro.</p>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Back to Publication -->
             <a href="{% url 'portal-publications:publication-detail' issue.publication.slug %}"
-               class="btn btn-outline-secondary">
+               class="btn btn-back">
                 <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
                 Nazad na publikaciju
             </a>
@@ -138,17 +147,19 @@
     </div>
 
     <!-- Sidebar -->
-    <aside class="col-lg-4">
+    <aside class="col-lg-4 fade-in-up fade-in-up-2">
         <!-- Publication Info Card -->
-        <div class="card mb-3">
+        <div class="card sidebar-card mb-3">
             <div class="card-body">
-                <h2 class="h5 card-title">Publikacija</h2>
+                <h2 class="sidebar-card-title">
+                    <i class="bi bi-journal-text me-2" aria-hidden="true"></i>Publikacija
+                </h2>
                 <p class="mb-2">
                     <a href="{% url 'portal-publications:publication-detail' issue.publication.slug %}">
                         {{ issue.publication.title }}
                     </a>
                 </p>
-                <span class="badge bg-secondary">
+                <span class="badge-type">
                     <i class="{{ issue.publication.type_icon }} me-1" aria-hidden="true"></i>
                     {{ issue.publication.type_display }}
                 </span>
@@ -156,11 +167,12 @@
         </div>
 
         <!-- Publisher Info Card -->
-        <div class="card">
+        <div class="card sidebar-card">
             <div class="card-body">
-                <h2 class="h5 card-title">Izdavač</h2>
-                <p class="mb-2">
-                    <i class="bi bi-building me-2" aria-hidden="true"></i>
+                <h2 class="sidebar-card-title">
+                    <i class="bi bi-building me-2" aria-hidden="true"></i>Izdavač
+                </h2>
+                <p class="mb-0">
                     <a href="{% url 'portal:publisher-detail' issue.publication.publisher.slug %}">
                         {{ issue.publication.publisher.name }}
                     </a>

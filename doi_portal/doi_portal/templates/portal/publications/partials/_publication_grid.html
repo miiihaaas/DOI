@@ -11,18 +11,18 @@
                  alt="{{ publication.title }} naslovna slika"
                  loading="lazy">
             {% else %}
-            <div class="card-img-placeholder text-center py-4 bg-light">
-                <i class="{{ publication.type_icon }} display-4 text-muted" aria-hidden="true"></i>
+            <div class="card-img-placeholder">
+                <i class="{{ publication.type_icon }} display-4" aria-hidden="true"></i>
             </div>
             {% endif %}
             <div class="card-body">
                 <div class="mb-2">
-                    <span class="badge bg-secondary">
+                    <span class="badge-type">
                         <i class="{{ publication.type_icon }} me-1" aria-hidden="true"></i>
                         {{ publication.type_display }}
                     </span>
                     {% if publication.access_type == "OPEN" %}
-                    <span class="badge bg-success ms-1">
+                    <span class="badge-access ms-1">
                         <i class="bi bi-unlock me-1" aria-hidden="true"></i>Otvoreni pristup
                     </span>
                     {% endif %}
@@ -33,7 +33,7 @@
                         {{ publication.title }}
                     </a>
                 </h3>
-                <p class="card-text text-muted small mb-0">
+                <p class="card-text small mb-0">
                     <i class="bi bi-building me-1" aria-hidden="true"></i>
                     {{ publication.publisher.name }}
                 </p>
@@ -94,10 +94,10 @@
 
 {% else %}
 <!-- Empty State -->
-<div class="text-center py-5">
-    <i class="bi bi-journal-text display-3 text-muted d-block mb-3" aria-hidden="true"></i>
-    <p class="lead text-muted">Nema publikacija koje odgovaraju kriterijumima pretrage.</p>
-    <a href="{% url 'portal-publications:publication-list' %}" class="btn btn-outline-primary">
+<div class="empty-state">
+    <i class="bi bi-journal-text" aria-hidden="true"></i>
+    <p class="lead">Nema publikacija koje odgovaraju kriterijumima pretrage.</p>
+    <a href="{% url 'portal-publications:publication-list' %}" class="btn btn-outline-primary mt-2">
         <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Obrišite sve filtere
     </a>
 </div>

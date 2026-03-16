@@ -8,14 +8,16 @@
 {% block portal_content %}
 <div class="row">
     <!-- Filter Sidebar -->
-    <aside class="col-lg-3 mb-4">
-        <div class="card">
+    <aside class="col-lg-3 mb-4 fade-in-up">
+        <div class="card filter-sidebar-card">
             <div class="card-body">
-                <h2 class="h5 card-title mb-3">Filteri</h2>
+                <h2 class="filter-sidebar-title">
+                    <i class="bi bi-funnel me-2" aria-hidden="true"></i>Filteri
+                </h2>
 
                 <!-- Search Box -->
                 <div class="mb-3">
-                    <label for="search-input" class="form-label fw-semibold">Pretraživanje</label>
+                    <label for="search-input" class="filter-label">Pretraživanje</label>
                     <input type="text"
                            id="search-input"
                            name="search"
@@ -30,11 +32,11 @@
                            aria-label="Pretražite publikacije po naslovu">
                 </div>
 
-                <hr>
+                <div class="filter-divider"></div>
 
                 <!-- Type Filter (multiselect checkboxes - AC #2) -->
                 <fieldset class="mb-3">
-                    <legend class="form-label fw-semibold h6">Tip publikacije</legend>
+                    <legend class="filter-label">Tip publikacije</legend>
                     {% for value, label in publication_types %}
                     <div class="form-check">
                         <input class="form-check-input"
@@ -55,12 +57,12 @@
                     {% endfor %}
                 </fieldset>
 
-                <hr>
+                <div class="filter-divider"></div>
 
                 <!-- Subject Area Filter (multiselect checkboxes - AC #2) -->
                 {% if subject_areas %}
                 <fieldset class="mb-3">
-                    <legend class="form-label fw-semibold h6">Naučna oblast</legend>
+                    <legend class="filter-label">Naučna oblast</legend>
                     {% for area in subject_areas %}
                     <div class="form-check">
                         <input class="form-check-input"
@@ -81,12 +83,12 @@
                     {% endfor %}
                 </fieldset>
 
-                <hr>
+                <div class="filter-divider"></div>
                 {% endif %}
 
                 <!-- Access Type Filter (multiselect checkboxes - AC #2) -->
                 <fieldset class="mb-3">
-                    <legend class="form-label fw-semibold h6">Tip pristupa</legend>
+                    <legend class="filter-label">Tip pristupa</legend>
                     {% for value, label in access_types %}
                     <div class="form-check">
                         <input class="form-check-input"
@@ -107,12 +109,12 @@
                     {% endfor %}
                 </fieldset>
 
-                <hr>
+                <div class="filter-divider"></div>
 
                 <!-- Language Filter (multiselect checkboxes - AC #2) -->
                 {% if languages %}
                 <fieldset class="mb-3">
-                    <legend class="form-label fw-semibold h6">Jezik</legend>
+                    <legend class="filter-label">Jezik</legend>
                     {% for lang in languages %}
                     <div class="form-check">
                         <input class="form-check-input"
@@ -136,7 +138,7 @@
 
                 <!-- Reset All Filters -->
                 {% if has_active_filters %}
-                <hr>
+                <div class="filter-divider"></div>
                 <a href="{% url 'portal-publications:publication-list' %}" class="btn btn-outline-danger btn-sm w-100">
                     <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Obrišite sve filtere
                 </a>
@@ -146,8 +148,11 @@
     </aside>
 
     <!-- Main Content -->
-    <section class="col-lg-9">
-        <h1 class="h3 mb-4">Publikacije</h1>
+    <section class="col-lg-9 fade-in-up fade-in-up-1">
+        <div class="mb-4">
+            <p class="section-label mb-1">KATALOG</p>
+            <h1 class="section-title h3 mb-0">Publikacije</h1>
+        </div>
 
         <div id="publication-results" aria-live="polite">
             {% include "portal/publications/partials/_publication_grid.html" %}
