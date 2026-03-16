@@ -21,7 +21,7 @@ from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.text import slugify
+from slugify import slugify
 from django.views import View
 
 from doi_portal.core.permissions import has_publisher_access
@@ -249,7 +249,7 @@ def _generate_filename(issue: Issue) -> str:
     Returns:
         Filename in format: {publication-slug}_{volume}_{issue}_{timestamp}.xml
     """
-    publication_slug = slugify(issue.publication.title)[:30]
+    publication_slug = slugify(issue.publication.title)[:30] or "publication"
     volume = issue.volume or "v0"
     issue_num = issue.issue_number or "i0"
     timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")

@@ -10,7 +10,7 @@ Each type has specific fields required by Crossref schema 5.4.0.
 from __future__ import annotations
 
 from django.db import models
-from django.utils.text import slugify
+from slugify import slugify
 from django.utils.translation import gettext_lazy as _
 
 from doi_portal.core.mixins import SoftDeleteManager, SoftDeleteMixin
@@ -216,6 +216,9 @@ class Publication(SoftDeleteMixin, models.Model):
         """Save publication, auto-generating slug if not set."""
         if not self.slug:
             self.slug = slugify(self.title)
+            # Fallback for non-Latin titles (e.g. Cyrillic) where slugify returns empty
+            if not self.slug:
+                self.slug = f"publication-{self.pk or ''}"
             # Ensure uniqueness
             original_slug = self.slug
             counter = 1

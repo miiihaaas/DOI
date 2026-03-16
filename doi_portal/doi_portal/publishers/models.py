@@ -11,7 +11,7 @@ import re
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.text import slugify
+from slugify import slugify
 from django.utils.translation import gettext_lazy as _
 
 from doi_portal.core.mixins import SoftDeleteManager, SoftDeleteMixin  # noqa: F401
@@ -140,6 +140,9 @@ class Publisher(SoftDeleteMixin, models.Model):
         # Auto-generate slug from name if not set
         if not self.slug:
             self.slug = slugify(self.name)
+            # Fallback for non-Latin names (e.g. Cyrillic) where slugify returns empty
+            if not self.slug:
+                self.slug = f"publisher-{self.pk or ''}"
             # Ensure uniqueness
             original_slug = self.slug
             counter = 1

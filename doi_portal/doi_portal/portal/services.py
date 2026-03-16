@@ -13,7 +13,7 @@ All business logic for portal data retrieval is centralized here.
 from __future__ import annotations
 
 from django.db.models import Count, Q, QuerySet
-from django.utils.text import slugify
+from slugify import slugify
 
 from doi_portal.articles.models import Article, ArticleStatus, Author
 from doi_portal.publications.models import Publication
