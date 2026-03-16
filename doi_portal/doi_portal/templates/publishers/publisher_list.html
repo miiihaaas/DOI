@@ -12,8 +12,8 @@
     </a>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
+<div class="card admin-card">
+    <div class="card-body p-0">
         {% if publishers %}
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -30,23 +30,31 @@
                     {% for publisher in publishers %}
                     <tr>
                         <td>
-                            {% if publisher.logo %}
-                            <img src="{{ publisher.logo.url }}" alt="" class="me-2" style="height: 24px; width: auto;">
-                            {% endif %}
-                            <a href="{% url 'publishers:detail' publisher.pk %}" class="fw-semibold">{{ publisher.name }}</a>
+                            <div class="d-flex align-items-center">
+                                {% if publisher.logo %}
+                                <img src="{{ publisher.logo.url }}" alt="" class="admin-table-logo me-2">
+                                {% else %}
+                                <span class="admin-table-icon me-2">
+                                    <i class="bi bi-building"></i>
+                                </span>
+                                {% endif %}
+                                <a href="{% url 'publishers:detail' publisher.pk %}" class="fw-semibold">{{ publisher.name }}</a>
+                            </div>
                         </td>
-                        <td><code>{{ publisher.doi_prefix }}</code></td>
+                        <td><code class="admin-code">{{ publisher.doi_prefix }}</code></td>
                         <td>
                             <span class="badge bg-doi-teal">{{ publisher.publication_count }}</span>
                         </td>
-                        <td>{{ publisher.created_at|date:"d.m.Y." }}</td>
+                        <td class="text-muted">{{ publisher.created_at|date:"d.m.Y." }}</td>
                         <td class="text-end">
-                            <a href="{% url 'publishers:update' publisher.pk %}" class="btn btn-sm btn-outline-primary" title="Izmeni">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <a href="{% url 'publishers:delete' publisher.pk %}" class="btn btn-sm btn-outline-danger" title="Obriši">
-                                <i class="bi bi-trash"></i>
-                            </a>
+                            <div class="admin-actions">
+                                <a href="{% url 'publishers:update' publisher.pk %}" class="btn btn-sm btn-outline-primary" title="Izmeni">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'publishers:delete' publisher.pk %}" class="btn btn-sm btn-outline-danger" title="Obriši">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -54,9 +62,9 @@
             </table>
         </div>
         {% else %}
-        <div class="text-center py-5 text-muted">
-            <i class="bi bi-building display-4 mb-3 d-block"></i>
-            <p class="mb-3">Nema izdavača.</p>
+        <div class="text-center py-5">
+            <i class="bi bi-building admin-empty-icon d-block mb-3"></i>
+            <p class="text-muted mb-3">Nema izdavača.</p>
             <a href="{% url 'publishers:create' %}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1"></i>Dodaj prvog izdavača
             </a>

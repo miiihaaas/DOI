@@ -38,7 +38,7 @@
 </div>
 
 {% if not total_deleted_count %}
-<div class="card">
+<div class="card admin-card">
     <div class="card-body text-center py-5">
         <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
         <p class="mt-3 mb-0 text-muted">Nema obrisanih stavki</p>
@@ -48,7 +48,7 @@
 
 {% for section in deleted_sections %}
 {% if section.count %}
-<div class="card shadow-sm mb-3 section-card">
+<div class="card admin-card mb-3 section-card">
     <div class="card-header" data-bs-toggle="collapse" data-bs-target="#{{ section.key }}-collapse"
          role="button" aria-expanded="true" aria-controls="{{ section.key }}-collapse">
         <h5 class="mb-0">

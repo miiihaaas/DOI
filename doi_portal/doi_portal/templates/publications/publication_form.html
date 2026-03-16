@@ -11,7 +11,7 @@
 
 <div class="row justify-content-center">
     <div class="col-lg-10">
-        <div class="card shadow-sm section-card">
+        <div class="card admin-card section-card">
             <div class="card-header">
                 <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
             </div>
@@ -40,14 +40,14 @@
 
                     <div class="row">
                         <div class="col-md-8 mb-3">
-                            <label for="id_title" class="form-label">Naslov <span class="text-danger">*</span></label>
+                            <label for="id_title" class="form-label admin-form-label">Naslov <span class="text-danger">*</span></label>
                             {{ form.title }}
                             {% if form.title.errors %}
                             <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="id_publisher" class="form-label">Izdavač <span class="text-danger">*</span></label>
+                            <label for="id_publisher" class="form-label admin-form-label">Izdavač <span class="text-danger">*</span></label>
                             {{ form.publisher }}
                             {% if form.publisher.errors %}
                             <div class="invalid-feedback d-block">{{ form.publisher.errors.0 }}</div>
@@ -57,7 +57,7 @@
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="id_publication_type" class="form-label">Tip publikacije <span class="text-danger">*</span></label>
+                            <label for="id_publication_type" class="form-label admin-form-label">Tip publikacije <span class="text-danger">*</span></label>
                             <select name="publication_type"
                                     id="id_publication_type"
                                     class="form-select"
@@ -77,7 +77,7 @@
                             {% endif %}
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="id_language" class="form-label">Jezik</label>
+                            <label for="id_language" class="form-label admin-form-label">Jezik</label>
                             {{ form.language }}
                             <div class="form-text">ISO 639-1 kod (npr. 'sr', 'en')</div>
                             {% if form.language.errors %}
@@ -85,7 +85,7 @@
                             {% endif %}
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="id_access_type" class="form-label">Tip pristupa</label>
+                            <label for="id_access_type" class="form-label admin-form-label">Tip pristupa</label>
                             {{ form.access_type }}
                             {% if form.access_type.errors %}
                             <div class="invalid-feedback d-block">{{ form.access_type.errors.0 }}</div>
@@ -94,7 +94,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="id_description" class="form-label">Opis</label>
+                        <label for="id_description" class="form-label admin-form-label">Opis</label>
                         {{ form.description }}
                         {% if form.description.errors %}
                         <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
@@ -103,17 +103,17 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="id_subject_area" class="form-label">Naučna oblast</label>
+                            <label for="id_subject_area" class="form-label admin-form-label">Naučna oblast</label>
                             {{ form.subject_area }}
                             {% if form.subject_area.errors %}
                             <div class="invalid-feedback d-block">{{ form.subject_area.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="id_cover_image" class="form-label">Naslovna slika</label>
+                            <label for="id_cover_image" class="form-label admin-form-label">Naslovna slika</label>
                             {% if form.instance.cover_image %}
                             <div class="mb-2">
-                                <img src="{{ form.instance.cover_image.url }}" alt="Trenutna naslovna slika" class="img-thumbnail" style="max-height: 100px;">
+                                <img src="{{ form.instance.cover_image.url }}" alt="Trenutna naslovna slika" class="admin-logo-thumb">
                             </div>
                             {% endif %}
                             {{ form.cover_image }}
@@ -157,11 +157,10 @@
 <script>
 // Debug: Log HTMX events for type fields
 document.addEventListener('DOMContentLoaded', function() {
-    const typeSelect = document.getElementById('id_publication_type');
+    var typeSelect = document.getElementById('id_publication_type');
     if (typeSelect) {
         console.log('HTMX: Type select found');
 
-        // Listen for HTMX events
         document.body.addEventListener('htmx:beforeRequest', function(evt) {
             console.log('HTMX beforeRequest:', evt.detail);
         });
@@ -172,10 +171,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('HTMX responseError:', evt.detail);
         });
 
-        // Fallback: Manual trigger if HTMX not working
         typeSelect.addEventListener('change', function() {
             console.log('Type changed to:', this.value);
-            // Check if HTMX request was made
             setTimeout(function() {
                 var target = document.getElementById('type-specific-fields');
                 console.log('Target content length:', target ? target.innerHTML.length : 0);

@@ -8,22 +8,22 @@
 </div>
 
 <!-- Filter form -->
-<div class="card shadow-sm mb-4 filter-card">
+<div class="card admin-card mb-4 filter-card">
     <div class="card-body">
         <form method="get" action="{% url 'core:audit-log-list' %}" id="filter-form">
             <div class="row g-3">
                 <div class="col-md-2">
-                    <label for="date_from" class="form-label">Datum od</label>
+                    <label for="date_from" class="form-label admin-form-label">Datum od</label>
                     <input type="date" class="form-control" id="date_from" name="date_from"
                            value="{{ filter_date_from }}">
                 </div>
                 <div class="col-md-2">
-                    <label for="date_to" class="form-label">Datum do</label>
+                    <label for="date_to" class="form-label admin-form-label">Datum do</label>
                     <input type="date" class="form-control" id="date_to" name="date_to"
                            value="{{ filter_date_to }}">
                 </div>
                 <div class="col-md-2">
-                    <label for="actor" class="form-label">Korisnik</label>
+                    <label for="actor" class="form-label admin-form-label">Korisnik</label>
                     <select class="form-select" id="actor" name="actor">
                         <option value="">Svi korisnici</option>
                         {% for user in users %}
@@ -34,7 +34,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label for="action" class="form-label">Akcija</label>
+                    <label for="action" class="form-label admin-form-label">Akcija</label>
                     <select class="form-select" id="action" name="action">
                         <option value="">Sve akcije</option>
                         {% for value, label in action_choices %}
@@ -45,7 +45,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label for="model" class="form-label">Model</label>
+                    <label for="model" class="form-label admin-form-label">Model</label>
                     <select class="form-select" id="model" name="model">
                         <option value="">Svi modeli</option>
                         {% for ct in content_types %}
@@ -56,14 +56,14 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label for="object_id" class="form-label">Object ID</label>
+                    <label for="object_id" class="form-label admin-form-label">Object ID</label>
                     <input type="text" class="form-control" id="object_id" name="object_id"
                            value="{{ filter_object_id }}">
                 </div>
             </div>
             <div class="row g-3 mt-1">
                 <div class="col-md-6">
-                    <label for="search-input" class="form-label">Pretraga</label>
+                    <label for="search-input" class="form-label admin-form-label">Pretraga</label>
                     <input type="text" class="form-control" id="search-input" name="q"
                            value="{{ search_query }}"
                            placeholder="Pretraži po objektu ili korisniku..."
@@ -86,7 +86,7 @@
 </div>
 
 <!-- Table -->
-<div class="card shadow-sm">
+<div class="card admin-card">
     <div class="card-body">
         {% include "core/partials/_audit_log_table.html" %}
     </div>

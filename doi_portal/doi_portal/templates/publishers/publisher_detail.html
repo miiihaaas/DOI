@@ -7,7 +7,7 @@
     <h1 class="h3 mb-0 page-title">
         <i class="bi bi-building me-2"></i>{{ publisher.name }}
     </h1>
-    <div>
+    <div class="d-flex gap-2">
         <a href="{% url 'publishers:update' publisher.pk %}" class="btn btn-primary">
             <i class="bi bi-pencil me-1"></i>Izmeni
         </a>
@@ -19,88 +19,100 @@
 
 <div class="row">
     <div class="col-lg-8">
-        <div class="card shadow-sm mb-4 section-card">
+        <div class="card admin-card mb-4 section-card">
             <div class="card-header">
                 <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
             </div>
             <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">Naziv</dt>
-                    <dd class="col-sm-8">{{ publisher.name }}</dd>
-
-                    <dt class="col-sm-4">DOI prefiks</dt>
-                    <dd class="col-sm-8"><code>{{ publisher.doi_prefix }}</code></dd>
-
-                    <dt class="col-sm-4">Slug</dt>
-                    <dd class="col-sm-8"><code>{{ publisher.slug }}</code></dd>
-
+                <dl class="admin-dl mb-0">
+                    <div class="admin-dl-row">
+                        <dt>Naziv</dt>
+                        <dd>{{ publisher.name }}</dd>
+                    </div>
+                    <div class="admin-dl-row">
+                        <dt>DOI prefiks</dt>
+                        <dd><code class="admin-code">{{ publisher.doi_prefix }}</code></dd>
+                    </div>
+                    <div class="admin-dl-row">
+                        <dt>Slug</dt>
+                        <dd><code class="admin-code">{{ publisher.slug }}</code></dd>
+                    </div>
                     {% if publisher.description %}
-                    <dt class="col-sm-4">Opis</dt>
-                    <dd class="col-sm-8">{{ publisher.description }}</dd>
+                    <div class="admin-dl-row">
+                        <dt>Opis</dt>
+                        <dd>{{ publisher.description }}</dd>
+                    </div>
                     {% endif %}
                 </dl>
             </div>
         </div>
 
-        <div class="card shadow-sm mb-4 section-card">
+        <div class="card admin-card mb-4 section-card">
             <div class="card-header">
                 <h5 class="card-title mb-0"><i class="bi bi-envelope me-2"></i>Kontakt informacije</h5>
             </div>
             <div class="card-body">
-                <dl class="row mb-0">
+                {% if publisher.contact_email or publisher.contact_phone or publisher.website %}
+                <dl class="admin-dl mb-0">
                     {% if publisher.contact_email %}
-                    <dt class="col-sm-4">Email</dt>
-                    <dd class="col-sm-8">
-                        <a href="mailto:{{ publisher.contact_email }}">{{ publisher.contact_email }}</a>
-                    </dd>
+                    <div class="admin-dl-row">
+                        <dt>Email</dt>
+                        <dd>
+                            <a href="mailto:{{ publisher.contact_email }}">{{ publisher.contact_email }}</a>
+                        </dd>
+                    </div>
                     {% endif %}
-
                     {% if publisher.contact_phone %}
-                    <dt class="col-sm-4">Telefon</dt>
-                    <dd class="col-sm-8">{{ publisher.contact_phone }}</dd>
+                    <div class="admin-dl-row">
+                        <dt>Telefon</dt>
+                        <dd>{{ publisher.contact_phone }}</dd>
+                    </div>
                     {% endif %}
-
                     {% if publisher.website %}
-                    <dt class="col-sm-4">Web sajt</dt>
-                    <dd class="col-sm-8">
-                        <a href="{{ publisher.website }}" target="_blank" rel="noopener noreferrer">
-                            {{ publisher.website }}
-                            <i class="bi bi-box-arrow-up-right ms-1"></i>
-                        </a>
-                    </dd>
-                    {% endif %}
-
-                    {% if not publisher.contact_email and not publisher.contact_phone and not publisher.website %}
-                    <dd class="col-12 text-muted">Nema unetih kontakt informacija.</dd>
+                    <div class="admin-dl-row">
+                        <dt>Web sajt</dt>
+                        <dd>
+                            <a href="{{ publisher.website }}" target="_blank" rel="noopener noreferrer">
+                                {{ publisher.website }}
+                                <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.75rem;"></i>
+                            </a>
+                        </dd>
+                    </div>
                     {% endif %}
                 </dl>
+                {% else %}
+                <p class="text-muted mb-0 fst-italic">Nema unetih kontakt informacija.</p>
+                {% endif %}
             </div>
         </div>
 
         {% if publisher.crossref_username or publisher.crossref_password %}
-        <div class="card shadow-sm mb-4 section-card">
+        <div class="card admin-card mb-4 section-card">
             <div class="card-header">
                 <h5 class="card-title mb-0"><i class="bi bi-shield-lock me-2"></i>Crossref kredencijali</h5>
             </div>
             <div class="card-body">
-                <dl class="row mb-0">
+                <dl class="admin-dl mb-0">
                     {% if publisher.crossref_username %}
-                    <dt class="col-sm-4">Korisničko ime</dt>
-                    <dd class="col-sm-8"><code>{{ publisher.crossref_username }}</code></dd>
+                    <div class="admin-dl-row">
+                        <dt>Korisničko ime</dt>
+                        <dd><code class="admin-code">{{ publisher.crossref_username }}</code></dd>
+                    </div>
                     {% endif %}
-
                     {% if publisher.crossref_password %}
-                    <dt class="col-sm-4">Lozinka</dt>
-                    <dd class="col-sm-8" id="crossref-password-cell">
-                        {% include "publishers/partials/_crossref_password_masked.html" %}
-                    </dd>
+                    <div class="admin-dl-row">
+                        <dt>Lozinka</dt>
+                        <dd id="crossref-password-cell">
+                            {% include "publishers/partials/_crossref_password_masked.html" %}
+                        </dd>
+                    </div>
                     {% endif %}
                 </dl>
             </div>
         </div>
         {% endif %}
 
-        <div class="card shadow-sm mb-4 section-card">
+        <div class="card admin-card mb-4 section-card">
             <div class="card-header">
                 <h5 class="card-title mb-0"><i class="bi bi-people me-2"></i>Kontakt osobe (interne)</h5>
             </div>
@@ -116,7 +128,7 @@
             </div>
         </div>
 
-        <div class="card shadow-sm mb-4 section-card">
+        <div class="card admin-card mb-4 section-card">
             <div class="card-header">
                 <h5 class="card-title mb-0"><i class="bi bi-chat-left-text me-2"></i>Napomene</h5>
             </div>
@@ -132,22 +144,26 @@
             </div>
         </div>
 
-        <div class="card shadow-sm section-card">
+        <div class="card admin-card section-card">
             <div class="card-header">
                 <h5 class="card-title mb-0"><i class="bi bi-gear me-2"></i>Sistemske informacije</h5>
             </div>
             <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">Kreirano</dt>
-                    <dd class="col-sm-8">{{ publisher.created_at|date:"d.m.Y. H:i" }}</dd>
-
-                    <dt class="col-sm-4">Ažurirano</dt>
-                    <dd class="col-sm-8">{{ publisher.updated_at|date:"d.m.Y. H:i" }}</dd>
-
-                    <dt class="col-sm-4">Broj publikacija</dt>
-                    <dd class="col-sm-8">
-                        <span class="badge bg-doi-teal">{{ publisher.publication_count }}</span>
-                    </dd>
+                <dl class="admin-dl mb-0">
+                    <div class="admin-dl-row">
+                        <dt>Kreirano</dt>
+                        <dd>{{ publisher.created_at|date:"d.m.Y. H:i" }}</dd>
+                    </div>
+                    <div class="admin-dl-row">
+                        <dt>Ažurirano</dt>
+                        <dd>{{ publisher.updated_at|date:"d.m.Y. H:i" }}</dd>
+                    </div>
+                    <div class="admin-dl-row">
+                        <dt>Broj publikacija</dt>
+                        <dd>
+                            <span class="badge bg-doi-teal">{{ publisher.publication_count }}</span>
+                        </dd>
+                    </div>
                 </dl>
             </div>
         </div>
@@ -155,17 +171,17 @@
 
     <div class="col-lg-4">
         {% if publisher.logo %}
-        <div class="card shadow-sm mb-4 section-card">
+        <div class="card admin-card mb-4 section-card">
             <div class="card-header">
                 <h5 class="card-title mb-0"><i class="bi bi-image me-2"></i>Logo</h5>
             </div>
             <div class="card-body text-center">
-                <img src="{{ publisher.logo.url }}" alt="{{ publisher.name }}" class="img-fluid" style="max-height: 200px;">
+                <img src="{{ publisher.logo.url }}" alt="{{ publisher.name }}" class="admin-logo-preview">
             </div>
         </div>
         {% endif %}
 
-        <div class="card shadow-sm section-card">
+        <div class="card admin-card section-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0"><i class="bi bi-journal-text me-2"></i>Publikacije</h5>
                 <span class="badge">{{ publications|length }}</span>

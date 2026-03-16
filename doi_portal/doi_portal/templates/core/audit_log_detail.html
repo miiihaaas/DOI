@@ -11,7 +11,7 @@
 </div>
 
 <!-- Metadata -->
-<div class="card mb-4">
+<div class="card admin-card mb-4">
     <div class="card-header">
         <h5 class="card-title mb-0">Metapodaci</h5>
     </div>
@@ -76,7 +76,7 @@
 <!-- Changes -->
 {% if entry.action == 1 and changes_data %}
 <!-- UPDATE: Side by side old vs new -->
-<div class="card">
+<div class="card admin-card">
     <div class="card-header">
         <h5 class="card-title mb-0">Izmene</h5>
     </div>
@@ -105,7 +105,7 @@
 </div>
 {% elif entry.action == 0 and changes_data %}
 <!-- CREATE: Show set values -->
-<div class="card">
+<div class="card admin-card">
     <div class="card-header">
         <h5 class="card-title mb-0">Postavljene vrednosti</h5>
     </div>
@@ -132,7 +132,7 @@
 </div>
 {% elif entry.action == 2 %}
 <!-- DELETE: Show object repr -->
-<div class="card">
+<div class="card admin-card">
     <div class="card-header">
         <h5 class="card-title mb-0">Obrisani objekat</h5>
     </div>

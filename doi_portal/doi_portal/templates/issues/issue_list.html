@@ -20,11 +20,11 @@
 </div>
 
 <!-- Filters -->
-<div class="card shadow-sm mb-4 filter-card">
+<div class="card admin-card mb-4 filter-card">
     <div class="card-body">
         <form method="get" class="row g-3">
             <div class="col-md-4">
-                <label for="status" class="form-label">Status</label>
+                <label for="status" class="form-label admin-form-label">Status</label>
                 <select name="status" id="status" class="form-select">
                     <option value="">Svi statusi</option>
                     {% for value, label in status_choices %}
@@ -37,8 +37,8 @@
             {% if current_publication %}
             <input type="hidden" name="publication" value="{{ current_publication }}">
             {% endif %}
-            <div class="col-md-8 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary me-2">
+            <div class="col-md-8 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">
                     <i class="bi bi-search me-1"></i>Filtriraj
                 </button>
                 <a href="{% url 'issues:list' %}{% if current_publication %}?publication={{ current_publication }}{% endif %}" class="btn btn-outline-secondary">
@@ -49,8 +49,8 @@
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
+<div class="card admin-card">
+    <div class="card-body p-0">
         {% if issues %}
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -58,43 +58,31 @@
                     <tr>
                         <th>
                             <a href="?sort=volume&order={% if current_sort == 'volume' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_publication %}&publication={{ current_publication }}{% endif %}"
-                               class="text-decoration-none"
-                               aria-label="Sortiraj po volumenu">
+                               class="text-decoration-none" aria-label="Sortiraj po volumenu">
                                 Volumen
-                                {% if current_sort == 'volume' %}
-                                    <i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>
-                                {% endif %}
+                                {% if current_sort == 'volume' %}<i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>{% endif %}
                             </a>
                         </th>
                         <th>
                             <a href="?sort=issue_number&order={% if current_sort == 'issue_number' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_publication %}&publication={{ current_publication }}{% endif %}"
-                               class="text-decoration-none"
-                               aria-label="Sortiraj po broju">
+                               class="text-decoration-none" aria-label="Sortiraj po broju">
                                 Broj
-                                {% if current_sort == 'issue_number' %}
-                                    <i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>
-                                {% endif %}
+                                {% if current_sort == 'issue_number' %}<i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>{% endif %}
                             </a>
                         </th>
                         <th>
                             <a href="?sort=year&order={% if current_sort == 'year' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_publication %}&publication={{ current_publication }}{% endif %}"
-                               class="text-decoration-none"
-                               aria-label="Sortiraj po godini">
+                               class="text-decoration-none" aria-label="Sortiraj po godini">
                                 Godina
-                                {% if current_sort == 'year' %}
-                                    <i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>
-                                {% endif %}
+                                {% if current_sort == 'year' %}<i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>{% endif %}
                             </a>
                         </th>
                         <th>Naslov</th>
                         <th>
                             <a href="?sort=status&order={% if current_sort == 'status' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_publication %}&publication={{ current_publication }}{% endif %}"
-                               class="text-decoration-none"
-                               aria-label="Sortiraj po statusu">
+                               class="text-decoration-none" aria-label="Sortiraj po statusu">
                                 Status
-                                {% if current_sort == 'status' %}
-                                    <i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>
-                                {% endif %}
+                                {% if current_sort == 'status' %}<i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>{% endif %}
                             </a>
                         </th>
                         <th>Članci</th>
@@ -131,10 +119,7 @@
                         </td>
                         <td>
                             {% if issue.cover_image %}
-                            <img src="{{ issue.cover_image.url }}"
-                                 alt="Cover {{ issue }}"
-                                 class="img-thumbnail"
-                                 style="max-height: 40px; max-width: 40px;">
+                            <img src="{{ issue.cover_image.url }}" alt="Cover {{ issue }}" class="admin-table-cover">
                             {% else %}
                             <span class="text-muted">-</span>
                             {% endif %}
@@ -147,16 +132,18 @@
                         </td>
                         {% endif %}
                         <td class="text-end">
-                            {% if can_edit %}
-                            <a href="{% url 'issues:update' issue.pk %}" class="btn btn-sm btn-outline-primary" title="Izmeni">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            {% endif %}
-                            {% if can_delete %}
-                            <a href="{% url 'issues:delete' issue.pk %}" class="btn btn-sm btn-outline-danger" title="Obriši">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                            {% endif %}
+                            <div class="admin-actions">
+                                {% if can_edit %}
+                                <a href="{% url 'issues:update' issue.pk %}" class="btn btn-sm btn-outline-primary" title="Izmeni">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                                {% if can_delete %}
+                                <a href="{% url 'issues:delete' issue.pk %}" class="btn btn-sm btn-outline-danger" title="Obriši">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -165,8 +152,8 @@
         </div>
 
         {% if is_paginated %}
-        <nav aria-label="Navigacija stranica" class="mt-4">
-            <ul class="pagination justify-content-center">
+        <nav aria-label="Navigacija stranica" class="mt-4 px-3 pb-3">
+            <ul class="pagination justify-content-center mb-0">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
                     <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_publication %}&publication={{ current_publication }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_order %}&order={{ current_order }}{% endif %}">
@@ -174,13 +161,9 @@
                     </a>
                 </li>
                 {% endif %}
-
                 <li class="page-item disabled">
-                    <span class="page-link">
-                        Stranica {{ page_obj.number }} od {{ page_obj.paginator.num_pages }}
-                    </span>
+                    <span class="page-link">Stranica {{ page_obj.number }} od {{ page_obj.paginator.num_pages }}</span>
                 </li>
-
                 {% if page_obj.has_next %}
                 <li class="page-item">
                     <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_publication %}&publication={{ current_publication }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_order %}&order={{ current_order }}{% endif %}">
@@ -193,15 +176,15 @@
         {% endif %}
 
         {% else %}
-        <div class="text-center py-5 text-muted">
-            <i class="bi bi-collection display-4 mb-3 d-block"></i>
+        <div class="text-center py-5">
+            <i class="bi bi-collection admin-empty-icon d-block mb-3"></i>
             {% if current_status %}
-            <p class="mb-3">Nema izdanja koja odgovaraju filterima.</p>
+            <p class="text-muted mb-3">Nema izdanja koja odgovaraju filterima.</p>
             <a href="{% url 'issues:list' %}{% if current_publication %}?publication={{ current_publication }}{% endif %}" class="btn btn-outline-secondary me-2">
                 <i class="bi bi-x-lg me-1"></i>Poništi filtere
             </a>
             {% else %}
-            <p class="mb-3">Nema izdanja za prikaz.</p>
+            <p class="text-muted mb-3">Nema izdanja za prikaz.</p>
             {% endif %}
             {% if can_create %}
             <a href="{% url 'issues:create' %}{% if current_publication %}?publication={{ current_publication }}{% endif %}" class="btn btn-primary">

@@ -11,7 +11,7 @@
 
 <div class="row justify-content-center">
     <div class="col-lg-10">
-        <div class="card shadow-sm section-card">
+        <div class="card admin-card section-card">
             <div class="card-header">
                 <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
             </div>
@@ -46,14 +46,14 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="id_publication" class="form-label">Publikacija <span class="text-danger">*</span></label>
+                            <label for="id_publication" class="form-label admin-form-label">Publikacija <span class="text-danger">*</span></label>
                             {{ form.publication }}
                             {% if form.publication.errors %}
                             <div class="invalid-feedback d-block">{{ form.publication.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="id_status" class="form-label">Status</label>
+                            <label for="id_status" class="form-label admin-form-label">Status</label>
                             {{ form.status }}
                             {% if form.status.errors %}
                             <div class="invalid-feedback d-block">{{ form.status.errors.0 }}</div>
@@ -63,35 +63,35 @@
 
                     <div class="row">
                         <div class="col-md-3 mb-3">
-                            <label for="id_volume" class="form-label">Volumen</label>
+                            <label for="id_volume" class="form-label admin-form-label">Volumen</label>
                             {{ form.volume }}
                             {% if form.volume.errors %}
                             <div class="invalid-feedback d-block">{{ form.volume.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="id_issue_number" class="form-label">Broj izdanja</label>
+                            <label for="id_issue_number" class="form-label admin-form-label">Broj izdanja</label>
                             {{ form.issue_number }}
                             {% if form.issue_number.errors %}
                             <div class="invalid-feedback d-block">{{ form.issue_number.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="id_year" class="form-label">Godina <span class="text-danger">*</span></label>
+                            <label for="id_year" class="form-label admin-form-label">Godina <span class="text-danger">*</span></label>
                             {{ form.year }}
                             {% if form.year.errors %}
                             <div class="invalid-feedback d-block">{{ form.year.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="id_publication_month" class="form-label">Mesec objave</label>
+                            <label for="id_publication_month" class="form-label admin-form-label">Mesec objave</label>
                             {{ form.publication_month }}
                             {% if form.publication_month.errors %}
                             <div class="invalid-feedback d-block">{{ form.publication_month.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-3 mb-3" x-show="hasMonth" x-transition>
-                            <label for="id_publication_day" class="form-label">Dan objave</label>
+                            <label for="id_publication_day" class="form-label admin-form-label">Dan objave</label>
                             {{ form.publication_day }}
                             {% if form.publication_day.errors %}
                             <div class="invalid-feedback d-block">{{ form.publication_day.errors.0 }}</div>
@@ -102,7 +102,7 @@
 
                     <div class="row">
                         <div class="col-md-8 mb-3">
-                            <label for="id_title" class="form-label">Naslov</label>
+                            <label for="id_title" class="form-label admin-form-label">Naslov</label>
                             {{ form.title }}
                             <div class="form-text">Opcioni naslov izdanja</div>
                             {% if form.title.errors %}
@@ -110,10 +110,10 @@
                             {% endif %}
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="id_cover_image" class="form-label">Naslovna slika</label>
+                            <label for="id_cover_image" class="form-label admin-form-label">Naslovna slika</label>
                             {% if form.instance.cover_image %}
                             <div class="mb-2">
-                                <img src="{{ form.instance.cover_image.url }}" alt="Trenutna naslovna slika" class="img-thumbnail" style="max-height: 100px;">
+                                <img src="{{ form.instance.cover_image.url }}" alt="Trenutna naslovna slika" class="admin-logo-thumb">
                             </div>
                             {% endif %}
                             {{ form.cover_image }}
@@ -131,7 +131,7 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="id_doi_suffix" class="form-label">DOI sufiks izdanja</label>
+                            <label for="id_doi_suffix" class="form-label admin-form-label">DOI sufiks izdanja</label>
                             <div class="input-group">
                                 <span class="input-group-text" x-text="doiPrefix + '/'">{{ publisher_doi_prefix }}/</span>
                                 {{ form.doi_suffix }}
@@ -142,7 +142,7 @@
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="id_pdf_file" class="form-label">PDF publikacije</label>
+                            <label for="id_pdf_file" class="form-label admin-form-label">PDF publikacije</label>
                             {% if form.instance.pdf_file %}
                             <div class="mb-2">
                                 <a href="{{ form.instance.pdf_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
@@ -167,7 +167,7 @@
 
                         <div class="row">
                             <div class="col-md-12 mb-3">
-                                <label for="id_proceedings_title" class="form-label">Naslov zbornika</label>
+                                <label for="id_proceedings_title" class="form-label admin-form-label">Naslov zbornika</label>
                                 {{ form.proceedings_title }}
                                 <div class="form-text">Ako se razlikuje od naslova publikacije</div>
                                 {% if form.proceedings_title.errors %}
@@ -178,14 +178,14 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="id_proceedings_publisher_name" class="form-label">Naziv izdavača zbornika</label>
+                                <label for="id_proceedings_publisher_name" class="form-label admin-form-label">Naziv izdavača zbornika</label>
                                 {{ form.proceedings_publisher_name }}
                                 {% if form.proceedings_publisher_name.errors %}
                                 <div class="invalid-feedback d-block">{{ form.proceedings_publisher_name.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="id_proceedings_publisher_place" class="form-label">Mesto izdavanja</label>
+                                <label for="id_proceedings_publisher_place" class="form-label admin-form-label">Mesto izdavanja</label>
                                 {{ form.proceedings_publisher_place }}
                                 {% if form.proceedings_publisher_place.errors %}
                                 <div class="invalid-feedback d-block">{{ form.proceedings_publisher_place.errors.0 }}</div>

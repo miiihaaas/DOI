@@ -1,18 +1,23 @@
 /* Admin Panel Styles for DOI Portal
-   Brand colors aligned with doi.rs website */
+   Design System: doi.rs brand */
 
 /* =============================================
    1. CSS Variables & Bootstrap Overrides
    ============================================= */
 :root {
   --doi-primary: #5CB46A;
-  --doi-primary-hover: #4a9a57;
+  --doi-primary-hover: #68cc6c;
   --doi-primary-light: rgba(92, 180, 106, 0.1);
   --doi-teal: #033333;
+  --doi-teal-darker: #062727;
   --doi-teal-light: #065656;
   --doi-light: #F9F9FF;
   --doi-accent-orange: #FFA726;
   --doi-accent-teal: #26A69A;
+  --doi-text: #212121;
+  --doi-text-secondary: #728383;
+  --doi-border: #e2e8f0;
+  --doi-border-subtle: #ededed;
 
   /* Bootstrap overrides */
   --bs-primary: #5CB46A;
@@ -20,17 +25,31 @@
   --bs-info: #26A69A;
   --bs-info-rgb: 38, 166, 154;
   --bs-link-color: #5CB46A;
-  --bs-link-hover-color: #4a9a57;
+  --bs-link-hover-color: #68cc6c;
+  --bs-body-bg: #f9f9ff;
 }
 
-/* Override Bootstrap primary button */
+/* =============================================
+   1b. Typography
+   ============================================= */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--doi-text);
+}
+
+/* =============================================
+   1c. Bootstrap Button Overrides
+   ============================================= */
 .btn-primary {
   --bs-btn-bg: var(--doi-primary);
   --bs-btn-border-color: var(--doi-primary);
   --bs-btn-hover-bg: var(--doi-primary-hover);
   --bs-btn-hover-border-color: var(--doi-primary-hover);
-  --bs-btn-active-bg: #3f8a4a;
-  --bs-btn-active-border-color: #3f8a4a;
+  --bs-btn-active-bg: #4a9a57;
+  --bs-btn-active-border-color: #4a9a57;
+  font-weight: 600;
 }
 
 .btn-outline-primary {
@@ -42,7 +61,6 @@
   --bs-btn-active-border-color: var(--doi-primary-hover);
 }
 
-/* Override Bootstrap info */
 .btn-info {
   --bs-btn-bg: var(--doi-accent-teal);
   --bs-btn-border-color: var(--doi-accent-teal);
@@ -82,7 +100,6 @@
   color: #065656;
 }
 
-/* Override Bootstrap links */
 a {
   color: var(--doi-primary);
 }
@@ -90,7 +107,6 @@ a:hover {
   color: var(--doi-primary-hover);
 }
 
-/* Badge primary override */
 .badge.bg-primary {
   background-color: var(--doi-primary) !important;
 }
@@ -112,7 +128,7 @@ a:hover {
 }
 
 /* =============================================
-   3. Sidebar - doi.rs Teal Theme
+   3. Sidebar
    ============================================= */
 #sidebar-wrapper {
   position: fixed;
@@ -123,45 +139,47 @@ a:hover {
   z-index: 1000;
   transition: transform 0.25s ease-out;
   overflow-y: auto;
-  background: linear-gradient(180deg, #022828 0%, var(--doi-teal) 100%);
+  background: linear-gradient(180deg, var(--doi-teal-darker) 0%, var(--doi-teal) 100%);
 }
 
-/* Sidebar heading */
 .sidebar-heading {
-  background: rgba(0, 0, 0, 0.2);
-  border-bottom: 1px solid rgba(92, 180, 106, 0.3) !important;
+  background: rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(92, 180, 106, 0.25) !important;
   padding-right: 3.5rem !important;
+  letter-spacing: -0.01em;
 }
 
 .sidebar-heading i {
   color: var(--doi-primary);
 }
 
-/* Sidebar menu styling */
+/* Sidebar menu */
 .sidebar-menu .list-group-item {
   background-color: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.75);
-  padding: 0.75rem 1.25rem;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.7rem 1.25rem;
   transition: all 0.2s ease;
   border-left: 3px solid transparent;
+  font-size: 0.9rem;
+  font-weight: 400;
 }
 
 .sidebar-menu .list-group-item:hover:not(.disabled) {
-  background-color: rgba(92, 180, 106, 0.15);
+  background-color: rgba(92, 180, 106, 0.12);
   color: white;
   border-left-color: var(--doi-primary);
 }
 
 .sidebar-menu .list-group-item.active {
-  background-color: rgba(92, 180, 106, 0.2);
+  background-color: rgba(92, 180, 106, 0.18);
   color: white;
   border-left-color: var(--doi-primary);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .sidebar-menu .list-group-item.disabled {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.25);
   pointer-events: none;
   cursor: not-allowed;
 }
@@ -169,6 +187,12 @@ a:hover {
 .sidebar-menu .list-group-item i {
   width: 1.25rem;
   text-align: center;
+  opacity: 0.8;
+}
+
+.sidebar-menu .list-group-item.active i,
+.sidebar-menu .list-group-item:hover:not(.disabled) i {
+  opacity: 1;
 }
 
 /* Page Content */
@@ -180,7 +204,7 @@ a:hover {
   background-color: var(--doi-light);
 }
 
-/* Sidebar collapsed state */
+/* Sidebar collapsed */
 #wrapper.toggled #sidebar-wrapper {
   transform: translateX(-250px);
 }
@@ -190,7 +214,7 @@ a:hover {
   width: 100%;
 }
 
-/* Mobile responsiveness */
+/* Mobile */
 @media (max-width: 768px) {
   #sidebar-wrapper {
     transform: translateX(-250px);
@@ -211,9 +235,9 @@ a:hover {
    ============================================= */
 .navbar {
   border-top: 3px solid var(--doi-primary) !important;
+  background-color: #fff !important;
 }
 
-/* Sidebar overlay for mobile */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -230,14 +254,14 @@ a:hover {
   opacity: 1;
 }
 
-/* Animated hamburger toggle button */
+/* Hamburger toggle */
 .sidebar-toggle {
   width: 40px;
   height: 40px;
   padding: 8px;
   background: transparent;
   border: 2px solid var(--doi-primary);
-  border-radius: 0.375rem;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -249,7 +273,6 @@ a:hover {
   z-index: 1001;
 }
 
-/* On mobile when open: float the button inside the sidebar header area */
 @media (max-width: 768px) {
   .sidebar-toggle.is-open {
     position: fixed;
@@ -282,7 +305,6 @@ a:hover {
   box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.4);
 }
 
-/* Hamburger bars */
 .toggle-bar {
   display: block;
   width: 20px;
@@ -293,7 +315,6 @@ a:hover {
   transform-origin: center;
 }
 
-/* Animated X state */
 .sidebar-toggle.is-open {
   background-color: var(--doi-primary);
   border-color: var(--doi-primary);
@@ -318,6 +339,8 @@ a:hover {
 
 .navbar .nav-link {
   color: var(--doi-teal);
+  font-weight: 500;
+  font-size: 0.9rem;
 }
 
 .navbar .nav-link:hover {
@@ -327,6 +350,8 @@ a:hover {
 .navbar .dropdown-menu {
   min-width: 200px;
   border-top: 2px solid var(--doi-primary);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 /* =============================================
@@ -336,6 +361,7 @@ a:hover {
   background-color: transparent;
   padding: 0;
   margin-bottom: 0;
+  font-size: 0.85rem;
 }
 
 .breadcrumb a {
@@ -345,23 +371,51 @@ a:hover {
 
 .breadcrumb a:hover {
   color: var(--doi-primary-hover);
+  text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+  color: var(--doi-text-secondary);
 }
 
 /* =============================================
    6. Welcome Card
    ============================================= */
 .welcome-card {
-  background: linear-gradient(135deg, var(--doi-primary) 0%, var(--doi-teal) 100%);
+  background: linear-gradient(135deg, var(--doi-teal) 0%, #0a4a4a 60%, var(--doi-primary) 100%);
   color: white;
   border: none;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.welcome-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(92, 180, 106, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.welcome-card .card-body {
+  position: relative;
+  z-index: 1;
+  padding: 1.75rem;
 }
 
 .welcome-card .card-title {
   color: white;
+  font-weight: 700;
+  font-size: 1.35rem;
 }
 
 .welcome-card .card-text {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 0.95rem;
 }
 
 .welcome-card strong {
@@ -373,21 +427,37 @@ a:hover {
    ============================================= */
 .dashboard-stat-card {
   border-left: 4px solid;
-  border-radius: 0.375rem;
+  border-radius: 10px;
   transition: all 0.2s ease;
+  border-top: none;
+  border-right: 1px solid var(--doi-border);
+  border-bottom: 1px solid var(--doi-border);
 }
 
 .dashboard-stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
+.dashboard-stat-card .card-body {
+  padding: 1.5rem;
 }
 
 .dashboard-stat-card .card-body i {
-  font-size: 2.5rem;
+  font-size: 2rem;
+  opacity: 0.8;
 }
 
 .dashboard-stat-card .display-6 {
   color: var(--doi-teal);
+  font-weight: 700;
+  font-size: 2rem;
+}
+
+.dashboard-stat-card p {
+  color: var(--doi-text-secondary) !important;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 /* Card color variants */
@@ -443,50 +513,83 @@ a:hover {
 /* =============================================
    8. Section Cards (Pending, Ready, Drafts)
    ============================================= */
+.section-card {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--doi-border);
+}
+
 .section-card .card-header {
   background: var(--doi-teal);
   color: white;
   border-bottom: none;
+  padding: 1rem 1.25rem;
 }
 
 .section-card .card-header h5 {
   color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .section-card .card-header i {
-  color: rgba(255, 255, 255, 0.8) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
 }
 
 .section-card .card-header .badge {
   background-color: var(--doi-primary) !important;
   color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .section-card .card-header .btn {
-  color: rgba(255, 255, 255, 0.85);
-  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.3);
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 .section-card .card-header .btn:hover {
   color: white;
   background-color: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.section-card .list-group-item {
+  border-color: var(--doi-border-subtle);
+  padding: 0.85rem 1.25rem;
 }
 
 .section-card .list-group-item-action:hover {
   background-color: var(--doi-primary-light);
 }
 
+.section-card .list-group-item h6 {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--doi-teal);
+}
+
 /* =============================================
    9. Quick Actions
    ============================================= */
+.quick-actions {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--doi-border);
+}
+
 .quick-actions .card-header {
   background: var(--doi-light);
   border-bottom: 2px solid var(--doi-primary);
+  padding: 1rem 1.25rem;
 }
 
 .quick-actions .card-header h5 {
   color: var(--doi-teal);
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .quick-actions .card-header i {
@@ -496,6 +599,8 @@ a:hover {
 .quick-actions .list-group-item-action {
   border-left: 3px solid transparent;
   transition: all 0.15s ease;
+  font-size: 0.9rem;
+  padding: 0.75rem 1.25rem;
 }
 
 .quick-actions .list-group-item-action:hover {
@@ -516,7 +621,8 @@ a:hover {
 }
 
 .footer .text-muted {
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 0.85rem;
 }
 
 /* =============================================
@@ -526,19 +632,28 @@ a:hover {
 /* Cards */
 .card {
   transition: box-shadow 0.2s ease;
+  border-color: var(--doi-border);
 }
 
-/* Alert styling */
+/* Alerts */
 .alert {
-  border-radius: 0.375rem;
+  border-radius: 8px;
 }
 
 /* Tables */
 .table th {
   font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   background-color: var(--doi-light);
   color: var(--doi-teal);
   border-bottom: 2px solid var(--doi-primary);
+}
+
+.table td {
+  font-size: 0.9rem;
+  vertical-align: middle;
 }
 
 .table-hover tbody tr:hover {
@@ -556,6 +671,7 @@ a:hover {
 /* Badges */
 .badge {
   font-weight: 500;
+  font-size: 0.75rem;
 }
 
 .badge.bg-doi-teal {
@@ -566,6 +682,7 @@ a:hover {
 /* Page titles */
 .page-title {
   color: var(--doi-teal);
+  font-weight: 700;
 }
 
 .page-title i {
@@ -575,11 +692,13 @@ a:hover {
 /* Filter cards */
 .filter-card {
   border-top: 3px solid var(--doi-primary);
+  border-radius: 10px;
 }
 
 /* Pagination */
 .page-link {
   color: var(--doi-primary);
+  border-color: var(--doi-border);
 }
 
 .page-link:hover {
@@ -609,23 +728,30 @@ a:hover {
   color: var(--doi-primary);
 }
 
-/* Definition lists in detail views */
+/* Definition lists */
 .section-card dt {
   color: var(--doi-teal);
   font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.section-card dd {
+  color: var(--doi-text-secondary);
 }
 
 .section-card dd code {
   background-color: var(--doi-light);
   padding: 0.15rem 0.4rem;
-  border-radius: 0.25rem;
+  border-radius: 4px;
   color: var(--doi-teal);
+  font-size: 0.85rem;
 }
 
-/* HTMX inline cards (contacts, notes) */
+/* HTMX inline cards */
 #contacts-section .card,
 #notes-section .card {
   border-left: 3px solid var(--doi-primary);
+  border-radius: 8px;
 }
 
 #contacts-section .card:hover,
@@ -637,7 +763,140 @@ a:hover {
 .form-control:focus,
 .form-select:focus {
   border-color: var(--doi-primary);
-  box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.2);
+}
+
+.form-control,
+.form-select {
+  border-color: var(--doi-border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+/* =============================================
+   12. Admin Cards & Data Display
+   ============================================= */
+
+.admin-card {
+  border: 1px solid var(--doi-border);
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+/* Admin definition list */
+.admin-dl {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-dl-row {
+  display: flex;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--doi-border-subtle);
+}
+
+.admin-dl-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.admin-dl-row:first-child {
+  padding-top: 0;
+}
+
+.admin-dl-row dt {
+  font-weight: 600;
+  color: var(--doi-teal);
+  min-width: 160px;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.admin-dl-row dd {
+  color: var(--doi-text-secondary);
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  word-break: break-word;
+}
+
+.admin-dl-row dd a {
+  color: var(--doi-primary);
+}
+
+.admin-dl-row dd a:hover {
+  color: var(--doi-primary-hover);
+}
+
+/* Admin code inline */
+.admin-code {
+  background-color: var(--doi-light);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  color: var(--doi-teal);
+  font-size: 0.85rem;
+}
+
+/* Admin table helpers */
+.admin-table-logo {
+  height: 28px;
+  width: auto;
+  border-radius: 4px;
+}
+
+.admin-table-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--doi-primary-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--doi-primary);
+  font-size: 0.8rem;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 0.375rem;
+  justify-content: flex-end;
+}
+
+.admin-actions .btn {
+  border-radius: 6px;
+}
+
+/* Admin empty state */
+.admin-empty-icon {
+  font-size: 3rem;
+  color: var(--doi-text-secondary);
+  opacity: 0.3;
+}
+
+/* Admin logo previews */
+.admin-logo-preview {
+  max-height: 200px;
+  border-radius: 8px;
+}
+
+.admin-table-cover {
+  max-height: 40px;
+  max-width: 40px;
+  border-radius: 4px;
+  border: 1px solid var(--doi-border);
+}
+
+.admin-logo-thumb {
+  max-height: 80px;
+  border-radius: 6px;
+  border: 1px solid var(--doi-border);
+  padding: 0.25rem;
+}
+
+/* Admin form labels */
+.admin-form-label {
+  font-weight: 600;
+  color: var(--doi-teal);
+  font-size: 0.875rem;
 }
 
 /* Content area */

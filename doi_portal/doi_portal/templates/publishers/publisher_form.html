@@ -11,7 +11,7 @@
 
 <div class="row justify-content-center">
     <div class="col-lg-8">
-        <div class="card shadow-sm section-card">
+        <div class="card admin-card section-card">
             <div class="card-header">
                 <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Osnovni podaci</h5>
             </div>
@@ -20,7 +20,7 @@
                     {% csrf_token %}
 
                     <div class="mb-3">
-                        <label for="id_name" class="form-label">Naziv <span class="text-danger">*</span></label>
+                        <label for="id_name" class="form-label admin-form-label">Naziv <span class="text-danger">*</span></label>
                         {{ form.name }}
                         {% if form.name.errors %}
                         <div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>
@@ -28,7 +28,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="id_doi_prefix" class="form-label">DOI prefiks <span class="text-danger">*</span></label>
+                        <label for="id_doi_prefix" class="form-label admin-form-label">DOI prefiks <span class="text-danger">*</span></label>
                         {{ form.doi_prefix }}
                         <div class="form-text">Format: 10.XXXX (npr. 10.1234)</div>
                         {% if form.doi_prefix.errors %}
@@ -37,7 +37,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="id_description" class="form-label">Opis</label>
+                        <label for="id_description" class="form-label admin-form-label">Opis</label>
                         {{ form.description }}
                         {% if form.description.errors %}
                         <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
@@ -45,10 +45,10 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="id_logo" class="form-label">Logo</label>
+                        <label for="id_logo" class="form-label admin-form-label">Logo</label>
                         {% if form.instance.logo %}
                         <div class="mb-2">
-                            <img src="{{ form.instance.logo.url }}" alt="Trenutni logo" class="img-thumbnail" style="max-height: 100px;">
+                            <img src="{{ form.instance.logo.url }}" alt="Trenutni logo" class="admin-logo-thumb">
                         </div>
                         {% endif %}
                         {{ form.logo }}
@@ -65,14 +65,14 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="id_contact_email" class="form-label">Email</label>
+                            <label for="id_contact_email" class="form-label admin-form-label">Email</label>
                             {{ form.contact_email }}
                             {% if form.contact_email.errors %}
                             <div class="invalid-feedback d-block">{{ form.contact_email.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="id_contact_phone" class="form-label">Telefon</label>
+                            <label for="id_contact_phone" class="form-label admin-form-label">Telefon</label>
                             {{ form.contact_phone }}
                             {% if form.contact_phone.errors %}
                             <div class="invalid-feedback d-block">{{ form.contact_phone.errors.0 }}</div>
@@ -81,7 +81,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="id_website" class="form-label">Web sajt</label>
+                        <label for="id_website" class="form-label admin-form-label">Web sajt</label>
                         {{ form.website }}
                         {% if form.website.errors %}
                         <div class="invalid-feedback d-block">{{ form.website.errors.0 }}</div>
@@ -95,14 +95,14 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="id_crossref_username" class="form-label">Korisničko ime</label>
+                            <label for="id_crossref_username" class="form-label admin-form-label">Korisničko ime</label>
                             {{ form.crossref_username }}
                             {% if form.crossref_username.errors %}
                             <div class="invalid-feedback d-block">{{ form.crossref_username.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="id_crossref_password" class="form-label">Lozinka</label>
+                            <label for="id_crossref_password" class="form-label admin-form-label">Lozinka</label>
                             {{ form.crossref_password }}
                             <div class="form-text">Ostavite prazno ako ne želite da menjate lozinku.</div>
                             {% if form.crossref_password.errors %}

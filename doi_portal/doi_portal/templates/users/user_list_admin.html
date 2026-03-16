@@ -30,11 +30,11 @@
   </div>
 
   <!-- Filters -->
-  <div class="card shadow-sm mb-4 filter-card">
+  <div class="card admin-card mb-4 filter-card">
     <div class="card-body">
       <form method="get" class="row g-3">
         <div class="col-md-3">
-          <label for="roleFilter" class="form-label">{% trans "Uloga" %}</label>
+          <label for="roleFilter" class="form-label admin-form-label">{% trans "Uloga" %}</label>
           <select class="form-select" name="role" id="roleFilter">
             <option value="">{% trans "Sve uloge" %}</option>
             <option value="Superadmin" {% if current_role == "Superadmin" %}selected{% endif %}>Superadmin</option>
@@ -44,7 +44,7 @@
           </select>
         </div>
         <div class="col-md-3">
-          <label for="statusFilter" class="form-label">{% trans "Status" %}</label>
+          <label for="statusFilter" class="form-label admin-form-label">{% trans "Status" %}</label>
           <select class="form-select" name="status" id="statusFilter">
             <option value="">{% trans "Svi statusi" %}</option>
             <option value="active" {% if current_status == "active" %}selected{% endif %}>{% trans "Aktivni" %}</option>
@@ -52,7 +52,7 @@
           </select>
         </div>
         <div class="col-md-4">
-          <label for="searchInput" class="form-label">{% trans "Pretraga" %}</label>
+          <label for="searchInput" class="form-label admin-form-label">{% trans "Pretraga" %}</label>
           <input type="search"
                  class="form-control"
                  name="search"
@@ -70,7 +70,7 @@
   </div>
 
   <!-- User Table -->
-  <div class="card shadow-sm">
+  <div class="card admin-card">
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-striped table-hover align-middle mb-0">
