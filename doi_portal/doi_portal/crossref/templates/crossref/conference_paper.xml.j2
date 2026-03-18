@@ -25,11 +25,11 @@
         {% if publication.conference_number %}
         <conference_number>{{ publication.conference_number }}</conference_number>
         {% endif %}
-        {% if publication.conference_date %}
-        <conference_date start_month="{{ publication.conference_date|format_date('%m') }}" start_year="{{ publication.conference_date|format_date('%Y') }}" start_day="{{ publication.conference_date|format_date('%d') }}"{% if publication.conference_date_end %} end_month="{{ publication.conference_date_end|format_date('%m') }}" end_year="{{ publication.conference_date_end|format_date('%Y') }}" end_day="{{ publication.conference_date_end|format_date('%d') }}"{% endif %}/>
-        {% endif %}
         {% if publication.conference_location %}
         <conference_location>{{ publication.conference_location }}</conference_location>
+        {% endif %}
+        {% if publication.conference_date %}
+        <conference_date start_month="{{ publication.conference_date|format_date('%m') }}" start_year="{{ publication.conference_date|format_date('%Y') }}" start_day="{{ publication.conference_date|format_date('%d') }}"{% if publication.conference_date_end %} end_month="{{ publication.conference_date_end|format_date('%m') }}" end_year="{{ publication.conference_date_end|format_date('%Y') }}" end_day="{{ publication.conference_date_end|format_date('%d') }}"{% endif %}/>
         {% endif %}
       </event_metadata>
       <proceedings_metadata language="{{ publication.language }}">
@@ -67,19 +67,6 @@
       </proceedings_metadata>
       {% for article in articles %}
       <conference_paper publication_type="{{ article.publication_type }}">
-        {# PAŽNJA: title/subtitle sadrže face markup — NE dodavati xml_escape filter, Markup() wrapper upravlja escape-om #}
-        <titles>
-          <title>{{ article.title }}</title>
-          {% if article.subtitle %}
-          <subtitle>{{ article.subtitle }}</subtitle>
-          {% endif %}
-          {% if article.original_language_title %}
-          <original_language_title{% if article.original_language_title_language %} language="{{ article.original_language_title_language|xml_escape }}"{% endif %}>{{ article.original_language_title }}</original_language_title>
-          {% if article.original_language_subtitle %}
-          <subtitle>{{ article.original_language_subtitle }}</subtitle>
-          {% endif %}
-          {% endif %}
-        </titles>
         {% if article.authors %}
         <contributors>
           {% for author in article.authors %}
@@ -110,6 +97,19 @@
           {% endfor %}
         </contributors>
         {% endif %}
+        {# PAŽNJA: title/subtitle sadrže face markup — NE dodavati xml_escape filter, Markup() wrapper upravlja escape-om #}
+        <titles>
+          <title>{{ article.title }}</title>
+          {% if article.subtitle %}
+          <subtitle>{{ article.subtitle }}</subtitle>
+          {% endif %}
+          {% if article.original_language_title %}
+          <original_language_title{% if article.original_language_title_language %} language="{{ article.original_language_title_language|xml_escape }}"{% endif %}>{{ article.original_language_title }}</original_language_title>
+          {% if article.original_language_subtitle %}
+          <subtitle>{{ article.original_language_subtitle }}</subtitle>
+          {% endif %}
+          {% endif %}
+        </titles>
         {# PAŽNJA: abstract sadrži JATS inline markup — NE dodavati xml_escape filter #}
         {% if article.abstract %}
         <jats:abstract>
@@ -135,14 +135,6 @@
           <item_number item_number_type="article_number">{{ article.article_number }}</item_number>
         </publisher_item>
         {% endif %}
-        {% if article.license_url %}
-        <ai:program name="AccessIndicators">
-          {% if article.free_to_read %}
-          <ai:free_to_read{% if article.free_to_read_start_date %} start_date="{{ article.free_to_read_start_date|format_date('%Y-%m-%d') }}"{% endif %}/>
-          {% endif %}
-          <ai:license_ref{% if article.license_applies_to %} applies_to="{{ article.license_applies_to }}"{% endif %}>{{ article.license_url }}</ai:license_ref>
-        </ai:program>
-        {% endif %}
         {% if article.fundings %}
         <fr:program name="fundref">
           {% for funding in article.fundings %}
@@ -157,6 +149,14 @@
           </fr:assertion>
           {% endfor %}
         </fr:program>
+        {% endif %}
+        {% if article.license_url %}
+        <ai:program name="AccessIndicators">
+          {% if article.free_to_read %}
+          <ai:free_to_read{% if article.free_to_read_start_date %} start_date="{{ article.free_to_read_start_date|format_date('%Y-%m-%d') }}"{% endif %}/>
+          {% endif %}
+          <ai:license_ref{% if article.license_applies_to %} applies_to="{{ article.license_applies_to }}"{% endif %}>{{ article.license_url }}</ai:license_ref>
+        </ai:program>
         {% endif %}
         <doi_data>
           <doi>{{ publisher.doi_prefix }}/{{ article.doi_suffix }}</doi>
