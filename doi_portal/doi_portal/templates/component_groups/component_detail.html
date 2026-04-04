@@ -1,0 +1,100 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ component }} - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">
+    <i class="bi bi-puzzle me-2"></i>{{ component.title|default:component.doi_suffix }}
+  </h1>
+  <div>
+    <a href="{% url 'components:component-update' component_group.pk component.pk %}" class="btn btn-outline-secondary me-2">
+      <i class="bi bi-pencil me-1"></i>Izmeni
+    </a>
+    <a href="{% url 'components:group-detail' component_group.pk %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>Nazad
+    </a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    {# Contributor List with HTMX #}
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="bi bi-people me-2"></i>Kontributori
+        </h5>
+      </div>
+      <div class="card-body">
+        <div id="contributor-list">
+          {% include "component_groups/partials/_contributor_list.html" %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Sidebar #}
+  <div class="col-lg-4">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h6 class="mb-0">
+          <i class="bi bi-info-circle me-2"></i>Informacije o komponenti
+        </h6>
+      </div>
+      <div class="card-body">
+        <dl class="mb-0">
+          <dt>DOI</dt>
+          <dd><code>{{ component.full_doi }}</code></dd>
+          <dt>DOI sufiks</dt>
+          <dd><code>{{ component.doi_suffix }}</code></dd>
+          <dt>Naslov</dt>
+          <dd>{{ component.title|default:"-" }}</dd>
+          {% if component.description %}
+          <dt>Opis</dt>
+          <dd>{{ component.description }}</dd>
+          {% endif %}
+          {% if component.format_mime_type %}
+          <dt>MIME tip</dt>
+          <dd><span class="badge bg-info">{{ component.format_mime_type }}</span></dd>
+          {% endif %}
+          {% if component.resource_url %}
+          <dt>URL resursa</dt>
+          <dd><a href="{{ component.resource_url }}" target="_blank" rel="noopener">{{ component.resource_url }}</a></dd>
+          {% endif %}
+          <dt>Relacija</dt>
+          <dd>{{ component.parent_relation }}</dd>
+          {% if component.publication_year %}
+          <dt>Datum publikacije</dt>
+          <dd>
+            {{ component.publication_year }}{% if component.publication_month %}-{{ component.publication_month|stringformat:"02d" }}{% endif %}{% if component.publication_day %}-{{ component.publication_day|stringformat:"02d" }}{% endif %}
+          </dd>
+          {% endif %}
+          <dt>Redosled</dt>
+          <dd>{{ component.order }}</dd>
+          <dt>Kreirano</dt>
+          <dd>{{ component.created_at|date:"d.m.Y H:i" }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h6 class="mb-0">Grupa</h6>
+      </div>
+      <div class="card-body">
+        <dl class="mb-0">
+          <dt>Parent DOI</dt>
+          <dd><code>{{ component_group.parent_doi }}</code></dd>
+          <dt>Naslov grupe</dt>
+          <dd>
+            <a href="{% url 'components:group-detail' component_group.pk %}">
+              {{ component_group.label }}
+            </a>
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

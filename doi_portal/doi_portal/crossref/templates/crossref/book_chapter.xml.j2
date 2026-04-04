@@ -4,6 +4,7 @@
            xmlns:jats="http://www.ncbi.nlm.nih.gov/JATS1"
            xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
            xmlns:fr="http://www.crossref.org/fundref.xsd"
+           xmlns:rel="http://www.crossref.org/relations.xsd"
            xsi:schemaLocation="http://www.crossref.org/schema/5.4.0 https://www.crossref.org/schemas/crossref5.4.0.xsd"
            version="5.4.0">
   <head>
@@ -133,6 +134,22 @@
           </fr:assertion>
           {% endfor %}
         </fr:program>
+        {% endif %}
+        {% if article.relations %}
+        <rel:program name="relations">
+          {% for relation in article.relations %}
+          <rel:related_item>
+            {% if relation.description %}
+            <rel:description>{{ relation.description }}</rel:description>
+            {% endif %}
+            {% if relation.scope == "intra_work" %}
+            <rel:intra_work_relation relationship-type="{{ relation.relationship_type }}" identifier-type="{{ relation.identifier_type }}">{{ relation.identifier }}</rel:intra_work_relation>
+            {% else %}
+            <rel:inter_work_relation relationship-type="{{ relation.relationship_type }}" identifier-type="{{ relation.identifier_type }}">{{ relation.identifier }}</rel:inter_work_relation>
+            {% endif %}
+          </rel:related_item>
+          {% endfor %}
+        </rel:program>
         {% endif %}
         <doi_data>
           <doi>{{ publisher.doi_prefix }}/{{ article.doi_suffix }}</doi>

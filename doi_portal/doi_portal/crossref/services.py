@@ -23,6 +23,8 @@ if TYPE_CHECKING:
 
     from doi_portal.articles.models import Article
     from doi_portal.articles.models import Author
+    from doi_portal.components.models import Component as ComponentModel
+    from doi_portal.components.models import ComponentGroup
     from doi_portal.issues.models import Issue
 
 from doi_portal.core.markup import markup_to_crossref_xml, markup_to_jats_xml
@@ -307,7 +309,7 @@ class CrossrefService:
         # Build articles context with authors and affiliations
         articles_data = []
         for article in issue.articles.filter(is_deleted=False).prefetch_related(
-            "authors__affiliations", "fundings"
+            "authors__affiliations", "fundings", "relations"
         ):
             authors_data = []
             for author in article.authors.all().order_by("order"):
@@ -359,6 +361,16 @@ class CrossrefService:
                         "award_number": f.award_number,
                     }
                     for f in article.fundings.order_by("order")
+                ],
+                "relations": [
+                    {
+                        "relationship_type": r.relationship_type,
+                        "identifier_type": r.identifier_type,
+                        "identifier": r.target_identifier,
+                        "description": r.description,
+                        "scope": r.relation_scope,
+                    }
+                    for r in article.relations.order_by("order")
                 ],
             })
 
@@ -486,6 +498,133 @@ class CrossrefService:
                 issue.save(update_fields=["xml_generation_status"])
             return (False, str(e))
 
+    # === Component (sa_component) support ===
+
+    SA_COMPONENT_TEMPLATE = "sa_component.xml.j2"
+
+    def generate_head_for_component(self, component_group: "ComponentGroup") -> dict[str, Any]:
+        """
+        Generate head metadata context for component Crossref XML.
+
+        Args:
+            component_group: ComponentGroup model instance
+
+        Returns:
+            Dictionary with head context data
+        """
+        from doi_portal.core.models import SiteSettings
+
+        settings = SiteSettings.get_settings()
+        publisher = component_group.publisher
+
+        return {
+            "doi_batch_id": self.generate_doi_batch_id(),
+            "timestamp": timezone.now().strftime("%Y%m%d%H%M%S"),
+            "depositor_name": settings.depositor_name or "DOI Portal",
+            "depositor_email": settings.depositor_email or "admin@example.com",
+            "registrant": publisher.name,
+        }
+
+    def _build_component_context(self, component_group: "ComponentGroup") -> dict[str, Any]:
+        """
+        Build the template context for component XML generation.
+
+        Args:
+            component_group: ComponentGroup model instance
+
+        Returns:
+            Context dictionary for sa_component template rendering
+        """
+        components_data = []
+        for c in component_group.components.filter(is_deleted=False).prefetch_related("contributors").order_by("order"):
+            contributors_data = [
+                {
+                    "given_name": ct.given_name,
+                    "surname": ct.surname,
+                    "suffix": ct.suffix,
+                    "orcid": ct.orcid,
+                    "sequence": ct.sequence,
+                    "contributor_role": ct.contributor_role,
+                }
+                for ct in c.contributors.filter(is_deleted=False).order_by("order")
+            ]
+            components_data.append({
+                "parent_relation": c.parent_relation,
+                "title": Markup(markup_to_crossref_xml(c.title)) if c.title else None,
+                "contributors": contributors_data,
+                "description": c.description,
+                "format_mime_type": c.format_mime_type,
+                "doi": f"{component_group.publisher.doi_prefix}/{c.doi_suffix}",
+                "resource_url": c.resource_url or f"{self._get_site_url()}/components/{c.pk}/",
+                "publication_year": c.publication_year,
+                "publication_month": c.publication_month,
+                "publication_day": c.publication_day,
+            })
+
+        return {
+            "head": self.generate_head_for_component(component_group),
+            "parent_doi": component_group.parent_doi,
+            "components": components_data,
+        }
+
+    def generate_component_xml(self, component_group: "ComponentGroup") -> str:
+        """
+        Generate Crossref XML for a component group.
+
+        Args:
+            component_group: ComponentGroup model instance
+
+        Returns:
+            XML string ready for Crossref deposit
+        """
+        context = self._build_component_context(component_group)
+        template = self.env.get_template(self.SA_COMPONENT_TEMPLATE)
+        return template.render(**context)
+
+    def generate_and_store_component_xml(self, component_group: "ComponentGroup") -> tuple[bool, str]:
+        """
+        Generate, store, and validate XML for a component group.
+
+        Args:
+            component_group: ComponentGroup model instance
+
+        Returns:
+            Tuple of (success, xml_or_error_message)
+        """
+        from django.db import transaction
+
+        from doi_portal.crossref.validators import validate_xml
+
+        try:
+            xml = self.generate_component_xml(component_group)
+
+            # Run XSD validation
+            validation_result = validate_xml(xml)
+
+            with transaction.atomic():
+                component_group.crossref_xml = xml
+                component_group.xml_generated_at = timezone.now()
+                component_group.xml_generation_status = "completed"
+
+                component_group.xsd_valid = validation_result.is_valid
+                component_group.xsd_errors = [e.to_dict() for e in validation_result.errors]
+                component_group.xsd_validated_at = validation_result.validated_at
+
+                component_group.save(update_fields=[
+                    "crossref_xml",
+                    "xml_generated_at",
+                    "xml_generation_status",
+                    "xsd_valid",
+                    "xsd_errors",
+                    "xsd_validated_at",
+                ])
+            return (True, xml)
+        except Exception as e:
+            with transaction.atomic():
+                component_group.xml_generation_status = "failed"
+                component_group.save(update_fields=["xml_generation_status"])
+            return (False, str(e))
+
 
 class PreValidationService:
     """
@@ -529,11 +668,15 @@ class PreValidationService:
         result.merge(self._validate_issue_doi_suffix(issue))
 
         # Validate all PUBLISHED articles only
-        for article in issue.articles.filter(
+        published_articles = issue.articles.filter(
             status=ArticleStatus.PUBLISHED,
             is_deleted=False,
-        ):
+        ).prefetch_related("relations")
+        for article in published_articles:
             result.merge(self._validate_article(article))
+
+        # Validate free_to_read consistency
+        result.merge(self._validate_free_to_read_consistency(issue, published_articles))
 
         return result
 
@@ -796,6 +939,33 @@ class PreValidationService:
                 fix_url=f"/dashboard/articles/{article.pk}/edit/",
             )
 
+        # Validate relations
+        from django.urls import reverse
+
+        fix_url = reverse("articles:update", kwargs={"pk": article.pk})
+        for relation in article.relations.all():
+            if not relation.target_identifier:
+                result.add_error(
+                    message=f"Relacija nema identifikator cilja (članak: {article.title or article.pk})",
+                    field_name="target_identifier",
+                    article_id=article.pk,
+                    fix_url=fix_url,
+                )
+            if relation.identifier_type == "doi" and relation.target_identifier and not relation.target_identifier.startswith("10."):
+                result.add_warning(
+                    message=f"Relacija ima tip identifikatora DOI ali vrednost ne počinje sa '10.' (članak: {article.title or article.pk})",
+                    field_name="target_identifier",
+                    article_id=article.pk,
+                    fix_url=fix_url,
+                )
+            if relation.relation_scope == "intra_work" and relation.identifier_type != "doi":
+                result.add_warning(
+                    message=f"Intra-work relacija koristi non-DOI identifikator (članak: {article.title or article.pk})",
+                    field_name="identifier_type",
+                    article_id=article.pk,
+                    fix_url=fix_url,
+                )
+
         return result
 
     def _validate_author(
@@ -851,6 +1021,248 @@ class PreValidationService:
                 field_name="contributor_role",
                 article_id=article.pk,
                 fix_url=f"/dashboard/articles/{article.pk}/edit/",
+            )
+
+        return result
+
+    def _validate_free_to_read_consistency(
+        self, issue, published_articles
+    ) -> ValidationResult:
+        """
+        Validate free_to_read field consistency across articles in an issue.
+
+        Warns if some (but not all) articles have free_to_read=True,
+        indicating potential inconsistency.
+        """
+        result = ValidationResult()
+        total = published_articles.count()
+
+        if total <= 1:
+            return result
+
+        free_count = published_articles.filter(free_to_read=True).count()
+
+        if 0 < free_count < total:
+            result.add_warning(
+                message=(
+                    f"{total - free_count} od {total} artikala nema označeno "
+                    f"'Slobodan pristup' — da li je to namerno?"
+                ),
+                field_name="free_to_read",
+            )
+        return result
+
+    # === Component (sa_component) validation ===
+
+    def validate_component_group(self, component_group: "ComponentGroup") -> ValidationResult:
+        """
+        Run all pre-generation validations for a component group.
+
+        Args:
+            component_group: ComponentGroup model instance to validate
+
+        Returns:
+            ValidationResult with all errors and warnings
+        """
+        result = ValidationResult()
+
+        # Check depositor settings first (blocking)
+        result.merge(self._validate_depositor_settings())
+
+        # Check component group fields
+        result.merge(self._validate_component_group_fields(component_group))
+
+        # Check parent DOI exists
+        result.merge(self._validate_component_parent_doi_exists(component_group))
+
+        # Validate each non-deleted component
+        for component in component_group.components.filter(is_deleted=False):
+            result.merge(self._validate_component(component))
+
+        return result
+
+    def _validate_component_group_fields(self, cg: "ComponentGroup") -> ValidationResult:
+        """
+        Validate ComponentGroup-level fields.
+
+        Args:
+            cg: ComponentGroup to validate
+
+        Returns:
+            ValidationResult with component group errors/warnings
+        """
+        result = ValidationResult()
+
+        # parent_doi is required
+        if not cg.parent_doi:
+            result.add_error(
+                message="Parent DOI je obavezan",
+                field_name="parent_doi",
+                fix_url=f"/dashboard/components/groups/{cg.pk}/edit/",
+            )
+
+        # parent_doi format check
+        if cg.parent_doi and not cg.parent_doi.startswith("10."):
+            result.add_error(
+                message="Parent DOI mora početi sa '10.' (format: 10.XXXX/...)",
+                field_name="parent_doi",
+                fix_url=f"/dashboard/components/groups/{cg.pk}/edit/",
+            )
+
+        # At least one component is required
+        if not cg.components.filter(is_deleted=False).exists():
+            result.add_error(
+                message="Grupa mora sadržati bar jednu komponentu",
+                field_name="components",
+                fix_url=f"/dashboard/components/groups/{cg.pk}/",
+            )
+
+        # Title recommendation
+        if not cg.title:
+            result.add_warning(
+                message="Preporučeno je dodati naslov grupe za lakši pregled",
+                field_name="title",
+                fix_url=f"/dashboard/components/groups/{cg.pk}/edit/",
+            )
+
+        return result
+
+    def _validate_component_parent_doi_exists(self, cg: "ComponentGroup") -> ValidationResult:
+        """
+        Check if parent DOI exists in the system.
+
+        Args:
+            cg: ComponentGroup to validate
+
+        Returns:
+            ValidationResult with warning if parent DOI not found
+        """
+        import re
+
+        from doi_portal.articles.models import Article
+        from doi_portal.issues.models import Issue
+
+        result = ValidationResult()
+
+        if not cg.parent_doi:
+            return result
+
+        # Extract suffix from parent_doi (format: "10.XXXX/suffix")
+        match = re.match(r"^10\.\d+/(.+)$", cg.parent_doi)
+        if not match:
+            return result
+
+        doi_suffix = match.group(1)
+        publisher = cg.publisher
+
+        # Check if any article or issue has this DOI suffix under same publisher
+        article_exists = Article.objects.filter(
+            doi_suffix=doi_suffix,
+            issue__publication__publisher=publisher,
+        ).exists()
+
+        issue_exists = Issue.objects.filter(
+            doi_suffix=doi_suffix,
+            publication__publisher=publisher,
+        ).exists()
+
+        if not article_exists and not issue_exists:
+            result.add_warning(
+                message=f"Parent DOI '{cg.parent_doi}' nije pronađen u sistemu — proverite da li je ispravan",
+                field_name="parent_doi",
+            )
+
+        return result
+
+    def _validate_component(self, component: "ComponentModel") -> ValidationResult:
+        """
+        Validate component-level fields.
+
+        Args:
+            component: Component to validate
+
+        Returns:
+            ValidationResult with component errors/warnings
+        """
+        result = ValidationResult()
+        cg = component.component_group
+
+        # doi_suffix is required
+        if not component.doi_suffix:
+            result.add_error(
+                message=f"DOI sufiks je obavezan (komponenta: {component.title or component.pk})",
+                field_name="doi_suffix",
+                fix_url=f"/dashboard/components/groups/{cg.pk}/components/{component.pk}/edit/",
+            )
+
+        # doi_suffix must not contain "/"
+        if component.doi_suffix and "/" in component.doi_suffix:
+            result.add_error(
+                message=f"DOI sufiks ne sme sadržati '/' (komponenta: {component.title or component.pk})",
+                field_name="doi_suffix",
+                fix_url=f"/dashboard/components/groups/{cg.pk}/components/{component.pk}/edit/",
+            )
+
+        # Title is recommended
+        if not component.title:
+            result.add_warning(
+                message=f"Preporučeno je dodati naslov komponente (ID: {component.pk})",
+                field_name="title",
+                fix_url=f"/dashboard/components/groups/{cg.pk}/components/{component.pk}/edit/",
+            )
+
+        # MIME type validation
+        if component.format_mime_type and "/" not in component.format_mime_type:
+            result.add_warning(
+                message=f"MIME tip '{component.format_mime_type}' nije validan format (očekivano: type/subtype)",
+                field_name="format_mime_type",
+                fix_url=f"/dashboard/components/groups/{cg.pk}/components/{component.pk}/edit/",
+            )
+
+        # Contributors are optional but recommended
+        contributors = list(component.contributors.filter(is_deleted=False))
+        if not contributors:
+            result.add_warning(
+                message=f"Komponenta nema kontributore (komponenta: {component.title or component.pk})",
+                field_name="contributors",
+                fix_url=f"/dashboard/components/groups/{cg.pk}/components/{component.pk}/",
+            )
+        else:
+            for contributor in contributors:
+                result.merge(self._validate_component_contributor(contributor, component))
+
+        return result
+
+    def _validate_component_contributor(
+        self,
+        contributor,
+        component: "ComponentModel",
+    ) -> ValidationResult:
+        """
+        Validate component contributor fields.
+
+        Args:
+            contributor: ComponentContributor to validate
+            component: Parent component for context
+
+        Returns:
+            ValidationResult with contributor errors
+        """
+        result = ValidationResult()
+        cg = component.component_group
+
+        if not contributor.surname:
+            result.add_error(
+                message=f"Kontributor nema prezime (komponenta: {component.title or component.pk})",
+                field_name="surname",
+                fix_url=f"/dashboard/components/groups/{cg.pk}/components/{component.pk}/",
+            )
+
+        if not contributor.contributor_role:
+            result.add_error(
+                message=f"Kontributor nema definisanu ulogu (komponenta: {component.title or component.pk})",
+                field_name="contributor_role",
+                fix_url=f"/dashboard/components/groups/{cg.pk}/components/{component.pk}/",
             )
 
         return result

@@ -1,0 +1,104 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Komponente - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">
+    <i class="bi bi-puzzle me-2"></i>Grupe komponenti
+  </h1>
+  <a href="{% url 'components:group-create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-1"></i>Nova grupa
+  </a>
+</div>
+
+{% if component_groups %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Parent DOI</th>
+          <th>Naslov</th>
+          <th>Komponente</th>
+          <th>Izdavač</th>
+          <th>Kreirano</th>
+          <th>Status</th>
+          <th>Akcije</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for group in component_groups %}
+        <tr>
+          <td>
+            <a href="{% url 'components:group-detail' group.pk %}">
+              <code>{{ group.parent_doi }}</code>
+            </a>
+          </td>
+          <td>{{ group.title|default:"-" }}</td>
+          <td><span class="badge bg-secondary">{{ group.component_count }}</span></td>
+          <td>{{ group.publisher.name }}</td>
+          <td>{{ group.created_at|date:"d.m.Y" }}</td>
+          <td>
+            {% if group.is_crossref_deposited %}
+            <span class="badge bg-success">Deponovano</span>
+            {% elif group.xsd_valid %}
+            <span class="badge bg-info">XML validan</span>
+            {% elif group.crossref_xml %}
+            <span class="badge bg-warning">XML generisan</span>
+            {% else %}
+            <span class="badge bg-secondary">Novo</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <a href="{% url 'components:group-detail' group.pk %}"
+                 class="btn btn-outline-primary" title="Detalji">
+                <i class="bi bi-eye"></i>
+              </a>
+              <a href="{% url 'crossref:component-group-deposit' group.pk %}"
+                 class="btn btn-outline-success" title="Crossref Deposit">
+                <i class="bi bi-cloud-upload"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if is_paginated %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Prethodna</a>
+    </li>
+    {% endif %}
+    <li class="page-item active">
+      <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    </li>
+    {% if page_obj.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ page_obj.next_page_number }}">Sledeća</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="card">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-puzzle display-4 text-muted"></i>
+    <h5 class="mt-3">Nema grupa komponenti</h5>
+    <p class="text-muted">Kreirajte prvu grupu komponenti za registraciju DOI-jeva za supplementary materijale.</p>
+    <a href="{% url 'components:group-create' %}" class="btn btn-primary">
+      <i class="bi bi-plus-circle me-1"></i>Kreiraj grupu
+    </a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

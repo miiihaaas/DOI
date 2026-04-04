@@ -1,0 +1,30 @@
+{# Single component row partial #}
+<tr>
+  <td>{{ component.order }}</td>
+  <td>
+    <a href="{% url 'components:component-detail' component.component_group.pk component.pk %}">
+      {{ component.title|default:"(bez naslova)" }}
+    </a>
+  </td>
+  <td><code>{{ component.doi_suffix }}</code></td>
+  <td>
+    {% if component.format_mime_type %}
+    <span class="badge bg-info">{{ component.format_mime_type }}</span>
+    {% else %}
+    -
+    {% endif %}
+  </td>
+  <td>{{ component.contributors.count }}</td>
+  <td>
+    <div class="btn-group btn-group-sm">
+      <a href="{% url 'components:component-detail' component.component_group.pk component.pk %}"
+         class="btn btn-outline-primary">
+        <i class="bi bi-eye"></i>
+      </a>
+      <a href="{% url 'components:component-update' component.component_group.pk component.pk %}"
+         class="btn btn-outline-secondary">
+        <i class="bi bi-pencil"></i>
+      </a>
+    </div>
+  </td>
+</tr>

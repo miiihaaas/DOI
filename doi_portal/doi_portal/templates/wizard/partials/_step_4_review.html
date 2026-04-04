@@ -1,0 +1,147 @@
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-megaphone me-2"></i>Konferencija</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Naziv</dt>
+                    <dd class="col-sm-7">{{ publication.conference_name }}</dd>
+                    {% if publication.conference_acronym %}
+                    <dt class="col-sm-5">Akronim</dt>
+                    <dd class="col-sm-7">{{ publication.conference_acronym }}</dd>
+                    {% endif %}
+                    {% if publication.conference_location %}
+                    <dt class="col-sm-5">Lokacija</dt>
+                    <dd class="col-sm-7">{{ publication.conference_location }}</dd>
+                    {% endif %}
+                    {% if publication.conference_date %}
+                    <dt class="col-sm-5">Datum</dt>
+                    <dd class="col-sm-7">{{ publication.conference_date|date:"d.m.Y." }}{% if publication.conference_date_end %} - {{ publication.conference_date_end|date:"d.m.Y." }}{% endif %}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i>Zbornik</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    {% if issue.proceedings_title %}
+                    <dt class="col-sm-5">Naslov</dt>
+                    <dd class="col-sm-7">{{ issue.proceedings_title }}</dd>
+                    {% endif %}
+                    {% if issue.year %}
+                    <dt class="col-sm-5">Godina</dt>
+                    <dd class="col-sm-7">{{ issue.year }}</dd>
+                    {% endif %}
+                    {% if issue.doi_suffix %}
+                    <dt class="col-sm-5">DOI sufiks</dt>
+                    <dd class="col-sm-7">{{ issue.doi_suffix }}</dd>
+                    {% endif %}
+                    {% if issue.isbn_print %}
+                    <dt class="col-sm-5">ISBN (print)</dt>
+                    <dd class="col-sm-7">{{ issue.isbn_print }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Articles Summary -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Radovi ({{ articles|length }})</h6>
+    </div>
+    <div class="card-body p-0">
+        {% if articles %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Naslov</th>
+                        <th>DOI sufiks</th>
+                        <th>Autori</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article in articles %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ article.title }}</td>
+                        <td><code>{{ article.doi_suffix|default:"-" }}</code></td>
+                        <td>{{ article.authors.count }}</td>
+                        <td>
+                            <span class="badge {% if article.status == 'DRAFT' %}bg-secondary{% else %}bg-success{% endif %}">
+                                {{ article.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            Nema radova.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Validation Results -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-shield-check me-2"></i>Validacija</h6>
+    </div>
+    <div class="card-body">
+        {% if validation_result.errors %}
+        <div class="alert alert-danger">
+            <h6 class="alert-heading"><i class="bi bi-exclamation-triangle me-1"></i>Greške</h6>
+            <ul class="mb-0">
+                {% for issue in validation_result.errors %}
+                <li>{{ issue.message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if validation_result.warnings %}
+        <div class="alert alert-warning">
+            <h6 class="alert-heading"><i class="bi bi-exclamation-circle me-1"></i>Upozorenja</h6>
+            <ul class="mb-0">
+                {% for issue in validation_result.warnings %}
+                <li>{{ issue.message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if validation_result.is_valid and not validation_result.warnings %}
+        <div class="alert alert-success mb-0">
+            <i class="bi bi-check-circle me-1"></i>Svi podaci su validni. Možete generisati XML.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="d-flex justify-content-between">
+    <a href="{% url 'wizard:conference-step-3' publication.pk %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Nazad
+    </a>
+    <form method="post" action="{% url 'wizard:generate-xml' publication.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success" {% if has_errors %}disabled{% endif %}>
+            <i class="bi bi-filetype-xml me-1"></i>Generiši XML
+        </button>
+    </form>
+</div>

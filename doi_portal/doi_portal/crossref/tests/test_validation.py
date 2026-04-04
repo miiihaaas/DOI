@@ -1135,3 +1135,116 @@ class TestIssueValidationView:
         assert "text/html" in response["Content-Type"]
         # Should still return the partial template
         assert "crossref/partials/_validation_panel.html" in [t.name for t in response.templates]
+
+
+# =============================================================================
+# Tests for free_to_read consistency validation
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestPreValidationServiceFreeToRead:
+    """Tests for free_to_read consistency validation."""
+
+    def _create_issue_with_articles(self, free_to_read_flags):
+        """Helper: create an issue with articles having specified free_to_read values."""
+        publisher = PublisherFactory(doi_prefix="10.99999")
+        journal = JournalFactory(publisher=publisher, issn_print="1234-5678")
+        issue = IssueFactory(
+            publication=journal,
+            year=2026,
+            volume="1",
+            issue_number="1",
+            publication_month=1,
+        )
+        for idx, ftr in enumerate(free_to_read_flags):
+            article = ArticleFactory(
+                issue=issue,
+                status=ArticleStatus.PUBLISHED,
+                doi_suffix=f"art.ftr.{idx}",
+                free_to_read=ftr,
+            )
+            AuthorFactory(
+                article=article,
+                given_name="Test",
+                surname="Author",
+                sequence=AuthorSequence.FIRST,
+                contributor_role=ContributorRole.AUTHOR,
+            )
+        return issue
+
+    def test_all_free_to_read_no_warning(self, site_settings_configured):
+        """No warning when all articles have free_to_read=True."""
+        from doi_portal.crossref.services import PreValidationService
+
+        issue = self._create_issue_with_articles([True, True, True])
+        service = PreValidationService()
+        result = service.validate_issue(issue)
+        free_warnings = [
+            w for w in result.warnings if w.field_name == "free_to_read"
+        ]
+        assert len(free_warnings) == 0
+
+    def test_none_free_to_read_no_warning(self, site_settings_configured):
+        """No warning when no articles have free_to_read."""
+        from doi_portal.crossref.services import PreValidationService
+
+        issue = self._create_issue_with_articles([False, False, False])
+        service = PreValidationService()
+        result = service.validate_issue(issue)
+        free_warnings = [
+            w for w in result.warnings if w.field_name == "free_to_read"
+        ]
+        assert len(free_warnings) == 0
+
+    def test_mixed_free_to_read_shows_warning(self, site_settings_configured):
+        """Warning when some articles have free_to_read and some don't."""
+        from doi_portal.crossref.services import PreValidationService
+
+        issue = self._create_issue_with_articles([True, True, True, False, False])
+        service = PreValidationService()
+        result = service.validate_issue(issue)
+        free_warnings = [
+            w for w in result.warnings if w.field_name == "free_to_read"
+        ]
+        assert len(free_warnings) == 1
+        assert "2 od 5" in free_warnings[0].message
+
+    def test_single_article_no_warning(self, site_settings_configured):
+        """No warning with single article (can't have inconsistency)."""
+        from doi_portal.crossref.services import PreValidationService
+
+        issue = self._create_issue_with_articles([True])
+        service = PreValidationService()
+        result = service.validate_issue(issue)
+        free_warnings = [
+            w for w in result.warnings if w.field_name == "free_to_read"
+        ]
+        assert len(free_warnings) == 0
+
+    def test_no_published_articles_no_warning(self, site_settings_configured):
+        """No warning when issue has no published articles."""
+        from doi_portal.crossref.services import PreValidationService
+
+        publisher = PublisherFactory(doi_prefix="10.99998")
+        journal = JournalFactory(publisher=publisher, issn_print="9876-5432")
+        issue = IssueFactory(
+            publication=journal,
+            year=2026,
+            volume="1",
+            issue_number="1",
+            publication_month=1,
+        )
+        # Create DRAFT articles (not PUBLISHED)
+        ArticleFactory(
+            issue=issue,
+            status=ArticleStatus.DRAFT,
+            doi_suffix="draft.001",
+            free_to_read=True,
+        )
+        service = PreValidationService()
+        result = service.validate_issue(issue)
+        free_warnings = [
+            w for w in result.warnings if w.field_name == "free_to_read"
+        ]
+        assert len(free_warnings) == 0

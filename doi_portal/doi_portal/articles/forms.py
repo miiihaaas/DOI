@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from doi_portal.core.constants import LANGUAGE_CHOICES
 from doi_portal.issues.models import Issue
 
-from .models import Affiliation, Article, ArticleFunding, Author
+from .models import Affiliation, Article, ArticleFunding, ArticleRelation, Author
 
 
 class ArticleForm(forms.ModelForm):
@@ -62,12 +62,14 @@ class ArticleForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "placeholder": "Unesite naslov članka",
+                    "data-check-spaces": "true",
                 }
             ),
             "subtitle": forms.TextInput(
                 attrs={
                     "class": "form-control",
                     "placeholder": "Opcioni podnaslov",
+                    "data-check-spaces": "true",
                 }
             ),
             "abstract": forms.Textarea(
@@ -460,4 +462,30 @@ class ArticleFundingForm(forms.ModelForm):
             "funder_doi": _("Funder DOI"),
             "funder_ror_id": _("Funder ROR ID"),
             "award_number": _("Broj projekta"),
+        }
+
+
+class ArticleRelationForm(forms.ModelForm):
+    """Form for article relation metadata (Crossref Relations)."""
+
+    class Meta:
+        model = ArticleRelation
+        fields = ["relationship_type", "identifier_type", "target_identifier", "description"]
+        widgets = {
+            "relationship_type": forms.Select(attrs={"class": "form-select"}),
+            "identifier_type": forms.Select(attrs={"class": "form-select"}),
+            "target_identifier": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "10.5555/target_doi",
+            }),
+            "description": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Opcioni opis relacije",
+            }),
+        }
+        labels = {
+            "relationship_type": _("Tip relacije"),
+            "identifier_type": _("Tip identifikatora"),
+            "target_identifier": _("Identifikator cilja"),
+            "description": _("Opis"),
         }

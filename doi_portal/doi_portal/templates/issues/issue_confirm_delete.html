@@ -1,6 +1,7 @@
 {% extends "admin_base.html" %}
+{% load terminology %}
 
-{% block title %}Obriši izdanje - DOI Portal{% endblock %}
+{% block title %}{{ "delete_issue"|term:pub_type }} - DOI Portal{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -57,7 +58,7 @@
                             <i class="bi bi-arrow-left me-1"></i>Odustani
                         </a>
                         <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-trash me-1"></i>Obriši izdanje
+                            <i class="bi bi-trash me-1"></i>{{ "delete_issue"|term:pub_type }}
                         </button>
                     </div>
                 </form>

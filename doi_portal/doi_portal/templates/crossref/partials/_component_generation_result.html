@@ -1,0 +1,92 @@
+{# Component XML generation result partial #}
+{% if generating %}
+<div class="alert alert-info" id="generation-result">
+  <div class="d-flex align-items-center">
+    <div class="spinner-border spinner-border-sm me-2" role="status">
+      <span class="visually-hidden">Generisanje...</span>
+    </div>
+    <span>{{ message }}</span>
+  </div>
+  <small class="d-block text-muted mt-2">
+    Osvežite stranicu za pregled statusa.
+  </small>
+</div>
+
+{% elif success %}
+<div class="card mb-3" id="generation-result">
+  <div class="card-header bg-success-subtle">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <i class="bi bi-check-circle-fill text-success me-2"></i>
+        <strong>{{ message }}</strong>
+        {% if timestamp %}
+        <small class="text-muted d-block mt-1">
+          Generisano: {{ timestamp|date:"d.m.Y H:i" }}
+        </small>
+        {% endif %}
+      </div>
+      {% if component_group %}
+      <div class="d-flex gap-2">
+        <button type="button"
+                class="btn btn-sm btn-outline-info"
+                hx-get="{% url 'crossref:component-xml-preview' component_group.pk %}"
+                hx-target="body"
+                hx-swap="beforeend">
+          <i class="bi bi-eye me-1"></i>Pregled XML
+        </button>
+        {% if xsd_valid %}
+        <a href="{% url 'crossref:component-xml-download' component_group.pk %}"
+           class="btn btn-sm btn-outline-primary" download>
+          <i class="bi bi-download me-1"></i>Preuzmi XML
+        </a>
+        {% else %}
+        <button type="button"
+                class="btn btn-sm btn-outline-warning"
+                hx-get="{% url 'crossref:component-download-warning' component_group.pk %}"
+                hx-target="body"
+                hx-swap="beforeend">
+          <i class="bi bi-download me-1"></i>Preuzmi XML
+          <i class="bi bi-exclamation-triangle ms-1"></i>
+        </button>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="card-body p-2">
+    {% include "crossref/partials/_xsd_validation_result.html" %}
+  </div>
+</div>
+
+{% if component_group %}
+<div id="export-history-container"
+     hx-get="{% url 'crossref:component-export-history' component_group.pk %}"
+     hx-trigger="load, htmx:afterRequest from:body"
+     hx-swap="innerHTML">
+</div>
+{% endif %}
+
+{% else %}
+<div class="alert alert-danger mb-0" id="generation-result">
+  <div class="d-flex align-items-start">
+    <i class="bi bi-x-circle-fill me-2 mt-1"></i>
+    <div>
+      <strong>{{ message }}</strong>
+      {% if errors %}
+        <ul class="mb-0 mt-2 ps-3">
+          {% for error in errors %}
+            <li>
+              {{ error.message }}
+              {% if error.fix_url %}
+                <a href="{{ error.fix_url }}" class="ms-2 text-danger">
+                  <i class="bi bi-pencil-square"></i> Ispravi
+                </a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}

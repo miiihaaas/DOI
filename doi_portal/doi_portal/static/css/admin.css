@@ -925,3 +925,95 @@ main.container-fluid {
     margin-right: 0.5rem;
   }
 }
+
+/* Double-space warning */
+.double-space-warning {
+  color: var(--warning-text, #856404);
+  background-color: var(--warning-bg, #fff3cd);
+  border: 1px solid var(--warning-border, #ffc107);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.double-space-warning button {
+  background: none;
+  border: 1px solid var(--warning-border, #ffc107);
+  border-radius: 4px;
+  padding: 0.125rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: inherit;
+}
+
+/* =============================================
+   Wizard Stepper
+   ============================================= */
+.wizard-stepper {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 2rem;
+}
+.wizard-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+.wizard-step a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: inherit;
+}
+.wizard-step-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  border: 2px solid var(--doi-border, #dee2e6);
+  background: white;
+  color: var(--doi-text-secondary, #728383);
+  z-index: 1;
+}
+.wizard-step.completed .wizard-step-icon {
+  background: var(--doi-primary, #5CB46A);
+  border-color: var(--doi-primary, #5CB46A);
+  color: white;
+}
+.wizard-step.active .wizard-step-icon {
+  border-color: var(--doi-primary, #5CB46A);
+  color: var(--doi-primary, #5CB46A);
+  box-shadow: 0 0 0 4px rgba(92, 180, 106, 0.15);
+}
+.wizard-step.disabled .wizard-step-icon {
+  opacity: 0.5;
+}
+.wizard-step-label {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.wizard-step-connector {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--doi-border, #dee2e6);
+  z-index: 0;
+}
+.wizard-step.completed .wizard-step-connector {
+  background: var(--doi-primary, #5CB46A);
+}
+.wizard-step:last-child .wizard-step-connector {
+  display: none;
+}

@@ -1,0 +1,307 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Crossref Deposit - {{ component_group }} - DOI Portal{% endblock %}
+
+{% block css %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.css" />
+<style>
+  .stepper { position: relative; }
+  .step { display: flex; margin-bottom: 0; position: relative; }
+  .step:last-child .step-connector { display: none; }
+  .step-indicator {
+    flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; z-index: 1; position: relative;
+  }
+  .step-connector { position: absolute; left: 19px; top: 40px; bottom: 0; width: 2px; background-color: #dee2e6; }
+  .step-completed .step-connector { background-color: #198754; }
+  .step-active .step-connector { background-color: #0d6efd; }
+  .step-completed .step-indicator { background-color: #198754; color: white; }
+  .step-active .step-indicator { background-color: #0d6efd; color: white; }
+  .step-disabled .step-indicator { background-color: #e9ecef; color: #6c757d; }
+  .step-content { flex-grow: 1; padding-left: 1rem; padding-bottom: 1.5rem; }
+  .step-title { font-weight: 600; margin-bottom: 0.25rem; }
+  .step-status { font-size: 0.8rem; }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">
+    <i class="bi bi-cloud-upload me-2"></i>Crossref Deposit — Komponente
+  </h1>
+  <a href="{% url 'components:group-detail' component_group.pk %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Nazad na grupu
+  </a>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="bi bi-list-check me-2"></i>Koraci za deponovanje
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="stepper">
+          {% for step in steps %}
+          <div class="step {% if step.completed %}step-completed{% elif step.active %}step-active{% else %}step-disabled{% endif %}">
+            <div>
+              <div class="step-indicator">
+                {% if step.completed %}
+                <i class="bi bi-check-lg"></i>
+                {% else %}
+                {{ step.number }}
+                {% endif %}
+              </div>
+              <div class="step-connector"></div>
+            </div>
+            <div class="step-content">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <div class="step-title">
+                    <i class="bi bi-{{ step.icon }} me-1"></i>{{ step.title }}
+                  </div>
+                  <div class="step-status">
+                    {% if step.completed %}
+                    <span class="text-success"><i class="bi bi-check-circle me-1"></i>Završeno</span>
+                    {% elif step.active %}
+                    <span class="text-primary"><i class="bi bi-arrow-right-circle me-1"></i>Aktivan korak</span>
+                    {% else %}
+                    <span class="text-muted"><i class="bi bi-lock me-1"></i>Nedostupno</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              {% if step.number == 1 %}
+              <div id="validation-step-content" class="mt-2"
+                   hx-get="{% url 'crossref:component-group-validate' component_group.pk %}"
+                   hx-trigger="load"
+                   hx-swap="innerHTML">
+                <div class="text-center py-2">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Učitavanje...</span>
+                  </div>
+                </div>
+              </div>
+
+              {% elif step.number == 2 %}
+              <div id="generation-step-content" class="mt-2">
+                {% if has_xml %}
+                <div class="alert alert-success mb-2 py-2">
+                  <i class="bi bi-check-circle me-1"></i>
+                  XML generisan {{ component_group.xml_generated_at|date:"d.m.Y H:i" }}
+                </div>
+                <button type="button"
+                        class="btn btn-sm btn-outline-warning"
+                        onclick="showRegenerateModal(event)">
+                  <i class="bi bi-arrow-clockwise me-1"></i>Regeneriši XML
+                </button>
+                {% elif step.active %}
+                <button type="button"
+                        class="btn btn-primary btn-sm"
+                        hx-post="{% url 'crossref:component-group-generate' component_group.pk %}"
+                        hx-target="#generation-step-content"
+                        hx-swap="innerHTML"
+                        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+                  <i class="bi bi-file-code me-1"></i>Generiši XML
+                </button>
+                {% endif %}
+              </div>
+
+              {% elif step.number == 3 %}
+              <div id="xsd-step-content" class="mt-2">
+                {% if has_xml %}
+                {% include "crossref/partials/_xsd_validation_result.html" with xsd_valid=component_group.xsd_valid xsd_errors=component_group.xsd_errors xsd_validated_at=component_group.xsd_validated_at %}
+                {% endif %}
+              </div>
+
+              {% elif step.number == 4 %}
+              <div class="mt-2">
+                {% if has_xml %}
+                <button type="button"
+                        id="xmlPreviewBtn"
+                        class="btn btn-outline-info btn-sm"
+                        onclick="loadXmlPreview()">
+                  <i class="bi bi-eye me-1"></i>Pregled XML
+                </button>
+                {% endif %}
+              </div>
+
+              {% elif step.number == 5 %}
+              <div class="mt-2">
+                {% if has_xml %}
+                  {% if component_group.xsd_valid %}
+                  <a href="{% url 'crossref:component-xml-download' component_group.pk %}"
+                     class="btn btn-outline-primary btn-sm" download>
+                    <i class="bi bi-download me-1"></i>Preuzmi XML
+                  </a>
+                  {% else %}
+                  <button type="button"
+                          class="btn btn-outline-warning btn-sm"
+                          hx-get="{% url 'crossref:component-download-warning' component_group.pk %}"
+                          hx-target="body"
+                          hx-swap="beforeend">
+                    <i class="bi bi-download me-1"></i>Preuzmi XML
+                    <i class="bi bi-exclamation-triangle ms-1"></i>
+                  </button>
+                  {% endif %}
+                {% endif %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    {% if all_ready or is_deposited %}
+    <div class="card mb-4 border-success">
+      <div class="card-body">
+        <div id="deposit-status">
+          {% include "crossref/partials/_component_deposit_status.html" %}
+        </div>
+      </div>
+    </div>
+    {% elif has_xml %}
+    <div class="card mb-4">
+      <div class="card-body">
+        <div id="deposit-status">
+          {% include "crossref/partials/_component_deposit_status.html" %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if has_xml %}
+    <div id="export-history-container"
+         hx-get="{% url 'crossref:component-export-history' component_group.pk %}"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h6 class="mb-0">
+          <i class="bi bi-info-circle me-2"></i>Informacije o grupi
+        </h6>
+      </div>
+      <div class="card-body">
+        <dl class="mb-0">
+          <dt>Parent DOI</dt>
+          <dd><code>{{ component_group.parent_doi }}</code></dd>
+          <dt>Naslov</dt>
+          <dd>{{ component_group.title|default:"-" }}</dd>
+          <dt>Izdavač</dt>
+          <dd>{{ component_group.publisher.name }}</dd>
+          <dt>Komponente</dt>
+          <dd>{{ component_group.component_count }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h6 class="mb-0">Brze akcije</h6>
+      </div>
+      <div class="list-group list-group-flush">
+        <a href="{% url 'components:group-detail' component_group.pk %}" class="list-group-item list-group-item-action">
+          <i class="bi bi-puzzle me-2"></i>Detalji grupe
+        </a>
+        <a href="{% url 'components:group-list' %}" class="list-group-item list-group-item-action">
+          <i class="bi bi-list me-2"></i>Sve grupe
+        </a>
+        <a href="https://doi.crossref.org/" class="list-group-item list-group-item-action" target="_blank" rel="noopener">
+          <i class="bi bi-box-arrow-up-right me-2"></i>Crossref admin portal
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="regenerateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning-subtle">
+        <h5 class="modal-title">
+          <i class="bi bi-exclamation-triangle me-2"></i>Regenerisanje XML
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Postojeći XML će biti zamenjen novim sadržajem.</p>
+        <p>Prethodni eksporti ostaju sačuvani u istoriji eksporta.</p>
+        <p><strong>Da li želite da nastavite?</strong></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i>Otkaži
+        </button>
+        <button type="button" class="btn btn-warning"
+                hx-post="{% url 'crossref:component-group-generate' component_group.pk %}"
+                hx-target="#generation-step-content"
+                hx-swap="innerHTML"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                onclick="bootstrap.Modal.getInstance(document.getElementById('regenerateModal')).hide()">
+          <i class="bi bi-arrow-clockwise me-1"></i>Regeneriši XML
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.js"></script>
+{% endblock javascript %}
+
+{% block inline_javascript %}
+{{ block.super }}
+<script>
+function showRegenerateModal(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const modal = new bootstrap.Modal(document.getElementById('regenerateModal'));
+    modal.show();
+}
+
+function loadXmlPreview() {
+    fetch('{% url "crossref:component-xml-preview" component_group.pk %}')
+        .then(response => response.text())
+        .then(html => {
+            const existingModal = document.getElementById('xmlPreviewModal');
+            if (existingModal) existingModal.remove();
+            document.body.insertAdjacentHTML('beforeend', html);
+            const modal = document.getElementById('xmlPreviewModal');
+            if (modal) {
+                const bsModal = new bootstrap.Modal(modal);
+                modal.addEventListener('shown.bs.modal', function() {
+                    const codeBlock = modal.querySelector('code.language-xml');
+                    if (codeBlock && typeof Prism !== 'undefined') {
+                        Prism.highlightElement(codeBlock);
+                    }
+                });
+                modal.addEventListener('hidden.bs.modal', function() { modal.remove(); });
+                bsModal.show();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading XML preview:', error);
+            alert('Greška pri učitavanju XML pregleda');
+        });
+}
+</script>
+{% endblock inline_javascript %}

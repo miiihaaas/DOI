@@ -1,0 +1,35 @@
+{# Single contributor row partial #}
+<tr>
+  <td>{{ contributor.order }}</td>
+  <td>{{ contributor.given_name|default:"-" }}</td>
+  <td>{{ contributor.surname }}</td>
+  <td>{{ contributor.get_contributor_role_display }}</td>
+  <td>{{ contributor.get_sequence_display }}</td>
+  <td>
+    {% if contributor.orcid %}
+    <code>{{ contributor.orcid }}</code>
+    {% else %}
+    -
+    {% endif %}
+  </td>
+  <td>
+    <div class="btn-group btn-group-sm">
+      <button type="button"
+              class="btn btn-outline-secondary"
+              hx-get="{% url 'components:contributor-edit-form' contributor.pk %}"
+              hx-target="#contributor-form-container"
+              hx-swap="innerHTML">
+        <i class="bi bi-pencil"></i>
+      </button>
+      <button type="button"
+              class="btn btn-outline-danger"
+              hx-post="{% url 'components:contributor-delete' contributor.pk %}"
+              hx-target="#contributor-list"
+              hx-swap="innerHTML"
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+              hx-confirm="Da li ste sigurni?">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  </td>
+</tr>

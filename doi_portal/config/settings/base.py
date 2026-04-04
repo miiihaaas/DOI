@@ -95,6 +95,8 @@ LOCAL_APPS = [
     "doi_portal.portal",  # Story 2.2: Public portal
     "doi_portal.core",
     "doi_portal.crossref",  # Story 5.1: Crossref XML generation
+    "doi_portal.components",  # Component (sa_component) support
+    "doi_portal.wizard",  # Conference registration wizard
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

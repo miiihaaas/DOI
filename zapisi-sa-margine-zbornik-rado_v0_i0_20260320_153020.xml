@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doi_batch xmlns="http://www.crossref.org/schema/5.4.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:jats="http://www.ncbi.nlm.nih.gov/JATS1"
+           xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
+           xmlns:fr="http://www.crossref.org/fundref.xsd"
+           xsi:schemaLocation="http://www.crossref.org/schema/5.4.0 https://www.crossref.org/schemas/crossref5.4.0.xsd"
+           version="5.4.0">
+  <head>
+    <doi_batch_id>4ccd0f12_20260320152928</doi_batch_id>
+    <timestamp>20260320152928</timestamp>
+    <depositor>
+      <depositor_name>Grma</depositor_name>
+      <email_address>info@grma.rs</email_address>
+    </depositor>
+    <registrant>Emoracio centar</registrant>
+  </head>
+  <body>
+    <conference>
+      <event_metadata>
+        <conference_name>Marginalistički naučno-stručni skup „Republika duha“</conference_name>
+        <conference_number>1</conference_number>
+        <conference_location>Beograd, Srbija</conference_location>
+        <conference_date start_month="03" start_year="2026" start_day="21" end_month="03" end_year="2026" end_day="21"/>
+      </event_metadata>
+      <proceedings_metadata language="sr">
+        <proceedings_title>Zapisi sa margine: zbornik radova</proceedings_title>
+        <publisher>
+          <publisher_name>Emoracio centar</publisher_name>
+        </publisher>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <isbn media_type="print">978-86-908946-0-4</isbn>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1</doi>
+          <resource>https://emoracio.edu.rs/zbornik-2026-1-zapisi-sa-margine/</resource>
+        </doi_data>
+      </proceedings_metadata>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Igor</given_name>
+            <surname>Mitrović</surname>
+            <affiliations>
+              <institution>
+                <institution_name>ADRA – Adventistički razvojni i humanitarni rad</institution_name>
+              </institution>
+            </affiliations>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>O REČIMA PROROKA U PODZEMNIM PROLAZIMA: BESKUĆNIŠTVO IZMEĐU KOSTURA U ORMANU, OGLEDALA I UČITELJA DRUŠTVA</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Kad god i gde god se događalo, beskućništvo je uvek ekstreman primer marginalizacije. Ne samo u smislu da je verovatno najsloženiji vid apsolutnog siromaštva. Ono po pravilu podrazumeva odbačenost od društva, stigmatizovanje i nevidljivost za institucije i zajednicu. U ovom tekstu skrećemo pažnju na beskućništvo u kojem se nalaze hiljade u Republici Srbiji, dok takozvani nadležni ne znaju da se ono dešava, ne žele da se suoče sa njim ili ne umeju. Ista ta država priznaje da je i do pola miliona u riziku od siromaštva i beskućništva. Osobe u situaciji beskućništva su svojevrsni ranjenici koji su pali u neravnopravnom ratu koji zovemo „tranzicija“, koje je društvo zaboravilo i ostavilo iza. Istina o njima je istina o nama i treba da je čujemo. I to ispričanu iz prve ruke. Konačno, ovde testiramo jednu teološko-egzistencijalnu tezu: beskućništvo – zlo kakvo jeste, kao i svaka druga patnja – može postati semenište Jovovske mudrosti, koja omamljenom savremenom čoveku otkriva šta je šta i kuda dalje. Rad kombinuje esejističku analizu, narativne priče iz prve ruke i teološko-refleksivni ton, koristeći hibridni stil koji istovremeno informiše, osvetljava marginalizovane i podstiče duhovnu i društvenu introspekciju.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>217</first_page>
+          <last_page>233</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.15</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-15-o-recima-proroka-u-podzemnim-prolazima-beskucnistvo-izmedu-kostura-u-ormanu-ogledala-i-ucitelja-drustva/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Марија</given_name>
+            <surname>Шапоњић</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Основна школа „Савремена“, Београд</institution_name>
+              </institution>
+            </affiliations>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>ОД МАРГИНАЛИЗАЦИЈЕ ВЛАСТИТЕ УЛОГЕ ДО ЦЕНТРАЛНЕ ПОЗИЦИЈЕ ВРЕДНОСТИ: МОДЕЛ СРЕЋНОГ УЧЕЊА</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>У фокусу овог рада је савремена реинтерпретација маргинализма62 у контексту педагогије. Иако се традиционално везује за економску теорију и анализу „последње додате јединице добра“, маргинализам овде служи као оквир за одбрану тезе да су најзначајнији помаци у образовању заправо плод суптилних интервенција у домену емоција и етике. Анализом пројекта „Срећно учење за друштво вредности“, реализованог у приватној Основној школи „Савремена“, доказује се да фокусирање на субјективни осећај среће ученика ствара највећу вредност за целокупан систем. Рад документује методологију, улогу просторног дизајна (Врлинотека) и ефекте социјално-емоционалног учења на општу школску климу.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>207</first_page>
+          <last_page>215</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.14</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-14-od-marginalizacije-vlastite-uloge-do-centralne-pozicije-vrednosti-model-srecnog-ucenja/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Olivera</given_name>
+            <surname>Vranić</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Eko straža</institution_name>
+              </institution>
+            </affiliations>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>EKOLOŠKI AKTIVIZAM NA MARGINI</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Rad „Ekološki aktivizam na margini“ razmatra ekološki angažman kao oblik delovanja koji nastaje izvan institucionalnih struktura, u prostoru lične odgovornosti i kolektivne solidarnosti. Polazeći od pitanja ravnodušnosti kao savremenog društvenog fenomena, autorka analizira ekologiju ne samo kao pitanje zaštite životne sredine, već kao egzistencijalno i etičko pitanje smisla delovanja u svetu koji pokazuje sklonost ka ponavljanju destruktivnih obrazaca. Rad povezuje teorijsko određenje grassroots aktivizma sa konkretnim primerima lokalnih inicijativa u Kraljevu (čišćenje reke Ibar, zaštita drvoreda, odbrana Lopatnice), ukazujući na snagu marginalnog delovanja koje se oslanja na ličnu inicijativu i zajedništvo. Posebna pažnja posvećena je filozofskoj dimenziji aktivizma, gde se smisao ne traži u trajnosti rezultata, već u doslednosti vrednostima i odbijanju ravnodušnosti. Ekološki aktivizam se u radu predstavlja kao oblik etičkog otpora i potvrda slobode pojedinca da deluje odgovorno u uslovima nesavršenog društvenog sistema.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>189</first_page>
+          <last_page>206</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.13</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-13-ekoloski-aktivizam-na-margini/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Александра</given_name>
+            <surname>Станковић</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Радио телевизија Србије</institution_name>
+              </institution>
+            </affiliations>
+          </person_name>
+          <person_name sequence="additional" contributor_role="author">
+            <given_name>Вук</given_name>
+            <surname>Цонић</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Лесковачке приче, интернет портал</institution_name>
+              </institution>
+            </affiliations>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>МАРГИНАЛИЗАМ ИЗ УГЛА СРБИСТИКЕ</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Рад „Маргинализам из угла србистике“ разматра појаву и значај маргинализма у српској и светској књижевности, са посебним освртом на дела Радоја Домановића, Милоша Црњанског, Ф. М. Достојевског и Франца Кафке. Полазећи од теоријског одређења маргинализма као свесног избора личног развоја и издизања изнад доминантних система вредности, ауторка испитује како се овај појам историјски манифестовао у књижевним ликовима и стваралаштву значајних писаца. Посебна пажња посвећена је односу појединца и мејнстрима, проблему колективне покорности и питању индивидуалне одговорности. Рад указује да маргинализам није случајна појава у књижевности, већ суштински елемент великих дела која преиспитују границе слободе, идентитета и истине. У савременом контексту, маргинализам се представља као борба за очување духовне аутентичности и здравог разума у условима друштвене објектификације.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>175</first_page>
+          <last_page>187</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.12</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-12-marginalizam-iz-ugla-srbistike/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Strahinja</given_name>
+            <surname>Pantić</surname>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>PANK U DVADESETIM GODINAMA 21. VEKA</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Rad razmatra položaj i značenje panka u dvadesetim godinama 21. veka iz lične, iskustvene perspektive autora koji pank ne posmatra kao istorijski pravac ili muzički žanr, već kao način života, vrednosni stav i egzistencijalnu poziciju. Polazeći od pitanja šta pank danas jeste i po čemu se razlikuje od svojih izvora, tekst problematizuje odnos između autentičnog bunta i njegove komercijalizacije u savremenoj pop kulturi. Ukazuje se na opasnost redukovanja panka na spoljašnje obeležje i uniformu, ali i na trajnost njegovih temeljnih vrednosti: nepristajanja, solidarnosti, kritičkog mišljenja i borbe protiv nepravde. Autor naglašava da pank opstaje ne kao nostalgična rekonstrukcija prošlosti, već kao živa praksa savremenih generacija koje kroz muziku, zajedništvo i lični izbor oblikuju alternativni kulturni prostor. Tekst je svesno napisan u nenaučnoj, subjektivnoj formi, čime se i formalno potvrđuje ideja da pank ostaje na margini, ali sa stalnom ambicijom da pogodi centar društvenih pitanja.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>169</first_page>
+          <last_page>173</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.11</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-11-pank-u-dvadesetim-godinama-21-veka/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Filip</given_name>
+            <surname>Jeknić</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Emoracio centar Kraljevo</institution_name>
+              </institution>
+            </affiliations>
+            <ORCID>https://orcid.org/0009-0009-8224-7376</ORCID>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>MARGINALISTIČKI ELEMENTI I POLITIČKA DINAMIKA STUDENTSKIH PROTESTA U SRBIJI 2024–2025</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Ovaj rad služi kao nastavak i potpunija verzija rada koji se bavio pitanjem postojanja marginalističkih elemenata u studentskim protestima u Srbiji 2024. godine. U ovom radu se razmatra spojivost novih postojećih teorija društvenih pokreta sa protestima u Srbiji. Takođe se unose dodatne teorije pomoću kojih se mogu lakše naći i razumeti, dobre i loše strane ovih protesta, kao i rezultate koji su ove karakteristike proizvele uz stavove učesnika, koji mogu pomoći pri dokazivanju teorija i upotpunjavanju istih.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>161</first_page>
+          <last_page>168</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.10</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-10-marginalisticki-element-i-politicka-dinamika-studentskih-protesta-u-srbiji-2024-2025/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Žana</given_name>
+            <surname>Nenadović</surname>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>ROKENROL NA MARGINI: KULTURA, MOĆ I OTPOR U MALOM GRADU</title>
+          <subtitle>(STUDIJA SLUČAJA FESTIVALA PRiČA U ČAČKU)</subtitle>
+        </titles>
+        <jats:abstract>
+          <jats:p>Rad razmatra položaj rokenrol kulture u malom gradu kroz analizu marginalizma kao pitanja vidljivosti, moći i kulturne politike, a ne kao posledice nedostatka kvaliteta ili publike. Polazeći od šireg društvenog i medijskog konteksta u kojem dominira instant kultura, tekst ispituje kako tržišna logika, politička instrumentalizacija i promene u strukturi publike utiču na potiskivanje autorskih i alternativnih kulturnih praksi. Rad prati nastanak Festivala PRiČA, njegov razvoj i društvenu ulogu. Posebna pažnja posvećena je odnosu između ograničenih resursa, slabe institucionalne podrške i potrebe za kontinuitetom kulturnih praksi koje ne podležu tržišnoj logici, kao i dejstvo migracija stanovništva iz manjih mesta u veće sredine. Cilj pisanja ovog rada je želja da se ukaže na probleme rokenrol festivala u okruženju koje je iscrpljeno marketinškim kampanjama, ispraznim oblicima zabave i besmislenim sadržajima, a motiv je došao iz ličnog iskustva višegodišnje borbe za očuvanje kulturnog identiteta u malom gradu, iz ljubavi prema rok muzici i kulturi uopšte. U okviru rada sprovedeno je ispitivanje o položaju rokenrola u manjem gradu, a rezultati ukazuju da festival prevazilazi funkciju muzičkog događaja i postaje prostor zajedništva, potvrđujući da rok kultura u manjim mestima stvara socijalnu povezanost i kulturni identitet, i zato opstaje kao praksa trajanja, a ne kao prolazni trend.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>141</first_page>
+          <last_page>160</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.9</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-9-rokenrol-na-margini-kultura-moc-i-otpor-u-malom-gradu-studina-slucaja-festivala-prica-u-cacku/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Nataša</given_name>
+            <surname>Ristić Velimirović</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Univerzitet u Beograd - Filozofski fakultet</institution_name>
+              </institution>
+            </affiliations>
+            <ORCID>https://orcid.org/0009-0002-9312-0855</ORCID>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>SRCE MARGINE: NEURODIVERGENTNI SUBJEKT U POSTTRANZICIONOM DRUŠTVU</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Rad istražuje marginalizaciju neurodivergentnih identiteta kroz filozofsku, psihološku i društveno-političku prizmu. U kontekstu posttranzicionih društava, poput Srbije, analiziraju se strukturalni mehanizmi epistemološke nepravde, terapijske kolonizacije i disocijacije od kolektivne istorije. U središtu rada nalazi se koncept „srca margine“, koji se uvodi kao ontološko i etičko središte u vremenu propasti institucionalnog reda. Autorka povezuje filozofiju svesti, kritiku terapijskog diskursa i lokalni kontekst tranzicione traume, pozivajući na novi oblik psihoterapije – ne kao normalizacije, već oslobađanja. Predlaže se transformacija terapeutske i društvene imaginacije, u pravcu priznanja autentične razlike kao temelja nove epistemologije duha.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>121</first_page>
+          <last_page>139</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.8</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-8-srce-margine-neurodivergentni-subject-u-posttranzicionom-drustvu/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Milena</given_name>
+            <surname>Milosavljević Karović</surname>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>BIO BAŠTA – BIO ŽIVOT</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Bio bašta predstavlja prostor koji čovek oblikuje tako da prirodi omogući uspostavljanje sopstvene ravnoteže. U takvom prostoru biljke, insekti i životinje žive u simbiozi, a bašta postaje izvor hrane ne samo za čoveka, već i za širi ekosistem. Rad razmatra nastanak, realizaciju i održavanje projekta bio bašte, kao i njegov uticaj na porodicu i zajednicu koje su u njemu učestvovale posredno ili neposredno. Projekat je razvijan tokom, približno, šest meseci, uz korišćenje prirodnih i recikliranih materijala, a inspiracija je pronađena na platformama Trag biljke i Pinterest. Bašta se sastoji od podignutih leja formiranih slojevitim organskim materijalima i podržanih pratećom sadnjom koja privlači oprašivače i korisne insekte, čime se održava ekološka ravnoteža. U slučajevima intervencije korišćeni su prirodni, domaći preparati. Pored ekološke funkcije, projekat ima i dublju socijalnu i obrazovnu dimenziju, jer podstiče zajedničko porodično vreme, učenje i razmenu znanja u zajednici, kao i stvaranje prostora mira u periodima društvene nestabilnosti. Rad ukazuje na to da priroda pruža sve neophodne resurse, da se vrednost zdrave hrane nalazi u deljenju i odgovornosti, te da održive prakse prevazilaze logiku pohlepe i granice „nemogućeg“.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>107</first_page>
+          <last_page>120</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.7</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-7-bio-basta-bio-zivot/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Јелена</given_name>
+            <surname>Стојковић</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Народни музеј Крушевац</institution_name>
+              </institution>
+            </affiliations>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>МАРГИНАЛИЗАМ КРОЗ УМЕТНОСТ КРЕАТИВНИХ РАДИОНИЦА</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Овај рад се бави темом маргинализма кроз призму креативних радионица са учесницима са потешкоћама у развоју. Полазна тачка је приказ развоја маргинализма у уметности, његових оснивача, самог кретања кроз време и токова који га обележавају. Циљ је утицати на побољшање опште свести у погледу прихватања особа са потешкоћама у развоју у свим друштвеним сегментима, премда, овде ће акценат бити на њиховој уметности. Будући да је маргинална уметност заправо уметност настала изван уметничких институција и званичних оквира, сматрам да је од великог значаја за креативни развој особа са потешкоћама у развоју, прихватање њихове уметности и активно укључивање и учествовање у свакодневним токовима званичних институција</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>95</first_page>
+          <last_page>105</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.6</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-6-marginalizam-kroz-umetnost-kreativnih-radionica/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Olivera</given_name>
+            <surname>Pantelić</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Muzičko-edukativna radionica „Cvrle“</institution_name>
+              </institution>
+            </affiliations>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>NESVESNO NA MARGINI – MUZIKA KAO SREDSTVO IZRAŽAVANJA OSOBA SA SMETNJAMA U RAZVOJU</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Ovaj rad bavi se položajem osoba sa smetnjama u razvoju, pre svega osoba iz spektra autizma, kao specifične, nevoljno marginalizovane grupe koja ne prepoznaje svoju marginalnost na kognitivnom nivou, ali je snažno doživljava kroz telo, emocije i senzorna iskustva. Polazeći od lične i profesionalne prakse rada sa decom i mladima sa smetnjama u razvoju, autorka razmatra mogućnosti muzike, pokreta i igre kao sredstava izražavanja, regulacije emocija i razvoja osnovnih veština, u situacijama u kojima verbalna komunikacija nije primarni ili dostupan kanal. Rad ukazuje na ograničenja formalnih sistema podrške i privid inkluzije, kao i na značaj kreativnog, fleksibilnog i individualizovanog pristupa, koji podrazumeva spremnost terapeuta i pedagoga da se izmesti iz unapred definisanih obrazaca rada. Muzika se prikazuje ne kao cilj sam po sebi, već kao prostor susreta, odnosa i iskustvene obrade stvarnosti, kroz koji deca razvijaju pažnju, motoriku, govor, socijalne veštine i osećaj sigurnosti. U tom smislu, margina se ne razume kao mesto deficita, nego kao potencijalni prostor autentičnog razvoja i drugačijeg oblika komunikacije.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>81</first_page>
+          <last_page>93</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.5</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-5-nesvesno-na-margini-muzika-kao-sredstvo-izrazavanja-osoba-sa-smetnjama-u-razvoju/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Teodora</given_name>
+            <surname>Slavković</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Emoracio centar Kraljevo</institution_name>
+              </institution>
+            </affiliations>
+            <ORCID>https://orcid.org/0009-0009-1126-2827</ORCID>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>IZVAN CENTRA: MARGINALIZAM KAO METAPOZICIJA SAVETODAVNOG I PSIHOTERAPIJSKOG RADA</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Ovaj rad razmatra marginalizam kao teorijsko-epistemološki okvir i metapoziciju savetodavnog i psihoterapijskog rada, polazeći od filozofskog koncepta margine razvijenog u delima Dražena Pavlice. Margina se ne razume kao periferija ili deficit psihičkog života, već kao konstitutivni prostor u kome se subjektivno iskustvo pojavljuje u svojoj neodređenosti, fragmentarnosti i procesualnosti. Rad polazi od pretpostavke da savremena psihoterapijska praksa sve češće susreće iskustva koja izmiču jasnoći, dijagnostičkoj kategorizaciji i ciljno orijentisanim intervencijama, te da upravo ta iskustva zahtevaju drugačiji odnos prema znanju, promeni i terapijskom cilju. Cilj rada jeste da marginalistički psihoterapijski princip konceptualizuje kao metapoziciju, a ne kao tehniku ili poseban terapijski pravac. Poseban akcenat stavljen je na epistemološki značaj neodređenosti, poziciju terapeuta zasnovanu na svesnom neznanju, kao i na etičke implikacije rada sa marginalnim sadržajima iskustva. Kroz analizu terapijskog odnosa, faza marginalističkog procesa i teorijske integracije sa humanističkim, egzistencijalnim i fenomenološkim tradicijama, rad pokazuje da se terapijska promena ne odvija nužno kroz direktnu intervenciju, već kroz zadržavanje pažnje uz iskustvo koje se tek formira. Zaključno, rad ukazuje da marginalizam predstavlja relevantan i etički osvešćen okvir savremene savetodavne i psihoterapijske prakse, posebno u radu sa iskustvima koja izmiču dominantnim terapijskim narativima, normalizaciji i instrumentalizaciji psihičkog života.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>67</first_page>
+          <last_page>79</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.4</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-4-izvan-centra-marginalizam-kao-metapozicija-savetodavnog-i-psihoterapijskog-rada/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Petar</given_name>
+            <surname>Jeknić</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Emoracio centar Kraljevo</institution_name>
+              </institution>
+            </affiliations>
+            <ORCID>https://orcid.org/0009-0008-6053-0990</ORCID>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>MARGINALISTIČKA VERTIKALA</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Ovaj rad predstavlja marginalističku vertikalu kao proces unutrašnje digestije životnih događaja, kroz koji se simptomi, stres i razvojne krize razumeju ne kao kvarovi, već kao signali potrebe za promenom. Polazeći od pojma margine kao prirodnog mesta razvoja, tekst razrađuje odnos resursa i razvojnog potencijala, ulogu nagona kao energije koja traži put, kao i centralni proces varenja u kojem se događaji psihološki obrađuju i integrišu. Posebna pažnja posvećena je razlikovanju adekvatnog i neadekvatnog varenja, uz prikaz osnovnih varijanti prekida procesa i njihovih posledica u vidu stresa, simptoma i ponavljanja obrazaca. U tom okviru predstavljen je Iskustveni model stresa kao unutrašnji mehanizam obrade događaja, u kojem se stres razume kao signal procesa, a ne kao njegov poremećaj. Rad u nastavku razmatra ulogu akcije između paradoksalne i konstruktivne teorije promene, kao i međusobni odnos iskustva, unutrašnje sigurnosti i egzistencijalne volje. Završni deo rada posvećen je pojmovima osvešćene celine, strukturne promene i egzistencijalne stabilnosti, shvaćene kao samopoštovanje koje proističe iz integrisanog iskustva. Marginalistička vertikala se na kraju razume kao spiralni razvojni proces, u kojem se završetak jednog ciklusa istovremeno otvara kao polazna tačka narednog.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>47</first_page>
+          <last_page>66</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.3</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-3-marginalisticka-vertikala/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Borivoje</given_name>
+            <surname>Todorović</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Korpberget behandlingscenter</institution_name>
+              </institution>
+            </affiliations>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>ZAVISNOST – ŽIVOT NA MARGINI</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Ovaj rad razmatra zavisnost kao složen i dugotrajan psihološki proces, čiji koreni leže u ranim traumatskim iskustvima, deprivaciji osnovnih emocionalnih potreba i narušenom razvoju ličnog identiteta. Zavisnost se ne posmatra isključivo kao problem supstanci ili ponašanja, već kao unutrašnje stanje hroničnog nemira i neravnoteže, koje osoba pokušava da reguliše putem spoljašnjih rešenja. Posebna pažnja posvećena je razlikovanju same bolesti zavisnosti od aktivnog zavisničkog ponašanja, koje predstavlja pokušaj psihe da ublaži bol, napetost i egzistencijalnu prazninu. Rad se oslanja na kliničku praksu i detaljne studije slučaja, kroz koje se prikazuje kako neobrađena trauma, potisnute potrebe i internalizovana krivica dovode do ponavljanja autodestruktivnih obrazaca. Margina se u ovom kontekstu razume kao prostor egzistencijalne granice, na kome se osoba nalazi između života i samouništenja, između nastavka zavisničkog obrasca i mogućnosti oporavka. Posebno se naglašava uloga bola, koji može delovati destruktivno, ali i postati pokretač promene ukoliko se adekvatno obradi i integriše. Zaključuje se da oporavak od zavisnosti ne podrazumeva samo apstinenciju, već dubinski rad na traumatskim iskustvima, preuzimanje odgovornosti i rekonstrukciju odnosa prema sebi, drugima i sopstvenoj prošlosti. Rad doprinosi razumevanju zavisnosti kao problema koji se razvija na margini ličnog i društvenog života, ali čije razrešenje zahteva povratak ka centru lične odgovornosti i svesnog izbora.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>31</first_page>
+          <last_page>46</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.2</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-2-zavisnost-zivot-na-margini/</resource>
+        </doi_data>
+      </conference_paper>
+      <conference_paper publication_type="full_text">
+        <contributors>
+          <person_name sequence="first" contributor_role="author">
+            <given_name>Ružica</given_name>
+            <surname>Azdejković</surname>
+            <affiliations>
+              <institution>
+                <institution_name>Opšta bolnica Kruševac</institution_name>
+              </institution>
+            </affiliations>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>U SUSRET MATERINSTVU</title>
+        </titles>
+        <jats:abstract>
+          <jats:p>Ovaj rad predstavlja iskustveni i klinički utemeljen prikaz trudnoće, porođaja i perioda nakon porođaja, sagledanih kao jedinstven i neprekidan proces psihofizičke i emocionalne transformacije žene. Polazeći od dugogodišnje medicinske prakse i neposrednog rada sa trudnicama i porodiljama, autorka ukazuje na jaz između medicinskih protokola i stvarnog iskustva žena, naročito u periodu nakon porođaja, koji često ostaje bez adekvatne podrške i razumevanja. Poseban akcenat stavljen je na odgovornost, realna očekivanja i proces prilagođavanja, uz jasno razgraničavanje onoga što predstavlja normalan deo iskustva od situacija koje zahtevaju dodatnu stručnu pomoć. Trudnoća i porođaj ne posmatraju se kao izolovani medicinski događaji, već kao razvojni proces u kome dolazi do paralelnog rađanja deteta i majke, uz duboke telesne, emotivne i psihičke promene. U okviru koncepta margine, ovaj rad osvetljava prostor između – između telesne promene i psihičke reorganizacije, između očekivanja okoline i ličnog doživljaja, između medicinske brige i lične odgovornosti. Rad ima za cilj da ženama pruži orijentire, smanji strah i neizvesnost, ali i da podstakne svesno učestvovanje u procesu majčinstva, prepoznajući ga kao iskustvo koje zahteva vreme, prisutnost i podršku.</jats:p>
+        </jats:abstract>
+        <publication_date media_type="online">
+          <year>2026</year>
+        </publication_date>
+        <pages>
+          <first_page>13</first_page>
+          <last_page>29</last_page>
+        </pages>
+        <ai:program name="AccessIndicators">
+          <ai:free_to_read/>
+          <ai:license_ref applies_to="vor">https://creativecommons.org/licenses/by-sa/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.66117/emce_zapisi.2026.1.1</doi>
+          <resource>https://emoracio.edu.rs/doi-2026-1-1-u-susret-materinstvu/</resource>
+        </doi_data>
+      </conference_paper>
+    </conference>
+  </body>
+</doi_batch>

@@ -1,0 +1,88 @@
+{# Inline contributor form for HTMX #}
+<div class="card border-primary">
+  <div class="card-header bg-primary-subtle">
+    <h6 class="mb-0">
+      {% if contributor %}
+      <i class="bi bi-pencil me-1"></i>Izmena kontributora
+      {% else %}
+      <i class="bi bi-plus-circle me-1"></i>Novi kontributor
+      {% endif %}
+    </h6>
+  </div>
+  <div class="card-body">
+    <form {% if contributor %}
+          hx-post="{% url 'components:contributor-update' contributor.pk %}"
+          {% else %}
+          hx-post="{% url 'components:contributor-add' component.pk %}"
+          {% endif %}
+          hx-target="#contributor-list"
+          hx-swap="innerHTML"
+          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+      <div class="row g-2">
+        <div class="col-md-4">
+          <label class="form-label">Ime</label>
+          {{ contributor_form.given_name }}
+          {% if contributor_form.given_name.errors %}
+          <div class="invalid-feedback d-block">
+            {% for error in contributor_form.given_name.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Prezime *</label>
+          {{ contributor_form.surname }}
+          {% if contributor_form.surname.errors %}
+          <div class="invalid-feedback d-block">
+            {% for error in contributor_form.surname.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Sufiks</label>
+          {{ contributor_form.suffix }}
+        </div>
+      </div>
+      <div class="row g-2 mt-1">
+        <div class="col-md-4">
+          <label class="form-label">Email</label>
+          {{ contributor_form.email }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">ORCID</label>
+          {{ contributor_form.orcid }}
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check">
+            {{ contributor_form.orcid_authenticated }}
+            <label class="form-check-label" for="{{ contributor_form.orcid_authenticated.id_for_label }}">
+              ORCID autentifikovan
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="row g-2 mt-1">
+        <div class="col-md-6">
+          <label class="form-label">Redosled</label>
+          {{ contributor_form.sequence }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Uloga</label>
+          {{ contributor_form.contributor_role }}
+        </div>
+      </div>
+      {{ contributor_form.order }}
+      <div class="mt-3">
+        <button type="submit" class="btn btn-sm btn-primary">
+          <i class="bi bi-check me-1"></i>{% if contributor %}Ažuriraj{% else %}Dodaj{% endif %}
+        </button>
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary"
+                hx-get="{% url 'components:contributor-form' component.pk %}"
+                hx-target="#contributor-form-container"
+                hx-swap="innerHTML">
+          <i class="bi bi-x me-1"></i>Otkaži
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

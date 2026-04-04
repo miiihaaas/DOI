@@ -64,6 +64,7 @@ class PublicationForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "placeholder": "Naslov publikacije",
+                    "data-check-spaces": "true",
                 }
             ),
             "publisher": forms.Select(

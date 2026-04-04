@@ -185,4 +185,25 @@ urlpatterns = [
         views.funding_form_view,
         name="funding-form",
     ),
+    # Relation HTMX endpoints
+    path(
+        "<int:article_pk>/relations/add/",
+        views.relation_add,
+        name="relation-add",
+    ),
+    path(
+        "relations/<int:pk>/delete/",
+        views.relation_delete,
+        name="relation-delete",
+    ),
+    path(
+        "<int:article_pk>/relations/reorder/",
+        views.relation_reorder,
+        name="relation-reorder",
+    ),
+    path(
+        "<int:article_pk>/relations/form/",
+        views.relation_form_view,
+        name="relation-form",
+    ),
 ]

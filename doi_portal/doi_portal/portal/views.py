@@ -686,6 +686,53 @@ def article_citation(request, pk):
 
 
 # =============================================================================
+# Component Landing Page
+# =============================================================================
+
+
+class ComponentLandingView(DetailView):
+    """
+    Public component landing page.
+
+    Displays component metadata: title, description, DOI, parent DOI,
+    contributors, MIME type.
+    """
+
+    template_name = "portal/component_landing.html"
+    context_object_name = "component"
+
+    def get_queryset(self):
+        """Return only non-deleted components with related data."""
+        from doi_portal.components.models import Component
+        return (
+            Component.objects.filter(is_deleted=False)
+            .select_related("component_group__publisher")
+            .prefetch_related("contributors")
+        )
+
+    def get_context_data(self, **kwargs):
+        """Add component-specific context."""
+        context = super().get_context_data(**kwargs)
+        component = self.object
+        publisher = component.component_group.publisher
+
+        context["full_doi"] = component.full_doi
+        context["doi_url"] = f"https://doi.org/{component.full_doi}"
+        context["parent_doi"] = component.component_group.parent_doi
+        context["parent_doi_url"] = f"https://doi.org/{component.component_group.parent_doi}"
+        context["publisher"] = publisher
+        context["contributors"] = component.contributors.filter(is_deleted=False).order_by("order")
+        context["share_url"] = self.request.build_absolute_uri()
+
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {"label": component.title or component.doi_suffix, "url": None},
+        ]
+
+        return context
+
+
+# =============================================================================
 # Story 4.8: About Page
 # =============================================================================
 

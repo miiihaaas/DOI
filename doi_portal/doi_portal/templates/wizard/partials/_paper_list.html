@@ -1,0 +1,7 @@
+{% for article in articles %}
+    {% include "wizard/partials/_paper_item.html" with article=article %}
+{% empty %}
+    <div class="text-muted text-center py-4">
+        Nema dodanih radova. Kliknite "Dodaj rad" za početak.
+    </div>
+{% endfor %}

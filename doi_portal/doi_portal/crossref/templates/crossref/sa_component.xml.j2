@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doi_batch version="5.4.0" xmlns="http://www.crossref.org/schema/5.4.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:rel="http://www.crossref.org/relations.xsd"
+           xsi:schemaLocation="http://www.crossref.org/schema/5.4.0 https://www.crossref.org/schemas/crossref5.4.0.xsd">
+  <head>
+    <doi_batch_id>{{ head.doi_batch_id }}</doi_batch_id>
+    <timestamp>{{ head.timestamp }}</timestamp>
+    <depositor>
+      <depositor_name>{{ head.depositor_name }}</depositor_name>
+      <email_address>{{ head.depositor_email }}</email_address>
+    </depositor>
+    <registrant>{{ head.registrant }}</registrant>
+  </head>
+  <body>
+    <sa_component parent_doi="{{ parent_doi }}">
+      <component_list>
+        {% for component in components %}
+        <component parent_relation="{{ component.parent_relation }}">
+          {% if component.title %}
+          <titles>
+            <title>{{ component.title }}</title>
+          </titles>
+          {% endif %}
+          {% if component.contributors %}
+          <contributors>
+            {% for contributor in component.contributors %}
+            <person_name sequence="{{ contributor.sequence }}" contributor_role="{{ contributor.contributor_role }}">
+              {% if contributor.given_name %}<given_name>{{ contributor.given_name }}</given_name>{% endif %}
+              <surname>{{ contributor.surname }}</surname>
+              {% if contributor.suffix %}<suffix>{{ contributor.suffix }}</suffix>{% endif %}
+              {% if contributor.orcid %}<ORCID>{{ contributor.orcid | format_orcid_url }}</ORCID>{% endif %}
+            </person_name>
+            {% endfor %}
+          </contributors>
+          {% endif %}
+          {% if component.publication_year %}
+          <publication_date>
+            {% if component.publication_month %}<month>{{ component.publication_month | format_month }}</month>{% endif %}
+            {% if component.publication_day %}<day>{{ component.publication_day | format_day }}</day>{% endif %}
+            <year>{{ component.publication_year }}</year>
+          </publication_date>
+          {% endif %}
+          {% if component.description %}
+          <description>{{ component.description }}</description>
+          {% endif %}
+          {% if component.format_mime_type %}
+          <format mime_type="{{ component.format_mime_type }}"/>
+          {% endif %}
+          {% if component.relations %}
+          <rel:program name="relations">
+            {% for relation in component.relations %}
+            <rel:related_item>
+              {% if relation.description %}
+              <rel:description>{{ relation.description }}</rel:description>
+              {% endif %}
+              {% if relation.scope == "intra_work" %}
+              <rel:intra_work_relation relationship-type="{{ relation.relationship_type }}" identifier-type="{{ relation.identifier_type }}">{{ relation.identifier }}</rel:intra_work_relation>
+              {% else %}
+              <rel:inter_work_relation relationship-type="{{ relation.relationship_type }}" identifier-type="{{ relation.identifier_type }}">{{ relation.identifier }}</rel:inter_work_relation>
+              {% endif %}
+            </rel:related_item>
+            {% endfor %}
+          </rel:program>
+          {% endif %}
+          <doi_data>
+            <doi>{{ component.doi }}</doi>
+            <resource>{{ component.resource_url }}</resource>
+          </doi_data>
+        </component>
+        {% endfor %}
+      </component_list>
+    </sa_component>
+  </body>
+</doi_batch>

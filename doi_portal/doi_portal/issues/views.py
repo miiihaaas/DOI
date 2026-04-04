@@ -21,8 +21,22 @@ from doi_portal.publishers.mixins import (
     PublisherScopedMixin,
 )
 
+from doi_portal.core.terminology import get_issue_delete_warning, get_term
+from doi_portal.publications.models import Publication, PublicationType
+
 from .forms import IssueForm
 from .models import Issue, IssueStatus
+
+
+def _get_pub_type_from_publication_id(publication_id):
+    """Get publication_type from publication_id query param. Returns JOURNAL as fallback."""
+    if publication_id:
+        try:
+            pub = Publication.objects.get(pk=publication_id)
+            return pub.publication_type
+        except Publication.DoesNotExist:
+            pass
+    return PublicationType.JOURNAL
 
 
 # Whitelist of allowed sort fields
@@ -97,13 +111,17 @@ class IssueListView(PublisherScopedMixin, ListView):
         publication = None
         if publication_id:
             try:
-                from doi_portal.publications.models import Publication
-
                 publication = Publication.objects.select_related("publisher").get(
                     pk=publication_id
                 )
             except (Publication.DoesNotExist, ValueError):
                 pass
+
+        if publication:
+            pub_type = publication.publication_type
+        else:
+            pub_type = PublicationType.JOURNAL
+        context["pub_type"] = pub_type
 
         if publication:
             context["breadcrumbs"] = [
@@ -115,12 +133,12 @@ class IssueListView(PublisherScopedMixin, ListView):
                         "publications:detail", kwargs={"slug": publication.slug}
                     ),
                 },
-                {"label": "Izdanja", "url": None},
+                {"label": get_term("issue_plural", pub_type), "url": None},
             ]
         else:
             context["breadcrumbs"] = [
                 {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
-                {"label": "Izdanja", "url": None},
+                {"label": get_term("issue_plural", pub_type), "url": None},
             ]
 
         context["publication"] = publication
@@ -181,13 +199,16 @@ class IssueCreateView(PublisherScopedEditMixin, CreateView):
     def get_context_data(self, **kwargs):
         """Add breadcrumbs and form metadata to context."""
         context = super().get_context_data(**kwargs)
+        publication_id = self.request.GET.get("publication")
+        pub_type = _get_pub_type_from_publication_id(publication_id)
+        context["pub_type"] = pub_type
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
-            {"label": "Izdanja", "url": reverse_lazy("issues:list")},
-            {"label": "Novo izdanje", "url": None},
+            {"label": get_term("issue_plural", pub_type), "url": reverse_lazy("issues:list")},
+            {"label": get_term("new_issue", pub_type), "url": None},
         ]
-        context["form_title"] = "Novo izdanje"
-        context["submit_text"] = "Kreiraj izdanje"
+        context["form_title"] = get_term("new_issue", pub_type)
+        context["submit_text"] = get_term("create_issue", pub_type)
         context["pub_doi_prefix_map_json"] = context["form"].pub_doi_prefix_map_json
         return context
 
@@ -196,7 +217,7 @@ class IssueCreateView(PublisherScopedEditMixin, CreateView):
         response = super().form_valid(form)
         messages.success(
             self.request,
-            "Izdanje uspešno kreirano.",
+            get_term("issue_created", self.object.publication.publication_type),
         )
         return response
 
@@ -247,12 +268,14 @@ class IssueUpdateView(PublisherScopedEditMixin, UpdateView):
     def get_context_data(self, **kwargs):
         """Add breadcrumbs and form metadata to context."""
         context = super().get_context_data(**kwargs)
+        pub_type = self.object.publication.publication_type
+        context["pub_type"] = pub_type
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
-            {"label": "Izdanja", "url": reverse_lazy("issues:list")},
+            {"label": get_term("issue_plural", pub_type), "url": reverse_lazy("issues:list")},
             {"label": str(self.object), "url": None},
         ]
-        context["form_title"] = f"Izmeni izdanje: {self.object}"
+        context["form_title"] = f"{get_term('edit_issue', pub_type)}: {self.object}"
         context["submit_text"] = "Sačuvaj izmene"
         context["pub_doi_prefix_map_json"] = context["form"].pub_doi_prefix_map_json
         # For edit, also provide publisher_doi_prefix directly
@@ -264,7 +287,7 @@ class IssueUpdateView(PublisherScopedEditMixin, UpdateView):
         response = super().form_valid(form)
         messages.success(
             self.request,
-            "Izdanje uspešno ažurirano.",
+            get_term("issue_updated", self.object.publication.publication_type),
         )
         return response
 
@@ -309,9 +332,11 @@ class IssueDetailView(PublisherScopedMixin, DetailView):
     def get_context_data(self, **kwargs):
         """Add breadcrumbs and role-based action flags to context."""
         context = super().get_context_data(**kwargs)
+        pub_type = self.object.publication.publication_type
+        context["pub_type"] = pub_type
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
-            {"label": "Izdanja", "url": reverse_lazy("issues:list")},
+            {"label": get_term("issue_plural", pub_type), "url": reverse_lazy("issues:list")},
             {"label": str(self.object), "url": None},
         ]
 
@@ -342,9 +367,11 @@ class IssueDeleteView(AdministratorRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         """Add breadcrumbs and article count to context."""
         context = super().get_context_data(**kwargs)
+        pub_type = self.object.publication.publication_type
+        context["pub_type"] = pub_type
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
-            {"label": "Izdanja", "url": reverse_lazy("issues:list")},
+            {"label": get_term("issue_plural", pub_type), "url": reverse_lazy("issues:list")},
             {"label": str(self.object), "url": None},
         ]
         context["article_count"] = self.object.article_count
@@ -354,17 +381,17 @@ class IssueDeleteView(AdministratorRequiredMixin, DeleteView):
         """Perform soft delete instead of actual deletion."""
         issue = self.object
         article_count = issue.article_count
+        pub_type = self.object.publication.publication_type
 
         if article_count > 0:
             messages.warning(
                 self.request,
-                f"Izdanje ima {article_count} članaka. "
-                "Izdanje je označeno kao obrisano ali podaci su sačuvani.",
+                get_issue_delete_warning(article_count, pub_type),
             )
         else:
             messages.success(
                 self.request,
-                "Izdanje uspešno obrisano.",
+                get_term("issue_deleted", pub_type),
             )
 
         # Soft delete instead of actual delete

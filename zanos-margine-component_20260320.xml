@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doi_batch xmlns="http://www.crossref.org/schema/5.4.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.crossref.org/schema/5.4.0 https://www.crossref.org/schemas/crossref5.4.0.xsd"
+           version="5.4.0">
+  <head>
+    <doi_batch_id>zanos_margine_20260320</doi_batch_id>
+    <timestamp>20260320160000</timestamp>
+    <depositor>
+      <depositor_name>Grma</depositor_name>
+      <email_address>info@grma.rs</email_address>
+    </depositor>
+    <registrant>Emoracio centar</registrant>
+  </head>
+  <body>
+    <sa_component parent_doi="10.66117/emce_zapisi.2026.1">
+      <component_list>
+        <component parent_relation="isPartOf">
+          <titles>
+            <title>Zanos margine</title>
+          </titles>
+          <contributors>
+            <person_name sequence="first" contributor_role="author">
+              <given_name>Krešimir</given_name>
+              <surname>Šokec</surname>
+            </person_name>
+          </contributors>
+          <description>Autorska instrumentalna kompozicija komponovana kao muzička podloga Prvog marginalističkog naučno-stručnog skupa „Republika duha", održanog 21. marta 2026. godine u Beogradu.</description>
+          <format mime_type="audio/mpeg"/>
+          <doi_data>
+            <doi>10.66117/emce_zanos.au.2026</doi>
+            <resource>https://emoracio.edu.rs/zanos-margine/</resource>
+          </doi_data>
+        </component>
+      </component_list>
+    </sa_component>
+  </body>
+</doi_batch>

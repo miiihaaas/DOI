@@ -1,0 +1,34 @@
+<div id="wizard-authors-{{ article.pk }}">
+    {% for author in authors %}
+    <div class="d-flex justify-content-between align-items-center border-bottom py-1">
+        <div>
+            <span class="badge bg-secondary me-1">{{ forloop.counter }}</span>
+            {{ author.given_name }} <strong>{{ author.surname }}</strong>
+            {% if author.suffix %} {{ author.suffix }}{% endif %}
+            {% if author.is_corresponding %}
+            <span class="badge bg-info ms-1" title="Korespondentan autor"><i class="bi bi-envelope-fill"></i></span>
+            {% endif %}
+            {% if author.orcid %}
+            <small class="text-muted ms-1">ORCID: {{ author.orcid }}</small>
+            {% endif %}
+        </div>
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-outline-primary btn-sm"
+                    hx-get="{% url 'wizard:author-edit-form' author.pk %}"
+                    hx-target="#wizard-author-form-{{ article.pk }}"
+                    hx-swap="innerHTML">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm"
+                    hx-post="{% url 'wizard:author-delete' author.pk %}"
+                    hx-target="#wizard-authors-{{ article.pk }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="Obrišete autora?">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-muted small py-1">Nema autora.</div>
+    {% endfor %}
+</div>

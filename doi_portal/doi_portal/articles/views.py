@@ -39,11 +39,12 @@ from doi_portal.publishers.mixins import (
     PublisherScopedMixin,
 )
 
-from .forms import AffiliationForm, ArticleFundingForm, ArticleForm, AuthorForm
+from .forms import AffiliationForm, ArticleFundingForm, ArticleForm, ArticleRelationForm, AuthorForm
 from .models import (
     Affiliation,
     Article,
     ArticleFunding,
+    ArticleRelation,
     ArticleStatus,
     Author,
     AuthorSequence,
@@ -59,6 +60,21 @@ from .services import (
     withdraw_article,
 )
 from .validators import validate_pdf_file
+
+from doi_portal.core.terminology import get_term
+from doi_portal.issues.models import Issue
+from doi_portal.publications.models import PublicationType
+
+
+def _get_pub_type_from_issue_id(issue_id):
+    """Get publication_type from issue_id query param. Returns JOURNAL as fallback."""
+    if issue_id:
+        try:
+            issue = Issue.objects.select_related("publication").get(pk=issue_id)
+            return issue.publication.publication_type
+        except Issue.DoesNotExist:
+            pass
+    return PublicationType.JOURNAL
 
 
 # =============================================================================
@@ -183,9 +199,16 @@ class ArticleListView(PublisherScopedMixin, ListView):
         """Add breadcrumbs, filter options to context."""
         context = super().get_context_data(**kwargs)
 
+        issue_id = self.request.GET.get("issue")
+        if issue_id:
+            pub_type = _get_pub_type_from_issue_id(issue_id)
+        else:
+            pub_type = PublicationType.JOURNAL
+        context["pub_type"] = pub_type
+
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
-            {"label": "Članci", "url": None},
+            {"label": get_term("article_plural", pub_type), "url": None},
         ]
 
         context["status_choices"] = ArticleStatus.choices
@@ -251,13 +274,16 @@ class ArticleCreateView(PublisherScopedEditMixin, CreateView):
     def get_context_data(self, **kwargs):
         """Add breadcrumbs and form metadata to context."""
         context = super().get_context_data(**kwargs)
+        issue_id = self.request.GET.get("issue")
+        pub_type = _get_pub_type_from_issue_id(issue_id)
+        context["pub_type"] = pub_type
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
-            {"label": "Članci", "url": reverse_lazy("articles:list")},
-            {"label": "Novi članak", "url": None},
+            {"label": get_term("article_plural", pub_type), "url": reverse_lazy("articles:list")},
+            {"label": get_term("new_article", pub_type), "url": None},
         ]
-        context["form_title"] = "Novi članak"
-        context["submit_text"] = "Kreiraj članak"
+        context["form_title"] = get_term("new_article", pub_type)
+        context["submit_text"] = get_term("create_article", pub_type)
         return context
 
     def form_valid(self, form):
@@ -266,7 +292,7 @@ class ArticleCreateView(PublisherScopedEditMixin, CreateView):
         response = super().form_valid(form)
         messages.success(
             self.request,
-            "Članak uspešno kreiran.",
+            get_term("article_created", self.object.issue.publication.publication_type),
         )
         return response
 
@@ -334,17 +360,20 @@ class ArticleUpdateView(PublisherScopedEditMixin, UpdateView):
     def get_context_data(self, **kwargs):
         """Add breadcrumbs and form metadata to context."""
         context = super().get_context_data(**kwargs)
+        pub_type = self.object.issue.publication.publication_type
+        context["pub_type"] = pub_type
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
-            {"label": "Članci", "url": reverse_lazy("articles:list")},
+            {"label": get_term("article_plural", pub_type), "url": reverse_lazy("articles:list")},
             {"label": str(self.object), "url": None},
         ]
-        context["form_title"] = f"Izmeni članak: {self.object.title}"
+        context["form_title"] = f"{get_term('edit_article', pub_type)}: {self.object.title}"
         context["submit_text"] = "Sačuvaj izmene"
         context["is_edit"] = True
         # Prefetch authors with affiliations to avoid N+1 queries (Story 3.2)
         context["authors"] = self.object.authors.prefetch_related("affiliations").all()
         context["fundings"] = self.object.fundings.all()
+        context["relations"] = self.object.relations.all()
         return context
 
     def form_valid(self, form):
@@ -352,7 +381,7 @@ class ArticleUpdateView(PublisherScopedEditMixin, UpdateView):
         response = super().form_valid(form)
         messages.success(
             self.request,
-            "Članak uspešno ažuriran.",
+            get_term("article_updated", self.object.issue.publication.publication_type),
         )
         return response
 
@@ -395,9 +424,11 @@ class ArticleDetailView(PublisherScopedMixin, DetailView):
     def get_context_data(self, **kwargs):
         """Add breadcrumbs and role-based action flags to context."""
         context = super().get_context_data(**kwargs)
+        pub_type = self.object.issue.publication.publication_type
+        context["pub_type"] = pub_type
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
-            {"label": "Članci", "url": reverse_lazy("articles:list")},
+            {"label": get_term("article_plural", pub_type), "url": reverse_lazy("articles:list")},
             {"label": str(self.object), "url": None},
         ]
 
@@ -464,9 +495,11 @@ class ArticleDeleteView(AdministratorRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         """Add breadcrumbs to context."""
         context = super().get_context_data(**kwargs)
+        pub_type = self.object.issue.publication.publication_type
+        context["pub_type"] = pub_type
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
-            {"label": "Članci", "url": reverse_lazy("articles:list")},
+            {"label": get_term("article_plural", pub_type), "url": reverse_lazy("articles:list")},
             {"label": str(self.object), "url": None},
         ]
         return context
@@ -476,7 +509,7 @@ class ArticleDeleteView(AdministratorRequiredMixin, DeleteView):
         article = self.object
         messages.success(
             self.request,
-            "Članak uspešno obrisan.",
+            get_term("article_deleted", self.object.issue.publication.publication_type),
         )
         article.soft_delete(user=self.request.user)
         return HttpResponseRedirect(self.success_url)
@@ -1118,7 +1151,7 @@ def article_submit_for_review(request, pk):
 
     try:
         _submit_article_for_review(article, request.user)
-        messages.success(request, "Članak poslat na pregled.")
+        messages.success(request, get_term("article_submitted", article.issue.publication.publication_type))
     except InvalidStatusTransition as e:
         messages.error(request, str(e))
 
@@ -1175,7 +1208,7 @@ def article_approve(request, pk):
 
     try:
         approve_article(article, request.user)
-        messages.success(request, "Članak odobren.")
+        messages.success(request, get_term("article_approved", article.issue.publication.publication_type))
     except InvalidStatusTransition as e:
         messages.error(request, str(e))
 
@@ -1229,7 +1262,7 @@ def article_return_for_revision(request, pk):
 
     try:
         return_article_for_revision(article, request.user, comment)
-        messages.success(request, "Članak vraćen na doradu.")
+        messages.success(request, get_term("article_returned", article.issue.publication.publication_type))
     except InvalidStatusTransition as e:
         messages.error(request, str(e))
 
@@ -1286,7 +1319,7 @@ def article_publish(request, pk):
 
     try:
         publish_article(article, request.user)
-        messages.success(request, "Članak objavljen.")
+        messages.success(request, get_term("article_published", article.issue.publication.publication_type))
     except InvalidStatusTransition as e:
         messages.error(request, str(e))
 
@@ -1340,7 +1373,7 @@ def article_withdraw(request, pk):
 
     try:
         withdraw_article(article, request.user, reason)
-        messages.success(request, "Članak povučen.")
+        messages.success(request, get_term("article_withdrawn", article.issue.publication.publication_type))
     except InvalidStatusTransition as e:
         messages.error(request, str(e))
 
@@ -1560,4 +1593,119 @@ def funding_form_view(request, article_pk):
     return render(request, "articles/partials/_funding_form.html", {
         "article": article,
         "funding_form": form,
+    })
+
+
+# =============================================================================
+# Relation HTMX CRUD views
+# =============================================================================
+
+
+@login_required
+@require_POST
+def relation_add(request, article_pk):
+    """Add relation to article via HTMX POST."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    form = ArticleRelationForm(request.POST)
+    if form.is_valid():
+        relation = form.save(commit=False)
+        relation.article = article
+        max_order = article.relations.aggregate(
+            max_order=models.Max("order")
+        )["max_order"] or 0
+        relation.order = max_order + 1
+        relation.save()
+
+        relations = article.relations.all()
+        return render(request, "articles/partials/_relation_list.html", {
+            "article": article,
+            "relations": relations,
+        })
+
+    # Return form with errors — HTMX retargets to form container
+    response = render(request, "articles/partials/_relation_form.html", {
+        "article": article,
+        "relation_form": form,
+    })
+    response["HX-Retarget"] = "#relation-form-container"
+    response["HX-Reswap"] = "innerHTML"
+    return response
+
+
+@login_required
+@require_POST
+def relation_delete(request, pk):
+    """Delete relation via HTMX POST."""
+    relation = get_object_or_404(
+        ArticleRelation.objects.select_related(
+            "article", "article__issue",
+            "article__issue__publication",
+            "article__issue__publication__publisher",
+        ),
+        pk=pk,
+    )
+    _check_article_permission(request.user, relation.article)
+
+    article = relation.article
+    relation.delete()
+
+    relations = article.relations.all()
+    return render(request, "articles/partials/_relation_list.html", {
+        "article": article,
+        "relations": relations,
+    })
+
+
+@login_required
+@require_POST
+def relation_reorder(request, article_pk):
+    """Reorder relation entries via HTMX POST with JSON body."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    try:
+        data = json.loads(request.body)
+        order_list = data.get("order", [])
+        for idx, relation_pk in enumerate(order_list):
+            ArticleRelation.objects.filter(
+                pk=int(relation_pk), article=article
+            ).update(order=idx)
+    except (json.JSONDecodeError, TypeError, ValueError, OverflowError):
+        logger.warning("Invalid relation reorder data for article %s", article_pk)
+
+    relations = article.relations.all()
+    return render(request, "articles/partials/_relation_list.html", {
+        "article": article,
+        "relations": relations,
+    })
+
+
+@login_required
+@require_GET
+def relation_form_view(request, article_pk):
+    """Return empty relation form for inline editing via HTMX GET."""
+    article = get_object_or_404(
+        Article.objects.select_related(
+            "issue", "issue__publication", "issue__publication__publisher"
+        ),
+        pk=article_pk,
+    )
+    _check_article_permission(request.user, article)
+
+    form = ArticleRelationForm()
+    return render(request, "articles/partials/_relation_form.html", {
+        "article": article,
+        "relation_form": form,
     })

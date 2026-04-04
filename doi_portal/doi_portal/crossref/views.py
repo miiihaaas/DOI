@@ -28,11 +28,14 @@ from doi_portal.core.permissions import has_publisher_access
 from doi_portal.crossref.models import CrossrefExport
 from doi_portal.crossref.services import CrossrefService
 from doi_portal.crossref.services import PreValidationService
+from doi_portal.crossref.tasks import crossref_generate_component_xml_task
 from doi_portal.crossref.tasks import crossref_generate_xml_task
 from doi_portal.issues.models import Issue
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
+
+from doi_portal.crossref.models import ExportType
 
 __all__ = [
     "CrossrefDepositView",
@@ -45,6 +48,17 @@ __all__ = [
     "xml_download_force",
     "export_redownload",
     "export_history",
+    # Component workflow
+    "ComponentGroupValidationView",
+    "GenerateComponentXMLView",
+    "ComponentGroupDepositView",
+    "component_xml_preview",
+    "component_xml_download",
+    "component_download_warning",
+    "component_xml_download_force",
+    "component_export_redownload",
+    "component_export_history",
+    "component_mark_deposited",
 ]
 
 
@@ -408,7 +422,14 @@ def export_redownload(request: "HttpRequest", pk: int) -> HttpResponse:
     """
     export = get_object_or_404(CrossrefExport, pk=pk)
 
-    if not has_publisher_access(request.user, export.issue.publication.publisher):
+    # Permission check — handle both issue and component_group exports
+    if export.issue:
+        publisher = export.issue.publication.publisher
+    elif export.component_group:
+        publisher = export.component_group.publisher
+    else:
+        raise Http404
+    if not has_publisher_access(request.user, publisher):
         raise PermissionDenied
 
     response = HttpResponse(
@@ -593,6 +614,347 @@ def mark_deposited(request: "HttpRequest", pk: int) -> HttpResponse:
         "crossref/partials/_deposit_status.html",
         {
             "issue": issue,
+            "is_deposited": True,
+        },
+    )
+
+
+# =============================================================================
+# Component Workflow Views
+# =============================================================================
+
+
+def _get_component_group(pk):
+    """Get ComponentGroup with publisher select_related."""
+    from doi_portal.components.models import ComponentGroup
+    return get_object_or_404(
+        ComponentGroup.objects.select_related("publisher"),
+        pk=pk,
+    )
+
+
+def _generate_component_filename(component_group) -> str:
+    """Generate standardized filename for component XML export."""
+    parent_doi_slug = slugify(component_group.parent_doi)[:30] or "component"
+    timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
+    return f"component_{parent_doi_slug}_{timestamp}.xml"
+
+
+def _create_component_xml_download_response(request, component_group):
+    """Create XML download response with export tracking for component groups."""
+    if not component_group.crossref_xml:
+        raise Http404("XML nije generisan.")
+
+    filename = _generate_component_filename(component_group)
+
+    CrossrefExport.objects.create(
+        component_group=component_group,
+        export_type=ExportType.COMPONENT_GROUP,
+        xml_content=component_group.crossref_xml,
+        exported_by=request.user,
+        filename=filename,
+        xsd_valid_at_export=component_group.xsd_valid,
+    )
+
+    response = HttpResponse(
+        component_group.crossref_xml,
+        content_type="application/xml; charset=utf-8",
+    )
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+class ComponentGroupValidationView(LoginRequiredMixin, View):
+    """Validate a ComponentGroup before XML generation."""
+
+    def get(self, request: "HttpRequest", pk: int) -> HttpResponse:
+        cg = _get_component_group(pk)
+        if not has_publisher_access(request.user, cg.publisher):
+            raise PermissionDenied
+
+        service = PreValidationService()
+        result = service.validate_component_group(cg)
+
+        return render(
+            request,
+            "crossref/partials/_component_validation_panel.html",
+            {
+                "component_group": cg,
+                "is_valid": result.is_valid,
+                "errors": result.errors,
+                "warnings": result.warnings,
+                "error_count": len(result.errors),
+                "warning_count": len(result.warnings),
+            },
+        )
+
+
+class GenerateComponentXMLView(LoginRequiredMixin, View):
+    """Generate Crossref XML for a ComponentGroup."""
+
+    ASYNC_COMPONENT_THRESHOLD = 20
+
+    def post(self, request: "HttpRequest", pk: int) -> HttpResponse:
+        cg = _get_component_group(pk)
+        if not has_publisher_access(request.user, cg.publisher):
+            raise PermissionDenied
+
+        # Pre-validation
+        validator = PreValidationService()
+        result = validator.validate_component_group(cg)
+
+        if not result.is_valid:
+            return render(
+                request,
+                "crossref/partials/_component_generation_result.html",
+                {
+                    "success": False,
+                    "message": "Generisanje blokirano zbog grešaka u validaciji",
+                    "errors": result.errors,
+                },
+            )
+
+        component_count = cg.components.filter(is_deleted=False).count()
+
+        if component_count > self.ASYNC_COMPONENT_THRESHOLD:
+            task = crossref_generate_component_xml_task.delay(cg.pk)
+            return render(
+                request,
+                "crossref/partials/_component_generation_result.html",
+                {
+                    "generating": True,
+                    "task_id": task.id,
+                    "message": "Generisanje u toku...",
+                },
+            )
+
+        # Sync generation
+        service = CrossrefService()
+        success, result_data = service.generate_and_store_component_xml(cg)
+        cg.refresh_from_db()
+
+        return render(
+            request,
+            "crossref/partials/_component_generation_result.html",
+            {
+                "component_group": cg,
+                "success": success,
+                "message": "XML uspešno generisan" if success else result_data,
+                "timestamp": cg.xml_generated_at,
+                "xsd_valid": cg.xsd_valid,
+                "xsd_errors": cg.xsd_errors,
+                "xsd_validated_at": cg.xsd_validated_at,
+            },
+        )
+
+
+@login_required
+def component_xml_preview(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Return XML preview modal for a ComponentGroup."""
+    cg = _get_component_group(pk)
+    if not has_publisher_access(request.user, cg.publisher):
+        raise PermissionDenied
+
+    if not cg.crossref_xml:
+        return HttpResponse(
+            '<div class="alert alert-warning">XML nije generisan.</div>',
+            status=200,
+        )
+
+    error_lines = []
+    if cg.xsd_errors:
+        for error in cg.xsd_errors:
+            if error.get("line"):
+                error_lines.append(str(error["line"]))
+
+    xml_size_kb = len(cg.crossref_xml.encode("utf-8")) / 1024
+    is_large_xml = xml_size_kb > 100
+
+    return TemplateResponse(
+        request,
+        "crossref/partials/_xml_preview_modal.html",
+        {
+            "component_group": cg,
+            "xml_content": cg.crossref_xml,
+            "xsd_valid": cg.xsd_valid,
+            "xsd_errors": cg.xsd_errors,
+            "error_lines": ",".join(error_lines),
+            "is_large_xml": is_large_xml,
+            "xml_size_kb": round(xml_size_kb, 1),
+        },
+    )
+
+
+@login_required
+def component_xml_download(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Download Crossref XML for a ComponentGroup."""
+    cg = _get_component_group(pk)
+    if not has_publisher_access(request.user, cg.publisher):
+        raise PermissionDenied
+    return _create_component_xml_download_response(request, cg)
+
+
+@login_required
+def component_download_warning(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Return warning modal for invalid component XML download."""
+    cg = _get_component_group(pk)
+    if not has_publisher_access(request.user, cg.publisher):
+        raise PermissionDenied
+
+    error_count = len(cg.xsd_errors) if cg.xsd_errors else 0
+    return TemplateResponse(
+        request,
+        "crossref/partials/_download_warning_modal.html",
+        {"component_group": cg, "error_count": error_count},
+    )
+
+
+@login_required
+def component_xml_download_force(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Download component XML regardless of validation status."""
+    cg = _get_component_group(pk)
+    if not has_publisher_access(request.user, cg.publisher):
+        raise PermissionDenied
+    return _create_component_xml_download_response(request, cg)
+
+
+@login_required
+def component_export_redownload(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Re-download a previous component export."""
+    export = get_object_or_404(CrossrefExport, pk=pk)
+
+    if export.component_group:
+        publisher = export.component_group.publisher
+    elif export.issue:
+        publisher = export.issue.publication.publisher
+    else:
+        raise Http404
+
+    if not has_publisher_access(request.user, publisher):
+        raise PermissionDenied
+
+    response = HttpResponse(
+        export.xml_content,
+        content_type="application/xml; charset=utf-8",
+    )
+    response["Content-Disposition"] = f'attachment; filename="{export.filename}"'
+    return response
+
+
+@login_required
+def component_export_history(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Return export history partial for a ComponentGroup."""
+    cg = _get_component_group(pk)
+    if not has_publisher_access(request.user, cg.publisher):
+        raise PermissionDenied
+
+    exports = CrossrefExport.objects.filter(
+        component_group=cg
+    ).select_related("exported_by")[:10]
+
+    return TemplateResponse(
+        request,
+        "crossref/partials/_component_export_history.html",
+        {"component_group": cg, "exports": exports},
+    )
+
+
+class ComponentGroupDepositView(LoginRequiredMixin, View):
+    """Crossref Deposit workflow page for ComponentGroup."""
+
+    def get(self, request: "HttpRequest", pk: int) -> HttpResponse:
+        cg = _get_component_group(pk)
+        if not has_publisher_access(request.user, cg.publisher):
+            raise PermissionDenied
+
+        has_xml = bool(cg.crossref_xml)
+        validator = PreValidationService()
+        validation_result = validator.validate_component_group(cg)
+
+        steps = [
+            {
+                "number": 1,
+                "title": "Pre-validacija",
+                "completed": validation_result.is_valid,
+                "active": not validation_result.is_valid,
+                "icon": "clipboard-check",
+            },
+            {
+                "number": 2,
+                "title": "Generisanje XML",
+                "completed": has_xml,
+                "active": validation_result.is_valid and not has_xml,
+                "icon": "file-code",
+            },
+            {
+                "number": 3,
+                "title": "XSD Validacija",
+                "completed": has_xml and cg.xsd_valid is True,
+                "active": has_xml and cg.xsd_valid is not True,
+                "icon": "shield-check",
+            },
+            {
+                "number": 4,
+                "title": "Pregled XML",
+                "completed": False,
+                "active": has_xml,
+                "icon": "eye",
+            },
+            {
+                "number": 5,
+                "title": "Preuzimanje XML",
+                "completed": cg.crossref_exports.exists(),
+                "active": has_xml,
+                "icon": "download",
+            },
+        ]
+
+        all_ready = (
+            has_xml
+            and cg.xsd_valid is True
+            and cg.crossref_exports.exists()
+        )
+
+        breadcrumbs = [
+            {"label": "Komponente", "url": reverse("components:group-list")},
+            {"label": str(cg), "url": reverse("components:group-detail", args=[cg.pk])},
+            {"label": "Crossref Deposit", "url": ""},
+        ]
+
+        return TemplateResponse(
+            request,
+            "crossref/component_crossref_deposit.html",
+            {
+                "component_group": cg,
+                "steps": steps,
+                "has_xml": has_xml,
+                "validation_result": validation_result,
+                "is_deposited": cg.is_crossref_deposited,
+                "all_ready": all_ready,
+                "breadcrumbs": breadcrumbs,
+            },
+        )
+
+
+@login_required
+def component_mark_deposited(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Mark a ComponentGroup as deposited to Crossref."""
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    cg = _get_component_group(pk)
+    if not has_publisher_access(request.user, cg.publisher):
+        raise PermissionDenied
+
+    cg.crossref_deposited_at = timezone.now()
+    cg.crossref_deposited_by = request.user
+    cg.save(update_fields=["crossref_deposited_at", "crossref_deposited_by"])
+
+    return render(
+        request,
+        "crossref/partials/_component_deposit_status.html",
+        {
+            "component_group": cg,
             "is_deposited": True,
         },
     )

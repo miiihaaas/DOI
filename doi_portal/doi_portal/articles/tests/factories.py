@@ -12,6 +12,7 @@ from doi_portal.articles.models import (
     Affiliation,
     Article,
     ArticleContentType,
+    ArticleRelation,
     ArticleStatus,
     Author,
     AuthorSequence,
@@ -23,6 +24,7 @@ from doi_portal.users.tests.factories import UserFactory
 __all__ = [
     "AffiliationFactory",
     "ArticleFactory",
+    "ArticleRelationFactory",
     "AuthorFactory",
 ]
 
@@ -58,6 +60,19 @@ class AuthorFactory(DjangoModelFactory):
     contributor_role = ContributorRole.AUTHOR
     sequence = AuthorSequence.ADDITIONAL
     order = factory.Sequence(lambda n: n + 1)
+
+
+class ArticleRelationFactory(DjangoModelFactory):
+    """Factory for ArticleRelation model."""
+
+    class Meta:
+        model = ArticleRelation
+
+    article = factory.SubFactory(ArticleFactory)
+    relationship_type = "isSupplementTo"
+    identifier_type = "doi"
+    target_identifier = factory.Sequence(lambda n: f"10.5555/target.{n}")
+    order = factory.Sequence(lambda n: n)
 
 
 class AffiliationFactory(DjangoModelFactory):

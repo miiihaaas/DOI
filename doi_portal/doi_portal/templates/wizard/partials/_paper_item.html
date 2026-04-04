@@ -1,0 +1,38 @@
+<div class="card mb-2" id="paper-item-{{ article.pk }}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <div>
+            <strong>{{ article.title }}</strong>
+            {% if article.doi_suffix %}
+            <small class="text-muted ms-2"><code>{{ article.doi_suffix }}</code></small>
+            {% endif %}
+        </div>
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-outline-primary btn-sm"
+                    hx-get="{% url 'wizard:paper-edit' publication.pk article.pk %}"
+                    hx-target="#paper-form-container"
+                    hx-swap="innerHTML">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm"
+                    hx-post="{% url 'wizard:paper-delete' publication.pk article.pk %}"
+                    hx-target="#paper-list"
+                    hx-swap="innerHTML"
+                    hx-confirm="Da li ste sigurni da želite da obrišete ovaj rad?">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body py-2">
+        <!-- Author section with per-article unique IDs -->
+        <div id="wizard-authors-{{ article.pk }}">
+            {% include "wizard/partials/_wizard_author_list.html" with article=article authors=article.authors.all %}
+        </div>
+        <div id="wizard-author-form-{{ article.pk }}"></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary mt-2"
+                hx-get="{% url 'wizard:author-form' article.pk %}"
+                hx-target="#wizard-author-form-{{ article.pk }}"
+                hx-swap="innerHTML">
+            <i class="bi bi-person-plus me-1"></i>Dodaj autora
+        </button>
+    </div>
+</div>

@@ -18,10 +18,11 @@ class ArticlesConfig(AppConfig):
         try:
             from auditlog.registry import auditlog
 
-            from .models import Affiliation, Article, Author
+            from .models import Affiliation, Article, ArticleRelation, Author
 
             auditlog.register(Article)
             auditlog.register(Author)
             auditlog.register(Affiliation)
+            auditlog.register(ArticleRelation)
         except ImportError:
             pass

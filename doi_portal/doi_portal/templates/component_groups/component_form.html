@@ -1,0 +1,102 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ form_title|default:"Komponenta" }} - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">
+    <i class="bi bi-puzzle me-2"></i>{{ form_title|default:"Komponenta" }}
+  </h1>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="{{ form.title.id_for_label }}" class="form-label">Naslov</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.title.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label for="{{ form.doi_suffix.id_for_label }}" class="form-label">DOI sufiks *</label>
+            {{ form.doi_suffix }}
+            {% if form.doi_suffix.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.doi_suffix.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+            <div class="form-text">Kompletni DOI = izdavač prefix / DOI sufiks</div>
+          </div>
+          <div class="mb-3">
+            <label for="{{ form.description.id_for_label }}" class="form-label">Opis</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.description.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label for="{{ form.format_mime_type.id_for_label }}" class="form-label">MIME tip</label>
+            {{ form.format_mime_type }}
+            {% if form.format_mime_type.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.format_mime_type.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label for="{{ form.resource_url.id_for_label }}" class="form-label">URL resursa</label>
+            {{ form.resource_url }}
+            {% if form.resource_url.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.resource_url.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+            <div class="form-text">Ako ostavite prazno, auto-generiše se</div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="{{ form.publication_year.id_for_label }}" class="form-label">Godina</label>
+              {{ form.publication_year }}
+            </div>
+            <div class="col-md-4">
+              <label for="{{ form.publication_month.id_for_label }}" class="form-label">Mesec</label>
+              {{ form.publication_month }}
+            </div>
+            <div class="col-md-4">
+              <label for="{{ form.publication_day.id_for_label }}" class="form-label">Dan</label>
+              {{ form.publication_day }}
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="{{ form.parent_relation.id_for_label }}" class="form-label">Relacija sa roditeljem</label>
+              {{ form.parent_relation }}
+            </div>
+            <div class="col-md-6">
+              <label for="{{ form.order.id_for_label }}" class="form-label">Redosled</label>
+              {{ form.order }}
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle me-1"></i>Sačuvaj
+            </button>
+            <a href="{% url 'components:group-detail' component_group.pk %}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-circle me-1"></i>Otkaži
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

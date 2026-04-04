@@ -53,6 +53,12 @@ MENU_ITEMS: dict[str, dict] = {
         "url_name": "articles:list",  # Story 3.1 - Implemented
         "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
     },
+    "component_groups": {
+        "label": "Komponente",
+        "icon": "bi-puzzle",
+        "url_name": "components:group-list",
+        "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
+    },
     "my_drafts": {
         "label": "Moji nacrti",
         "icon": "bi-pencil-square",

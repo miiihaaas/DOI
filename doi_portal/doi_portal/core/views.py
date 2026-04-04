@@ -151,6 +151,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                     "url_name": "publishers:list",
                     "icon": "bi-building",
                 },
+                {
+                    "label": "Registruj konferenciju",
+                    "url_name": "wizard:conference-start",
+                    "icon": "bi-megaphone",
+                },
             ]
         elif flags["is_urednik"]:
             actions = [
@@ -164,6 +169,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                     "url_name": "issues:list",
                     "icon": "bi-collection",
                 },
+                {
+                    "label": "Registruj konferenciju",
+                    "url_name": "wizard:conference-start",
+                    "icon": "bi-megaphone",
+                },
             ]
         elif flags["is_bibliotekar"]:
             actions = [
@@ -176,6 +186,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                     "label": "Moji nacrti",
                     "url_name": "articles:list",
                     "icon": "bi-pencil-square",
+                },
+                {
+                    "label": "Registruj konferenciju",
+                    "url_name": "wizard:conference-start",
+                    "icon": "bi-megaphone",
                 },
             ]
         return actions

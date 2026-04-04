@@ -1,5 +1,5 @@
 {% extends "portal/base.html" %}
-{% load static i18n portal_tags %}
+{% load static i18n portal_tags terminology %}
 
 {% block title %}{{ publication.title }} - DOI Portal{% endblock title %}
 
@@ -232,7 +232,7 @@
             <div class="card detail-meta-card mb-4">
                 <div class="card-body">
                     <h2 class="info-card-heading h5 mb-3">
-                        <i class="bi bi-collection me-2" aria-hidden="true"></i>Izdanja
+                        <i class="bi bi-collection me-2" aria-hidden="true"></i>{{ "issue_plural"|term:publication.publication_type }}
                     </h2>
                     {% if issues %}
                     <div class="issue-list">
@@ -263,7 +263,7 @@
                                     {% endif %}
                                     <span class="issue-article-count">
                                         <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>
-                                        {{ issue.article_count }} {% if issue.article_count == 1 %}članak{% elif issue.article_count >= 2 and issue.article_count <= 4 %}članka{% else %}članaka{% endif %}
+                                        {% article_count_label issue.article_count publication.publication_type %}
                                     </span>
                                 </div>
                             </div>
@@ -271,7 +271,7 @@
                         {% endfor %}
                     </div>
                     {% else %}
-                    <p class="text-muted-custom mb-0">Nema objavljenih izdanja.</p>
+                    <p class="text-muted-custom mb-0">Nema objavljenih {{ "issue_genitive"|term:publication.publication_type }}.</p>
                     {% endif %}
                 </div>
             </div>

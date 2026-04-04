@@ -74,6 +74,7 @@ class IssueForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "placeholder": "Opcioni naslov izdanja",
+                    "data-check-spaces": "true",
                 }
             ),
             "cover_image": forms.ClearableFileInput(

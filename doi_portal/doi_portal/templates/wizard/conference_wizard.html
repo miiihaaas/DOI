@@ -1,0 +1,62 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Registracija konferencije - DOI Portal{% endblock %}
+
+{% block content %}
+<!-- Breadcrumbs -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        {% for crumb in breadcrumbs %}
+        <li class="breadcrumb-item {% if forloop.last %}active{% endif %}">
+            {% if crumb.url and not forloop.last %}
+                <a href="{% url crumb.url %}">{{ crumb.label }}</a>
+            {% else %}
+                {{ crumb.label }}
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ol>
+</nav>
+
+<h1 class="h3 mb-4">
+    <i class="bi bi-megaphone me-2"></i>Registracija konferencije
+</h1>
+
+<!-- Wizard Stepper -->
+<div class="wizard-stepper mb-4">
+    {% for step in steps %}
+    <div class="wizard-step {% if step.number < current_step %}completed{% elif step.number == current_step %}active{% elif step.number <= max_completed_step %}completed{% else %}disabled{% endif %}">
+        {% if step.number < current_step and publication %}
+        <a href="{% if step.number == 1 %}{% url 'wizard:conference-step-1' publication.pk %}{% elif step.number == 2 %}{% url 'wizard:conference-step-2' publication.pk %}{% elif step.number == 3 %}{% url 'wizard:conference-step-3' publication.pk %}{% endif %}"
+           class="text-decoration-none">
+            <div class="wizard-step-icon">
+                <i class="bi {{ step.icon }}"></i>
+            </div>
+            <div class="wizard-step-label">{{ step.label }}</div>
+        </a>
+        {% else %}
+        <div class="wizard-step-icon">
+            <i class="bi {{ step.icon }}"></i>
+        </div>
+        <div class="wizard-step-label">{{ step.label }}</div>
+        {% endif %}
+        {% if not forloop.last %}
+        <div class="wizard-step-connector"></div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Step Content -->
+<div class="wizard-content">
+    {% if current_step == 1 %}
+        {% include "wizard/partials/_step_1_conference.html" %}
+    {% elif current_step == 2 %}
+        {% include "wizard/partials/_step_2_proceedings.html" %}
+    {% elif current_step == 3 %}
+        {% include "wizard/partials/_step_3_papers.html" %}
+    {% elif current_step == 4 %}
+        {% include "wizard/partials/_step_4_review.html" %}
+    {% endif %}
+</div>
+{% endblock %}

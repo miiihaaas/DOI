@@ -1,5 +1,5 @@
 {% extends "admin_base.html" %}
-{% load markup_tags %}
+{% load markup_tags terminology %}
 
 {% block title %}{{ article.title|strip_markup }} - DOI Portal{% endblock %}
 
@@ -364,7 +364,7 @@
             <div class="list-group list-group-flush">
                 {% if can_edit %}
                 <a href="{% url 'articles:update' article.pk %}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-pencil me-2"></i>Izmeni članak
+                    <i class="bi bi-pencil me-2"></i>{{ "edit_article"|term:pub_type }}
                 </a>
                 {% endif %}
                 {% if can_submit %}

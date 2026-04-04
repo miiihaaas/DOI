@@ -1,0 +1,92 @@
+{% extends "portal/base.html" %}
+
+{% block title %}{{ component.title|default:component.doi_suffix }} - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      {# Component Header #}
+      <div class="mb-4">
+        {% if component.format_mime_type %}
+        <span class="badge bg-info mb-2">{{ component.format_mime_type }}</span>
+        {% endif %}
+        <h1 class="h2">{{ component.title|default:"Komponenta" }}</h1>
+      </div>
+
+      {# Contributors #}
+      {% if contributors %}
+      <div class="mb-4">
+        <h6 class="text-muted mb-2">Kontributori</h6>
+        <ul class="list-unstyled">
+          {% for contributor in contributors %}
+          <li class="mb-1">
+            {% if contributor.given_name %}{{ contributor.given_name }} {% endif %}{{ contributor.surname }}{% if contributor.suffix %}, {{ contributor.suffix }}{% endif %}
+            <small class="text-muted">({{ contributor.get_contributor_role_display }})</small>
+            {% if contributor.orcid %}
+            <a href="https://orcid.org/{{ contributor.orcid }}" target="_blank" rel="noopener" class="ms-1">
+              <img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width:16px;height:16px;">
+            </a>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {# Description #}
+      {% if component.description %}
+      <div class="mb-4">
+        <h6 class="text-muted mb-2">Opis</h6>
+        <p>{{ component.description }}</p>
+      </div>
+      {% endif %}
+
+      {# Metadata #}
+      <div class="card mb-4">
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">DOI</dt>
+            <dd class="col-sm-8">
+              <a href="{{ doi_url }}" target="_blank" rel="noopener">
+                {{ full_doi }}
+              </a>
+            </dd>
+
+            <dt class="col-sm-4">Parent DOI</dt>
+            <dd class="col-sm-8">
+              <a href="{{ parent_doi_url }}" target="_blank" rel="noopener">
+                {{ parent_doi }}
+              </a>
+            </dd>
+
+            {% if component.format_mime_type %}
+            <dt class="col-sm-4">Format</dt>
+            <dd class="col-sm-8">{{ component.format_mime_type }}</dd>
+            {% endif %}
+
+            {% if component.publication_year %}
+            <dt class="col-sm-4">Datum publikacije</dt>
+            <dd class="col-sm-8">
+              {{ component.publication_year }}{% if component.publication_month %}-{{ component.publication_month|stringformat:"02d" }}{% endif %}{% if component.publication_day %}-{{ component.publication_day|stringformat:"02d" }}{% endif %}
+            </dd>
+            {% endif %}
+
+            <dt class="col-sm-4">Izdavač</dt>
+            <dd class="col-sm-8">{{ publisher.name }}</dd>
+
+            {% if component.resource_url %}
+            <dt class="col-sm-4">Resurs</dt>
+            <dd class="col-sm-8">
+              <a href="{{ component.resource_url }}" target="_blank" rel="noopener">
+                {{ component.resource_url }}
+              </a>
+            </dd>
+            {% endif %}
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

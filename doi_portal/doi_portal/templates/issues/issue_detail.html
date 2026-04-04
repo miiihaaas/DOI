@@ -1,5 +1,5 @@
 {% extends "admin_base.html" %}
-{% load markup_tags %}
+{% load markup_tags terminology %}
 
 {% block title %}{{ issue }} - DOI Portal{% endblock %}
 
@@ -143,10 +143,10 @@
         <!-- Articles Section -->
         <div class="card admin-card mb-4 section-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Članci ({{ issue.articles.count }})</h5>
+                <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>{{ "article_plural"|term:pub_type }} ({{ issue.articles.count }})</h5>
                 {% if can_edit %}
                 <a href="{% url 'articles:create' %}?issue={{ issue.pk }}" class="btn btn-sm">
-                    <i class="bi bi-plus-lg me-1"></i>Dodaj članak
+                    <i class="bi bi-plus-lg me-1"></i>{{ "add_first_article"|term:pub_type }}
                 </a>
                 {% endif %}
             </div>
@@ -177,7 +177,7 @@
             </div>
             {% else %}
             <div class="card-body">
-                <p class="text-muted fst-italic mb-0">Nema članaka u ovom izdanju.</p>
+                <p class="text-muted fst-italic mb-0">Nema {{ "article_genitive"|term:pub_type }} u ovom {{ "issue_genitive"|term:pub_type }}.</p>
             </div>
             {% endif %}
         </div>
@@ -261,7 +261,7 @@
             <div class="list-group list-group-flush">
                 {% if can_edit %}
                 <a href="{% url 'issues:update' issue.pk %}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-pencil me-2"></i>Izmeni izdanje
+                    <i class="bi bi-pencil me-2"></i>{{ "edit_issue"|term:pub_type }}
                 </a>
                 {% endif %}
                 <a href="{% url 'crossref:issue-deposit' issue.pk %}" class="list-group-item list-group-item-action">

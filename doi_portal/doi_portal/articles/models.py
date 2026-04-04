@@ -23,12 +23,15 @@ __all__ = [
     "Article",
     "ArticleContentType",
     "ArticleFunding",
+    "ArticleRelation",
     "ArticleStatus",
     "Author",
     "AuthorSequence",
     "ContributorRole",
+    "IdentifierType",
     "LicenseAppliesTo",
     "PdfStatus",
+    "RelationScope",
 ]
 
 
@@ -542,3 +545,113 @@ class ArticleFunding(models.Model):
         if self.award_number:
             s += f" — {self.award_number}"
         return s
+
+
+class RelationScope(models.TextChoices):
+    INTRA_WORK = "intra_work", _("Intra-work (isti rad)")
+    INTER_WORK = "inter_work", _("Inter-work (različiti radovi)")
+
+
+class IdentifierType(models.TextChoices):
+    DOI = "doi", "DOI"
+    ISSN = "issn", "ISSN"
+    ISBN = "isbn", "ISBN"
+    URI = "uri", "URI"
+    PMID = "pmid", "PMID"
+    PMCID = "pmcid", "PMCID"
+    ARXIV = "arxiv", "arXiv"
+    OTHER = "other", _("Ostalo")
+
+
+INTRA_WORK_TYPES = [
+    ("isPreprintOf", "isPreprintOf"),
+    ("hasPreprint", "hasPreprint"),
+    ("isManuscriptOf", "isManuscriptOf"),
+    ("hasManuscript", "hasManuscript"),
+    ("isExpressionOf", "isExpressionOf"),
+    ("hasExpression", "hasExpression"),
+    ("isManifestationOf", "isManifestationOf"),
+    ("hasManifestation", "hasManifestation"),
+    ("isReplacedBy", "isReplacedBy"),
+    ("replaces", "replaces"),
+    ("isSameAs", "isSameAs"),
+    ("isIdenticalTo", "isIdenticalTo"),
+    ("isTranslationOf", "isTranslationOf"),
+    ("hasTranslation", "hasTranslation"),
+    ("isVersionOf", "isVersionOf"),
+    ("hasVersion", "hasVersion"),
+]
+
+INTER_WORK_TYPES = [
+    ("isSupplementTo", "isSupplementTo"),
+    ("isSupplementedBy", "isSupplementedBy"),
+    ("isContinuedBy", "isContinuedBy"),
+    ("continues", "continues"),
+    ("isPartOf", "isPartOf"),
+    ("hasPart", "hasPart"),
+    ("references", "references"),
+    ("isReferencedBy", "isReferencedBy"),
+    ("isBasedOn", "isBasedOn"),
+    ("isBasisFor", "isBasisFor"),
+    ("isRequiredBy", "isRequiredBy"),
+    ("requires", "requires"),
+    ("isCommentOn", "isCommentOn"),
+    ("hasComment", "hasComment"),
+    ("isReplyTo", "isReplyTo"),
+    ("hasReply", "hasReply"),
+    ("isReviewOf", "isReviewOf"),
+    ("hasReview", "hasReview"),
+]
+
+RELATIONSHIP_TYPE_CHOICES = [
+    (_("Intra-work (isti rad, različite verzije)"), INTRA_WORK_TYPES),
+    (_("Inter-work (različiti radovi)"), INTER_WORK_TYPES),
+]
+
+
+class ArticleRelation(models.Model):
+    """Relation metadata for an article (Crossref Relations)."""
+
+    article = models.ForeignKey(
+        Article, on_delete=models.CASCADE, related_name="relations",
+        verbose_name=_("Članak"),
+    )
+    relationship_type = models.CharField(
+        max_length=50, choices=RELATIONSHIP_TYPE_CHOICES,
+        verbose_name=_("Tip relacije"),
+    )
+    relation_scope = models.CharField(
+        max_length=20, choices=RelationScope.choices,
+        verbose_name=_("Opseg relacije"),
+        editable=False,
+    )
+    identifier_type = models.CharField(
+        max_length=10, choices=IdentifierType.choices,
+        default=IdentifierType.DOI,
+        verbose_name=_("Tip identifikatora"),
+    )
+    target_identifier = models.CharField(
+        max_length=500,
+        verbose_name=_("Identifikator cilja"),
+    )
+    description = models.CharField(
+        max_length=500, blank=True,
+        verbose_name=_("Opis"),
+    )
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+        verbose_name = _("Relacija članka")
+        verbose_name_plural = _("Relacije članaka")
+
+    def __str__(self):
+        return f"{self.relationship_type} → {self.target_identifier}"
+
+    def save(self, *args, **kwargs):
+        intra_types = {t[0] for t in INTRA_WORK_TYPES}
+        self.relation_scope = (
+            RelationScope.INTRA_WORK if self.relationship_type in intra_types
+            else RelationScope.INTER_WORK
+        )
+        super().save(*args, **kwargs)

@@ -516,6 +516,25 @@
             </div>
         </div>
 
+        <!-- Relations Section -->
+        <div class="card shadow-sm mt-4 section-card" x-data="relationList()">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Srodne publikacije</h5>
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                        hx-get="{% url 'articles:relation-form' article_pk=object.pk %}"
+                        hx-target="#relation-form-container"
+                        hx-swap="innerHTML">
+                    <i class="bi bi-plus-lg me-1"></i>Dodaj
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="relation-form-container"></div>
+                <div id="relation-section-content">
+                    {% include "articles/partials/_relation_list.html" with relations=relations %}
+                </div>
+            </div>
+        </div>
+
         <!-- PDF Upload Section (Story 3.3) -->
         <div class="card shadow-sm mt-4 section-card">
             <div class="card-header">
@@ -854,6 +873,54 @@ function fundingList() {
                         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
                         htmx.ajax('POST', '{% url "articles:funding-reorder" article_pk=object.pk %}', {
                             target: '#funding-section-content',
+                            swap: 'innerHTML',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken,
+                            },
+                            body: JSON.stringify({order: order}),
+                        });
+                    }
+                });
+            }
+        }
+    }
+}
+
+function relationList() {
+    return {
+        _sortableInstance: null,
+        init() {
+            this.$nextTick(() => {
+                this.initSortable();
+            });
+            document.body.addEventListener('htmx:afterSwap', (evt) => {
+                if (evt.detail.target.id === 'relation-section-content') {
+                    this.$nextTick(() => {
+                        this.initSortable();
+                    });
+                }
+            });
+        },
+        initSortable() {
+            if (this._sortableInstance) {
+                this._sortableInstance.destroy();
+                this._sortableInstance = null;
+            }
+            const el = document.getElementById('relation-container');
+            if (el && el.children.length > 0) {
+                this._sortableInstance = new Sortable(el, {
+                    handle: '.relation-drag-handle',
+                    animation: 150,
+                    ghostClass: 'bg-light',
+                    onEnd: (evt) => {
+                        const items = el.querySelectorAll('[data-relation-id]');
+                        const order = Array.from(items).map(item =>
+                            parseInt(item.dataset.relationId)
+                        );
+                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        htmx.ajax('POST', '{% url "articles:relation-reorder" article_pk=object.pk %}', {
+                            target: '#relation-section-content',
                             swap: 'innerHTML',
                             headers: {
                                 'Content-Type': 'application/json',

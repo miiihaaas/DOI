@@ -1,0 +1,106 @@
+<div class="card border-primary mb-3">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            {% if article %}Izmeni rad{% else %}Dodaj rad{% endif %}
+        </h6>
+        <button type="button" class="btn btn-sm btn-light"
+                onclick="document.getElementById('paper-form-container').innerHTML = '';">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="card-body">
+        <form {% if article %}
+                hx-post="{% url 'wizard:paper-edit' publication.pk article.pk %}"
+              {% else %}
+                hx-post="{% url 'wizard:paper-add' publication.pk %}"
+              {% endif %}
+              hx-target="#paper-list"
+              hx-swap="innerHTML">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger mb-2">
+                {% for error in form.non_field_errors %}
+                <p class="mb-0">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="id_title" class="form-label">Naslov <span class="text-danger">*</span></label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_subtitle" class="form-label">Podnaslov</label>
+                {{ form.subtitle }}
+                {% if form.subtitle.errors %}
+                <div class="invalid-feedback d-block">{{ form.subtitle.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_abstract" class="form-label">Apstrakt</label>
+                {{ form.abstract }}
+                {% if form.abstract.errors %}
+                <div class="invalid-feedback d-block">{{ form.abstract.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="id_doi_suffix" class="form-label">DOI sufiks</label>
+                    {{ form.doi_suffix }}
+                    {% if form.doi_suffix.errors %}
+                    <div class="invalid-feedback d-block">{{ form.doi_suffix.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="id_first_page" class="form-label">Prva stranica</label>
+                    {{ form.first_page }}
+                    {% if form.first_page.errors %}
+                    <div class="invalid-feedback d-block">{{ form.first_page.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="id_last_page" class="form-label">Poslednja stranica</label>
+                    {{ form.last_page }}
+                    {% if form.last_page.errors %}
+                    <div class="invalid-feedback d-block">{{ form.last_page.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="id_language" class="form-label">Jezik</label>
+                    {{ form.language }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="id_license_url" class="form-label">URL licence</label>
+                    {{ form.license_url }}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check">
+                    {{ form.free_to_read }}
+                    <label class="form-check-label" for="id_free_to_read">Slobodan pristup</label>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        onclick="document.getElementById('paper-form-container').innerHTML = '';">
+                    Otkaži
+                </button>
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>Sačuvaj
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
