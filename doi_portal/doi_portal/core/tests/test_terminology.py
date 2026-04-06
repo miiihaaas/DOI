@@ -67,33 +67,6 @@ class TestGetTerm:
     def test_conference_article_created(self):
         assert get_term("article_created", PublicationType.CONFERENCE) == "Rad uspešno kreiran."
 
-    def test_book_article(self):
-        assert get_term("article", PublicationType.BOOK) == "Poglavlje"
-
-    def test_book_article_plural(self):
-        assert get_term("article_plural", PublicationType.BOOK) == "Poglavlja"
-
-    def test_book_issue(self):
-        assert get_term("issue", PublicationType.BOOK) == "Tom"
-
-    def test_book_issue_plural(self):
-        assert get_term("issue_plural", PublicationType.BOOK) == "Tomovi"
-
-    def test_book_new_article(self):
-        assert get_term("new_article", PublicationType.BOOK) == "Novo poglavlje"
-
-    def test_book_new_issue(self):
-        assert get_term("new_issue", PublicationType.BOOK) == "Novi tom"
-
-    def test_book_delete_issue(self):
-        assert get_term("delete_issue", PublicationType.BOOK) == "Obriši tom"
-
-    def test_book_article_created(self):
-        assert get_term("article_created", PublicationType.BOOK) == "Poglavlje uspešno kreirano."
-
-    def test_book_article_submitted(self):
-        assert get_term("article_submitted", PublicationType.BOOK) == "Poglavlje poslato na pregled."
-
     def test_other_matches_journal(self):
         assert get_term("article", PublicationType.OTHER) == "Članak"
         assert get_term("issue_plural", PublicationType.OTHER) == "Izdanja"
@@ -103,7 +76,7 @@ class TestGetTerm:
         from doi_portal.core.terminology import TERMINOLOGY_MAP
 
         journal_keys = set(TERMINOLOGY_MAP[PublicationType.JOURNAL].keys())
-        for pub_type in [PublicationType.CONFERENCE, PublicationType.BOOK, PublicationType.OTHER]:
+        for pub_type in [PublicationType.CONFERENCE, PublicationType.OTHER]:
             assert set(TERMINOLOGY_MAP[pub_type].keys()) == journal_keys
 
     # Portal-specific keys
@@ -113,18 +86,11 @@ class TestGetTerm:
     def test_conference_article_withdrawn_title(self):
         assert get_term("article_withdrawn_title", PublicationType.CONFERENCE) == "Povučen rad"
 
-    def test_book_article_withdrawn_title(self):
-        assert get_term("article_withdrawn_title", PublicationType.BOOK) == "Povučeno poglavlje"
-
     def test_journal_cite_article(self):
         assert get_term("cite_article", PublicationType.JOURNAL) == "Citiraj članak"
 
     def test_conference_cite_article(self):
         assert get_term("cite_article", PublicationType.CONFERENCE) == "Citiraj rad"
-
-    def test_book_cite_article(self):
-        assert get_term("cite_article", PublicationType.BOOK) == "Citiraj poglavlje"
-
 
 class TestGetTermFallback:
     """Test fallback behavior for unknown/None publication types."""
@@ -169,17 +135,6 @@ class TestArticleCountLabel:
     def test_conference_plural(self):
         assert get_article_count_label(7, PublicationType.CONFERENCE) == "7 radova"
 
-    # BOOK
-    def test_book_singular(self):
-        assert get_article_count_label(1, PublicationType.BOOK) == "1 poglavlje"
-
-    def test_book_paucal(self):
-        assert get_article_count_label(4, PublicationType.BOOK) == "4 poglavlja"
-
-    def test_book_plural(self):
-        assert get_article_count_label(10, PublicationType.BOOK) == "10 poglavlja"
-
-
 class TestGetIssueDeleteWarning:
     """Test get_issue_delete_warning() compound message."""
 
@@ -191,14 +146,6 @@ class TestGetIssueDeleteWarning:
     def test_conference_warning(self):
         result = get_issue_delete_warning(3, PublicationType.CONFERENCE)
         assert "Zbornik ima 3 rada" in result
-        assert "označen kao obrisan" in result
-
-    def test_book_warning(self):
-        result = get_issue_delete_warning(1, PublicationType.BOOK)
-        assert "Tom ima 1 tom" in result or "Tom ima 1 poglavlje" in result
-        # Actually it should use article genitive for the count text
-        # Let's check the actual result
-        assert "Tom ima 1" in result
         assert "označen kao obrisan" in result
 
     def test_other_warning(self):
@@ -218,11 +165,6 @@ class TestTermTemplateFilter:
         template = Template('{% load terminology %}{{ "article_plural"|term:pub_type }}')
         result = template.render(Context({"pub_type": "CONFERENCE"}))
         assert result == "Radovi"
-
-    def test_filter_with_book(self):
-        template = Template('{% load terminology %}{{ "new_article"|term:pub_type }}')
-        result = template.render(Context({"pub_type": "BOOK"}))
-        assert result == "Novo poglavlje"
 
     def test_article_count_label_tag(self):
         template = Template('{% load terminology %}{% article_count_label count pub_type %}')

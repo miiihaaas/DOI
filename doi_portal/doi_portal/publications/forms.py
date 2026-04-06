@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from doi_portal.core.constants import LANGUAGE_CHOICES
 
 from .models import Publication, PublicationType
-from .validators import validate_isbn, validate_issn
+from .validators import validate_issn
 
 
 class PublicationForm(forms.ModelForm):
@@ -50,11 +50,9 @@ class PublicationForm(forms.ModelForm):
             "conference_date",
             "conference_date_end",
             "series_issn",
-            # Book fields
+            # Conference ISBN fields
             "isbn_print",
             "isbn_online",
-            "edition",
-            "series_title",
         ]
         help_texts = {
             "language": "Primarni jezik publikacije. Članci/radovi mogu biti na različitim jezicima.",
@@ -179,7 +177,7 @@ class PublicationForm(forms.ModelForm):
                     "pattern": r"\d{4}-\d{3}[\dX]",
                 }
             ),
-            # Book fields
+            # Conference ISBN fields
             "isbn_print": forms.TextInput(
                 attrs={
                     "class": "form-control",
@@ -190,18 +188,6 @@ class PublicationForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "placeholder": "978-XX-XXXX-XXX-X",
-                }
-            ),
-            "edition": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "npr. 1. izdanje",
-                }
-            ),
-            "series_title": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "Naslov serije/edicije",
                 }
             ),
         }
@@ -264,20 +250,6 @@ class PublicationForm(forms.ModelForm):
             validate_issn(value)
         return value
 
-    def clean_isbn_print(self):
-        """Validate ISBN (print) format."""
-        value = self.cleaned_data.get("isbn_print", "")
-        if value:
-            validate_isbn(value)
-        return value
-
-    def clean_isbn_online(self):
-        """Validate ISBN (online) format."""
-        value = self.cleaned_data.get("isbn_online", "")
-        if value:
-            validate_isbn(value)
-        return value
-
     def clean(self):
         """
         Validate type-specific required fields.
@@ -291,12 +263,6 @@ class PublicationForm(forms.ModelForm):
         if publication_type == PublicationType.JOURNAL:
             issn_print = cleaned_data.get("issn_print", "")
             issn_online = cleaned_data.get("issn_online", "")
-            # This is a soft recommendation - not enforced as error
-
-        # For books, at least one ISBN should be provided (recommended, not required)
-        if publication_type == PublicationType.BOOK:
-            isbn_print = cleaned_data.get("isbn_print", "")
-            isbn_online = cleaned_data.get("isbn_online", "")
             # This is a soft recommendation - not enforced as error
 
         return cleaned_data
@@ -329,12 +295,6 @@ class PublicationForm(forms.ModelForm):
                 "isbn_print",
                 "isbn_online",
                 "series_issn",
-            ],
-            PublicationType.BOOK: [
-                "isbn_print",
-                "isbn_online",
-                "edition",
-                "series_title",
             ],
             PublicationType.OTHER: [],
         }

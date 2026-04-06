@@ -404,8 +404,8 @@ class TestPublicationPublicListView:
         pub_j = PublicationFactory(
             title="Časopis Test", publication_type=PublicationType.JOURNAL
         )
-        pub_b = PublicationFactory(
-            title="Knjiga Test", publication_type=PublicationType.BOOK
+        pub_o = PublicationFactory(
+            title="Ostalo Test", publication_type=PublicationType.OTHER
         )
 
         url = reverse("portal-publications:publication-list") + "?type=JOURNAL"
@@ -413,7 +413,7 @@ class TestPublicationPublicListView:
         content = response.content.decode()
 
         assert "Časopis Test" in content
-        assert "Knjiga Test" not in content
+        assert "Ostalo Test" not in content
 
     # --- Task 8.4: Test filter by access_type ---
 
@@ -491,8 +491,8 @@ class TestPublicationPublicListView:
             language="sr",
         )
         non_target = PublicationFactory(
-            title="Target Knjiga",
-            publication_type=PublicationType.BOOK,
+            title="Target Ostalo",
+            publication_type=PublicationType.OTHER,
             language="sr",
         )
 
@@ -504,7 +504,7 @@ class TestPublicationPublicListView:
         content = response.content.decode()
 
         assert "Target Časopis" in content
-        assert "Target Knjiga" not in content
+        assert "Target Ostalo" not in content
 
     # --- Task 8.9: Test pagination ---
 
@@ -586,7 +586,7 @@ class TestPublicationPublicListView:
 
     def test_empty_state_message(self, client):
         """AC #6: Empty state message shown when no results match."""
-        url = reverse("portal-publications:publication-list") + "?type=BOOK"
+        url = reverse("portal-publications:publication-list") + "?type=OTHER"
         response = client.get(url)
         content = response.content.decode()
 
@@ -594,7 +594,7 @@ class TestPublicationPublicListView:
 
     def test_empty_state_reset_button(self, client):
         """AC #6: Reset button available in empty state."""
-        url = reverse("portal-publications:publication-list") + "?type=BOOK"
+        url = reverse("portal-publications:publication-list") + "?type=OTHER"
         response = client.get(url)
         content = response.content.decode()
 
@@ -677,7 +677,7 @@ class TestPublicationPublicListView:
             )
         # Add non-journal to verify filter works
         PublicationFactory(
-            title="Book Extra", publisher=publisher, publication_type=PublicationType.BOOK
+            title="Other Extra", publisher=publisher, publication_type=PublicationType.OTHER
         )
 
         url = reverse("portal-publications:publication-list") + "?type=JOURNAL&page=2"
@@ -686,9 +686,9 @@ class TestPublicationPublicListView:
         assert response.status_code == 200
         # Page 2 of filtered results should have remaining journals
         assert len(response.context["publications"]) == 3
-        # Verify filter is still applied (no BOOK)
+        # Verify filter is still applied (no OTHER)
         content = response.content.decode()
-        assert "Book Extra" not in content
+        assert "Other Extra" not in content
 
     # --- Code Review Fix: Test multiselect filters (AC #2) ---
 
@@ -697,19 +697,19 @@ class TestPublicationPublicListView:
         pub_j = PublicationFactory(
             title="Multi Journal", publication_type=PublicationType.JOURNAL
         )
-        pub_b = PublicationFactory(
-            title="Multi Book", publication_type=PublicationType.BOOK
+        pub_o = PublicationFactory(
+            title="Multi Other", publication_type=PublicationType.OTHER
         )
         pub_c = PublicationFactory(
             title="Multi Conference", publication_type=PublicationType.CONFERENCE
         )
 
-        url = reverse("portal-publications:publication-list") + "?type=JOURNAL&type=BOOK"
+        url = reverse("portal-publications:publication-list") + "?type=JOURNAL&type=OTHER"
         response = client.get(url)
         content = response.content.decode()
 
         assert "Multi Journal" in content
-        assert "Multi Book" in content
+        assert "Multi Other" in content
         assert "Multi Conference" not in content
 
     # --- Code Review Fix: Test SEO meta tags (Tasks 4.9, 6.6) ---
@@ -783,28 +783,6 @@ class TestPublicationPublicDetailView:
         assert "Naučna Konferencija 2026" in content
         assert "NK2026" in content
         assert "Beograd" in content
-
-    def test_detail_shows_book_fields(self, client):
-        """AC #5: Book detail shows ISBN and edition."""
-        pub = PublicationFactory(
-            title="Test Knjiga",
-            publication_type=PublicationType.BOOK,
-            isbn_print="978-86-7549-100-0",
-            edition="1. izdanje",
-            series_title="Naučna Serija",
-        )
-
-        url = reverse(
-            "portal-publications:publication-detail", kwargs={"slug": pub.slug}
-        )
-        response = client.get(url)
-        content = response.content.decode()
-
-        assert response.status_code == 200
-        assert "Test Knjiga" in content
-        assert "978-86-7549-100-0" in content
-        assert "1. izdanje" in content
-        assert "Naučna Serija" in content
 
     # --- Task 8.13: Test deleted publication returns 404 ---
 

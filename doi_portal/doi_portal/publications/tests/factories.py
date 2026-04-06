@@ -58,10 +58,3 @@ class ConferenceFactory(PublicationFactory):
     conference_date = factory.Faker("date_object")
 
 
-class BookFactory(PublicationFactory):
-    """Factory for Book/Monograph publications."""
-
-    publication_type = PublicationType.BOOK
-    isbn_print = factory.Sequence(lambda n: f"978-86-7549-{100 + n:03d}-{n % 10}")
-    edition = "1. izdanje"
-    series_title = factory.Sequence(lambda n: f"Naučna edicija {n}")

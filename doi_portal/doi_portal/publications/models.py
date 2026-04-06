@@ -3,7 +3,7 @@ Publication models for DOI Portal.
 
 Story 2.3: Publication Model with Type-Specific Fields.
 Story 6.3: Refactored to use SoftDeleteMixin from core.mixins.
-Supports: Journal, Conference proceedings, Book/Monograph, Other.
+Supports: Journal, Conference proceedings, Other.
 Each type has specific fields required by Crossref schema 5.4.0.
 """
 
@@ -30,7 +30,6 @@ class PublicationType(models.TextChoices):
 
     JOURNAL = "JOURNAL", _("Časopis")
     CONFERENCE = "CONFERENCE", _("Zbornik")
-    BOOK = "BOOK", _("Monografija")
     OTHER = "OTHER", _("Ostalo")
 
 
@@ -45,7 +44,7 @@ class Publication(SoftDeleteMixin, models.Model):
     """
     Publication model with type-specific fields for Crossref compliance.
 
-    Supports: Journal, Conference proceedings, Book/Monograph, Other.
+    Supports: Journal, Conference proceedings, Other.
     Each type has specific fields required by Crossref schema 5.4.0.
     """
 
@@ -170,7 +169,7 @@ class Publication(SoftDeleteMixin, models.Model):
         validators=[validate_issn],
     )
 
-    # === BOOK-SPECIFIC FIELDS ===
+    # === CONFERENCE ISBN FIELDS (used by Conference proceedings for Crossref) ===
     isbn_print = models.CharField(
         _("ISBN (štampano)"),
         max_length=17,
@@ -183,17 +182,6 @@ class Publication(SoftDeleteMixin, models.Model):
         max_length=17,
         blank=True,
         validators=[validate_isbn],
-    )
-    edition = models.CharField(
-        _("Izdanje"),
-        max_length=50,
-        blank=True,
-        help_text=_("npr. '1. izdanje', '2. dopunjeno izdanje'"),
-    )
-    series_title = models.CharField(
-        _("Naslov serije"),
-        max_length=500,
-        blank=True,
     )
 
     # === TIMESTAMPS ===
@@ -249,7 +237,6 @@ class Publication(SoftDeleteMixin, models.Model):
         icons = {
             PublicationType.JOURNAL: "bi-journal-text",
             PublicationType.CONFERENCE: "bi-people",
-            PublicationType.BOOK: "bi-book",
             PublicationType.OTHER: "bi-file-earmark",
         }
         return icons.get(self.publication_type, "bi-file-earmark")

@@ -20,7 +20,6 @@ from doi_portal.articles.tests.factories import AuthorFactory
 from doi_portal.core.models import SiteSettings
 from doi_portal.issues.models import Issue
 from doi_portal.issues.tests.factories import IssueFactory
-from doi_portal.publications.tests.factories import BookFactory
 from doi_portal.publications.tests.factories import ConferenceFactory
 from doi_portal.publications.tests.factories import JournalFactory
 from doi_portal.publications.tests.factories import PublisherFactory
@@ -118,16 +117,6 @@ def conference_publication(publisher):
 
 
 @pytest.fixture
-def book_publication(publisher):
-    """Create a book publication."""
-    return BookFactory(
-        title="Test Book",
-        publisher=publisher,
-        isbn_print="978-86-7549-100-1",
-    )
-
-
-@pytest.fixture
 def valid_journal_issue(journal_publication, site_settings_configured):
     """Create a valid journal issue with articles."""
     issue = IssueFactory(
@@ -173,31 +162,6 @@ def valid_conference_issue(conference_publication, site_settings_configured):
         article=article,
         given_name="Jane",
         surname="Smith",
-        sequence=AuthorSequence.FIRST,
-        contributor_role=ContributorRole.AUTHOR,
-        order=1,
-    )
-    return issue
-
-
-@pytest.fixture
-def valid_book_issue(book_publication, site_settings_configured):
-    """Create a valid book issue with chapters."""
-    issue = IssueFactory(
-        publication=book_publication,
-        year=2026,
-        publication_date=date(2026, 6, 1),
-    )
-    article = ArticleFactory(
-        issue=issue,
-        title="Book Chapter",
-        doi_suffix="book.2026.ch1",
-        status=ArticleStatus.PUBLISHED,
-    )
-    AuthorFactory(
-        article=article,
-        given_name="Alice",
-        surname="Brown",
         sequence=AuthorSequence.FIRST,
         contributor_role=ContributorRole.AUTHOR,
         order=1,
@@ -275,16 +239,6 @@ class TestCrossrefServiceGenerateAndStore:
 
         assert success is True
         assert "<conference>" in xml or "conference" in xml.lower()
-
-    def test_generate_and_store_book_uses_book_template(self, valid_book_issue):
-        """Test book type uses book XML structure."""
-        from doi_portal.crossref.services import CrossrefService
-
-        service = CrossrefService()
-        success, xml = service.generate_and_store_xml(valid_book_issue)
-
-        assert success is True
-        assert "<book>" in xml or "book" in xml.lower()
 
     def test_generate_and_store_xml_has_proper_encoding(self, valid_journal_issue):
         """Test generated XML has proper UTF-8 encoding declaration."""
@@ -692,20 +646,6 @@ class TestOriginalLanguageTitleXML:
         assert success is True
         assert '<original_language_title language="sr">Konferencijski naslov</original_language_title>' in xml
 
-    def test_xml_book_with_original_language_title(self, valid_book_issue):
-        """Book XML includes original_language_title in <titles>."""
-        article = valid_book_issue.articles.first()
-        article.original_language_title = "Naslov poglavlja"
-        article.original_language_title_language = "sr"
-        article.save()
-
-        from doi_portal.crossref.services import CrossrefService
-
-        service = CrossrefService()
-        success, xml = service.generate_and_store_xml(valid_book_issue)
-
-        assert success is True
-        assert '<original_language_title language="sr">Naslov poglavlja</original_language_title>' in xml
 
 
 # =============================================================================

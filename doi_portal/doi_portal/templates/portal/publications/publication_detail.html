@@ -189,45 +189,6 @@
             </div>
             {% endif %}
 
-            {% if publication.publication_type == "BOOK" %}
-            <div class="card detail-meta-card mb-4">
-                <div class="card-body">
-                    <h2 class="info-card-heading h5 mb-3">
-                        <i class="bi bi-book me-2" aria-hidden="true"></i>Podaci o knjizi
-                    </h2>
-                    <dl class="detail-meta-list mb-0">
-                        {% if publication.isbn_print %}
-                        <div class="detail-meta-row">
-                            <dt>ISBN (štampano)</dt>
-                            <dd>{{ publication.isbn_print }}</dd>
-                        </div>
-                        {% endif %}
-
-                        {% if publication.isbn_online %}
-                        <div class="detail-meta-row">
-                            <dt>ISBN (online)</dt>
-                            <dd>{{ publication.isbn_online }}</dd>
-                        </div>
-                        {% endif %}
-
-                        {% if publication.edition %}
-                        <div class="detail-meta-row">
-                            <dt>Izdanje</dt>
-                            <dd>{{ publication.edition }}</dd>
-                        </div>
-                        {% endif %}
-
-                        {% if publication.series_title %}
-                        <div class="detail-meta-row">
-                            <dt>Naslov serije</dt>
-                            <dd>{{ publication.series_title }}</dd>
-                        </div>
-                        {% endif %}
-                    </dl>
-                </div>
-            </div>
-            {% endif %}
-
             <!-- Issues Section -->
             <div class="card detail-meta-card mb-4">
                 <div class="card-body">

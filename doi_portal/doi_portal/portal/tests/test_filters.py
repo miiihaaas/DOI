@@ -159,7 +159,7 @@ class TestSearchArticlesFilters:
         """Multi-select type filter: JOURNAL + CONFERENCE returns both."""
         journal_art = _create_article("Test Multi Journal", pub_type=PublicationType.JOURNAL)
         conf_art = _create_article("Test Multi Conference", pub_type=PublicationType.CONFERENCE)
-        book_art = _create_article("Test Multi Book", pub_type=PublicationType.BOOK)
+        other_art = _create_article("Test Multi Other", pub_type=PublicationType.OTHER)
 
         results = search_articles(
             "Test Multi",
@@ -168,7 +168,7 @@ class TestSearchArticlesFilters:
 
         assert journal_art in results
         assert conf_art in results
-        assert book_art not in results
+        assert other_art not in results
 
     def test_none_filters_parameter(self):
         """None filters parameter same as no filters."""

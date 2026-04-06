@@ -114,14 +114,12 @@ class CrossrefService:
     Handles XML generation for all publication types:
     - Journal articles
     - Conference papers
-    - Book chapters
     """
 
     # Template mapping by publication type
     TEMPLATE_MAP = {
         "JOURNAL": "journal_article.xml.j2",
         "CONFERENCE": "conference_paper.xml.j2",
-        "BOOK": "book_chapter.xml.j2",
         "OTHER": "journal_article.xml.j2",  # Default to journal format
     }
 
@@ -135,12 +133,6 @@ class CrossrefService:
         },
         "CONFERENCE": {
             "publication": ["title", "conference_name"],
-            "issue": ["year"],
-            "article": ["title", "doi_suffix"],
-            "author": ["surname", "sequence", "contributor_role"],
-        },
-        "BOOK": {
-            "publication": ["title"],
             "issue": ["year"],
             "article": ["title", "doi_suffix"],
             "author": ["surname", "sequence", "contributor_role"],
@@ -214,7 +206,7 @@ class CrossrefService:
         Get required fields for a given publication type.
 
         Args:
-            publication_type: Publication type (JOURNAL, CONFERENCE, BOOK, OTHER)
+            publication_type: Publication type (JOURNAL, CONFERENCE, OTHER)
 
         Returns:
             Dictionary mapping entity types to lists of required field names
@@ -399,11 +391,9 @@ class CrossrefService:
                 "conference_date": publication.conference_date,
                 "conference_date_end": publication.conference_date_end,
                 "conference_number": publication.conference_number,
-                # Book fields
+                # Conference ISBN fields
                 "isbn_print": publication.isbn_print,
                 "isbn_online": publication.isbn_online,
-                "edition": publication.edition,
-                "series_title": publication.series_title,
             },
             "issue": {
                 "pk": issue.pk,
@@ -915,9 +905,6 @@ class PreValidationService:
             result.merge(self._validate_journal_fields(issue))
         elif pub_type == "CONFERENCE":
             result.merge(self._validate_conference_fields(issue))
-        elif pub_type == "BOOK":
-            result.merge(self._validate_book_fields(issue))
-
         # Validate issue DOI suffix
         result.merge(self._validate_issue_doi_suffix(issue))
 
@@ -1080,37 +1067,6 @@ class PreValidationService:
                 message="Nedostaje naslov zbornika",
                 field_name="proceedings_title",
                 fix_url=f"/dashboard/issues/{issue.pk}/edit/",
-            )
-
-        return result
-
-    def _validate_book_fields(self, issue: Issue) -> ValidationResult:
-        """
-        Validate book-specific fields (AC4).
-
-        Args:
-            issue: Issue to validate
-
-        Returns:
-            ValidationResult with book field errors
-        """
-        result = ValidationResult()
-        publication = issue.publication
-
-        # ISBN (print or online) is required for books
-        if not publication.isbn_print and not publication.isbn_online:
-            result.add_error(
-                message="Nedostaje ISBN (štampani ili online)",
-                field_name="isbn",
-                fix_url=f"/dashboard/publications/{publication.slug}/edit/",
-            )
-
-        # Book title is required
-        if not publication.title:
-            result.add_error(
-                message="Nedostaje naslov knjige",
-                field_name="book_title",
-                fix_url=f"/dashboard/publications/{publication.slug}/edit/",
             )
 
         return result

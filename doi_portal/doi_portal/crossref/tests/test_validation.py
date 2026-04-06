@@ -20,7 +20,6 @@ from doi_portal.crossref.validation import ValidationResult
 from doi_portal.crossref.validation import ValidationSeverity
 from doi_portal.issues.tests.factories import IssueFactory
 from doi_portal.publications.models import PublicationType
-from doi_portal.publications.tests.factories import BookFactory
 from doi_portal.publications.tests.factories import ConferenceFactory
 from doi_portal.publications.tests.factories import JournalFactory
 from doi_portal.publications.tests.factories import PublisherFactory
@@ -251,27 +250,6 @@ def conference_without_fields(publisher):
         conference_name="",
         conference_date=None,
         conference_location="",
-    )
-
-
-@pytest.fixture
-def book_with_isbn(publisher):
-    """Create book publication with ISBN."""
-    return BookFactory(
-        title="Test Book",
-        publisher=publisher,
-        isbn_print="978-86-7549-100-1",
-    )
-
-
-@pytest.fixture
-def book_without_isbn(publisher):
-    """Create book publication without ISBN."""
-    return BookFactory(
-        title="Test Book No ISBN",
-        publisher=publisher,
-        isbn_print="",
-        isbn_online="",
     )
 
 
@@ -642,68 +620,6 @@ class TestPreValidationServiceConference:
         # Should have warning for missing date
         date_warnings = [w for w in result.warnings if "date" in w.field_name.lower() or "datum" in w.message.lower()]
         assert len(date_warnings) > 0
-
-
-@pytest.mark.django_db
-class TestPreValidationServiceBook:
-    """Tests for book-specific validation (AC4)."""
-
-    def test_validates_book_isbn_missing(self, book_without_isbn, site_settings_configured):
-        """Test error when book has no ISBN."""
-        from doi_portal.crossref.services import PreValidationService
-
-        issue = IssueFactory(
-            publication=book_without_isbn,
-            year=2026,
-            publication_date=date(2026, 1, 1),
-        )
-        article = ArticleFactory(
-            issue=issue,
-            title="Test",
-            doi_suffix="test.001",
-            status=ArticleStatus.PUBLISHED,
-        )
-        AuthorFactory(
-            article=article,
-            surname="Doe",
-            sequence=AuthorSequence.FIRST,
-            contributor_role=ContributorRole.AUTHOR,
-        )
-
-        service = PreValidationService()
-        result = service.validate_issue(issue)
-
-        assert result.has_errors()
-        isbn_errors = [e for e in result.errors if "isbn" in e.field_name.lower()]
-        assert len(isbn_errors) > 0
-
-    def test_validates_book_isbn_present(self, book_with_isbn, site_settings_configured):
-        """Test passes when book has ISBN."""
-        from doi_portal.crossref.services import PreValidationService
-
-        issue = IssueFactory(
-            publication=book_with_isbn,
-            year=2026,
-            publication_date=date(2026, 1, 1),
-        )
-        article = ArticleFactory(
-            issue=issue,
-            title="Test",
-            doi_suffix="test.001",
-            status=ArticleStatus.PUBLISHED,
-        )
-        AuthorFactory(
-            article=article,
-            surname="Doe",
-            sequence=AuthorSequence.FIRST,
-            contributor_role=ContributorRole.AUTHOR,
-        )
-
-        service = PreValidationService()
-        result = service.validate_issue(issue)
-
-        isbn_errors = [e for e in result.errors if "isbn" in e.field_name.lower()]
-        assert len(isbn_errors) == 0
 
 
 @pytest.mark.django_db

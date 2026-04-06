@@ -22,7 +22,6 @@ from doi_portal.crossref.services import format_orcid_url
 from doi_portal.crossref.services import xml_escape
 from doi_portal.crossref.validators import validate_xml
 from doi_portal.issues.tests.factories import IssueFactory
-from doi_portal.publications.tests.factories import BookFactory
 from doi_portal.publications.tests.factories import ConferenceFactory
 from doi_portal.publications.tests.factories import JournalFactory
 from doi_portal.publications.tests.factories import PublisherFactory
@@ -86,17 +85,6 @@ def conference_publication(publisher):
 
 
 @pytest.fixture
-def book_publication(publisher):
-    """Create test book publication."""
-    return BookFactory(
-        title="Test Monograph",
-        publisher=publisher,
-        isbn_print="978-86-7549-100-1",
-        edition="1. izdanje",
-    )
-
-
-@pytest.fixture
 def journal_issue(journal_publication):
     """Create test journal issue."""
     return IssueFactory(
@@ -120,18 +108,6 @@ def conference_issue(conference_publication):
         proceedings_title="Proceedings of ITC 2026",
         proceedings_publisher_name="Test Publisher",
         proceedings_publisher_place="Belgrade",
-    )
-
-
-@pytest.fixture
-def book_issue(book_publication):
-    """Create test book issue (represents the book itself)."""
-    return IssueFactory(
-        publication=book_publication,
-        volume="",
-        issue_number="",
-        year=2026,
-        publication_date=date(2026, 1, 1),
     )
 
 
@@ -269,7 +245,6 @@ class TestCrossrefServiceInitialization:
         service = CrossrefService()
         assert "JOURNAL" in service.TEMPLATE_MAP
         assert "CONFERENCE" in service.TEMPLATE_MAP
-        assert "BOOK" in service.TEMPLATE_MAP
 
 
 class TestGenerateDoiBatchId:
@@ -371,12 +346,6 @@ class TestGetTemplateName:
         service = CrossrefService()
         template_name = service._get_template_name("CONFERENCE")
         assert template_name == "conference_paper.xml.j2"
-
-    def test_book_template(self):
-        """Test BOOK uses book_chapter template."""
-        service = CrossrefService()
-        template_name = service._get_template_name("BOOK")
-        assert template_name == "book_chapter.xml.j2"
 
     def test_other_defaults_to_journal(self):
         """Test OTHER type uses journal template."""
@@ -549,46 +518,6 @@ class TestGenerateXmlConference:
 
 
 @pytest.mark.django_db
-class TestGenerateXmlBook:
-    """Tests for generate_xml with BOOK publication type."""
-
-    def test_generate_xml_book_structure(self, book_issue, site_settings, site):
-        """Test XML has book structure."""
-        ArticleFactory(
-            issue=book_issue,
-            title="Book Chapter Title",
-            doi_suffix="book.2026.001",
-        )
-        service = CrossrefService()
-        xml = service.generate_xml(book_issue)
-
-        assert '<book book_type="monograph">' in xml
-        assert "<book_metadata" in xml
-        assert "<content_item" in xml
-
-    def test_generate_xml_has_isbn(self, book_issue, site_settings, site):
-        """Test XML contains ISBN."""
-        ArticleFactory(issue=book_issue, title="Test", doi_suffix="test.001")
-        service = CrossrefService()
-        xml = service.generate_xml(book_issue)
-
-        assert '<isbn media_type="print">978-86-7549-100-1</isbn>' in xml
-
-    def test_generate_xml_book_without_isbn(self, book_publication, site_settings, site):
-        """Test XML has noisbn element when ISBN is missing."""
-        book_publication.isbn_print = ""
-        book_publication.isbn_online = ""
-        book_publication.save()
-        issue = IssueFactory(publication=book_publication, year=2026)
-        ArticleFactory(issue=issue, title="Test", doi_suffix="test.001")
-
-        service = CrossrefService()
-        xml = service.generate_xml(issue)
-
-        assert '<noisbn reason="monograph"/>' in xml
-
-
-@pytest.mark.django_db
 class TestValidateXml:
     """Tests for validate_xml function (Story 5.4: XSD Validation)."""
 
@@ -747,18 +676,3 @@ class TestResourceUrlFix:
         assert "doi.org" not in resource_url
         assert f"/articles/{article.pk}/" in resource_url
 
-    def test_resource_url_not_doi_org_book(self, book_issue, site_settings, site):
-        """Test book XML resource does NOT contain doi.org URL."""
-        article = ArticleFactory(
-            issue=book_issue,
-            title="Book Chapter",
-            doi_suffix="book.2026.001",
-        )
-        service = CrossrefService()
-        xml = service.generate_xml(book_issue)
-
-        resource_match = re.search(r"<resource>(.*?)</resource>", xml)
-        assert resource_match is not None
-        resource_url = resource_match.group(1)
-        assert "doi.org" not in resource_url
-        assert f"/articles/{article.pk}/" in resource_url

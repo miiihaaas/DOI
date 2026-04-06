@@ -193,44 +193,6 @@
                 {% endif %}
             </div>
         </div>
-        {% elif publication.publication_type == 'BOOK' %}
-        <div class="card admin-card mb-4 section-card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-book me-2"></i>Polja za knjigu</h5>
-            </div>
-            <div class="card-body">
-                {% if publication.isbn_print or publication.isbn_online or publication.edition or publication.series_title %}
-                <dl class="admin-dl mb-0">
-                    {% if publication.isbn_print %}
-                    <div class="admin-dl-row">
-                        <dt>ISBN (štampano)</dt>
-                        <dd><code class="admin-code">{{ publication.isbn_print }}</code></dd>
-                    </div>
-                    {% endif %}
-                    {% if publication.isbn_online %}
-                    <div class="admin-dl-row">
-                        <dt>ISBN (online)</dt>
-                        <dd><code class="admin-code">{{ publication.isbn_online }}</code></dd>
-                    </div>
-                    {% endif %}
-                    {% if publication.edition %}
-                    <div class="admin-dl-row">
-                        <dt>Izdanje</dt>
-                        <dd>{{ publication.edition }}</dd>
-                    </div>
-                    {% endif %}
-                    {% if publication.series_title %}
-                    <div class="admin-dl-row">
-                        <dt>Serija</dt>
-                        <dd>{{ publication.series_title }}</dd>
-                    </div>
-                    {% endif %}
-                </dl>
-                {% else %}
-                <p class="text-muted fst-italic mb-0">Nema unetih podataka specifičnih za knjigu.</p>
-                {% endif %}
-            </div>
-        </div>
         {% endif %}
     </div>
 

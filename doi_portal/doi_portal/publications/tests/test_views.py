@@ -16,7 +16,6 @@ from django.urls import reverse
 from doi_portal.publications.models import Publication, PublicationType
 
 from .factories import (
-    BookFactory,
     ConferenceFactory,
     JournalFactory,
     PublicationFactory,
@@ -161,20 +160,6 @@ class TestHtmxTypeFieldsEndpoint:
         assert b"conference_location" in response.content
         assert b"conference_date" in response.content
 
-    def test_htmx_returns_book_fields(self, client, admin_user):
-        """Test HTMX endpoint returns book fields partial."""
-        client.force_login(admin_user)
-        response = client.get(
-            reverse("publications:htmx-type-fields"),
-            {"type": "BOOK"},
-            HTTP_HX_REQUEST="true",
-        )
-        assert response.status_code == 200
-        assert b"isbn_print" in response.content
-        assert b"isbn_online" in response.content
-        assert b"edition" in response.content
-        assert b"series_title" in response.content
-
     def test_htmx_returns_other_fields(self, client, admin_user):
         """Test HTMX endpoint returns other type partial."""
         client.force_login(admin_user)
@@ -262,7 +247,7 @@ class TestPublicationListView:
     def test_list_filter_by_type(self, client, admin_user):
         """Test list view filter by publication type."""
         journal = JournalFactory(title="Časopis Test")
-        book = BookFactory(title="Knjiga Test")
+        other = PublicationFactory(title="Ostalo Test", publication_type=PublicationType.OTHER)
 
         client.force_login(admin_user)
         response = client.get(reverse("publications:list"), {"type": "JOURNAL"})
@@ -270,8 +255,8 @@ class TestPublicationListView:
         assert response.status_code == 200
         content = response.content.decode("utf-8")
         assert "Časopis Test" in content
-        # Book should not appear when filtering by JOURNAL
-        assert "Knjiga Test" not in content
+        # OTHER should not appear when filtering by JOURNAL
+        assert "Ostalo Test" not in content
 
     def test_list_search_by_title(self, client, admin_user):
         """Test list view search by title."""
@@ -339,8 +324,8 @@ class TestPublicationListSorting:
         assert content.index("ZZZ") < content.index("AAA")
 
     def test_sort_by_type_asc(self, client, admin_user):
-        """6.1: Sort by type ascending (BOOK < CONFERENCE < JOURNAL)."""
-        BookFactory(title="Knjiga Pub")
+        """6.1: Sort by type ascending (CONFERENCE < JOURNAL)."""
+        ConferenceFactory(title="Konferencija Pub")
         JournalFactory(title="Časopis Pub")
 
         client.force_login(admin_user)
@@ -349,8 +334,8 @@ class TestPublicationListSorting:
 
         assert response.status_code == 200
         content = response.content.decode("utf-8")
-        # BOOK comes before JOURNAL alphabetically
-        assert content.index("Knjiga Pub") < content.index("Časopis Pub")
+        # CONFERENCE comes before JOURNAL alphabetically
+        assert content.index("Konferencija Pub") < content.index("Časopis Pub")
 
     def test_sort_by_publisher_asc(self, client, admin_user):
         """6.1: Sort by publisher name ascending."""
@@ -811,7 +796,7 @@ class TestPublicationFilterSortPagination:
         publisher = PublisherFactory(name="Test Izd")
         JournalFactory(title="ZZZ Journal", publisher=publisher)
         JournalFactory(title="AAA Journal", publisher=publisher)
-        BookFactory(title="AAA Book", publisher=publisher)
+        PublicationFactory(title="AAA Other", publisher=publisher, publication_type=PublicationType.OTHER)
 
         client.force_login(admin_user)
         url = reverse("publications:list")
@@ -824,7 +809,7 @@ class TestPublicationFilterSortPagination:
         # Only journals, sorted desc
         assert "ZZZ Journal" in content
         assert "AAA Journal" in content
-        assert "AAA Book" not in content
+        assert "AAA Other" not in content
         assert content.index("ZZZ") < content.index("AAA Journal")
 
     def test_sort_params_preserved_in_context(self, client, admin_user):
@@ -1135,22 +1120,6 @@ class TestPublicationDetailView:
         assert "Naučna konferencija 2026" in content
         assert "Beograd" in content
 
-    def test_detail_shows_book_specific_fields(self, client, admin_user):
-        """Test detail view shows book-specific fields."""
-        publication = BookFactory(
-            isbn_print="978-86-7549-123-4",
-            edition="1. izdanje",
-        )
-
-        client.force_login(admin_user)
-        response = client.get(
-            reverse("publications:detail", kwargs={"slug": publication.slug})
-        )
-
-        assert response.status_code == 200
-        content = response.content.decode("utf-8")
-        assert "978-86-7549-123-4" in content
-        assert "1. izdanje" in content
 
 
 # =============================================================================

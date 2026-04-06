@@ -307,7 +307,6 @@ def htmx_type_fields(request):
     template_map = {
         PublicationType.JOURNAL: "publications/partials/_type_fields_journal.html",
         PublicationType.CONFERENCE: "publications/partials/_type_fields_conference.html",
-        PublicationType.BOOK: "publications/partials/_type_fields_book.html",
         PublicationType.OTHER: "publications/partials/_type_fields_other.html",
     }
 

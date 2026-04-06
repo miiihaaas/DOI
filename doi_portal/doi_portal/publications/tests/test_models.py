@@ -16,7 +16,6 @@ from doi_portal.publications.models import (
 from doi_portal.publishers.models import Publisher
 
 from .factories import (
-    BookFactory,
     ConferenceFactory,
     JournalFactory,
     PublicationFactory,
@@ -57,7 +56,6 @@ class TestPublicationModel:
         """Test all publication type choices are valid."""
         assert PublicationType.JOURNAL == "JOURNAL"
         assert PublicationType.CONFERENCE == "CONFERENCE"
-        assert PublicationType.BOOK == "BOOK"
         assert PublicationType.OTHER == "OTHER"
 
     def test_access_type_choices(self):
@@ -139,37 +137,6 @@ class TestConferencePublication:
 
 
 @pytest.mark.django_db
-class TestBookPublication:
-    """Test Book-specific publication fields (AC #4)."""
-
-    def test_create_book_publication(self):
-        """Test creating a book/monograph publication with type-specific fields."""
-        publication = BookFactory(
-            title="Monografija",
-            isbn_print="978-86-7549-123-4",
-            isbn_online="978-86-7549-124-1",
-            edition="1. izdanje",
-            series_title="Naučna edicija",
-        )
-        assert publication.pk is not None
-        assert publication.publication_type == PublicationType.BOOK
-        assert publication.isbn_print == "978-86-7549-123-4"
-        assert publication.isbn_online == "978-86-7549-124-1"
-        assert publication.edition == "1. izdanje"
-        assert publication.series_title == "Naučna edicija"
-
-    def test_book_type_icon(self):
-        """Test book type icon property."""
-        publication = BookFactory()
-        assert publication.type_icon == "bi-book"
-
-    def test_book_type_display(self):
-        """Test book type display property."""
-        publication = BookFactory()
-        assert publication.type_display == "Monografija"
-
-
-@pytest.mark.django_db
 class TestOtherPublication:
     """Test Other publication type."""
 
@@ -233,7 +200,7 @@ class TestPublicationValidation:
         publication = Publication(
             title="Test",
             publisher=publisher,
-            publication_type=PublicationType.BOOK,
+            publication_type=PublicationType.CONFERENCE,
             isbn_print="invalid",
         )
         with pytest.raises(ValidationError) as exc_info:

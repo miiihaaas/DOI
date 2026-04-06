@@ -130,8 +130,6 @@
                             {% include "publications/partials/_type_fields_journal.html" %}
                         {% elif form.publication_type.value == 'CONFERENCE' %}
                             {% include "publications/partials/_type_fields_conference.html" %}
-                        {% elif form.publication_type.value == 'BOOK' %}
-                            {% include "publications/partials/_type_fields_book.html" %}
                         {% else %}
                             {% include "publications/partials/_type_fields_other.html" %}
                         {% endif %}
