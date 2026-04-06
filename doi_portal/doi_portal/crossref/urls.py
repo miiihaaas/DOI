@@ -16,8 +16,11 @@ from doi_portal.crossref.views import ComponentGroupDepositView
 from doi_portal.crossref.views import ComponentGroupValidationView
 from doi_portal.crossref.views import CrossrefDepositView
 from doi_portal.crossref.views import GenerateComponentXMLView
+from doi_portal.crossref.views import GenerateMonographXMLView
 from doi_portal.crossref.views import GenerateXMLView
 from doi_portal.crossref.views import IssueValidationView
+from doi_portal.crossref.views import MonographDepositView
+from doi_portal.crossref.views import MonographValidationView
 from doi_portal.crossref.views import component_download_warning
 from doi_portal.crossref.views import component_export_history
 from doi_portal.crossref.views import component_export_redownload
@@ -29,6 +32,13 @@ from doi_portal.crossref.views import download_warning
 from doi_portal.crossref.views import export_history
 from doi_portal.crossref.views import export_redownload
 from doi_portal.crossref.views import mark_deposited
+from doi_portal.crossref.views import monograph_download_warning
+from doi_portal.crossref.views import monograph_export_history
+from doi_portal.crossref.views import monograph_export_redownload
+from doi_portal.crossref.views import monograph_mark_deposited
+from doi_portal.crossref.views import monograph_xml_download
+from doi_portal.crossref.views import monograph_xml_download_force
+from doi_portal.crossref.views import monograph_xml_preview
 from doi_portal.crossref.views import xml_download
 from doi_portal.crossref.views import xml_download_force
 from doi_portal.crossref.views import xml_preview
@@ -141,5 +151,56 @@ urlpatterns = [
         "component-exports/<int:pk>/redownload/",
         component_export_redownload,
         name="component-export-redownload",
+    ),
+    # Monograph workflow routes
+    path(
+        "monographs/<int:pk>/validate/",
+        MonographValidationView.as_view(),
+        name="monograph-validate",
+    ),
+    path(
+        "monographs/<int:pk>/generate/",
+        GenerateMonographXMLView.as_view(),
+        name="monograph-generate",
+    ),
+    path(
+        "monographs/<int:pk>/preview/",
+        monograph_xml_preview,
+        name="monograph-xml-preview",
+    ),
+    path(
+        "monographs/<int:pk>/download/",
+        monograph_xml_download,
+        name="monograph-xml-download",
+    ),
+    path(
+        "monographs/<int:pk>/download-warning/",
+        monograph_download_warning,
+        name="monograph-download-warning",
+    ),
+    path(
+        "monographs/<int:pk>/download-force/",
+        monograph_xml_download_force,
+        name="monograph-xml-download-force",
+    ),
+    path(
+        "monographs/<int:pk>/export-history/",
+        monograph_export_history,
+        name="monograph-export-history",
+    ),
+    path(
+        "monographs/<int:pk>/deposit/",
+        MonographDepositView.as_view(),
+        name="monograph-deposit",
+    ),
+    path(
+        "monographs/<int:pk>/mark-deposited/",
+        monograph_mark_deposited,
+        name="monograph-mark-deposited",
+    ),
+    path(
+        "monograph-exports/<int:pk>/redownload/",
+        monograph_export_redownload,
+        name="monograph-export-redownload",
     ),
 ]

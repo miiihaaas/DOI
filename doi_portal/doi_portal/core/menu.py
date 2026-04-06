@@ -1,7 +1,7 @@
 """
 Menu configuration for DOI Portal admin panel.
 
-Role-based menu structure for sidebar navigation.
+Role-based menu structure for sidebar navigation with logical sections.
 """
 
 from __future__ import annotations
@@ -20,98 +20,124 @@ __all__ = [
     "get_user_role",
 ]
 
-# Menu items configuration
+# Menu items configuration, grouped by logical sections.
 # url_name: None means the feature is not yet implemented (will show as disabled)
 MENU_ITEMS: dict[str, dict] = {
+    # --- Pregled ---
     "dashboard": {
         "label": "Kontrolna tabla",
         "icon": "bi-house-door",
         "url_name": "dashboard",
         "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
+        "section": "Pregled",
     },
-    "publishers": {
-        "label": "Izdavači",
-        "icon": "bi-building",
-        "url_name": "publishers:list",  # Story 2.1 - Implemented
-        "roles": ["Superadmin", "Administrator"],
+    "my_drafts": {
+        "label": "Moji nacrti",
+        "icon": "bi-pencil-square",
+        "url_name": "articles:list",  # Story 3.8 - filter via query param
+        "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
+        "section": "Pregled",
     },
+    "pending_review": {
+        "label": "Na čekanju",
+        "icon": "bi-hourglass-split",
+        "url_name": "articles:list",  # Story 3.8 - filter via query param
+        "roles": ["Superadmin", "Administrator", "Urednik"],
+        "section": "Pregled",
+    },
+    # --- Sadržaj ---
     "publications": {
         "label": "Publikacije",
         "icon": "bi-journal-text",
-        "url_name": "publications:list",  # Story 2.3 - Implemented
+        "url_name": "publications:list",
         "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
+        "section": "Sadržaj",
     },
     "issues": {
         "label": "Izdanja",
         "icon": "bi-collection",
-        "url_name": "issues:list",  # Story 2.6 - Implemented
+        "url_name": "issues:list",
         "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
+        "section": "Sadržaj",
     },
     "articles": {
         "label": "Članci",
         "icon": "bi-file-earmark-text",
-        "url_name": "articles:list",  # Story 3.1 - Implemented
+        "url_name": "articles:list",
         "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
+        "section": "Sadržaj",
+    },
+    "monographs": {
+        "label": "Monografije",
+        "icon": "bi-book",
+        "url_name": "monographs:list",
+        "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
+        "section": "Sadržaj",
     },
     "component_groups": {
         "label": "Komponente",
         "icon": "bi-puzzle",
         "url_name": "components:group-list",
         "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
+        "section": "Sadržaj",
     },
-    "my_drafts": {
-        "label": "Moji nacrti",
-        "icon": "bi-pencil-square",
-        "url_name": "articles:list",  # Story 3.8 - Now functional (filter via query param)
-        "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
-    },
-    "pending_review": {
-        "label": "Na čekanju",
-        "icon": "bi-hourglass-split",
-        "url_name": "articles:list",  # Story 3.8 - Now functional (filter via query param)
-        "roles": ["Superadmin", "Administrator", "Urednik"],
+    # --- Upravljanje ---
+    "publishers": {
+        "label": "Izdavači",
+        "icon": "bi-building",
+        "url_name": "publishers:list",
+        "roles": ["Superadmin", "Administrator"],
+        "section": "Upravljanje",
     },
     "users": {
         "label": "Korisnici",
         "icon": "bi-people",
-        "url_name": "users:manage-list",  # Implemented in Story 1.6
+        "url_name": "users:manage-list",
         "roles": ["Superadmin"],
+        "section": "Upravljanje",
     },
+    # --- Sistem ---
     "audit_log": {
         "label": "Revizioni log",
         "icon": "bi-clock-history",
         "url_name": "core:audit-log-list",
         "roles": ["Superadmin"],
+        "section": "Sistem",
     },
     "deleted_items": {
         "label": "Obrisane stavke",
         "icon": "bi-trash",
         "url_name": "core:deleted-items",
         "roles": ["Superadmin"],
+        "section": "Sistem",
     },
     "gdpr_requests": {
         "label": "GDPR zahtevi",
         "icon": "bi-shield-lock",
         "url_name": "core:gdpr-request-list",
         "roles": ["Superadmin"],
+        "section": "Sistem",
     },
     "system_settings": {
         "label": "Podešavanja sistema",
         "icon": "bi-gear",
         "url_name": None,  # Not implemented yet
         "roles": ["Superadmin"],
-    },
-    "sentry_test": {
-        "label": "Sentry test",
-        "icon": "bi-bug",
-        "url_name": "core:sentry-test",
-        "roles": ["Superadmin"],
+        "section": "Sistem",
     },
     "system_health": {
         "label": "Zdravlje sistema",
         "icon": "bi-heart-pulse",
         "url_name": "core:system-health",
         "roles": ["Superadmin"],
+        "section": "Sistem",
+    },
+    "sentry_test": {
+        "label": "Sentry test",
+        "icon": "bi-bug",
+        "url_name": "core:sentry-test",
+        "roles": ["Superadmin"],
+        "section": "Sistem",
     },
 }
 
@@ -168,6 +194,7 @@ def get_menu_for_user(user: User) -> Sequence[dict]:
             "icon": item["icon"],
             "url_name": item["url_name"],
             "roles": item["roles"],
+            "section": item.get("section", ""),
         }
         for key, item in MENU_ITEMS.items()
         if user_role in item["roles"]

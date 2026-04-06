@@ -1,0 +1,121 @@
+{% extends "portal/base.html" %}
+{% load static i18n %}
+
+{% block title %}Monografije - DOI Portal{% endblock title %}
+
+{% block meta_description %}Pregledajte objavljene monografije na DOI Portalu.{% endblock meta_description %}
+
+{% block portal_content %}
+<section class="fade-in-up">
+    <div class="mb-4">
+        <p class="section-label mb-1">KATALOG</p>
+        <h1 class="section-title h3 mb-0">Monografije</h1>
+    </div>
+
+    {% if monographs %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for monograph in monographs %}
+        <div class="col">
+            <article class="card h-100 publication-card">
+                <div class="card-img-placeholder">
+                    <i class="bi bi-book display-4" aria-hidden="true"></i>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <span class="badge-type">
+                            <i class="bi bi-book me-1" aria-hidden="true"></i>
+                            Monografija
+                        </span>
+                        {% if monograph.free_to_read %}
+                        <span class="badge-access ms-1">
+                            <i class="bi bi-unlock me-1" aria-hidden="true"></i>Slobodan pristup
+                        </span>
+                        {% endif %}
+                    </div>
+                    <h3 class="h6 card-title">
+                        <a href="{% url 'portal-monographs:monograph-detail' monograph.pk %}"
+                           class="text-decoration-none stretched-link">
+                            {{ monograph.title }}
+                        </a>
+                    </h3>
+                    {% if monograph.contributors.exists %}
+                    <p class="card-text small mb-1">
+                        <i class="bi bi-person me-1" aria-hidden="true"></i>
+                        {% for contributor in monograph.contributors.all|slice:":3" %}{{ contributor.given_name }} {{ contributor.surname }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if monograph.contributors.count > 3 %} i dr.{% endif %}
+                    </p>
+                    {% endif %}
+                    <p class="card-text small mb-1">
+                        <i class="bi bi-calendar me-1" aria-hidden="true"></i>
+                        {{ monograph.year }}
+                    </p>
+                    <p class="card-text small mb-1">
+                        <i class="bi bi-building me-1" aria-hidden="true"></i>
+                        {{ monograph.publisher.name }}
+                    </p>
+                    {% if monograph.isbn_print or monograph.isbn_online %}
+                    <p class="card-text small mb-1">
+                        <i class="bi bi-upc me-1" aria-hidden="true"></i>
+                        ISBN: {{ monograph.isbn_print|default:monograph.isbn_online }}
+                    </p>
+                    {% endif %}
+                    <p class="card-text small mb-0">
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>
+                            {{ monograph.full_doi }}
+                        </span>
+                    </p>
+                </div>
+            </article>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Navigacija stranica">
+        <ul class="pagination justify-content-center mt-4">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ page_obj.previous_page_number }}">
+                    Prethodna
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                <li class="page-item">
+                    <a class="page-link"
+                       href="?page={{ num }}">
+                        {{ num }}
+                    </a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ page_obj.next_page_number }}">
+                    Sledeća
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <i class="bi bi-book" aria-hidden="true"></i>
+        <p class="lead">Nema objavljenih monografija.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock portal_content %}

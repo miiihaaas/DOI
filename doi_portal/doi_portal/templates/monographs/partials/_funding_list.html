@@ -1,0 +1,28 @@
+{% load i18n %}
+<div id="funding-container">
+    {% for funding in fundings %}
+    <div class="d-flex align-items-center gap-2 mb-2 p-2 border rounded" data-funding-id="{{ funding.pk }}">
+        <i class="bi bi-grip-vertical funding-drag-handle text-muted" style="cursor: grab;"></i>
+        <div class="flex-grow-1">
+            <span class="fw-semibold">{{ funding.funder_name }}</span>
+            {% if funding.award_number %}
+            <span class="text-muted">— Projekat br. {{ funding.award_number }}</span>
+            {% endif %}
+            {% if funding.funder_doi %}
+            <br><small class="text-muted">DOI: {{ funding.funder_doi }}</small>
+            {% endif %}
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-danger"
+                hx-post="{% url 'monographs:funding-delete' pk=funding.pk %}"
+                hx-target="#funding-section-content"
+                hx-swap="innerHTML"
+                hx-confirm="Obrisati finansijera?">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+    {% empty %}
+    <div class="text-muted text-center py-2">
+        Nema dodanih finansijera.
+    </div>
+    {% endfor %}
+</div>

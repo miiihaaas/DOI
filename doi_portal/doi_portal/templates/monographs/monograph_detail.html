@@ -1,0 +1,384 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ monograph.title }} - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 page-title">
+        <i class="bi bi-book me-2"></i>{{ monograph.title }}
+    </h1>
+    <div class="d-flex gap-2">
+        {% if can_edit %}
+        <a href="{% url 'monographs:update' monograph.pk %}" class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i>Izmeni
+        </a>
+        {% endif %}
+        {% if monograph.status == 'DRAFT' and can_edit %}
+        <form method="post" action="{% url 'monographs:publish' monograph.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success"
+                    onclick="return confirm('Da li ste sigurni da želite da objavite ovu monografiju?{% if monograph.has_chapters %} Sva poglavlja u statusu Nacrt će takođe biti objavljena.{% endif %}')">
+                <i class="bi bi-check-circle me-1"></i>Objavi
+            </button>
+        </form>
+        {% endif %}
+        {% if monograph.status == 'PUBLISHED' and can_edit %}
+        <form method="post" action="{% url 'monographs:withdraw' monograph.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning"
+                    onclick="return confirm('Da li ste sigurni da želite da povučete ovu monografiju? Sva objavljena poglavlja će takođe biti povučena.')">
+                <i class="bi bi-x-circle me-1"></i>Povuci
+            </button>
+        </form>
+        {% endif %}
+        {% if can_delete %}
+        <a href="{% url 'monographs:delete' monograph.pk %}" class="btn btn-outline-danger">
+            <i class="bi bi-trash me-1"></i>Obriši
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Info Card -->
+    <div class="col-lg-8">
+        <div class="card admin-card mb-4 section-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
+            </div>
+            <div class="card-body">
+                <dl class="admin-dl mb-0">
+                    <div class="admin-dl-row">
+                        <dt>Naslov</dt>
+                        <dd>{{ monograph.title }}</dd>
+                    </div>
+
+                    {% if monograph.subtitle %}
+                    <div class="admin-dl-row">
+                        <dt>Podnaslov</dt>
+                        <dd>{{ monograph.subtitle }}</dd>
+                    </div>
+                    {% endif %}
+
+                    <div class="admin-dl-row">
+                        <dt>Izdavač</dt>
+                        <dd>{{ monograph.publisher.name }}</dd>
+                    </div>
+
+                    <div class="admin-dl-row">
+                        <dt>DOI</dt>
+                        <dd><code class="admin-code">{{ monograph.full_doi }}</code></dd>
+                    </div>
+
+                    <div class="admin-dl-row">
+                        <dt>Godina izdanja</dt>
+                        <dd>{{ monograph.year }}</dd>
+                    </div>
+
+                    <div class="admin-dl-row">
+                        <dt>Status</dt>
+                        <dd>
+                            <span class="badge {% if monograph.status == 'DRAFT' %}bg-secondary{% elif monograph.status == 'PUBLISHED' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ monograph.get_status_display }}
+                            </span>
+                        </dd>
+                    </div>
+
+                    {% if monograph.language %}
+                    <div class="admin-dl-row">
+                        <dt>Jezik</dt>
+                        <dd>{{ monograph.language }}</dd>
+                    </div>
+                    {% endif %}
+
+                    {% if monograph.edition_number %}
+                    <div class="admin-dl-row">
+                        <dt>Broj izdanja</dt>
+                        <dd>{{ monograph.edition_number }}</dd>
+                    </div>
+                    {% endif %}
+
+                    {% if monograph.publication_place %}
+                    <div class="admin-dl-row">
+                        <dt>Mesto izdanja</dt>
+                        <dd>{{ monograph.publication_place }}</dd>
+                    </div>
+                    {% endif %}
+
+                    {% if monograph.isbn_print %}
+                    <div class="admin-dl-row">
+                        <dt>ISBN (štampano)</dt>
+                        <dd>{{ monograph.isbn_print }}</dd>
+                    </div>
+                    {% endif %}
+
+                    {% if monograph.isbn_online %}
+                    <div class="admin-dl-row">
+                        <dt>ISBN (online)</dt>
+                        <dd>{{ monograph.isbn_online }}</dd>
+                    </div>
+                    {% endif %}
+
+                    {% if monograph.total_pages %}
+                    <div class="admin-dl-row">
+                        <dt>Ukupan broj strana</dt>
+                        <dd>{{ monograph.total_pages }}</dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+
+        <!-- Abstract Section -->
+        {% if monograph.abstract %}
+        <div class="card admin-card mb-4 section-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-text-paragraph me-2"></i>Apstrakt</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ monograph.abstract|linebreaksbr }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Keywords Section -->
+        {% if monograph.keywords %}
+        <div class="card admin-card mb-4 section-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-tags me-2"></i>Ključne reči</h5>
+            </div>
+            <div class="card-body">
+                {% for keyword in monograph.keywords %}
+                <span class="badge bg-primary me-1 mb-1">{{ keyword }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Contributors Section -->
+        {% if contributors %}
+        <div class="card admin-card mb-4 section-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Kontributori ({{ contributors|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% for c in contributors %}
+                <div class="{% if not forloop.last %}border-bottom pb-2 mb-2{% endif %}">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <strong>{{ c.surname }}{% if c.given_name %}, {{ c.given_name }}{% endif %}</strong>
+                            {% if c.suffix %}
+                                <span class="text-muted">{{ c.suffix }}</span>
+                            {% endif %}
+                            <span class="badge bg-info ms-1">{{ c.get_contributor_role_display }}</span>
+                            {% if c.is_corresponding %}
+                                <span class="badge bg-warning ms-1">Korespondentan</span>
+                            {% endif %}
+                            <span class="badge bg-{% if c.sequence == 'first' %}primary{% else %}secondary{% endif %} ms-1">
+                                {{ c.get_sequence_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% if c.orcid %}
+                    <div class="mt-1">
+                        <small class="text-success">
+                            <i class="bi bi-check-circle me-1"></i>ORCID: {{ c.orcid }}
+                        </small>
+                    </div>
+                    {% endif %}
+                    {% if c.email %}
+                    <div>
+                        <small class="text-muted">
+                            <i class="bi bi-envelope me-1"></i>{{ c.email }}
+                        </small>
+                    </div>
+                    {% endif %}
+                    {% for aff in c.affiliations.all %}
+                    <div>
+                        <small class="text-muted">
+                            <i class="bi bi-building me-1"></i>{{ aff.institution_name }}{% if aff.department %}, {{ aff.department }}{% endif %}
+                            {% if aff.institution_ror_id %}
+                                <a href="{{ aff.institution_ror_id }}" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Funding Section -->
+        {% if fundings %}
+        <div class="card admin-card mb-4 section-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-cash-stack me-2"></i>Finansiranje ({{ fundings|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% for f in fundings %}
+                <div class="{% if not forloop.last %}border-bottom pb-2 mb-2{% endif %}">
+                    <span class="fw-semibold">{{ f.funder_name }}</span>
+                    {% if f.award_number %}
+                    <span class="text-muted">— Projekat br. {{ f.award_number }}</span>
+                    {% endif %}
+                    {% if f.funder_doi %}
+                    <br><small class="text-muted">DOI: {{ f.funder_doi }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Relations Section -->
+        {% if relations %}
+        <div class="card admin-card mb-4 section-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Relacije ({{ relations|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% for r in relations %}
+                <div class="{% if not forloop.last %}border-bottom pb-2 mb-2{% endif %}">
+                    <span class="badge bg-info text-dark">{{ r.relationship_type }}</span>
+                    <span class="text-muted mx-1">&rarr;</span>
+                    <span class="fw-semibold">{{ r.target_identifier }}</span>
+                    <small class="text-muted">({{ r.get_identifier_type_display }})</small>
+                    {% if r.description %}
+                    <br><small class="text-muted fst-italic">{{ r.description }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Chapters Section -->
+        {% if chapters %}
+        <div class="card admin-card mb-4 section-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-list-ol me-2"></i>Poglavlja ({{ chapters|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% for ch in chapters %}
+                <div class="{% if not forloop.last %}border-bottom pb-2 mb-2{% endif %}">
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-secondary me-2">{{ ch.order }}</span>
+                        <div class="flex-grow-1">
+                            <strong>{{ ch.title }}</strong>
+                            {% if ch.subtitle %}
+                            <br><small class="text-muted">{{ ch.subtitle }}</small>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <code class="admin-code small">{{ ch.full_doi }}</code>
+                        </div>
+                    </div>
+                    {% if ch.first_page or ch.last_page %}
+                    <small class="text-muted">Strane: {{ ch.first_page }}{% if ch.last_page %}-{{ ch.last_page }}{% endif %}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- License/Access Card -->
+        <div class="card admin-card mb-4 section-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Licenca i pristup</h5>
+            </div>
+            <div class="card-body">
+                <dl class="admin-dl mb-0">
+                    {% if monograph.license_url %}
+                    <div class="admin-dl-row">
+                        <dt>URL licence</dt>
+                        <dd><a href="{{ monograph.license_url }}" target="_blank">{{ monograph.license_url }}</a></dd>
+                    </div>
+                    {% endif %}
+                    <div class="admin-dl-row">
+                        <dt>Slobodan pristup</dt>
+                        <dd>
+                            {% if monograph.free_to_read %}
+                            <span class="badge bg-success">Da</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Ne</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    {% if monograph.use_external_resource and monograph.external_landing_url %}
+                    <div class="admin-dl-row">
+                        <dt>Eksterna stranica</dt>
+                        <dd><a href="{{ monograph.external_landing_url }}" target="_blank">{{ monograph.external_landing_url }}</a></dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+
+        <!-- Metadata Card -->
+        <div class="card admin-card mb-4 section-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Metapodaci</h5>
+            </div>
+            <div class="card-body">
+                <dl class="admin-dl mb-0">
+                    <div class="admin-dl-row">
+                        <dt>Kreirao</dt>
+                        <dd>{{ monograph.created_by|default:"-" }}</dd>
+                    </div>
+                    <div class="admin-dl-row">
+                        <dt>Kreirano</dt>
+                        <dd>{{ monograph.created_at|date:"d.m.Y. H:i" }}</dd>
+                    </div>
+                    <div class="admin-dl-row">
+                        <dt>Ažurirano</dt>
+                        <dd>{{ monograph.updated_at|date:"d.m.Y. H:i" }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card admin-card quick-actions">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Brze akcije</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% if can_edit %}
+                <a href="{% url 'monographs:update' monograph.pk %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-pencil me-2"></i>Izmeni monografiju
+                </a>
+                {% endif %}
+                {% if monograph.status == 'DRAFT' and can_edit %}
+                <form method="post" action="{% url 'monographs:publish' monograph.pk %}" class="d-inline w-100">
+                    {% csrf_token %}
+                    <button type="submit" class="list-group-item list-group-item-action text-success border-0 w-100 text-start"
+                            onclick="return confirm('Objavi monografiju?')">
+                        <i class="bi bi-check-circle me-2"></i>Objavi monografiju
+                    </button>
+                </form>
+                {% endif %}
+                {% if monograph.status == 'PUBLISHED' and can_edit %}
+                <form method="post" action="{% url 'monographs:withdraw' monograph.pk %}" class="d-inline w-100">
+                    {% csrf_token %}
+                    <button type="submit" class="list-group-item list-group-item-action text-warning border-0 w-100 text-start"
+                            onclick="return confirm('Povuci monografiju?')">
+                        <i class="bi bi-x-circle me-2"></i>Povuci monografiju
+                    </button>
+                </form>
+                {% endif %}
+                <a href="{% url 'crossref:monograph-deposit' pk=monograph.pk %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-cloud-upload me-2"></i>Crossref Deposit
+                </a>
+                <a href="{% url 'monographs:list' %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-list-ul me-2"></i>Sve monografije
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

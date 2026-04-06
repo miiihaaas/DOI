@@ -1,0 +1,72 @@
+{% load i18n %}
+<div id="chapter-{{ chapter.pk }}-contributors-container">
+    {% for c in contributors %}
+    <div class="d-flex align-items-center gap-2 mb-2 p-2 border rounded" data-contributor-id="{{ c.pk }}">
+        <i class="bi bi-grip-vertical text-muted" style="cursor: grab;"></i>
+        <div class="flex-grow-1">
+            <strong>{{ c.surname }}{% if c.given_name %}, {{ c.given_name }}{% endif %}</strong>
+            {% if c.suffix %}<span class="text-muted">{{ c.suffix }}</span>{% endif %}
+            <span class="badge bg-info ms-1">{{ c.get_contributor_role_display }}</span>
+            {% if c.is_corresponding %}
+                <span class="badge bg-warning ms-1">Korespondentan</span>
+            {% endif %}
+            {% if c.orcid %}
+                <span class="text-success ms-1"><i class="bi bi-check-circle"></i> {{ c.orcid }}</span>
+            {% endif %}
+            {% if c.email %}
+                <br><small class="text-muted"><i class="bi bi-envelope me-1"></i>{{ c.email }}</small>
+            {% endif %}
+            {% for aff in c.affiliations.all %}
+            <div>
+                <small class="text-muted">
+                    <i class="bi bi-building me-1"></i>{{ aff.institution_name }}{% if aff.department %}, {{ aff.department }}{% endif %}
+                    <button type="button" class="btn btn-sm btn-link text-primary p-0 ms-1"
+                            hx-get="{% url 'monographs:chapter-affiliation-edit-form' pk=aff.pk %}"
+                            hx-target="#chapter-{{ chapter.pk }}-contributor-form-container"
+                            hx-swap="innerHTML"
+                            title="Izmeni afilijaciju">
+                        <i class="bi bi-pencil" style="font-size: 0.7em;"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-1"
+                            hx-post="{% url 'monographs:chapter-affiliation-delete' pk=aff.pk %}"
+                            hx-target="#chapter-{{ chapter.pk }}-contributors"
+                            hx-swap="innerHTML"
+                            hx-confirm="Obrisati afilijaciju?"
+                            title="Obriši afilijaciju">
+                        <i class="bi bi-x-circle" style="font-size: 0.7em;"></i>
+                    </button>
+                </small>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            <button type="button" class="btn btn-sm btn-outline-primary"
+                    hx-get="{% url 'monographs:chapter-contributor-edit-form' pk=c.pk %}"
+                    hx-target="#chapter-{{ chapter.pk }}-contributor-form-container"
+                    hx-swap="innerHTML"
+                    title="Izmeni">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-success"
+                    hx-get="{% url 'monographs:chapter-affiliation-form' contributor_pk=c.pk %}"
+                    hx-target="#chapter-{{ chapter.pk }}-contributor-form-container"
+                    hx-swap="innerHTML"
+                    title="Dodaj afilijaciju">
+                <i class="bi bi-building-add"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    hx-post="{% url 'monographs:chapter-contributor-delete' pk=c.pk %}"
+                    hx-target="#chapter-{{ chapter.pk }}-contributors"
+                    hx-swap="innerHTML"
+                    hx-confirm="Ukloniti kontributora {{ c }}?"
+                    title="Ukloni">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-muted text-center py-2">
+        Nema kontributora za ovo poglavlje.
+    </div>
+    {% endfor %}
+</div>

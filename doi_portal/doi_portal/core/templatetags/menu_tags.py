@@ -60,6 +60,7 @@ def render_sidebar_menu(context: dict) -> dict:
                 "url": url,
                 "is_active": is_active,
                 "is_disabled": is_disabled,
+                "section": item.get("section", ""),
             },
         )
 

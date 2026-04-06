@@ -20,6 +20,7 @@ class ExportType(models.TextChoices):
 
     ISSUE = "ISSUE", _("Izdanje")
     COMPONENT_GROUP = "COMPONENT_GROUP", _("Grupa komponenti")
+    MONOGRAPH = "MONOGRAPH", _("Monografija")
 
 
 class CrossrefExport(models.Model):
@@ -46,6 +47,14 @@ class CrossrefExport(models.Model):
         blank=True,
         related_name="crossref_exports",
         verbose_name=_("Grupa komponenti"),
+    )
+    monograph = models.ForeignKey(
+        "monographs.Monograph",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="crossref_exports",
+        verbose_name=_("Monografija"),
     )
     export_type = models.CharField(
         _("Tip eksporta"),
@@ -84,8 +93,9 @@ class CrossrefExport(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    models.Q(issue__isnull=False, component_group__isnull=True, export_type="ISSUE")
-                    | models.Q(issue__isnull=True, component_group__isnull=False, export_type="COMPONENT_GROUP")
+                    models.Q(issue__isnull=False, component_group__isnull=True, monograph__isnull=True, export_type="ISSUE")
+                    | models.Q(issue__isnull=True, component_group__isnull=False, monograph__isnull=True, export_type="COMPONENT_GROUP")
+                    | models.Q(issue__isnull=True, component_group__isnull=True, monograph__isnull=False, export_type="MONOGRAPH")
                 ),
                 name="crossref_export_exactly_one_source",
             ),

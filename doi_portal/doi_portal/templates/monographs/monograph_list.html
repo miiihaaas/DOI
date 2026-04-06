@@ -1,0 +1,145 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Monografije - DOI Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 page-title">
+        <i class="bi bi-book me-2"></i>Monografije
+    </h1>
+    {% if can_create %}
+    <a href="{% url 'monographs:create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Nova monografija
+    </a>
+    {% endif %}
+</div>
+
+<!-- Filters -->
+<div class="card admin-card mb-4 filter-card">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="status" class="form-label admin-form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">Svi statusi</option>
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-8 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i>Filtriraj
+                </button>
+                <a href="{% url 'monographs:list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg me-1"></i>Poništi
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card admin-card">
+    <div class="card-body p-0">
+        {% if monographs %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Naslov</th>
+                        <th>Izdavač</th>
+                        <th>Godina</th>
+                        <th>Status</th>
+                        <th>Datum kreiranja</th>
+                        <th class="text-end">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for monograph in monographs %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'monographs:detail' monograph.pk %}" class="fw-semibold">
+                                {{ monograph.title }}
+                            </a>
+                            {% if monograph.subtitle %}
+                            <br><small class="text-muted">{{ monograph.subtitle }}</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted">{{ monograph.publisher.name }}</td>
+                        <td class="text-muted">{{ monograph.year }}</td>
+                        <td>
+                            <span class="badge {% if monograph.status == 'DRAFT' %}bg-secondary{% elif monograph.status == 'PUBLISHED' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ monograph.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="text-muted">{{ monograph.created_at|date:"d.m.Y. H:i" }}</td>
+                        <td class="text-end">
+                            <div class="admin-actions">
+                                <a href="{% url 'monographs:detail' monograph.pk %}" class="btn btn-sm btn-outline-primary" title="Detalji">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if can_edit and monograph.status == "DRAFT" %}
+                                <a href="{% url 'monographs:update' monograph.pk %}" class="btn btn-sm btn-outline-primary" title="Izmeni">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                                {% if can_delete %}
+                                <a href="{% url 'monographs:delete' monograph.pk %}" class="btn btn-sm btn-outline-danger" title="Obriši">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <nav aria-label="Navigacija stranica" class="mt-4 px-3 pb-3">
+            <ul class="pagination justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}">
+                        Prethodna
+                    </a>
+                </li>
+                {% endif %}
+                <li class="page-item disabled">
+                    <span class="page-link">Stranica {{ page_obj.number }} od {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}">
+                        Sledeća
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-book admin-empty-icon d-block mb-3"></i>
+            {% if current_status %}
+            <p class="text-muted mb-3">Nema monografija koje odgovaraju filterima.</p>
+            <a href="{% url 'monographs:list' %}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-x-lg me-1"></i>Poništi filtere
+            </a>
+            {% else %}
+            <p class="text-muted mb-3">Nema monografija za prikaz.</p>
+            {% endif %}
+            {% if can_create %}
+            <a href="{% url 'monographs:create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Dodajte prvu monografiju
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

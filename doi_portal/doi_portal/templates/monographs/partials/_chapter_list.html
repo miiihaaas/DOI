@@ -1,0 +1,52 @@
+{% load i18n %}
+<div id="chapters-container">
+    {% for chapter in chapters %}
+    <div class="card mb-2" data-chapter-id="{{ chapter.pk }}">
+        <div class="card-body py-2 d-flex align-items-center">
+            <span class="drag-handle me-2" style="cursor: grab;" title="Prevucite za promenu redosleda">
+                <i class="bi bi-grip-vertical"></i>
+            </span>
+            <div class="flex-grow-1">
+                <span class="badge bg-secondary me-1">{{ chapter.order }}</span>
+                <strong>{{ chapter.title }}</strong>
+                {% if chapter.subtitle %}
+                <br><small class="text-muted ms-4">{{ chapter.subtitle }}</small>
+                {% endif %}
+                <br><small class="text-muted ms-4">DOI: <code>{{ chapter.doi_suffix }}</code></small>
+                {% if chapter.first_page or chapter.last_page %}
+                <small class="text-muted">| Strane: {{ chapter.first_page }}{% if chapter.last_page %}-{{ chapter.last_page }}{% endif %}</small>
+                {% endif %}
+            </div>
+            <div class="ms-2 d-flex align-items-center gap-1">
+                <button type="button" class="btn btn-sm btn-outline-info"
+                        hx-get="{% url 'monographs:chapter-detail' pk=chapter.pk %}"
+                        hx-target="#chapter-{{ chapter.pk }}-detail"
+                        hx-swap="innerHTML"
+                        title="Prikaži detalje">
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                        hx-get="{% url 'monographs:chapter-edit-form' pk=chapter.pk %}"
+                        hx-target="#chapter-form-container"
+                        hx-swap="innerHTML"
+                        title="Izmeni poglavlje">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        hx-post="{% url 'monographs:chapter-delete' pk=chapter.pk %}"
+                        hx-target="#chapters-section-content"
+                        hx-swap="innerHTML"
+                        hx-confirm="Da li ste sigurni da želite obrisati poglavlje „{{ chapter.title }}"?"
+                        title="Obriši poglavlje">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div id="chapter-{{ chapter.pk }}-detail"></div>
+    </div>
+    {% empty %}
+    <div class="text-muted text-center py-3">
+        Nema dodanih poglavlja. Kliknite "Dodaj poglavlje" za početak.
+    </div>
+    {% endfor %}
+</div>

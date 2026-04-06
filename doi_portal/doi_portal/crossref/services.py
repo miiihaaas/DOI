@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from doi_portal.components.models import Component as ComponentModel
     from doi_portal.components.models import ComponentGroup
     from doi_portal.issues.models import Issue
+    from doi_portal.monographs.models import Monograph
 
 from doi_portal.core.markup import markup_to_crossref_xml, markup_to_jats_xml
 from doi_portal.crossref.validation import ValidationResult
@@ -623,6 +624,259 @@ class CrossrefService:
             with transaction.atomic():
                 component_group.xml_generation_status = "failed"
                 component_group.save(update_fields=["xml_generation_status"])
+            return (False, str(e))
+
+    # === Monograph (book_monograph) support ===
+
+    MONOGRAPH_TEMPLATE = "book_monograph.xml.j2"
+
+    def generate_head_for_monograph(self, monograph: "Monograph") -> dict[str, Any]:
+        """
+        Generate head metadata context for monograph Crossref XML.
+
+        Args:
+            monograph: Monograph model instance
+
+        Returns:
+            Dictionary with head context data
+        """
+        from doi_portal.core.models import SiteSettings
+
+        settings = SiteSettings.get_settings()
+        publisher = monograph.publisher
+
+        return {
+            "doi_batch_id": self.generate_doi_batch_id(),
+            "timestamp": timezone.now().strftime("%Y%m%d%H%M%S"),
+            "depositor_name": settings.depositor_name or "DOI Portal",
+            "depositor_email": settings.depositor_email or "admin@example.com",
+            "registrant": publisher.name,
+        }
+
+    def _build_monograph_context(self, monograph: "Monograph") -> dict[str, Any]:
+        """
+        Build template context for monograph XML generation.
+
+        Args:
+            monograph: Monograph model instance
+
+        Returns:
+            Context dictionary for book_monograph template rendering
+        """
+        from doi_portal.monographs.models import MonographStatus
+
+        site_url = self._get_site_url()
+        publisher = monograph.publisher
+
+        # Build monograph-level contributors
+        contributors_data = []
+        for contributor in monograph.contributors.filter(
+            is_deleted=False,
+        ).prefetch_related("affiliations").order_by("order"):
+            affiliations_data = [
+                {
+                    "institution_name": aff.institution_name,
+                    "institution_ror_id": aff.institution_ror_id,
+                    "department": aff.department,
+                }
+                for aff in contributor.affiliations.all().order_by("order")
+            ]
+            contributors_data.append({
+                "given_name": contributor.given_name,
+                "surname": contributor.surname,
+                "suffix": contributor.suffix,
+                "orcid": contributor.orcid,
+                "orcid_authenticated": contributor.orcid_authenticated,
+                "sequence": contributor.sequence,
+                "contributor_role": contributor.contributor_role,
+                "affiliations": affiliations_data,
+            })
+
+        # Build monograph-level fundings
+        monograph_fundings = [
+            {
+                "funder_name": f.funder_name,
+                "funder_doi": self._normalize_funder_doi(f.funder_doi),
+                "award_number": f.award_number,
+            }
+            for f in monograph.fundings.order_by("order")
+        ]
+
+        # Build monograph-level relations
+        monograph_relations = [
+            {
+                "relationship_type": r.relationship_type,
+                "identifier_type": r.identifier_type,
+                "identifier": r.target_identifier,
+                "description": r.description,
+                "scope": r.relation_scope,
+            }
+            for r in monograph.relations.order_by("order")
+        ]
+
+        # Build resource URL for monograph
+        if monograph.use_external_resource and monograph.external_landing_url:
+            monograph_resource_url = monograph.external_landing_url
+        else:
+            monograph_resource_url = f"{site_url}/monographs/{monograph.slug}/"
+
+        # Build chapters (PUBLISHED only)
+        chapters_data = []
+        for chapter in monograph.chapters.filter(
+            status=MonographStatus.PUBLISHED,
+            is_deleted=False,
+        ).prefetch_related(
+            "contributors__affiliations", "fundings", "relations",
+        ).order_by("order"):
+            # Chapter contributors
+            chapter_contributors = []
+            for cc in chapter.contributors.filter(is_deleted=False).order_by("order"):
+                cc_affiliations = [
+                    {
+                        "institution_name": aff.institution_name,
+                        "institution_ror_id": aff.institution_ror_id,
+                        "department": aff.department,
+                    }
+                    for aff in cc.affiliations.all().order_by("order")
+                ]
+                chapter_contributors.append({
+                    "given_name": cc.given_name,
+                    "surname": cc.surname,
+                    "suffix": cc.suffix,
+                    "orcid": cc.orcid,
+                    "orcid_authenticated": cc.orcid_authenticated,
+                    "sequence": cc.sequence,
+                    "contributor_role": cc.contributor_role,
+                    "affiliations": cc_affiliations,
+                })
+
+            # Chapter fundings
+            chapter_fundings = [
+                {
+                    "funder_name": f.funder_name,
+                    "funder_doi": self._normalize_funder_doi(f.funder_doi),
+                    "award_number": f.award_number,
+                }
+                for f in chapter.fundings.order_by("order")
+            ]
+
+            # Chapter relations
+            chapter_relations = [
+                {
+                    "relationship_type": r.relationship_type,
+                    "identifier_type": r.identifier_type,
+                    "identifier": r.target_identifier,
+                    "description": r.description,
+                    "scope": r.relation_scope,
+                }
+                for r in chapter.relations.order_by("order")
+            ]
+
+            # Chapter resource URL
+            chapter_resource_url = f"{site_url}/monographs/{monograph.slug}/chapters/{chapter.pk}/"
+
+            chapters_data.append({
+                "title": Markup(markup_to_crossref_xml(chapter.title)),
+                "subtitle": Markup(markup_to_crossref_xml(chapter.subtitle)),
+                "abstract": Markup(markup_to_jats_xml(chapter.abstract)),
+                "language": chapter.language,
+                "first_page": chapter.first_page,
+                "last_page": chapter.last_page,
+                "doi_suffix": chapter.doi_suffix,
+                "resource_url": chapter_resource_url,
+                "license_url": chapter.license_url,
+                "license_applies_to": chapter.license_applies_to,
+                "free_to_read": chapter.free_to_read,
+                "contributors": chapter_contributors,
+                "fundings": chapter_fundings,
+                "relations": chapter_relations,
+            })
+
+        return {
+            "site_url": site_url,
+            "head": self.generate_head_for_monograph(monograph),
+            "publisher": {
+                "name": publisher.name,
+                "doi_prefix": publisher.doi_prefix,
+            },
+            "monograph": {
+                "title": Markup(markup_to_crossref_xml(monograph.title)),
+                "subtitle": Markup(markup_to_crossref_xml(monograph.subtitle)),
+                "abstract": Markup(markup_to_jats_xml(monograph.abstract)),
+                "language": monograph.language or "en",
+                "edition_number": monograph.edition_number,
+                "year": monograph.year,
+                "isbn_print": monograph.isbn_print,
+                "isbn_online": monograph.isbn_online,
+                "publication_place": monograph.publication_place,
+                "license_url": monograph.license_url,
+                "license_applies_to": monograph.license_applies_to,
+                "free_to_read": monograph.free_to_read,
+                "doi_suffix": monograph.doi_suffix,
+                "resource_url": monograph_resource_url,
+            },
+            "contributors": contributors_data,
+            "monograph_fundings": monograph_fundings,
+            "monograph_relations": monograph_relations,
+            "chapters": chapters_data,
+        }
+
+    def generate_monograph_xml(self, monograph: "Monograph") -> str:
+        """
+        Generate Crossref XML string for a monograph.
+
+        Args:
+            monograph: Monograph model instance
+
+        Returns:
+            XML string ready for Crossref deposit
+        """
+        context = self._build_monograph_context(monograph)
+        template = self.env.get_template(self.MONOGRAPH_TEMPLATE)
+        return template.render(**context)
+
+    def generate_and_store_monograph_xml(self, monograph: "Monograph") -> tuple[bool, str]:
+        """
+        Generate, validate, and store XML on monograph model.
+
+        Args:
+            monograph: Monograph model instance
+
+        Returns:
+            Tuple of (success, xml_or_error_message)
+        """
+        from django.db import transaction
+
+        from doi_portal.crossref.validators import validate_xml
+
+        try:
+            xml = self.generate_monograph_xml(monograph)
+
+            # Run XSD validation
+            validation_result = validate_xml(xml)
+
+            with transaction.atomic():
+                monograph.crossref_xml = xml
+                monograph.xml_generated_at = timezone.now()
+                monograph.xml_generation_status = "completed"
+
+                monograph.xsd_valid = validation_result.is_valid
+                monograph.xsd_errors = [e.to_dict() for e in validation_result.errors]
+                monograph.xsd_validated_at = validation_result.validated_at
+
+                monograph.save(update_fields=[
+                    "crossref_xml",
+                    "xml_generated_at",
+                    "xml_generation_status",
+                    "xsd_valid",
+                    "xsd_errors",
+                    "xsd_validated_at",
+                ])
+            return (True, xml)
+        except Exception as e:
+            with transaction.atomic():
+                monograph.xml_generation_status = "failed"
+                monograph.save(update_fields=["xml_generation_status"])
             return (False, str(e))
 
 
@@ -1263,6 +1517,224 @@ class PreValidationService:
                 message=f"Kontributor nema definisanu ulogu (komponenta: {component.title or component.pk})",
                 field_name="contributor_role",
                 fix_url=f"/dashboard/components/groups/{cg.pk}/components/{component.pk}/",
+            )
+
+        return result
+
+    # === Monograph validation ===
+
+    def validate_monograph(self, monograph: "Monograph") -> ValidationResult:
+        """
+        Validate monograph before XML generation.
+
+        Args:
+            monograph: Monograph model instance to validate
+
+        Returns:
+            ValidationResult with all errors and warnings
+        """
+        from doi_portal.monographs.models import MonographStatus
+
+        result = ValidationResult()
+
+        # Check depositor settings first (blocking)
+        result.merge(self._validate_depositor_settings())
+
+        # Check monograph-level fields
+        result.merge(self._validate_monograph_fields(monograph))
+
+        # Validate monograph-level contributors
+        contributors = list(
+            monograph.contributors.filter(is_deleted=False).order_by("order")
+        )
+        if not contributors:
+            result.add_warning(
+                message="Monografija nema kontributore — preporučeno je dodati bar jednog",
+                field_name="contributors",
+                fix_url=f"/dashboard/monographs/{monograph.pk}/edit/",
+            )
+        else:
+            for i, contributor in enumerate(contributors, 1):
+                result.merge(
+                    self._validate_monograph_contributor(contributor, i, "Monografija")
+                )
+
+        # Validate PUBLISHED chapters
+        published_chapters = monograph.chapters.filter(
+            status=MonographStatus.PUBLISHED,
+            is_deleted=False,
+        ).prefetch_related("contributors", "relations")
+
+        for idx, chapter in enumerate(published_chapters, 1):
+            result.merge(self._validate_chapter(chapter, idx))
+
+        return result
+
+    def _validate_monograph_fields(self, monograph: "Monograph") -> ValidationResult:
+        """
+        Validate monograph-level required fields.
+
+        Args:
+            monograph: Monograph to validate
+
+        Returns:
+            ValidationResult with monograph field errors/warnings
+        """
+        result = ValidationResult()
+
+        # Title is required
+        if not monograph.title:
+            result.add_error(
+                message="Nedostaje naslov monografije",
+                field_name="title",
+                fix_url=f"/dashboard/monographs/{monograph.pk}/edit/",
+            )
+
+        # Year is required
+        if not monograph.year:
+            result.add_error(
+                message="Nedostaje godina izdanja monografije",
+                field_name="year",
+                fix_url=f"/dashboard/monographs/{monograph.pk}/edit/",
+            )
+
+        # DOI suffix is required
+        if not monograph.doi_suffix:
+            result.add_error(
+                message="Nedostaje DOI sufiks monografije",
+                field_name="doi_suffix",
+                fix_url=f"/dashboard/monographs/{monograph.pk}/edit/",
+            )
+
+        # Publisher is required
+        if not monograph.publisher_id:
+            result.add_error(
+                message="Nedostaje izdavač monografije",
+                field_name="publisher",
+                fix_url=f"/dashboard/monographs/{monograph.pk}/edit/",
+            )
+
+        # ISBN warning (noisbn will be used)
+        if not monograph.isbn_print and not monograph.isbn_online:
+            result.add_warning(
+                message="ISBN nije podešen — biće korišćen <noisbn> element",
+                field_name="isbn",
+                fix_url=f"/dashboard/monographs/{monograph.pk}/edit/",
+            )
+
+        # Abstract recommended
+        if not monograph.abstract:
+            result.add_warning(
+                message="Apstrakt monografije nije popunjen — preporučeno za Crossref",
+                field_name="abstract",
+                fix_url=f"/dashboard/monographs/{monograph.pk}/edit/",
+            )
+
+        return result
+
+    def _validate_chapter(self, chapter, chapter_num: int) -> ValidationResult:
+        """
+        Validate a single chapter.
+
+        Args:
+            chapter: MonographChapter to validate
+            chapter_num: Chapter sequence number for error messages
+
+        Returns:
+            ValidationResult with chapter errors/warnings
+        """
+        result = ValidationResult()
+        monograph = chapter.monograph
+
+        # Title is required
+        if not chapter.title:
+            result.add_error(
+                message=f"Poglavlje {chapter_num}: nedostaje naslov",
+                field_name="title",
+                fix_url=f"/dashboard/monographs/{monograph.pk}/chapters/{chapter.pk}/edit/",
+            )
+
+        # DOI suffix is required
+        if not chapter.doi_suffix:
+            result.add_error(
+                message=f"Poglavlje {chapter_num}: nedostaje DOI sufiks",
+                field_name="doi_suffix",
+                fix_url=f"/dashboard/monographs/{monograph.pk}/chapters/{chapter.pk}/edit/",
+            )
+
+        # At least one contributor is required
+        chapter_contributors = list(
+            chapter.contributors.filter(is_deleted=False).order_by("order")
+        )
+        if not chapter_contributors:
+            result.add_error(
+                message=f"Poglavlje {chapter_num} ({chapter.title or chapter.pk}): nema kontributore",
+                field_name="contributors",
+                fix_url=f"/dashboard/monographs/{monograph.pk}/chapters/{chapter.pk}/edit/",
+            )
+        else:
+            for i, contributor in enumerate(chapter_contributors, 1):
+                result.merge(
+                    self._validate_monograph_contributor(
+                        contributor, i, f"Poglavlje {chapter_num}"
+                    )
+                )
+
+        # Pages recommended
+        if not chapter.first_page and not chapter.last_page:
+            result.add_warning(
+                message=f"Poglavlje {chapter_num} ({chapter.title or chapter.pk}): stranice nisu definisane",
+                field_name="pages",
+                fix_url=f"/dashboard/monographs/{monograph.pk}/chapters/{chapter.pk}/edit/",
+            )
+
+        return result
+
+    def _validate_monograph_contributor(
+        self,
+        contributor,
+        contributor_num: int,
+        context_label: str,
+    ) -> ValidationResult:
+        """
+        Validate a monograph/chapter contributor.
+
+        Args:
+            contributor: MonographContributor or ChapterContributor to validate
+            contributor_num: Contributor sequence number
+            context_label: 'Monografija' or 'Poglavlje N' for error messages
+
+        Returns:
+            ValidationResult with contributor errors/warnings
+        """
+        result = ValidationResult()
+
+        # Surname is required
+        if not contributor.surname:
+            result.add_error(
+                message=f"{context_label}, kontributor {contributor_num}: nedostaje prezime",
+                field_name="surname",
+            )
+
+        # Contributor role is required
+        if not contributor.contributor_role:
+            result.add_error(
+                message=f"{context_label}, kontributor {contributor_num}: nedostaje uloga",
+                field_name="contributor_role",
+            )
+
+        # First contributor must have sequence='first'
+        if contributor_num == 1 and contributor.sequence != "first":
+            result.add_error(
+                message=f"{context_label}, kontributor {contributor_num}: prvi kontributor mora imati sequence='first'",
+                field_name="sequence",
+            )
+
+        # Given name recommended
+        if not contributor.given_name:
+            result.add_warning(
+                message=f"{context_label}, kontributor {contributor_num}: ime nije popunjeno",
+                field_name="given_name",
             )
 
         return result

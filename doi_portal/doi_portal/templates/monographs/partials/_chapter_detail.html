@@ -1,0 +1,78 @@
+{% load i18n %}
+<div class="border-top bg-light p-3">
+    {% if chapter.abstract %}
+    <div class="mb-3">
+        <strong>Apstrakt:</strong>
+        <p class="mb-0 mt-1">{{ chapter.abstract|linebreaksbr }}</p>
+    </div>
+    {% endif %}
+
+    {% if chapter.language %}
+    <p class="mb-2"><strong>Jezik:</strong> {{ chapter.language }}</p>
+    {% endif %}
+
+    {% if chapter.license_url %}
+    <p class="mb-2"><strong>Licenca:</strong> <a href="{{ chapter.license_url }}" target="_blank">{{ chapter.license_url }}</a></p>
+    {% endif %}
+
+    {% if chapter.free_to_read %}
+    <p class="mb-2"><span class="badge bg-success">Slobodan pristup</span></p>
+    {% endif %}
+
+    <!-- Chapter Contributors -->
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <h6 class="mb-0"><i class="bi bi-people me-1"></i>Kontributori poglavlja</h6>
+            <button type="button" class="btn btn-sm btn-primary"
+                    hx-get="{% url 'monographs:chapter-contributor-form' chapter_pk=chapter.pk %}"
+                    hx-target="#chapter-{{ chapter.pk }}-contributor-form-container"
+                    hx-swap="innerHTML">
+                <i class="bi bi-plus-lg me-1"></i>Dodaj
+            </button>
+        </div>
+        <div class="card-body py-2">
+            <div id="chapter-{{ chapter.pk }}-contributor-form-container"></div>
+            <div id="chapter-{{ chapter.pk }}-contributors">
+                {% include "monographs/partials/_chapter_contributor_list.html" %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Chapter Funding -->
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <h6 class="mb-0"><i class="bi bi-cash-stack me-1"></i>Finansiranje poglavlja</h6>
+            <button type="button" class="btn btn-sm btn-primary"
+                    hx-get="{% url 'monographs:chapter-funding-form' chapter_pk=chapter.pk %}"
+                    hx-target="#chapter-{{ chapter.pk }}-funding-form-container"
+                    hx-swap="innerHTML">
+                <i class="bi bi-plus-lg me-1"></i>Dodaj
+            </button>
+        </div>
+        <div class="card-body py-2">
+            <div id="chapter-{{ chapter.pk }}-funding-form-container"></div>
+            <div id="chapter-{{ chapter.pk }}-funding">
+                {% include "monographs/partials/_chapter_funding_list.html" %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Chapter Relations -->
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <h6 class="mb-0"><i class="bi bi-diagram-3 me-1"></i>Relacije poglavlja</h6>
+            <button type="button" class="btn btn-sm btn-primary"
+                    hx-get="{% url 'monographs:chapter-relation-form' chapter_pk=chapter.pk %}"
+                    hx-target="#chapter-{{ chapter.pk }}-relation-form-container"
+                    hx-swap="innerHTML">
+                <i class="bi bi-plus-lg me-1"></i>Dodaj
+            </button>
+        </div>
+        <div class="card-body py-2">
+            <div id="chapter-{{ chapter.pk }}-relation-form-container"></div>
+            <div id="chapter-{{ chapter.pk }}-relations">
+                {% include "monographs/partials/_chapter_relation_list.html" %}
+            </div>
+        </div>
+    </div>
+</div>

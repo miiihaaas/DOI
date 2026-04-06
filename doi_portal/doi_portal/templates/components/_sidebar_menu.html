@@ -1,5 +1,15 @@
-{# Sidebar menu items rendered based on user role #}
+{# Sidebar menu items rendered based on user role, grouped by section #}
 {% for item in menu_items %}
+  {% ifchanged item.section %}
+    {% if not forloop.first %}
+      <hr class="sidebar-divider my-1" style="border-color: rgba(255,255,255,0.15);">
+    {% endif %}
+    {% if item.section %}
+    <div class="sidebar-section-label text-uppercase text-muted px-3 py-1">
+      <small class="fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.05em; color: rgba(255,255,255,0.45);">{{ item.section }}</small>
+    </div>
+    {% endif %}
+  {% endifchanged %}
   {% if item.is_disabled %}
     <a class="list-group-item list-group-item-action sidebar-menu-item disabled"
        href="#"

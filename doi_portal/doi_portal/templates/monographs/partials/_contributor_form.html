@@ -1,0 +1,91 @@
+{% load i18n %}
+<div class="card border-primary mb-3">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            {% if contributor %}Izmeni kontributora{% else %}Dodaj kontributora{% endif %}
+        </h6>
+        <button type="button" class="btn btn-sm btn-light"
+                onclick="document.getElementById('contributor-form-container').innerHTML = '';">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="card-body">
+        <form {% if contributor %}
+                hx-post="{% url 'monographs:contributor-update' pk=contributor.pk %}"
+              {% else %}
+                hx-post="{% url 'monographs:contributor-add' monograph_pk=monograph.pk %}"
+              {% endif %}
+              hx-target="#contributors-section-content"
+              hx-swap="innerHTML">
+            {% csrf_token %}
+
+            {% if contributor_form.non_field_errors %}
+            <div class="alert alert-danger mb-2">
+                {% for error in contributor_form.non_field_errors %}
+                <p class="mb-0">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <label for="id_given_name" class="form-label">{{ contributor_form.given_name.label }}</label>
+                    {{ contributor_form.given_name }}
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label for="id_surname" class="form-label">{{ contributor_form.surname.label }} <span class="text-danger">*</span></label>
+                    {{ contributor_form.surname }}
+                    {% if contributor_form.surname.errors %}
+                    <div class="invalid-feedback d-block">{{ contributor_form.surname.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label for="id_suffix" class="form-label">{{ contributor_form.suffix.label }}</label>
+                    {{ contributor_form.suffix }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label for="id_email" class="form-label">{{ contributor_form.email.label }}</label>
+                    {{ contributor_form.email }}
+                    {% if contributor_form.email.errors %}
+                    <div class="invalid-feedback d-block">{{ contributor_form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label for="id_orcid" class="form-label">{{ contributor_form.orcid.label }}</label>
+                    {{ contributor_form.orcid }}
+                    {% if contributor_form.orcid.errors %}
+                    <div class="invalid-feedback d-block">{{ contributor_form.orcid.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label for="id_contributor_role" class="form-label">{{ contributor_form.contributor_role.label }}</label>
+                    {{ contributor_form.contributor_role }}
+                </div>
+                <div class="col-md-6 mb-2 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        {{ contributor_form.is_corresponding }}
+                        <label class="form-check-label" for="id_is_corresponding">
+                            {{ contributor_form.is_corresponding.label }}
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        onclick="document.getElementById('contributor-form-container').innerHTML = '';">
+                    Otkaži
+                </button>
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>Sačuvaj
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

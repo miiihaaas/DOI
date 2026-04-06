@@ -31,6 +31,7 @@ from doi_portal.crossref.services import PreValidationService
 from doi_portal.crossref.tasks import crossref_generate_component_xml_task
 from doi_portal.crossref.tasks import crossref_generate_xml_task
 from doi_portal.issues.models import Issue
+from doi_portal.monographs.models import Monograph
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -59,6 +60,17 @@ __all__ = [
     "component_export_redownload",
     "component_export_history",
     "component_mark_deposited",
+    # Monograph workflow
+    "MonographValidationView",
+    "GenerateMonographXMLView",
+    "MonographDepositView",
+    "monograph_xml_preview",
+    "monograph_xml_download",
+    "monograph_download_warning",
+    "monograph_xml_download_force",
+    "monograph_export_redownload",
+    "monograph_export_history",
+    "monograph_mark_deposited",
 ]
 
 
@@ -955,6 +967,332 @@ def component_mark_deposited(request: "HttpRequest", pk: int) -> HttpResponse:
         "crossref/partials/_component_deposit_status.html",
         {
             "component_group": cg,
+            "is_deposited": True,
+        },
+    )
+
+
+# =============================================================================
+# Monograph Workflow Views
+# =============================================================================
+
+
+def _get_monograph(pk):
+    """Get Monograph with publisher select_related."""
+    return get_object_or_404(
+        Monograph.objects.select_related("publisher"),
+        pk=pk,
+    )
+
+
+def _generate_monograph_filename(monograph) -> str:
+    """Generate standardized filename for monograph XML export."""
+    title_slug = slugify(monograph.title)[:30] or "monograph"
+    timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
+    return f"monograph_{title_slug}_{timestamp}.xml"
+
+
+def _create_monograph_xml_download_response(request, monograph):
+    """Create XML download response with export tracking for monographs."""
+    if not monograph.crossref_xml:
+        raise Http404("XML nije generisan.")
+
+    filename = _generate_monograph_filename(monograph)
+
+    CrossrefExport.objects.create(
+        monograph=monograph,
+        export_type=ExportType.MONOGRAPH,
+        xml_content=monograph.crossref_xml,
+        exported_by=request.user,
+        filename=filename,
+        xsd_valid_at_export=monograph.xsd_valid,
+    )
+
+    response = HttpResponse(
+        monograph.crossref_xml,
+        content_type="application/xml; charset=utf-8",
+    )
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+class MonographValidationView(LoginRequiredMixin, View):
+    """Validate a Monograph before XML generation."""
+
+    def get(self, request: "HttpRequest", pk: int) -> HttpResponse:
+        monograph = _get_monograph(pk)
+        if not has_publisher_access(request.user, monograph.publisher):
+            raise PermissionDenied
+
+        service = PreValidationService()
+        result = service.validate_monograph(monograph)
+
+        return render(
+            request,
+            "crossref/partials/_monograph_validation_panel.html",
+            {
+                "monograph": monograph,
+                "is_valid": result.is_valid,
+                "errors": result.errors,
+                "warnings": result.warnings,
+                "error_count": len(result.errors),
+                "warning_count": len(result.warnings),
+            },
+        )
+
+
+class GenerateMonographXMLView(LoginRequiredMixin, View):
+    """Generate Crossref XML for a Monograph."""
+
+    def post(self, request: "HttpRequest", pk: int) -> HttpResponse:
+        monograph = _get_monograph(pk)
+        if not has_publisher_access(request.user, monograph.publisher):
+            raise PermissionDenied
+
+        # Pre-validation
+        validator = PreValidationService()
+        result = validator.validate_monograph(monograph)
+
+        if not result.is_valid:
+            return render(
+                request,
+                "crossref/partials/_monograph_generation_result.html",
+                {
+                    "success": False,
+                    "message": "Generisanje blokirano zbog grešaka u validaciji",
+                    "errors": result.errors,
+                },
+            )
+
+        # Sync generation (monographs are single entities, no async needed)
+        service = CrossrefService()
+        success, result_data = service.generate_and_store_monograph_xml(monograph)
+        monograph.refresh_from_db()
+
+        return render(
+            request,
+            "crossref/partials/_monograph_generation_result.html",
+            {
+                "monograph": monograph,
+                "success": success,
+                "message": "XML uspešno generisan" if success else result_data,
+                "timestamp": monograph.xml_generated_at,
+                "xsd_valid": monograph.xsd_valid,
+                "xsd_errors": monograph.xsd_errors,
+                "xsd_validated_at": monograph.xsd_validated_at,
+            },
+        )
+
+
+@login_required
+def monograph_xml_preview(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Return XML preview modal for a Monograph."""
+    monograph = _get_monograph(pk)
+    if not has_publisher_access(request.user, monograph.publisher):
+        raise PermissionDenied
+
+    if not monograph.crossref_xml:
+        return HttpResponse(
+            '<div class="alert alert-warning">XML nije generisan.</div>',
+            status=200,
+        )
+
+    error_lines = []
+    if monograph.xsd_errors:
+        for error in monograph.xsd_errors:
+            if error.get("line"):
+                error_lines.append(str(error["line"]))
+
+    xml_size_kb = len(monograph.crossref_xml.encode("utf-8")) / 1024
+    is_large_xml = xml_size_kb > 100
+
+    return TemplateResponse(
+        request,
+        "crossref/partials/_xml_preview_modal.html",
+        {
+            "monograph": monograph,
+            "xml_content": monograph.crossref_xml,
+            "xsd_valid": monograph.xsd_valid,
+            "xsd_errors": monograph.xsd_errors,
+            "error_lines": ",".join(error_lines),
+            "is_large_xml": is_large_xml,
+            "xml_size_kb": round(xml_size_kb, 1),
+        },
+    )
+
+
+@login_required
+def monograph_xml_download(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Download Crossref XML for a Monograph."""
+    monograph = _get_monograph(pk)
+    if not has_publisher_access(request.user, monograph.publisher):
+        raise PermissionDenied
+    return _create_monograph_xml_download_response(request, monograph)
+
+
+@login_required
+def monograph_download_warning(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Return warning modal for invalid monograph XML download."""
+    monograph = _get_monograph(pk)
+    if not has_publisher_access(request.user, monograph.publisher):
+        raise PermissionDenied
+
+    error_count = len(monograph.xsd_errors) if monograph.xsd_errors else 0
+    return TemplateResponse(
+        request,
+        "crossref/partials/_monograph_download_warning_modal.html",
+        {"monograph": monograph, "error_count": error_count},
+    )
+
+
+@login_required
+def monograph_xml_download_force(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Download monograph XML regardless of validation status."""
+    monograph = _get_monograph(pk)
+    if not has_publisher_access(request.user, monograph.publisher):
+        raise PermissionDenied
+    return _create_monograph_xml_download_response(request, monograph)
+
+
+@login_required
+def monograph_export_redownload(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Re-download a previous monograph export."""
+    export = get_object_or_404(CrossrefExport, pk=pk)
+
+    if export.monograph:
+        publisher = export.monograph.publisher
+    elif export.component_group:
+        publisher = export.component_group.publisher
+    elif export.issue:
+        publisher = export.issue.publication.publisher
+    else:
+        raise Http404
+
+    if not has_publisher_access(request.user, publisher):
+        raise PermissionDenied
+
+    response = HttpResponse(
+        export.xml_content,
+        content_type="application/xml; charset=utf-8",
+    )
+    response["Content-Disposition"] = f'attachment; filename="{export.filename}"'
+    return response
+
+
+@login_required
+def monograph_export_history(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Return export history partial for a Monograph."""
+    monograph = _get_monograph(pk)
+    if not has_publisher_access(request.user, monograph.publisher):
+        raise PermissionDenied
+
+    exports = CrossrefExport.objects.filter(
+        monograph=monograph
+    ).select_related("exported_by")[:10]
+
+    return TemplateResponse(
+        request,
+        "crossref/partials/_monograph_export_history.html",
+        {"monograph": monograph, "exports": exports},
+    )
+
+
+class MonographDepositView(LoginRequiredMixin, View):
+    """Crossref Deposit workflow page for Monograph."""
+
+    def get(self, request: "HttpRequest", pk: int) -> HttpResponse:
+        monograph = _get_monograph(pk)
+        if not has_publisher_access(request.user, monograph.publisher):
+            raise PermissionDenied
+
+        has_xml = bool(monograph.crossref_xml)
+        validator = PreValidationService()
+        validation_result = validator.validate_monograph(monograph)
+
+        steps = [
+            {
+                "number": 1,
+                "title": "Pre-validacija",
+                "completed": validation_result.is_valid,
+                "active": not validation_result.is_valid,
+                "icon": "clipboard-check",
+            },
+            {
+                "number": 2,
+                "title": "Generisanje XML",
+                "completed": has_xml,
+                "active": validation_result.is_valid and not has_xml,
+                "icon": "file-code",
+            },
+            {
+                "number": 3,
+                "title": "XSD Validacija",
+                "completed": has_xml and monograph.xsd_valid is True,
+                "active": has_xml and monograph.xsd_valid is not True,
+                "icon": "shield-check",
+            },
+            {
+                "number": 4,
+                "title": "Pregled XML",
+                "completed": False,
+                "active": has_xml,
+                "icon": "eye",
+            },
+            {
+                "number": 5,
+                "title": "Preuzimanje XML",
+                "completed": monograph.crossref_exports.exists(),
+                "active": has_xml,
+                "icon": "download",
+            },
+        ]
+
+        all_ready = (
+            has_xml
+            and monograph.xsd_valid is True
+            and monograph.crossref_exports.exists()
+        )
+
+        breadcrumbs = [
+            {"label": "Monografije", "url": reverse("monographs:list")},
+            {"label": str(monograph), "url": reverse("monographs:detail", args=[monograph.pk])},
+            {"label": "Crossref Deposit", "url": ""},
+        ]
+
+        return TemplateResponse(
+            request,
+            "crossref/monograph_crossref_deposit.html",
+            {
+                "monograph": monograph,
+                "steps": steps,
+                "has_xml": has_xml,
+                "validation_result": validation_result,
+                "is_deposited": monograph.is_crossref_deposited,
+                "all_ready": all_ready,
+                "breadcrumbs": breadcrumbs,
+            },
+        )
+
+
+@login_required
+def monograph_mark_deposited(request: "HttpRequest", pk: int) -> HttpResponse:
+    """Mark a Monograph as deposited to Crossref."""
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    monograph = _get_monograph(pk)
+    if not has_publisher_access(request.user, monograph.publisher):
+        raise PermissionDenied
+
+    monograph.crossref_deposited_at = timezone.now()
+    monograph.crossref_deposited_by = request.user
+    monograph.save(update_fields=["crossref_deposited_at", "crossref_deposited_by"])
+
+    return render(
+        request,
+        "crossref/partials/_monograph_deposit_status.html",
+        {
+            "monograph": monograph,
             "is_deposited": True,
         },
     )

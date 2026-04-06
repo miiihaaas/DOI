@@ -43,6 +43,8 @@ urlpatterns = [
     path("dashboard/components/", include("doi_portal.components.urls", namespace="components")),
     # Conference registration wizard
     path("dashboard/wizard/", include("doi_portal.wizard.urls", namespace="wizard")),
+    # Monograph admin routes (under dashboard)
+    path("dashboard/monographs/", include("doi_portal.monographs.urls", namespace="monographs")),
     # Story 5.2: Crossref validation routes (under dashboard)
     path("dashboard/crossref/", include("doi_portal.crossref.urls", namespace="crossref")),
     # Story 6.2: Audit Log Viewer + Story 6.5: System monitoring (under dashboard)
@@ -55,6 +57,8 @@ urlpatterns = [
     path("articles/", include("doi_portal.portal.urls_articles", namespace="portal-articles")),
     # Public component landing page (no authentication required)
     path("components/", include("doi_portal.portal.urls_components", namespace="portal-components")),
+    # Public monograph portal routes (no authentication required)
+    path("monographs/", include("doi_portal.portal.urls_monographs", namespace="portal-monographs")),
 ]
 
 # Media files — static() only works when DEBUG=True.

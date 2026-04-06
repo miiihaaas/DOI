@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doi_batch version="5.4.0" xmlns="http://www.crossref.org/schema/5.4.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:jats="http://www.ncbi.nlm.nih.gov/JATS1"
+           xmlns:ai="http://www.crossref.org/AccessIndicators.xsd"
+           xmlns:fr="http://www.crossref.org/fundref.xsd"
+           xmlns:rel="http://www.crossref.org/relations.xsd"
+           xsi:schemaLocation="http://www.crossref.org/schema/5.4.0 https://www.crossref.org/schemas/crossref5.4.0.xsd">
+  <head>
+    <doi_batch_id>{{ head.doi_batch_id }}</doi_batch_id>
+    <timestamp>{{ head.timestamp }}</timestamp>
+    <depositor>
+      <depositor_name>{{ head.depositor_name|xml_escape }}</depositor_name>
+      <email_address>{{ head.depositor_email }}</email_address>
+    </depositor>
+    <registrant>{{ head.registrant|xml_escape }}</registrant>
+  </head>
+  <body>
+    <book book_type="monograph">
+      <book_metadata language="{{ monograph.language }}">
+        {# XSD ORDER: 1.contributors 2.titles 3.abstract 4.edition 5.pub_date 6.acceptance_date 7.isbn 8.publisher 9.publisher_item 10.(crossmark OR fr+ai) 11.rel 12.archive 13.doi_data 14.citation_list #}
+        {% if contributors %}
+        <contributors>
+          {% for contributor in contributors %}
+          <person_name sequence="{{ contributor.sequence }}" contributor_role="{{ contributor.contributor_role }}">
+            {% if contributor.given_name %}
+            <given_name>{{ contributor.given_name }}</given_name>
+            {% endif %}
+            <surname>{{ contributor.surname }}</surname>
+            {% if contributor.suffix %}
+            <suffix>{{ contributor.suffix }}</suffix>
+            {% endif %}
+            {% if contributor.affiliations %}
+            <affiliations>
+              {% for aff in contributor.affiliations %}
+              <institution>
+                <institution_name>{{ aff.institution_name }}</institution_name>
+                {% if aff.institution_ror_id %}
+                <institution_id type="ror">{{ aff.institution_ror_id }}</institution_id>
+                {% endif %}
+                {% if aff.department %}
+                <institution_department>{{ aff.department }}</institution_department>
+                {% endif %}
+              </institution>
+              {% endfor %}
+            </affiliations>
+            {% endif %}
+            {% if contributor.orcid %}
+            <ORCID{% if contributor.orcid_authenticated %} authenticated="true"{% endif %}>{{ contributor.orcid|format_orcid_url }}</ORCID>
+            {% endif %}
+          </person_name>
+          {% endfor %}
+        </contributors>
+        {% endif %}
+        {# PAŽNJA: title/subtitle sadrže face markup — NE dodavati xml_escape filter, Markup() wrapper upravlja escape-om #}
+        <titles>
+          <title>{{ monograph.title }}</title>
+          {% if monograph.subtitle %}
+          <subtitle>{{ monograph.subtitle }}</subtitle>
+          {% endif %}
+        </titles>
+        {# PAŽNJA: abstract sadrži JATS inline markup — NE dodavati xml_escape filter #}
+        {% if monograph.abstract %}
+        <jats:abstract>
+          <jats:p>{{ monograph.abstract }}</jats:p>
+        </jats:abstract>
+        {% endif %}
+        {% if monograph.edition_number %}
+        <edition_number>{{ monograph.edition_number }}</edition_number>
+        {% endif %}
+        <publication_date media_type="online">
+          <year>{{ monograph.year }}</year>
+        </publication_date>
+        {% if monograph.isbn_print %}
+        <isbn media_type="print">{{ monograph.isbn_print }}</isbn>
+        {% endif %}
+        {% if monograph.isbn_online %}
+        <isbn media_type="electronic">{{ monograph.isbn_online }}</isbn>
+        {% endif %}
+        {% if not monograph.isbn_print and not monograph.isbn_online %}
+        <noisbn reason="monograph"/>
+        {% endif %}
+        <publisher>
+          <publisher_name>{{ publisher.name|xml_escape }}</publisher_name>
+          {% if monograph.publication_place %}
+          <publisher_place>{{ monograph.publication_place|xml_escape }}</publisher_place>
+          {% endif %}
+        </publisher>
+        {% if monograph_fundings %}
+        <fr:program name="fundref">
+          {% for funding in monograph_fundings %}
+          <fr:assertion name="fundgroup">
+            <fr:assertion name="funder_name">{{ funding.funder_name }}</fr:assertion>
+            {% if funding.funder_doi %}
+            <fr:assertion name="funder_identifier">{{ funding.funder_doi }}</fr:assertion>
+            {% endif %}
+            {% if funding.award_number %}
+            <fr:assertion name="award_number">{{ funding.award_number }}</fr:assertion>
+            {% endif %}
+          </fr:assertion>
+          {% endfor %}
+        </fr:program>
+        {% endif %}
+        {% if monograph.license_url %}
+        <ai:program name="AccessIndicators">
+          {% if monograph.free_to_read %}
+          <ai:free_to_read/>
+          {% endif %}
+          <ai:license_ref{% if monograph.license_applies_to %} applies_to="{{ monograph.license_applies_to }}"{% endif %}>{{ monograph.license_url }}</ai:license_ref>
+        </ai:program>
+        {% endif %}
+        {% if monograph_relations %}
+        <rel:program name="relations">
+          {% for relation in monograph_relations %}
+          <rel:related_item>
+            {% if relation.description %}
+            <rel:description>{{ relation.description }}</rel:description>
+            {% endif %}
+            {% if relation.scope == "intra_work" %}
+            <rel:intra_work_relation relationship-type="{{ relation.relationship_type }}" identifier-type="{{ relation.identifier_type }}">{{ relation.identifier }}</rel:intra_work_relation>
+            {% else %}
+            <rel:inter_work_relation relationship-type="{{ relation.relationship_type }}" identifier-type="{{ relation.identifier_type }}">{{ relation.identifier }}</rel:inter_work_relation>
+            {% endif %}
+          </rel:related_item>
+          {% endfor %}
+        </rel:program>
+        {% endif %}
+        <doi_data>
+          <doi>{{ publisher.doi_prefix }}/{{ monograph.doi_suffix }}</doi>
+          <resource>{{ monograph.resource_url }}</resource>
+        </doi_data>
+      </book_metadata>
+      {% for chapter in chapters %}
+      <content_item component_type="chapter">
+        {# XSD ORDER: 1.contributors 2.titles 3.abstract 4.publication_date 5.acceptance_date 6.pages 7.publisher_item 8.fr+ai 9.rel 10.archive 11.doi_data #}
+        {% if chapter.contributors %}
+        <contributors>
+          {% for contributor in chapter.contributors %}
+          <person_name sequence="{{ contributor.sequence }}" contributor_role="{{ contributor.contributor_role }}">
+            {% if contributor.given_name %}
+            <given_name>{{ contributor.given_name }}</given_name>
+            {% endif %}
+            <surname>{{ contributor.surname }}</surname>
+            {% if contributor.suffix %}
+            <suffix>{{ contributor.suffix }}</suffix>
+            {% endif %}
+            {% if contributor.affiliations %}
+            <affiliations>
+              {% for aff in contributor.affiliations %}
+              <institution>
+                <institution_name>{{ aff.institution_name }}</institution_name>
+                {% if aff.institution_ror_id %}
+                <institution_id type="ror">{{ aff.institution_ror_id }}</institution_id>
+                {% endif %}
+                {% if aff.department %}
+                <institution_department>{{ aff.department }}</institution_department>
+                {% endif %}
+              </institution>
+              {% endfor %}
+            </affiliations>
+            {% endif %}
+            {% if contributor.orcid %}
+            <ORCID{% if contributor.orcid_authenticated %} authenticated="true"{% endif %}>{{ contributor.orcid|format_orcid_url }}</ORCID>
+            {% endif %}
+          </person_name>
+          {% endfor %}
+        </contributors>
+        {% endif %}
+        {# PAŽNJA: title/subtitle sadrže face markup — NE dodavati xml_escape filter, Markup() wrapper upravlja escape-om #}
+        <titles>
+          <title>{{ chapter.title }}</title>
+          {% if chapter.subtitle %}
+          <subtitle>{{ chapter.subtitle }}</subtitle>
+          {% endif %}
+        </titles>
+        {# PAŽNJA: abstract sadrži JATS inline markup — NE dodavati xml_escape filter #}
+        {% if chapter.abstract %}
+        <jats:abstract>
+          <jats:p>{{ chapter.abstract }}</jats:p>
+        </jats:abstract>
+        {% endif %}
+        {% if chapter.first_page or chapter.last_page %}
+        <pages>
+          {% if chapter.first_page %}
+          <first_page>{{ chapter.first_page }}</first_page>
+          {% endif %}
+          {% if chapter.last_page %}
+          <last_page>{{ chapter.last_page }}</last_page>
+          {% endif %}
+        </pages>
+        {% endif %}
+        {% if chapter.fundings %}
+        <fr:program name="fundref">
+          {% for funding in chapter.fundings %}
+          <fr:assertion name="fundgroup">
+            <fr:assertion name="funder_name">{{ funding.funder_name }}</fr:assertion>
+            {% if funding.funder_doi %}
+            <fr:assertion name="funder_identifier">{{ funding.funder_doi }}</fr:assertion>
+            {% endif %}
+            {% if funding.award_number %}
+            <fr:assertion name="award_number">{{ funding.award_number }}</fr:assertion>
+            {% endif %}
+          </fr:assertion>
+          {% endfor %}
+        </fr:program>
+        {% endif %}
+        {% if chapter.license_url %}
+        <ai:program name="AccessIndicators">
+          {% if chapter.free_to_read %}
+          <ai:free_to_read/>
+          {% endif %}
+          <ai:license_ref{% if chapter.license_applies_to %} applies_to="{{ chapter.license_applies_to }}"{% endif %}>{{ chapter.license_url }}</ai:license_ref>
+        </ai:program>
+        {% endif %}
+        {% if chapter.relations %}
+        <rel:program name="relations">
+          {% for relation in chapter.relations %}
+          <rel:related_item>
+            {% if relation.description %}
+            <rel:description>{{ relation.description }}</rel:description>
+            {% endif %}
+            {% if relation.scope == "intra_work" %}
+            <rel:intra_work_relation relationship-type="{{ relation.relationship_type }}" identifier-type="{{ relation.identifier_type }}">{{ relation.identifier }}</rel:intra_work_relation>
+            {% else %}
+            <rel:inter_work_relation relationship-type="{{ relation.relationship_type }}" identifier-type="{{ relation.identifier_type }}">{{ relation.identifier }}</rel:inter_work_relation>
+            {% endif %}
+          </rel:related_item>
+          {% endfor %}
+        </rel:program>
+        {% endif %}
+        <doi_data>
+          <doi>{{ publisher.doi_prefix }}/{{ chapter.doi_suffix }}</doi>
+          <resource>{{ chapter.resource_url }}</resource>
+        </doi_data>
+      </content_item>
+      {% endfor %}
+    </book>
+  </body>
+</doi_batch>

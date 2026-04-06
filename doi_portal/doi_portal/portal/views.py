@@ -45,6 +45,9 @@ from doi_portal.portal.services import search_articles
 
 from doi_portal.issues.models import Issue
 from doi_portal.issues.models import IssueStatus
+from doi_portal.monographs.models import Monograph
+from doi_portal.monographs.models import MonographChapter
+from doi_portal.monographs.models import MonographStatus
 from doi_portal.publications.models import AccessType
 from doi_portal.publications.models import Publication
 from doi_portal.publications.models import PublicationType
@@ -729,6 +732,109 @@ class ComponentLandingView(DetailView):
             {"label": component.title or component.doi_suffix, "url": None},
         ]
 
+        return context
+
+
+# =============================================================================
+# Monograph Portal Views
+# =============================================================================
+
+
+class MonographPublicListView(ListView):
+    """Public list of published monographs."""
+
+    model = Monograph
+    template_name = "portal/monographs/monograph_list.html"
+    context_object_name = "monographs"
+    paginate_by = 12
+
+    def get_queryset(self):
+        return Monograph.objects.filter(
+            status=MonographStatus.PUBLISHED,
+        ).select_related("publisher").order_by("-year", "-created_at")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {"label": "Monografije", "url": None},
+        ]
+        return context
+
+
+class MonographPublicDetailView(DetailView):
+    """Public detail page for a monograph."""
+
+    model = Monograph
+    template_name = "portal/monographs/monograph_detail.html"
+    context_object_name = "monograph"
+
+    def get_queryset(self):
+        return Monograph.objects.filter(
+            status=MonographStatus.PUBLISHED,
+        ).select_related("publisher")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        monograph = self.object
+        context["contributors"] = monograph.contributors.prefetch_related(
+            "affiliations",
+        ).all()
+        context["chapters"] = (
+            monograph.chapters.filter(status=MonographStatus.PUBLISHED)
+            .prefetch_related("contributors__affiliations")
+            .order_by("order")
+        )
+        context["full_doi"] = monograph.full_doi
+        context["doi_url"] = f"https://doi.org/{monograph.full_doi}"
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {
+                "label": "Monografije",
+                "url": reverse("portal-monographs:monograph-list"),
+            },
+            {"label": monograph.title, "url": None},
+        ]
+        return context
+
+
+class ChapterLandingView(DetailView):
+    """Public landing page for a monograph chapter."""
+
+    model = MonographChapter
+    template_name = "portal/monographs/chapter_detail.html"
+    context_object_name = "chapter"
+
+    def get_queryset(self):
+        return MonographChapter.objects.filter(
+            status=MonographStatus.PUBLISHED,
+        ).select_related("monograph__publisher")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        chapter = self.object
+        monograph = chapter.monograph
+        context["monograph"] = monograph
+        context["contributors"] = chapter.contributors.prefetch_related(
+            "affiliations",
+        ).all()
+        context["full_doi"] = chapter.full_doi
+        context["doi_url"] = f"https://doi.org/{chapter.full_doi}"
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {
+                "label": "Monografije",
+                "url": reverse("portal-monographs:monograph-list"),
+            },
+            {
+                "label": monograph.title,
+                "url": reverse(
+                    "portal-monographs:monograph-detail",
+                    kwargs={"pk": monograph.pk},
+                ),
+            },
+            {"label": chapter.title, "url": None},
+        ]
         return context
 
 
