@@ -38,6 +38,8 @@ from .forms import (
     MonographFundingForm,
     MonographRelationForm,
 )
+from doi_portal.articles.models import PdfStatus
+
 from .models import (
     ChapterAffiliation,
     ChapterContributor,
@@ -1462,4 +1464,199 @@ def chapter_relation_form_view(request, chapter_pk):
     return render(request, "monographs/partials/_chapter_relation_form.html", {
         "chapter": chapter,
         "relation_form": form,
+    })
+
+
+# =============================================================================
+# PDF Upload: Monograph
+# =============================================================================
+
+
+@login_required
+@require_POST
+def monograph_pdf_upload(request, pk):
+    """Upload PDF for monograph via HTMX."""
+    monograph = get_object_or_404(
+        Monograph.objects.select_related("publisher"), pk=pk,
+    )
+    _check_monograph_permission(request.user, monograph)
+
+    pdf_file = request.FILES.get("pdf_file")
+    if not pdf_file:
+        return render(request, "monographs/partials/_pdf_upload.html", {
+            "monograph": monograph,
+            "error": "Izaberite PDF fajl za otpremanje.",
+        })
+
+    from doi_portal.articles.validators import validate_pdf_file
+
+    errors = validate_pdf_file(pdf_file)
+    if errors:
+        return render(request, "monographs/partials/_pdf_upload.html", {
+            "monograph": monograph,
+            "error": errors[0],
+        })
+
+    # Save old file reference for cleanup after successful scan
+    old_pdf = monograph.pdf_file.name if monograph.pdf_file else None
+
+    # Save new file
+    monograph.pdf_file = pdf_file
+    monograph.pdf_original_filename = pdf_file.name
+    monograph.pdf_status = PdfStatus.SCANNING
+    monograph.save(update_fields=["pdf_file", "pdf_original_filename", "pdf_status"])
+
+    # Trigger async virus scan
+    from doi_portal.articles.tasks import virus_scan_pdf_task
+
+    virus_scan_pdf_task.delay(
+        monograph.id, model_label="monographs.Monograph", old_pdf_path=old_pdf,
+    )
+
+    return render(request, "monographs/partials/_pdf_upload.html", {
+        "monograph": monograph,
+    })
+
+
+@login_required
+@require_GET
+def monograph_pdf_status(request, pk):
+    """Return monograph PDF status fragment for HTMX polling."""
+    monograph = get_object_or_404(
+        Monograph.objects.select_related("publisher"), pk=pk,
+    )
+    _check_monograph_permission(request.user, monograph)
+
+    return render(request, "monographs/partials/_pdf_upload.html", {
+        "monograph": monograph,
+    })
+
+
+@login_required
+@require_POST
+def monograph_pdf_delete(request, pk):
+    """Delete PDF file from monograph via HTMX POST."""
+    monograph = get_object_or_404(
+        Monograph.objects.select_related("publisher"), pk=pk,
+    )
+    _check_monograph_permission(request.user, monograph)
+
+    # Prevent deletion while virus scan is in progress
+    if monograph.pdf_status == PdfStatus.SCANNING:
+        return render(request, "monographs/partials/_pdf_upload.html", {
+            "monograph": monograph,
+            "error": "Nije moguće obrisati PDF dok je skeniranje u toku.",
+        })
+
+    # Delete the file from storage
+    if monograph.pdf_file:
+        monograph.pdf_file.delete(save=False)
+
+    # Reset fields
+    monograph.pdf_file = ""
+    monograph.pdf_status = PdfStatus.NONE
+    monograph.pdf_original_filename = ""
+    monograph.save(update_fields=["pdf_file", "pdf_status", "pdf_original_filename"])
+
+    return render(request, "monographs/partials/_pdf_upload.html", {
+        "monograph": monograph,
+    })
+
+
+# =============================================================================
+# PDF Upload: Chapter
+# =============================================================================
+
+
+@login_required
+@require_POST
+def chapter_pdf_upload(request, pk):
+    """Upload PDF for chapter via HTMX."""
+    chapter = get_object_or_404(
+        MonographChapter.objects.select_related("monograph", "monograph__publisher"),
+        pk=pk,
+    )
+    _check_monograph_permission(request.user, chapter.monograph)
+
+    pdf_file = request.FILES.get("pdf_file")
+    if not pdf_file:
+        return render(request, "monographs/partials/_chapter_pdf_upload.html", {
+            "chapter": chapter,
+            "error": "Izaberite PDF fajl za otpremanje.",
+        })
+
+    from doi_portal.articles.validators import validate_pdf_file
+
+    errors = validate_pdf_file(pdf_file)
+    if errors:
+        return render(request, "monographs/partials/_chapter_pdf_upload.html", {
+            "chapter": chapter,
+            "error": errors[0],
+        })
+
+    # Save old file reference for cleanup after successful scan
+    old_pdf = chapter.pdf_file.name if chapter.pdf_file else None
+
+    # Save new file
+    chapter.pdf_file = pdf_file
+    chapter.pdf_original_filename = pdf_file.name
+    chapter.pdf_status = PdfStatus.SCANNING
+    chapter.save(update_fields=["pdf_file", "pdf_original_filename", "pdf_status"])
+
+    # Trigger async virus scan
+    from doi_portal.articles.tasks import virus_scan_pdf_task
+
+    virus_scan_pdf_task.delay(
+        chapter.id, model_label="monographs.MonographChapter", old_pdf_path=old_pdf,
+    )
+
+    return render(request, "monographs/partials/_chapter_pdf_upload.html", {
+        "chapter": chapter,
+    })
+
+
+@login_required
+@require_GET
+def chapter_pdf_status(request, pk):
+    """Return chapter PDF status fragment for HTMX polling."""
+    chapter = get_object_or_404(
+        MonographChapter.objects.select_related("monograph", "monograph__publisher"),
+        pk=pk,
+    )
+    _check_monograph_permission(request.user, chapter.monograph)
+
+    return render(request, "monographs/partials/_chapter_pdf_upload.html", {
+        "chapter": chapter,
+    })
+
+
+@login_required
+@require_POST
+def chapter_pdf_delete(request, pk):
+    """Delete PDF file from chapter via HTMX POST."""
+    chapter = get_object_or_404(
+        MonographChapter.objects.select_related("monograph", "monograph__publisher"),
+        pk=pk,
+    )
+    _check_monograph_permission(request.user, chapter.monograph)
+
+    # Prevent deletion while virus scan is in progress
+    if chapter.pdf_status == PdfStatus.SCANNING:
+        return render(request, "monographs/partials/_chapter_pdf_upload.html", {
+            "chapter": chapter,
+            "error": "Nije moguće obrisati PDF dok je skeniranje u toku.",
+        })
+
+    # Delete the file from storage
+    if chapter.pdf_file:
+        chapter.pdf_file.delete(save=False)
+
+    # Reset fields
+    chapter.pdf_file = ""
+    chapter.pdf_status = PdfStatus.NONE
+    chapter.pdf_original_filename = ""
+    chapter.save(update_fields=["pdf_file", "pdf_status", "pdf_original_filename"])
+
+    return render(request, "monographs/partials/_chapter_pdf_upload.html", {
+        "chapter": chapter,
     })

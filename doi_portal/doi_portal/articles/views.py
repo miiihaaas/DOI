@@ -927,7 +927,7 @@ def pdf_upload(request, article_pk):
     # Trigger async virus scan
     from .tasks import virus_scan_pdf_task
 
-    virus_scan_pdf_task.delay(article.id, old_pdf_path=old_pdf)
+    virus_scan_pdf_task.delay(article.id, model_label="articles.Article", old_pdf_path=old_pdf)
 
     return render(request, "articles/partials/_pdf_upload.html", {
         "article": article,

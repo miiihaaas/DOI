@@ -2,7 +2,7 @@
 Citation Modal - Bootstrap 5 modal with format tabs and HTMX content loading
 Story 4.7: Citation Modal (Custom UI Component #8).
 Included in article_detail.html.
-Context: article, citation_url, citation_download_url
+Context: citation_item_title, citation_url, citation_download_url
 {% endcomment %}
 {% load markup_tags %}
 
@@ -69,7 +69,7 @@ function citationModal() {
       </div>
       <div class="modal-body">
         <!-- Article title -->
-        <p class="text-muted small mb-3">{{ article.title|strip_markup|truncatechars:80 }}</p>
+        <p class="text-muted small mb-3">{{ citation_item_title|truncatechars:80 }}</p>
 
         <!-- Format tabs -->
         <ul class="nav nav-tabs mb-3" id="citationTabs" role="tablist">

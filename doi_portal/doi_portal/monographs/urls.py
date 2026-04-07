@@ -255,4 +255,36 @@ urlpatterns = [
         views.chapter_relation_delete,
         name="chapter-relation-delete",
     ),
+    # Monograph PDF HTMX endpoints
+    path(
+        "<int:pk>/pdf/upload/",
+        views.monograph_pdf_upload,
+        name="pdf-upload",
+    ),
+    path(
+        "<int:pk>/pdf/status/",
+        views.monograph_pdf_status,
+        name="pdf-status",
+    ),
+    path(
+        "<int:pk>/pdf/delete/",
+        views.monograph_pdf_delete,
+        name="pdf-delete",
+    ),
+    # Chapter PDF HTMX endpoints
+    path(
+        "chapters/<int:pk>/pdf/upload/",
+        views.chapter_pdf_upload,
+        name="chapter-pdf-upload",
+    ),
+    path(
+        "chapters/<int:pk>/pdf/status/",
+        views.chapter_pdf_status,
+        name="chapter-pdf-status",
+    ),
+    path(
+        "chapters/<int:pk>/pdf/delete/",
+        views.chapter_pdf_delete,
+        name="chapter-pdf-delete",
+    ),
 ]

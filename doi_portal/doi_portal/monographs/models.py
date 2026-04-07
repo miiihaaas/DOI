@@ -24,6 +24,7 @@ from doi_portal.articles.models import (
     AuthorSequence,
     ContributorRole,
     IdentifierType,
+    PdfStatus,
     RelationScope,
 )
 from doi_portal.articles.validators import validate_orcid
@@ -42,6 +43,7 @@ __all__ = [
     "MonographFunding",
     "MonographRelation",
     "MonographStatus",
+    "PdfStatus",
 ]
 
 
@@ -379,6 +381,24 @@ class Monograph(SoftDeleteMixin, models.Model):
         default=False,
     )
 
+    # PDF
+    pdf_file = models.FileField(
+        _("PDF fajl"),
+        upload_to="monographs/pdfs/",
+        blank=True,
+    )
+    pdf_status = models.CharField(
+        _("Status PDF-a"),
+        max_length=20,
+        choices=PdfStatus.choices,
+        default=PdfStatus.NONE,
+    )
+    pdf_original_filename = models.CharField(
+        _("Originalni naziv fajla"),
+        max_length=500,
+        blank=True,
+    )
+
     # External resource
     use_external_resource = models.BooleanField(
         _("Koristi eksternu landing stranicu"),
@@ -602,6 +622,24 @@ class MonographChapter(SoftDeleteMixin, models.Model):
     free_to_read = models.BooleanField(
         _("Slobodan pristup"),
         default=False,
+    )
+
+    # PDF
+    pdf_file = models.FileField(
+        _("PDF fajl"),
+        upload_to="monographs/chapter_pdfs/",
+        blank=True,
+    )
+    pdf_status = models.CharField(
+        _("Status PDF-a"),
+        max_length=20,
+        choices=PdfStatus.choices,
+        default=PdfStatus.NONE,
+    )
+    pdf_original_filename = models.CharField(
+        _("Originalni naziv fajla"),
+        max_length=500,
+        blank=True,
     )
 
     # Timestamps

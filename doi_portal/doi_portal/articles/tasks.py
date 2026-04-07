@@ -24,7 +24,7 @@ CLAMAV_SOCKET_TIMEOUT = 10  # seconds
     soft_time_limit=300,
     time_limit=600,
 )
-def virus_scan_pdf_task(self, article_id, old_pdf_path=None):
+def virus_scan_pdf_task(self, instance_id, model_label="articles.Article", old_pdf_path=None):
     """
     Scan uploaded PDF for viruses using ClamAV.
 
@@ -36,34 +36,37 @@ def virus_scan_pdf_task(self, article_id, old_pdf_path=None):
     5. Error -> retry up to 3 times, then "scan_failed"
 
     Args:
-        article_id: Primary key of the Article to scan.
+        instance_id: Primary key of the model instance to scan.
+        model_label: App label and model name (e.g. "articles.Article").
         old_pdf_path: Path to old PDF for cleanup after successful scan.
     """
-    from doi_portal.articles.models import Article
+    from django.apps import apps
     from doi_portal.articles.models import PdfStatus
 
+    Model = apps.get_model(model_label)
+
     try:
-        article = Article.all_objects.get(pk=article_id)
-    except Article.DoesNotExist:
-        logger.error("article_not_found", article_id=article_id)
+        instance = Model.all_objects.get(pk=instance_id)
+    except Model.DoesNotExist:
+        logger.error("instance_not_found", model_label=model_label, instance_id=instance_id)
         return
 
     try:
-        _run_virus_scan(self, article, old_pdf_path)
+        _run_virus_scan(self, instance, old_pdf_path)
     except Retry:
         # Celery retry — let it propagate so the task is re-queued.
         raise
     except Exception:
         # Catch-all: if anything unexpected happens (SoftTimeLimitExceeded,
         # worker shutdown, etc.), ensure status doesn't stay stuck on SCANNING.
-        logger.exception("virus_scan_unexpected_error", article_id=article_id)
-        article.refresh_from_db(fields=["pdf_status"])
-        if article.pdf_status == PdfStatus.SCANNING:
-            article.pdf_status = PdfStatus.SCAN_FAILED
-            article.save(update_fields=["pdf_status"])
+        logger.exception("virus_scan_unexpected_error", model_label=model_label, instance_id=instance_id)
+        instance.refresh_from_db(fields=["pdf_status"])
+        if instance.pdf_status == PdfStatus.SCANNING:
+            instance.pdf_status = PdfStatus.SCAN_FAILED
+            instance.save(update_fields=["pdf_status"])
 
 
-def _run_virus_scan(task, article, old_pdf_path):
+def _run_virus_scan(task, instance, old_pdf_path):
     """Inner scan logic, separated so the caller can catch-all exceptions."""
     from doi_portal.articles.models import PdfStatus
 
@@ -78,36 +81,36 @@ def _run_virus_scan(task, article, old_pdf_path):
     except Exception as exc:
         logger.warning(
             "clamav_connection_failed",
-            article_id=article.pk,
+            instance_id=instance.pk,
             error=str(exc),
             retry=task.request.retries,
         )
         try:
             raise task.retry(exc=exc)
         except task.MaxRetriesExceededError:
-            article.pdf_status = PdfStatus.SCAN_FAILED
-            article.save(update_fields=["pdf_status"])
-            logger.error("clamav_max_retries_exceeded", article_id=article.pk)
+            instance.pdf_status = PdfStatus.SCAN_FAILED
+            instance.save(update_fields=["pdf_status"])
+            logger.error("clamav_max_retries_exceeded", instance_id=instance.pk)
             return
 
     # Scan the file
     try:
-        scan_result = cd.scan_stream(article.pdf_file.read())
-        article.pdf_file.seek(0)  # Reset file pointer
+        scan_result = cd.scan_stream(instance.pdf_file.read())
+        instance.pdf_file.seek(0)  # Reset file pointer
     except Exception as exc:
-        logger.error("clamav_scan_error", article_id=article.pk, error=str(exc))
+        logger.error("clamav_scan_error", instance_id=instance.pk, error=str(exc))
         try:
             raise task.retry(exc=exc)
         except task.MaxRetriesExceededError:
-            article.pdf_status = PdfStatus.SCAN_FAILED
-            article.save(update_fields=["pdf_status"])
+            instance.pdf_status = PdfStatus.SCAN_FAILED
+            instance.save(update_fields=["pdf_status"])
             return
 
     if scan_result is None:
         # File is clean
-        article.pdf_status = PdfStatus.CLEAN
-        article.save(update_fields=["pdf_status"])
-        logger.info("pdf_scan_clean", article_id=article.pk)
+        instance.pdf_status = PdfStatus.CLEAN
+        instance.save(update_fields=["pdf_status"])
+        logger.info("pdf_scan_clean", instance_id=instance.pk)
 
         # Delete old PDF if this was a replacement
         if old_pdf_path:
@@ -115,17 +118,17 @@ def _run_virus_scan(task, article, old_pdf_path):
     else:
         # File is infected
         virus_name = str(scan_result)
-        file_path = article.pdf_file.name
-        article.pdf_file.delete(save=False)
-        article.pdf_file = ""
-        article.pdf_original_filename = ""
-        article.pdf_status = PdfStatus.INFECTED
-        article.save(
+        file_path = instance.pdf_file.name
+        instance.pdf_file.delete(save=False)
+        instance.pdf_file = ""
+        instance.pdf_original_filename = ""
+        instance.pdf_status = PdfStatus.INFECTED
+        instance.save(
             update_fields=["pdf_file", "pdf_original_filename", "pdf_status"],
         )
         logger.error(
             "pdf_scan_infected",
-            article_id=article.pk,
+            instance_id=instance.pk,
             virus=virus_name,
             file_path=file_path,
         )

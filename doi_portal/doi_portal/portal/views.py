@@ -35,9 +35,13 @@ from django.views.generic import FormView
 from django.views.generic import ListView
 from django.views.generic import TemplateView
 
-from doi_portal.articles.models import Article, ArticleStatus
+from doi_portal.articles.models import Article, ArticleStatus, PdfStatus
 from doi_portal.core.markup import strip_markup
+from doi_portal.portal.services import generate_chapter_citation
 from doi_portal.portal.services import generate_citation
+from doi_portal.portal.services import generate_monograph_citation
+from doi_portal.portal.services import get_chapter_pdf_download_filename
+from doi_portal.portal.services import get_monograph_pdf_download_filename
 from doi_portal.portal.services import get_pdf_download_filename
 from doi_portal.portal.services import get_portal_statistics
 from doi_portal.portal.services import get_recent_publications
@@ -601,6 +605,13 @@ class ArticleLandingView(DetailView):
             kwargs={"pk": article.pk},
         )
 
+        # Generic context for shared partials (_floating_action_bar, _citation_modal)
+        from doi_portal.core.terminology import get_term
+        context["fab_cite_label"] = get_term("cite_article", publication.publication_type)
+        context["fab_share_label"] = get_term("share_article", publication.publication_type)
+        context["fab_actions_label"] = get_term("article_actions", publication.publication_type)
+        context["citation_item_title"] = strip_markup(article.title)
+
         return context
 
 
@@ -630,8 +641,6 @@ def article_pdf_download(request, pk):
         raise Http404("PDF nije dostupan za ovaj članak.")
 
     # Security: Do not serve infected or in-progress PDF files
-    from doi_portal.articles.models import PdfStatus
-
     if article.pdf_status in (PdfStatus.INFECTED, PdfStatus.SCANNING, PdfStatus.UPLOADING):
         raise Http404("PDF nije dostupan za ovaj članak.")
 
@@ -795,6 +804,41 @@ class MonographPublicDetailView(DetailView):
             },
             {"label": monograph.title, "url": None},
         ]
+
+        # Floating Action Bar & Citation Modal context
+        context["has_pdf"] = (
+            bool(monograph.pdf_file)
+            and monograph.pdf_status == PdfStatus.CLEAN
+            and monograph.status != MonographStatus.WITHDRAWN
+        )
+        context["share_url"] = self.request.build_absolute_uri(
+            reverse(
+                "portal-monographs:monograph-detail",
+                kwargs={"pk": monograph.pk},
+            )
+        )
+        if context["has_pdf"]:
+            context["pdf_download_url"] = reverse(
+                "portal-monographs:monograph-pdf-download",
+                kwargs={"pk": monograph.pk},
+            )
+            context["pdf_download_filename"] = get_monograph_pdf_download_filename(
+                monograph
+            )
+        context["citation_url"] = reverse(
+            "portal-monographs:monograph-citation",
+            kwargs={"pk": monograph.pk},
+        )
+        context["citation_download_url"] = reverse(
+            "portal-monographs:monograph-citation-download",
+            kwargs={"pk": monograph.pk},
+        )
+        context["is_withdrawn"] = monograph.status == MonographStatus.WITHDRAWN
+        context["fab_cite_label"] = "Citiraj monografiju"
+        context["fab_share_label"] = "Podeli monografiju"
+        context["fab_actions_label"] = "Akcije za monografiju"
+        context["citation_item_title"] = monograph.title
+
         return context
 
 
@@ -835,6 +879,41 @@ class ChapterLandingView(DetailView):
             },
             {"label": chapter.title, "url": None},
         ]
+
+        # Floating Action Bar & Citation Modal context
+        context["has_pdf"] = (
+            bool(chapter.pdf_file)
+            and chapter.pdf_status == PdfStatus.CLEAN
+            and chapter.status != MonographStatus.WITHDRAWN
+        )
+        context["share_url"] = self.request.build_absolute_uri(
+            reverse(
+                "portal-monographs:chapter-detail",
+                kwargs={"monograph_pk": monograph.pk, "pk": chapter.pk},
+            )
+        )
+        if context["has_pdf"]:
+            context["pdf_download_url"] = reverse(
+                "portal-monographs:chapter-pdf-download",
+                kwargs={"monograph_pk": monograph.pk, "pk": chapter.pk},
+            )
+            context["pdf_download_filename"] = get_chapter_pdf_download_filename(
+                chapter
+            )
+        context["citation_url"] = reverse(
+            "portal-monographs:chapter-citation",
+            kwargs={"monograph_pk": monograph.pk, "pk": chapter.pk},
+        )
+        context["citation_download_url"] = reverse(
+            "portal-monographs:chapter-citation-download",
+            kwargs={"monograph_pk": monograph.pk, "pk": chapter.pk},
+        )
+        context["is_withdrawn"] = chapter.status == MonographStatus.WITHDRAWN
+        context["fab_cite_label"] = "Citiraj poglavlje"
+        context["fab_share_label"] = "Podeli poglavlje"
+        context["fab_actions_label"] = "Akcije za poglavlje"
+        context["citation_item_title"] = chapter.title
+
         return context
 
 
@@ -986,3 +1065,206 @@ Ova poruka je automatski poslata sa DOI Portal kontakt forme.
             "Molimo ispravite greške u formi i pokušajte ponovo."
         )
         return super().form_invalid(form)
+
+
+# =============================================================================
+# Monograph PDF Download & Citation Views
+# =============================================================================
+
+
+@require_GET
+def monograph_pdf_download(request, pk):
+    """
+    Serve monograph PDF file as download.
+
+    Only PUBLISHED monographs with CLEAN pdf_status are served.
+    """
+    monograph = get_object_or_404(
+        Monograph,
+        pk=pk,
+        status=MonographStatus.PUBLISHED,
+    )
+    if not monograph.pdf_file:
+        raise Http404("PDF nije dostupan za ovu monografiju.")
+
+    if monograph.pdf_status in (PdfStatus.INFECTED, PdfStatus.SCANNING, PdfStatus.UPLOADING):
+        raise Http404("PDF nije dostupan za ovu monografiju.")
+
+    filename = get_monograph_pdf_download_filename(monograph)
+    return FileResponse(
+        monograph.pdf_file.open("rb"),
+        content_type="application/pdf",
+        as_attachment=True,
+        filename=filename,
+    )
+
+
+@require_GET
+def monograph_citation(request, pk):
+    """
+    Return HTML fragment with formatted citation for a monograph.
+
+    HTMX endpoint - returns HTML, never JSON.
+    Supports formats: apa, mla, chicago, bibtex, ris.
+    Default format is APA.
+    """
+    monograph = get_object_or_404(
+        Monograph.objects.select_related("publisher")
+        .prefetch_related("contributors"),
+        pk=pk,
+        status__in=[MonographStatus.PUBLISHED, MonographStatus.WITHDRAWN],
+    )
+
+    fmt = request.GET.get("format", "apa")
+    if fmt not in CITATION_FORMATS:
+        fmt = "apa"
+
+    citation_text = generate_monograph_citation(monograph, fmt)
+    is_code_format = fmt in ("bibtex", "ris")
+
+    return render(
+        request,
+        "portal/partials/_citation_content.html",
+        {
+            "citation_text": citation_text,
+            "citation_format": fmt,
+            "is_code_format": is_code_format,
+        },
+    )
+
+
+@require_GET
+def monograph_citation_download(request, pk):
+    """
+    Download monograph citation file (BibTeX .bib or RIS .ris).
+
+    Returns file with Content-Disposition: attachment header.
+    Only supports bibtex and ris formats.
+    """
+    fmt = request.GET.get("format", "")
+    if fmt not in ("bibtex", "ris"):
+        return HttpResponseBadRequest("Format mora biti 'bibtex' ili 'ris'.")
+
+    monograph = get_object_or_404(
+        Monograph.objects.select_related("publisher")
+        .prefetch_related("contributors"),
+        pk=pk,
+        status__in=[MonographStatus.PUBLISHED, MonographStatus.WITHDRAWN],
+    )
+
+    citation_text = generate_monograph_citation(monograph, fmt)
+    doi_slug = monograph.doi_suffix.replace("/", "-")
+
+    if fmt == "bibtex":
+        content_type = "application/x-bibtex; charset=utf-8"
+        filename = f"{doi_slug}.bib"
+    else:
+        content_type = "application/x-research-info-systems; charset=utf-8"
+        filename = f"{doi_slug}.ris"
+
+    response = HttpResponse(citation_text, content_type=content_type)
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+# =============================================================================
+# Chapter PDF Download & Citation Views
+# =============================================================================
+
+
+@require_GET
+def chapter_pdf_download(request, monograph_pk, pk):
+    """
+    Serve chapter PDF file as download.
+
+    Only PUBLISHED chapters with CLEAN pdf_status are served.
+    """
+    chapter = get_object_or_404(
+        MonographChapter,
+        pk=pk,
+        monograph__pk=monograph_pk,
+        status=MonographStatus.PUBLISHED,
+    )
+    if not chapter.pdf_file:
+        raise Http404("PDF nije dostupan za ovo poglavlje.")
+
+    if chapter.pdf_status in (PdfStatus.INFECTED, PdfStatus.SCANNING, PdfStatus.UPLOADING):
+        raise Http404("PDF nije dostupan za ovo poglavlje.")
+
+    filename = get_chapter_pdf_download_filename(chapter)
+    return FileResponse(
+        chapter.pdf_file.open("rb"),
+        content_type="application/pdf",
+        as_attachment=True,
+        filename=filename,
+    )
+
+
+@require_GET
+def chapter_citation(request, monograph_pk, pk):
+    """
+    Return HTML fragment with formatted citation for a chapter.
+
+    HTMX endpoint - returns HTML, never JSON.
+    Supports formats: apa, mla, chicago, bibtex, ris.
+    Default format is APA.
+    """
+    chapter = get_object_or_404(
+        MonographChapter.objects.select_related("monograph__publisher")
+        .prefetch_related("contributors"),
+        pk=pk,
+        monograph__pk=monograph_pk,
+        status__in=[MonographStatus.PUBLISHED, MonographStatus.WITHDRAWN],
+    )
+
+    fmt = request.GET.get("format", "apa")
+    if fmt not in CITATION_FORMATS:
+        fmt = "apa"
+
+    citation_text = generate_chapter_citation(chapter, fmt)
+    is_code_format = fmt in ("bibtex", "ris")
+
+    return render(
+        request,
+        "portal/partials/_citation_content.html",
+        {
+            "citation_text": citation_text,
+            "citation_format": fmt,
+            "is_code_format": is_code_format,
+        },
+    )
+
+
+@require_GET
+def chapter_citation_download(request, monograph_pk, pk):
+    """
+    Download chapter citation file (BibTeX .bib or RIS .ris).
+
+    Returns file with Content-Disposition: attachment header.
+    Only supports bibtex and ris formats.
+    """
+    fmt = request.GET.get("format", "")
+    if fmt not in ("bibtex", "ris"):
+        return HttpResponseBadRequest("Format mora biti 'bibtex' ili 'ris'.")
+
+    chapter = get_object_or_404(
+        MonographChapter.objects.select_related("monograph__publisher")
+        .prefetch_related("contributors"),
+        pk=pk,
+        monograph__pk=monograph_pk,
+        status__in=[MonographStatus.PUBLISHED, MonographStatus.WITHDRAWN],
+    )
+
+    citation_text = generate_chapter_citation(chapter, fmt)
+    doi_slug = chapter.doi_suffix.replace("/", "-")
+
+    if fmt == "bibtex":
+        content_type = "application/x-bibtex; charset=utf-8"
+        filename = f"{doi_slug}.bib"
+    else:
+        content_type = "application/x-research-info-systems; charset=utf-8"
+        filename = f"{doi_slug}.ris"
+
+    response = HttpResponse(citation_text, content_type=content_type)
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response

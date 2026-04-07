@@ -4,7 +4,7 @@ Story 4.5: Quick access to PDF, citation, sharing, and DOI copy.
 Story 4.6: Functional PDF download replaces placeholder button.
 Story 4.7: Cite button triggers Citation Modal (replaces placeholder).
 Included in article_detail.html. Requires Alpine.js (available in base.html).
-Context: article, full_doi, doi_url, has_pdf, is_withdrawn, share_url, pdf_download_url, pdf_download_filename
+Context: fab_publication_type, full_doi, doi_url, has_pdf, is_withdrawn, share_url, pdf_download_url, pdf_download_filename
 {% endcomment %}
 {% load terminology %}
 
@@ -79,7 +79,7 @@ function floatingActionBar({ doi = '', shareUrl = '' } = {}) {
 </script>
 
 <nav class="floating-action-bar"
-     aria-label="{{ "article_actions"|term:article.issue.publication.publication_type }}"
+     aria-label="{{ fab_actions_label }}"
      role="navigation"
      x-data="floatingActionBar({ doi: '{{ full_doi|escapejs }}', shareUrl: '{{ share_url|escapejs }}' })">
 
@@ -107,8 +107,8 @@ function floatingActionBar({ doi = '', shareUrl = '' } = {}) {
   <!-- Cite Button (Story 4.7 - triggers Citation Modal) -->
   <button type="button"
           class="btn btn-outline-secondary fab-btn"
-          title="{{ "cite_article"|term:article.issue.publication.publication_type }}"
-          aria-label="{{ "cite_article"|term:article.issue.publication.publication_type }}"
+          title="{{ fab_cite_label }}"
+          aria-label="{{ fab_cite_label }}"
           data-bs-toggle="modal"
           data-bs-target="#citationModal">
     <i class="bi bi-quote" aria-hidden="true"></i>
@@ -119,8 +119,8 @@ function floatingActionBar({ doi = '', shareUrl = '' } = {}) {
   <div class="fab-share-wrapper" style="position: relative;">
     <button type="button"
             class="btn btn-outline-secondary fab-btn"
-            title="{{ "share_article"|term:article.issue.publication.publication_type }}"
-            aria-label="{{ "share_article"|term:article.issue.publication.publication_type }}"
+            title="{{ fab_share_label }}"
+            aria-label="{{ fab_share_label }}"
             :aria-expanded="shareOpen.toString()"
             @click="handleShare()">
       <i class="bi bi-share" aria-hidden="true"></i>

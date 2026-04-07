@@ -241,6 +241,28 @@
                     .floating-action-bubble .btn:last-child { border-top-right-radius: 50rem; border-bottom-right-radius: 50rem; }
                 </style>
                 <script>
+                    function pdfUpload() {
+                        return {
+                            isDragging: false,
+                            uploading: false,
+                            handleDrop(event) {
+                                this.isDragging = false;
+                                const files = event.dataTransfer.files;
+                                if (files.length > 0) {
+                                    const input = this.$el.querySelector('input[type="file"]');
+                                    input.files = files;
+                                    this.uploading = true;
+                                    this.$el.closest('form').requestSubmit();
+                                }
+                            },
+                            fileSelected(event) {
+                                if (event.target.files.length > 0) {
+                                    this.uploading = true;
+                                    event.target.closest('form').requestSubmit();
+                                }
+                            }
+                        }
+                    }
                     function keywordsInput() {
                         return {
                             keywords: [],
@@ -325,6 +347,18 @@
                 <div id="relation-section-content">
                     {% include "monographs/partials/_relation_list.html" %}
                 </div>
+            </div>
+        </div>
+
+        <!-- PDF Upload Section -->
+        <div class="card admin-card section-card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>PDF fajl
+                </h5>
+            </div>
+            <div class="card-body">
+                {% include "monographs/partials/_pdf_upload.html" with monograph=object %}
             </div>
         </div>
 
