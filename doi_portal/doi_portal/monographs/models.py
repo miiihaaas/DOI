@@ -381,6 +381,15 @@ class Monograph(SoftDeleteMixin, models.Model):
         default=False,
     )
 
+    # Cover image
+    cover_image = models.ImageField(
+        _("Naslovna slika"),
+        upload_to="monographs/covers/",
+        blank=True,
+        null=True,
+        help_text=_("Naslovna slika monografije (JPG, PNG, max 2MB)"),
+    )
+
     # PDF
     pdf_file = models.FileField(
         _("PDF fajl"),

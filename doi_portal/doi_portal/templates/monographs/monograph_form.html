@@ -16,7 +16,7 @@
                 <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
             </div>
             <div class="card-body">
-                <form method="post" novalidate id="monograph-main-form">
+                <form method="post" enctype="multipart/form-data" novalidate id="monograph-main-form">
                     {% csrf_token %}
 
                     <!-- Form Errors Summary -->
@@ -157,6 +157,25 @@
                             <button type="button" class="btn btn-outline-secondary" @click="addKeyword()">Dodaj</button>
                         </div>
                         <input type="hidden" name="keywords" :value="JSON.stringify(keywords)" x-ref="keywordsHidden">
+                    </div>
+
+                    <!-- Cover Image Section -->
+                    <div class="form-section-divider"></div>
+                    <h6 class="form-section-title"><i class="bi bi-image me-2"></i>Naslovna slika</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {% if form.instance.cover_image %}
+                            <div class="mb-2">
+                                <img src="{{ form.instance.cover_image.url }}" alt="Trenutna naslovna slika" class="admin-logo-thumb" style="max-height: 200px;">
+                            </div>
+                            {% endif %}
+                            {{ form.cover_image }}
+                            {% if form.cover_image.errors %}
+                            <div class="invalid-feedback d-block">{{ form.cover_image.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">JPG ili PNG, preporučena veličina do 2MB</div>
+                        </div>
                     </div>
 
                     <!-- License Section -->

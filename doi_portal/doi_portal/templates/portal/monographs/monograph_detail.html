@@ -233,6 +233,18 @@
 
     <!-- Sidebar -->
     <aside class="col-lg-4 fade-in-up fade-in-up-2">
+        {% if monograph.cover_image %}
+        <!-- Cover Image -->
+        <div class="card sidebar-card mb-3">
+            <div class="card-body text-center">
+                <img src="{{ monograph.cover_image.url }}"
+                     alt="Naslovna slika: {{ monograph.title }}"
+                     class="img-fluid rounded shadow-sm"
+                     style="max-height: 400px;">
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Publisher Info Card -->
         <div class="card sidebar-card mb-3">
             <div class="card-body">

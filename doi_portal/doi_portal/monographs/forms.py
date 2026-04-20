@@ -60,6 +60,7 @@ class MonographForm(forms.ModelForm):
             "license_url",
             "license_applies_to",
             "free_to_read",
+            "cover_image",
             "use_external_resource",
             "external_landing_url",
         ]
@@ -155,6 +156,12 @@ class MonographForm(forms.ModelForm):
                     "class": "form-check-input",
                 }
             ),
+            "cover_image": forms.ClearableFileInput(
+                attrs={
+                    "class": "form-control",
+                    "accept": "image/*",
+                }
+            ),
             "use_external_resource": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
@@ -185,6 +192,7 @@ class MonographForm(forms.ModelForm):
             "license_url": _("URL licence"),
             "license_applies_to": _("Licenca se odnosi na"),
             "free_to_read": _("Slobodan pristup"),
+            "cover_image": _("Naslovna slika"),
             "use_external_resource": _("Koristi eksterni URL za DOI"),
             "external_landing_url": _("Eksterna landing stranica"),
         }

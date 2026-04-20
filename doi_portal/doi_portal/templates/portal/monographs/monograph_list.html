@@ -17,9 +17,17 @@
         {% for monograph in monographs %}
         <div class="col">
             <article class="card h-100 publication-card">
+                {% if monograph.cover_image %}
+                <div class="card-img-placeholder" style="padding: 0; overflow: hidden;">
+                    <img src="{{ monograph.cover_image.url }}"
+                         alt="Naslovna slika: {{ monograph.title }}"
+                         style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                {% else %}
                 <div class="card-img-placeholder">
                     <i class="bi bi-book display-4" aria-hidden="true"></i>
                 </div>
+                {% endif %}
                 <div class="card-body">
                     <div class="mb-2">
                         <span class="badge-type">
