@@ -708,7 +708,7 @@ class CrossrefService:
         if monograph.use_external_resource and monograph.external_landing_url:
             monograph_resource_url = monograph.external_landing_url
         else:
-            monograph_resource_url = f"{site_url}/monographs/{monograph.slug}/"
+            monograph_resource_url = f"{site_url}/monographs/{monograph.pk}/"
 
         # Build chapters (PUBLISHED only)
         chapters_data = []
@@ -763,7 +763,7 @@ class CrossrefService:
             ]
 
             # Chapter resource URL
-            chapter_resource_url = f"{site_url}/monographs/{monograph.slug}/chapters/{chapter.pk}/"
+            chapter_resource_url = f"{site_url}/monographs/{monograph.pk}/chapters/{chapter.pk}/"
 
             chapters_data.append({
                 "title": Markup(markup_to_crossref_xml(chapter.title)),
