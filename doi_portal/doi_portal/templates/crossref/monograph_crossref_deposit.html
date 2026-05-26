@@ -206,7 +206,11 @@
           <dt>DOI</dt>
           <dd><code>{{ monograph.full_doi }}</code></dd>
           <dt>Izdavač</dt>
-          <dd>{{ monograph.publisher.name }}</dd>
+          <dd>
+            <a href="{% url 'publishers:detail' monograph.publisher.pk %}">
+              {{ monograph.publisher.name }}
+            </a>
+          </dd>
           <dt>Godina</dt>
           <dd>{{ monograph.year }}</dd>
           <dt>Status</dt>
@@ -239,6 +243,9 @@
         </a>
         <a href="{% url 'monographs:list' %}" class="list-group-item list-group-item-action">
           <i class="bi bi-list me-2"></i>Sve monografije
+        </a>
+        <a href="https://www.crossref.org/XSDParse/" class="list-group-item list-group-item-action" target="_blank" rel="noopener">
+          <i class="bi bi-box-arrow-up-right me-2"></i>Crossref XSD Parser
         </a>
         <a href="https://doi.crossref.org/" class="list-group-item list-group-item-action" target="_blank" rel="noopener">
           <i class="bi bi-box-arrow-up-right me-2"></i>Crossref admin portal

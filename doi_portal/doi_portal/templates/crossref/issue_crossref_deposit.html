@@ -255,6 +255,12 @@
               {{ issue.publication.title }}
             </a>
           </dd>
+          <dt>Izdavač</dt>
+          <dd>
+            <a href="{% url 'publishers:detail' issue.publication.publisher.pk %}">
+              {{ issue.publication.publisher.name }}
+            </a>
+          </dd>
           <dt>Izdanje</dt>
           <dd>Vol. {{ issue.volume }}, No. {{ issue.issue_number }} ({{ issue.year }})</dd>
           <dt>Status</dt>
@@ -278,6 +284,9 @@
         </a>
         <a href="{% url 'issues:list' %}?publication={{ issue.publication.pk }}" class="list-group-item list-group-item-action">
           <i class="bi bi-list me-2"></i>Sva izdanja
+        </a>
+        <a href="https://www.crossref.org/XSDParse/" class="list-group-item list-group-item-action" target="_blank" rel="noopener">
+          <i class="bi bi-box-arrow-up-right me-2"></i>Crossref XSD Parser
         </a>
         <a href="https://doi.crossref.org/" class="list-group-item list-group-item-action" target="_blank" rel="noopener">
           <i class="bi bi-box-arrow-up-right me-2"></i>Crossref admin portal
