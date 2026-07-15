@@ -980,9 +980,19 @@ class PreValidationService:
                 fix_url=f"/dashboard/issues/{issue.pk}/edit/",
             )
 
-        # Warning about resource URL
+        # Warning about DOI landing page — show the exact resource URL that will
+        # go into the Crossref XML so the user can verify it resolves.
+        publication = issue.publication
+        landing_path = f"/publications/{publication.slug}/issues/{issue.pk}/"
+        try:
+            landing_url = f"{CrossrefService()._get_site_url()}{landing_path}"
+        except ValueError:
+            landing_url = landing_path
         result.add_warning(
-            message=f"Izdanje ima DOI sufiks '{issue.doi_suffix}' — proverite da je portal stranica dostupna",
+            message=(
+                f"Izdanje ima DOI sufiks '{issue.doi_suffix}' — proverite da je "
+                f"landing stranica dostupna: {landing_url}"
+            ),
             field_name="doi_suffix",
         )
 
