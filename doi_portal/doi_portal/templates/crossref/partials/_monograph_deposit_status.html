@@ -12,7 +12,7 @@
   {% if monograph.crossref_deposited_by %}
   <p class="text-muted mb-0">
     <i class="bi bi-person me-1"></i>
-    {{ monograph.crossref_deposited_by.get_full_name|default:monograph.crossref_deposited_by.email }}
+    {{ monograph.crossref_deposited_by.name|default:monograph.crossref_deposited_by.email }}
   </p>
   {% endif %}
 </div>

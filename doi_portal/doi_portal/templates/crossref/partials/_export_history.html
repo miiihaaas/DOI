@@ -23,7 +23,7 @@
           <tr>
             <td>{{ export.exported_at|date:"d.m.Y H:i" }}</td>
             <td><small class="text-muted">{{ export.filename }}</small></td>
-            <td>{{ export.exported_by.get_full_name|default:export.exported_by.email }}</td>
+            <td>{{ export.exported_by.name|default:export.exported_by.email }}</td>
             <td>
               {% if export.xsd_valid_at_export %}
               <span class="badge bg-success">Validan</span>

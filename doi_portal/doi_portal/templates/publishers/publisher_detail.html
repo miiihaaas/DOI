@@ -96,7 +96,17 @@
                     {% if publisher.crossref_username %}
                     <div class="admin-dl-row">
                         <dt>Korisničko ime</dt>
-                        <dd><code class="admin-code">{{ publisher.crossref_username }}</code></dd>
+                        <dd>
+                            <span x-data="{ copied: false, copy() { navigator.clipboard.writeText(this.$refs.value.textContent).then(() => { this.copied = true; setTimeout(() => this.copied = false, 1500) }) } }">
+                                <code class="admin-code" x-ref="value">{{ publisher.crossref_username }}</code>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-secondary ms-2"
+                                        @click="copy()"
+                                        :title="copied ? 'Kopirano!' : 'Kopiraj u clipboard'">
+                                    <i class="bi" :class="copied ? 'bi-check-lg text-success' : 'bi-clipboard'"></i>
+                                </button>
+                            </span>
+                        </dd>
                     </div>
                     {% endif %}
                     {% if publisher.crossref_password %}
