@@ -22,8 +22,8 @@
                     {% csrf_token %}
 
                     <!-- Publication type map for Alpine.js proceedings toggle -->
-                    <script type="application/json" id="pub-type-map">{{ form.publication_type_map_json }}</script>
-                    <script type="application/json" id="pub-doi-prefix-map">{{ pub_doi_prefix_map_json }}</script>
+                    <script type="application/json" id="pub-type-map">{{ form.publication_type_map_json|safe }}</script>
+                    <script type="application/json" id="pub-doi-prefix-map">{{ pub_doi_prefix_map_json|safe }}</script>
 
                     <!-- Form Errors Summary -->
                     {% if form.errors %}
