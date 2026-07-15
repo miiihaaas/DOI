@@ -16,7 +16,7 @@ from django.utils.translation import gettext_lazy as _
 from doi_portal.core.mixins import SoftDeleteManager, SoftDeleteMixin
 from doi_portal.publishers.models import Publisher
 
-from .validators import validate_isbn, validate_issn
+from .validators import validate_issn
 
 __all__ = [
     "Publication",
@@ -167,21 +167,6 @@ class Publication(SoftDeleteMixin, models.Model):
         max_length=9,
         blank=True,
         validators=[validate_issn],
-    )
-
-    # === CONFERENCE ISBN FIELDS (used by Conference proceedings for Crossref) ===
-    isbn_print = models.CharField(
-        _("ISBN (štampano)"),
-        max_length=17,
-        blank=True,
-        validators=[validate_isbn],
-        help_text=_("Format: 978-X-XXXX-XXXX-X"),
-    )
-    isbn_online = models.CharField(
-        _("ISBN (online)"),
-        max_length=17,
-        blank=True,
-        validators=[validate_isbn],
     )
 
     # === TIMESTAMPS ===

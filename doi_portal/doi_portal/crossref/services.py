@@ -391,9 +391,6 @@ class CrossrefService:
                 "conference_date": publication.conference_date,
                 "conference_date_end": publication.conference_date_end,
                 "conference_number": publication.conference_number,
-                # Conference ISBN fields
-                "isbn_print": publication.isbn_print,
-                "isbn_online": publication.isbn_online,
             },
             "issue": {
                 "pk": issue.pk,
@@ -408,6 +405,13 @@ class CrossrefService:
                 "proceedings_title": issue.proceedings_title,
                 "proceedings_publisher_name": issue.proceedings_publisher_name,
                 "proceedings_publisher_place": issue.proceedings_publisher_place,
+                # Conference ISBN (per-issue)
+                "isbn_print": issue.isbn_print,
+                "isbn_online": issue.isbn_online,
+                # External resource override
+                "use_external_resource": issue.use_external_resource,
+                "external_landing_url": issue.external_landing_url,
+                "external_pdf_url": issue.external_pdf_url,
             },
             "articles": articles_data,
         }
@@ -983,11 +987,14 @@ class PreValidationService:
         # Warning about DOI landing page — show the exact resource URL that will
         # go into the Crossref XML so the user can verify it resolves.
         publication = issue.publication
-        landing_path = f"/publications/{publication.slug}/issues/{issue.pk}/"
-        try:
-            landing_url = f"{CrossrefService()._get_site_url()}{landing_path}"
-        except ValueError:
-            landing_url = landing_path
+        if issue.use_external_resource and issue.external_landing_url:
+            landing_url = issue.external_landing_url
+        else:
+            landing_path = f"/publications/{publication.slug}/issues/{issue.pk}/"
+            try:
+                landing_url = f"{CrossrefService()._get_site_url()}{landing_path}"
+            except ValueError:
+                landing_url = landing_path
         result.add_warning(
             message=(
                 f"Izdanje ima DOI sufiks '{issue.doi_suffix}' — proverite da je "
@@ -995,6 +1002,32 @@ class PreValidationService:
             ),
             field_name="doi_suffix",
         )
+
+        # Warning about duplicate ISBN across other issues of the same publisher —
+        # Crossref rejects submissions where the same ISBN is bound to more than
+        # one genre (e.g. "assigned to other genre: 101").
+        from django.db.models import Q
+
+        for isbn_field in ("isbn_print", "isbn_online"):
+            isbn_value = getattr(issue, isbn_field, "") or ""
+            if not isbn_value:
+                continue
+            isbn_duplicates = IssueModel.objects.filter(
+                publication__publisher=publisher,
+            ).exclude(pk=issue.pk).filter(
+                Q(isbn_print=isbn_value) | Q(isbn_online=isbn_value)
+            )
+            if isbn_duplicates.exists():
+                other = isbn_duplicates.first()
+                result.add_warning(
+                    message=(
+                        f"ISBN '{isbn_value}' se već koristi u drugom izdanju "
+                        f"istog izdavača ({other}) — Crossref može odbiti "
+                        f"submisiju zbog konflikta žanra."
+                    ),
+                    field_name=isbn_field,
+                    fix_url=f"/dashboard/issues/{issue.pk}/edit/",
+                )
 
         return result
 

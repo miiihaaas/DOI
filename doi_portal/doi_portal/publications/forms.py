@@ -50,9 +50,6 @@ class PublicationForm(forms.ModelForm):
             "conference_date",
             "conference_date_end",
             "series_issn",
-            # Conference ISBN fields
-            "isbn_print",
-            "isbn_online",
         ]
         help_texts = {
             "language": "Primarni jezik publikacije. Članci/radovi mogu biti na različitim jezicima.",
@@ -177,19 +174,6 @@ class PublicationForm(forms.ModelForm):
                     "pattern": r"\d{4}-\d{3}[\dX]",
                 }
             ),
-            # Conference ISBN fields
-            "isbn_print": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "978-XX-XXXX-XXX-X",
-                }
-            ),
-            "isbn_online": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "978-XX-XXXX-XXX-X",
-                }
-            ),
         }
 
     def clean_language(self):
@@ -292,8 +276,6 @@ class PublicationForm(forms.ModelForm):
                 "conference_location",
                 "conference_date",
                 "conference_date_end",
-                "isbn_print",
-                "isbn_online",
                 "series_issn",
             ],
             PublicationType.OTHER: [],

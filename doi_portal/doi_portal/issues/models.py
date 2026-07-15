@@ -14,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 
 from doi_portal.core.mixins import SoftDeleteManager, SoftDeleteMixin
 from doi_portal.publications.models import Publication
+from doi_portal.publications.validators import validate_isbn
 
 __all__ = [
     "Issue",
@@ -132,6 +133,38 @@ class Issue(SoftDeleteMixin, models.Model):
         max_length=255,
         blank=True,
         help_text=_("Mesto izdavanja zbornika"),
+    )
+    isbn_print = models.CharField(
+        _("ISBN (štampano)"),
+        max_length=17,
+        blank=True,
+        validators=[validate_isbn],
+        help_text=_("Format: 978-X-XXXX-XXXX-X"),
+    )
+    isbn_online = models.CharField(
+        _("ISBN (online)"),
+        max_length=17,
+        blank=True,
+        validators=[validate_isbn],
+    )
+
+    # === EXTERNAL RESOURCE FIELDS ===
+    use_external_resource = models.BooleanField(
+        _("Koristi eksterni URL za DOI"),
+        default=False,
+        help_text=_("Ako je uključeno, DOI za izdanje će pokazivati na sajt izdavača umesto na portal."),
+    )
+    external_landing_url = models.URLField(
+        _("Eksterna landing stranica"),
+        max_length=500,
+        blank=True,
+        help_text=_("URL stranice zbornika na sajtu izdavača"),
+    )
+    external_pdf_url = models.URLField(
+        _("Eksterni PDF URL"),
+        max_length=500,
+        blank=True,
+        help_text=_("URL PDF fajla zbornika na sajtu izdavača (opciono)"),
     )
 
     # === CROSSREF XML GENERATION FIELDS (Story 5.3) ===

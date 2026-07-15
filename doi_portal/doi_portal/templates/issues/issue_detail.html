@@ -132,10 +132,64 @@
                         <dd>{{ issue.proceedings_publisher_place }}</dd>
                     </div>
                     {% endif %}
+                    {% if issue.isbn_print %}
+                    <div class="admin-dl-row">
+                        <dt>ISBN (štampano)</dt>
+                        <dd><code class="admin-code">{{ issue.isbn_print }}</code></dd>
+                    </div>
+                    {% endif %}
+                    {% if issue.isbn_online %}
+                    <div class="admin-dl-row">
+                        <dt>ISBN (online)</dt>
+                        <dd><code class="admin-code">{{ issue.isbn_online }}</code></dd>
+                    </div>
+                    {% endif %}
                 </dl>
                 {% else %}
                 <p class="text-muted fst-italic mb-0">Nema unetih podataka o zborniku.</p>
                 {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if issue.use_external_resource or issue.external_landing_url or issue.external_pdf_url %}
+        <div class="card admin-card mb-4 section-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-box-arrow-up-right me-2"></i>Eksterni resursi</h5>
+            </div>
+            <div class="card-body">
+                <dl class="admin-dl mb-0">
+                    {% if issue.use_external_resource %}
+                    <div class="admin-dl-row">
+                        <dt>DOI cilja</dt>
+                        <dd>
+                            <span class="badge bg-info"><i class="bi bi-box-arrow-up-right me-1"></i>Sajt izdavača</span>
+                        </dd>
+                    </div>
+                    {% endif %}
+                    {% if issue.external_landing_url %}
+                    <div class="admin-dl-row">
+                        <dt>Eksterna landing stranica</dt>
+                        <dd>
+                            <a href="{{ issue.external_landing_url }}" target="_blank" rel="noopener">
+                                {{ issue.external_landing_url }}
+                                <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.75rem;"></i>
+                            </a>
+                        </dd>
+                    </div>
+                    {% endif %}
+                    {% if issue.external_pdf_url %}
+                    <div class="admin-dl-row">
+                        <dt>Eksterni PDF URL</dt>
+                        <dd>
+                            <a href="{{ issue.external_pdf_url }}" target="_blank" rel="noopener">
+                                {{ issue.external_pdf_url }}
+                                <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.75rem;"></i>
+                            </a>
+                        </dd>
+                    </div>
+                    {% endif %}
+                </dl>
             </div>
         </div>
         {% endif %}

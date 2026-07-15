@@ -43,6 +43,11 @@ class IssueForm(forms.ModelForm):
             "proceedings_title",
             "proceedings_publisher_name",
             "proceedings_publisher_place",
+            "isbn_print",
+            "isbn_online",
+            "use_external_resource",
+            "external_landing_url",
+            "external_pdf_url",
         ]
         widgets = {
             "publication": forms.Select(
@@ -132,6 +137,35 @@ class IssueForm(forms.ModelForm):
                     "placeholder": "Mesto izdavanja",
                 }
             ),
+            "isbn_print": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "978-XX-XXXX-XXX-X",
+                }
+            ),
+            "isbn_online": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "978-XX-XXXX-XXX-X",
+                }
+            ),
+            "use_external_resource": forms.CheckboxInput(
+                attrs={
+                    "class": "form-check-input",
+                }
+            ),
+            "external_landing_url": forms.URLInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "https://izdavac.rs/zbornik-2026-vol-27/",
+                }
+            ),
+            "external_pdf_url": forms.URLInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "https://izdavac.rs/zbornik-2026-vol-27.pdf",
+                }
+            ),
         }
         labels = {
             "publication": _("Publikacija"),
@@ -148,6 +182,11 @@ class IssueForm(forms.ModelForm):
             "proceedings_title": _("Naslov zbornika"),
             "proceedings_publisher_name": _("Naziv izdavača zbornika"),
             "proceedings_publisher_place": _("Mesto izdavanja"),
+            "isbn_print": _("ISBN (štampano)"),
+            "isbn_online": _("ISBN (online)"),
+            "use_external_resource": _("Koristi eksterni URL za DOI"),
+            "external_landing_url": _("Eksterna landing stranica"),
+            "external_pdf_url": _("Eksterni PDF URL"),
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -284,6 +323,17 @@ class IssueForm(forms.ModelForm):
                         "već postoji."
                     )
                 )
+
+        use_external = cleaned_data.get("use_external_resource")
+        external_landing_url = (cleaned_data.get("external_landing_url") or "").strip()
+        if use_external and not external_landing_url:
+            self.add_error(
+                "external_landing_url",
+                _(
+                    "Eksterna landing stranica je obavezna kada je uključen "
+                    "eksterni URL za DOI."
+                ),
+            )
 
         return cleaned_data
 

@@ -50,19 +50,23 @@
           {% endif %}
           <year>{{ issue.year }}</year>
         </publication_date>
-        {% if publication.isbn_print %}
-        <isbn media_type="print">{{ publication.isbn_print }}</isbn>
+        {% if issue.isbn_print %}
+        <isbn media_type="print">{{ issue.isbn_print }}</isbn>
         {% endif %}
-        {% if publication.isbn_online %}
-        <isbn media_type="electronic">{{ publication.isbn_online }}</isbn>
+        {% if issue.isbn_online %}
+        <isbn media_type="electronic">{{ issue.isbn_online }}</isbn>
         {% endif %}
-        {% if not publication.isbn_print and not publication.isbn_online %}
+        {% if not issue.isbn_print and not issue.isbn_online %}
         <noisbn reason="simple_series"/>
         {% endif %}
         {% if issue.doi_suffix %}
         <doi_data>
           <doi>{{ publisher.doi_prefix }}/{{ issue.doi_suffix }}</doi>
+          {% if issue.use_external_resource and issue.external_landing_url %}
+          <resource>{{ issue.external_landing_url }}</resource>
+          {% else %}
           <resource>{{ site_url }}/publications/{{ publication.slug }}/issues/{{ issue.pk }}/</resource>
+          {% endif %}
         </doi_data>
         {% endif %}
       </proceedings_metadata>

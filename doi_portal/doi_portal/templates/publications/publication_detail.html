@@ -126,7 +126,7 @@
                 <h5 class="mb-0"><i class="bi bi-people me-2"></i>Polja za konferenciju</h5>
             </div>
             <div class="card-body">
-                {% if publication.conference_name or publication.conference_acronym or publication.conference_location or publication.conference_date or publication.conference_number or publication.isbn_print or publication.isbn_online or publication.series_issn %}
+                {% if publication.conference_name or publication.conference_acronym or publication.conference_location or publication.conference_date or publication.conference_number or publication.series_issn %}
                 <dl class="admin-dl mb-0">
                     {% if publication.conference_name %}
                     <div class="admin-dl-row">
@@ -167,18 +167,6 @@
                     <div class="admin-dl-row">
                         <dt>Broj konferencije</dt>
                         <dd>{{ publication.conference_number }}.</dd>
-                    </div>
-                    {% endif %}
-                    {% if publication.isbn_print %}
-                    <div class="admin-dl-row">
-                        <dt>ISBN (štampano)</dt>
-                        <dd><code class="admin-code">{{ publication.isbn_print }}</code></dd>
-                    </div>
-                    {% endif %}
-                    {% if publication.isbn_online %}
-                    <div class="admin-dl-row">
-                        <dt>ISBN (online)</dt>
-                        <dd><code class="admin-code">{{ publication.isbn_online }}</code></dd>
                     </div>
                     {% endif %}
                     {% if publication.series_issn %}

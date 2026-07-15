@@ -70,13 +70,6 @@ class PublicationAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Polja za knjigu",
-            {
-                "fields": ("isbn_print", "isbn_online", "edition", "series_title"),
-                "classes": ("collapse",),
-            },
-        ),
-        (
             "Vremenske oznake",
             {
                 "fields": ("created_at", "updated_at"),

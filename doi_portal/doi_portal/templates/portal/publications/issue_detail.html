@@ -56,7 +56,7 @@
 
             <!-- Conference Proceedings -->
             {% if issue.publication.publication_type == "CONFERENCE" %}
-            {% if issue.proceedings_title or issue.proceedings_publisher_name or issue.proceedings_publisher_place %}
+            {% if issue.proceedings_title or issue.proceedings_publisher_name or issue.proceedings_publisher_place or issue.isbn_print or issue.isbn_online %}
             <div class="card detail-meta-card mb-4">
                 <div class="card-body">
                     <h2 class="info-card-heading h5 mb-3">
@@ -79,6 +79,18 @@
                         <div class="detail-meta-row">
                             <dt>Mesto izdavanja</dt>
                             <dd>{{ issue.proceedings_publisher_place }}</dd>
+                        </div>
+                        {% endif %}
+                        {% if issue.isbn_print %}
+                        <div class="detail-meta-row">
+                            <dt>ISBN (štampano)</dt>
+                            <dd>{{ issue.isbn_print }}</dd>
+                        </div>
+                        {% endif %}
+                        {% if issue.isbn_online %}
+                        <div class="detail-meta-row">
+                            <dt>ISBN (online)</dt>
+                            <dd>{{ issue.isbn_online }}</dd>
                         </div>
                         {% endif %}
                     </dl>
