@@ -175,6 +175,15 @@ h3 { font-size: clamp(1.35rem, 1.8vw, 1.6rem); line-height: 1.35; }
     border-radius: 1px;
 }
 
+/* Remove the grey tap-highlight rectangle on mobile when tapping nav items */
+.portal-header .nav-link,
+.portal-header .navbar-cta,
+.portal-header .navbar-brand,
+.portal-header .dropdown-item,
+.portal-header .navbar-toggler {
+    -webkit-tap-highlight-color: transparent;
+}
+
 /* Hamburger icon - white */
 .portal-header .navbar-toggler {
     border-color: rgba(255, 255, 255, 0.3);
@@ -2461,7 +2470,14 @@ html.lenis, html.lenis body { height: auto; }
     color: #fff;
 }
 
-.footer-newsletter .btn-doi { font-size: 0.95rem; }
+.footer-newsletter .btn-doi {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.95rem;
+    letter-spacing: normal;
+    padding: 0.6rem 1.1rem;
+    box-shadow: 0 6px 16px -8px rgba(92, 180, 106, 0.5);
+}
 
 @media (max-width: 575.98px) {
     .portal-footer-bottom .container { justify-content: center; text-align: center; }

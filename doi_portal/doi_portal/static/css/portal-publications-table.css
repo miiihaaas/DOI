@@ -46,6 +46,12 @@
     padding: 1rem 1.15rem;
     margin-bottom: 1.75rem;
     box-shadow: var(--pub-shadow-rest);
+    /* Bug 1: sit above the results column. The global [data-reveal] rule adds
+       will-change:transform to both this bar and the results <section>, each
+       creating a stacking context; since the results section comes later in the
+       DOM it would otherwise paint above the open dropdown menus. */
+    position: relative;
+    z-index: 30;
 }
 
 /* ---- Search field --------------------------------------------------- */
@@ -94,6 +100,8 @@
    ===================================================================== */
 .pub-filter {
     position: relative;
+    /* never clip the open dropdown menu */
+    overflow: visible;
 }
 
 .pub-filter-toggle {
@@ -161,6 +169,8 @@
     min-width: 230px;
     max-height: 320px;
     overflow: auto;
+    /* Bug 1: keep the open menu (and its clickable checkboxes) above the table */
+    z-index: 1080;
 }
 
 .pub-filter-option {
@@ -305,10 +315,10 @@
     text-decoration: none;
 }
 
-/* Active type — distinct: soft brand tint + gradient accent bar */
+/* Active type — light green highlight (not a dark block) + green accent bar */
 .pub-type-link.active {
-    background: var(--brand-gradient-soft);
-    color: #fff;
+    background: rgba(92, 180, 106, 0.14);
+    color: var(--color-dark);
     padding-left: 1.05rem;
 }
 .pub-type-link.active::before {
@@ -323,7 +333,7 @@
 }
 .pub-type-link.active i,
 .pub-type-link.active .bi {
-    color: #fff;
+    color: var(--color-primary);
 }
 /* Count badge inside a type link (optional) */
 .pub-type-link .pub-type-count {
@@ -333,7 +343,7 @@
     color: var(--color-text-secondary);
 }
 .pub-type-link.active .pub-type-count {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--color-primary);
 }
 
 /* =====================================================================
@@ -536,32 +546,70 @@
    RESPONSIVE
    ===================================================================== */
 
-/* Under 992px: side menu stacks above table (Bootstrap cols), un-stick */
+/* Under 992px: side menu stacks above table (Bootstrap cols), un-stick.
+   Turn it into a compact horizontal scrolling row of chips so it doesn't
+   dominate the screen on tablets/phones. */
 @media (max-width: 991.98px) {
     .pub-type-nav {
         position: static;
         top: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+    .pub-type-nav-title {
+        display: none;
+    }
+    .pub-type-link {
+        flex: 0 0 auto;
+        padding: 0.5rem 0.85rem;
+        border: 1px solid var(--color-border);
+        border-radius: 50px;
+        font-size: 0.85rem;
+    }
+    .pub-type-link.active {
+        padding-left: 0.85rem;
+    }
+    /* accent bar reads badly on a pill chip — drop it in the horizontal layout */
+    .pub-type-link.active::before {
+        display: none;
     }
 }
 
-/* Under 768px: filter bar items go full-width, table scrolls */
+/* Under 768px: compact filter bar, side-scrolling table */
 @media (max-width: 767.98px) {
     .pub-filter-bar {
-        padding: 0.85rem;
+        gap: 0.5rem;
+        padding: 0.75rem;
     }
-    .pub-search,
-    .pub-filter,
-    .pub-sort,
-    .pub-filter-reset {
+    /* Search takes its own full-width row */
+    .pub-search {
         flex: 1 1 100%;
+    }
+    /* Four dropdown toggles + sort wrap two-per-row instead of stacking */
+    .pub-filter {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-width: 0;
     }
     .pub-filter-toggle,
     .pub-sort .form-select {
         width: 100%;
         justify-content: space-between;
+        padding: 0.45rem 0.8rem;
+        font-size: 0.85rem;
     }
+    .pub-filter-reset {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+    /* Anchor the menu to its toggle instead of forcing full page width */
     .pub-filter-menu {
-        min-width: 100%;
+        min-width: 220px;
+        max-width: 90vw;
     }
 
     /* Keep table horizontally scrollable inside its card */
@@ -570,12 +618,13 @@
         -webkit-overflow-scrolling: touch;
     }
     .pub-table {
-        min-width: 640px;
+        min-width: 720px;
     }
     .pub-table thead th,
     .pub-table td {
-        padding: 0.65rem 0.75rem;
+        padding: 0.6rem 0.7rem;
     }
+    /* Keep the Naziv column readable while other columns scroll */
     .pub-name-cell {
         min-width: 200px;
     }

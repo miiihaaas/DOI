@@ -1,105 +1,137 @@
 {% extends "portal/base.html" %}
 {% load static i18n %}
 
+{% block css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/portal-publication-detail.css' %}"><link rel="stylesheet" href="{% static 'css/portal-monographs-table.css' %}">{% endblock css %}
+
 {% block title %}{{ monograph.title }} - DOI Portal{% endblock title %}
 
 {% block meta_description %}{{ monograph.title }} - Monografija na DOI Portalu. {{ monograph.abstract|truncatewords:30 }}{% endblock meta_description %}
 
 {% block portal_content %}
-<div class="row">
-    <!-- Main Content -->
-    <article class="col-lg-8 fade-in-up">
-        <!-- Title -->
-        <div class="mb-4" data-reveal>
-            <p class="page-eyebrow mb-2">Monografija</p>
-            <h1 class="section-title h3 mb-2">{{ monograph.title }}</h1>
-            {% if monograph.subtitle %}
-            <p class="article-subtitle mb-3">{{ monograph.subtitle }}</p>
-            {% endif %}
-            <div class="gradient-accent-bar mb-3"></div>
-            <div class="d-flex flex-wrap gap-2">
-                <span class="badge-type">
-                    <i class="bi bi-book me-1" aria-hidden="true"></i>
-                    Monografija
-                </span>
-                {% if monograph.free_to_read %}
-                <span class="badge-access">
-                    <i class="bi bi-unlock me-1" aria-hidden="true"></i>Slobodan pristup
-                </span>
-                {% endif %}
-            </div>
-        </div>
+<a href="{% url 'portal-monographs:monograph-list' %}" class="btn-back pub-detail-back d-inline-block" data-reveal>
+    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad na monografije
+</a>
 
-        <!-- Contributors -->
-        <section class="article-authors mb-4" data-reveal aria-labelledby="contributors-heading">
-            <h2 id="contributors-heading" class="info-card-heading h5 mb-3">Kontributori</h2>
-            {% for contributor in contributors %}
-            <div class="author-card mb-3">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="author-avatar">
-                        {{ contributor.given_name|first }}{{ contributor.surname|first }}
-                    </div>
-                    <div>
-                        <span class="author-name">
-                            {{ contributor.given_name }} {{ contributor.surname }}{% if contributor.suffix %} {{ contributor.suffix }}{% endif %}
-                        </span>
-                        <small class="text-muted">({{ contributor.get_contributor_role_display }})</small>
-                        {% if contributor.is_corresponding %}
-                        <span class="badge-access ms-1" style="font-size: 0.7rem; padding: 2px 8px;">
-                            <i class="bi bi-envelope-fill me-1" aria-hidden="true"></i>Korespondent
-                        </span>
-                        {% endif %}
-                        {% if contributor.orcid %}
-                        <a href="https://orcid.org/{{ contributor.orcid }}"
-                           class="orcid-link ms-1"
-                           rel="external"
-                           target="_blank"
-                           aria-label="ORCID profil za {{ contributor.given_name }} {{ contributor.surname }}: {{ contributor.orcid }}">
-                            <img src="https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png"
-                                 alt="ORCID" width="16" height="16">
-                            {{ contributor.orcid }}
-                        </a>
-                        {% endif %}
-                        {% for affiliation in contributor.affiliations.all %}
-                        <div class="author-affiliation">
-                            {{ affiliation.institution_name }}{% if affiliation.department %}, {{ affiliation.department }}{% endif %}{% if affiliation.city %}, {{ affiliation.city }}{% endif %}{% if affiliation.country %}, {{ affiliation.country }}{% endif %}
+<header class="portal-page-header pub-detail-header" data-reveal>
+    <p class="page-eyebrow">
+        <i class="bi bi-book" aria-hidden="true"></i>MONOGRAFIJA
+    </p>
+    <h1 class="page-title h2">{{ monograph.title }}</h1>
+    {% if monograph.subtitle %}
+    <p class="mono-header-subtitle">{{ monograph.subtitle }}</p>
+    {% endif %}
+    {% if contributors %}
+    <p class="page-subtitle">
+        {% for c in contributors|slice:":3" %}{{ c.given_name }} {{ c.surname }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if contributors|length > 3 %} i dr.{% endif %}
+    </p>
+    {% else %}
+    <p class="page-subtitle">{{ monograph.publisher.name }}</p>
+    {% endif %}
+
+    <div class="pub-header-badges">
+        <span class="badge-type">
+            <i class="bi bi-book" aria-hidden="true"></i>
+            Monografija
+        </span>
+        {% if monograph.free_to_read %}
+        <span class="badge-access">
+            <i class="bi bi-unlock" aria-hidden="true"></i>Otvoreni pristup
+        </span>
+        {% else %}
+        <span class="badge-restricted">
+            <i class="bi bi-lock" aria-hidden="true"></i>Ograničeni pristup
+        </span>
+        {% endif %}
+        {% if monograph.year %}
+        <span class="badge-year">
+            <i class="bi bi-calendar3" aria-hidden="true"></i>{{ monograph.year }}
+        </span>
+        {% endif %}
+    </div>
+</header>
+
+<div class="row g-4 pub-detail-layout">
+    <!-- Main column: contributors + abstract + keywords + details + chapters -->
+    <div class="col-lg-8" data-reveal>
+        <article>
+            <!-- Contributors -->
+            <section class="pub-section" aria-labelledby="contributors-heading">
+                <div class="pub-section-head">
+                    <p class="section-label"><span class="gradient-accent-bar" aria-hidden="true"></span>Autorstvo</p>
+                    <h2 id="contributors-heading" class="pub-section-title">Kontributori</h2>
+                </div>
+                {% for contributor in contributors %}
+                <div class="author-card mb-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="author-avatar">
+                            {{ contributor.given_name|first }}{{ contributor.surname|first }}
                         </div>
-                        {% endfor %}
+                        <div>
+                            <span class="author-name">
+                                {{ contributor.given_name }} {{ contributor.surname }}{% if contributor.suffix %} {{ contributor.suffix }}{% endif %}
+                            </span>
+                            <small class="text-muted">({{ contributor.get_contributor_role_display }})</small>
+                            {% if contributor.is_corresponding %}
+                            <span class="badge-access ms-1" style="font-size: 0.7rem; padding: 2px 8px;">
+                                <i class="bi bi-envelope-fill me-1" aria-hidden="true"></i>Korespondent
+                            </span>
+                            {% endif %}
+                            {% if contributor.orcid %}
+                            <a href="https://orcid.org/{{ contributor.orcid }}"
+                               class="orcid-link ms-1"
+                               rel="external"
+                               target="_blank"
+                               aria-label="ORCID profil za {{ contributor.given_name }} {{ contributor.surname }}: {{ contributor.orcid }}">
+                                <img src="https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png"
+                                     alt="ORCID" width="16" height="16">
+                                {{ contributor.orcid }}
+                            </a>
+                            {% endif %}
+                            {% for affiliation in contributor.affiliations.all %}
+                            <div class="author-affiliation">
+                                {{ affiliation.institution_name }}{% if affiliation.department %}, {{ affiliation.department }}{% endif %}{% if affiliation.city %}, {{ affiliation.city }}{% endif %}{% if affiliation.country %}, {{ affiliation.country }}{% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
-            </div>
-            {% empty %}
-            <p class="text-muted-custom">Nema podataka o kontributorima.</p>
-            {% endfor %}
-        </section>
-
-        <!-- Abstract -->
-        {% if monograph.abstract %}
-        <section class="article-abstract mb-4" data-reveal aria-labelledby="abstract-heading">
-            <h2 id="abstract-heading" class="info-card-heading h5 mb-3">Apstrakt</h2>
-            <div class="abstract-content">
-                <p>{{ monograph.abstract|linebreaksbr }}</p>
-            </div>
-        </section>
-        {% endif %}
-
-        <!-- Keywords -->
-        {% if monograph.keywords %}
-        <section class="article-keywords mb-4" data-reveal aria-labelledby="keywords-heading">
-            <h2 id="keywords-heading" class="info-card-heading h5 mb-3">Ključne reči</h2>
-            <div>
-                {% for kw in monograph.keywords %}
-                <span class="badge bg-light text-dark border me-1 mb-1 keyword-tag">{{ kw }}</span>
+                {% empty %}
+                <p class="text-muted-custom mb-0">Nema podataka o kontributorima.</p>
                 {% endfor %}
-            </div>
-        </section>
-        {% endif %}
+            </section>
 
-        <!-- Metadata -->
-        <section class="article-metadata mb-4" data-reveal aria-labelledby="metadata-heading">
-            <h2 id="metadata-heading" class="info-card-heading h5 mb-3">Podaci o monografiji</h2>
+            <!-- Abstract -->
+            {% if monograph.abstract %}
+            <section class="pub-section" aria-labelledby="abstract-heading">
+                <div class="pub-section-head">
+                    <p class="section-label"><span class="gradient-accent-bar" aria-hidden="true"></span>O monografiji</p>
+                    <h2 id="abstract-heading" class="pub-section-title">Apstrakt</h2>
+                </div>
+                <p class="pub-detail-description">{{ monograph.abstract|linebreaksbr }}</p>
+            </section>
+            {% endif %}
+
+            <!-- Keywords -->
+            {% if monograph.keywords %}
+            <section class="pub-section" aria-labelledby="keywords-heading">
+                <div class="pub-section-head">
+                    <p class="section-label"><span class="gradient-accent-bar" aria-hidden="true"></span>Indeksiranje</p>
+                    <h2 id="keywords-heading" class="pub-section-title">Ključne reči</h2>
+                </div>
+                <div class="mono-keyword-list">
+                    {% for kw in monograph.keywords %}
+                    <span class="badge bg-light text-dark border keyword-tag">{{ kw }}</span>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Monograph details -->
             <div class="card detail-meta-card">
                 <div class="card-body">
+                    <h2 class="info-card-heading h5">
+                        <i class="bi bi-journal-text" aria-hidden="true"></i>Podaci o monografiji
+                    </h2>
                     <dl class="detail-meta-list mb-0">
                         <div class="detail-meta-row">
                             <dt>DOI</dt>
@@ -177,77 +209,131 @@
                         <div class="detail-meta-row">
                             <dt>Pristup</dt>
                             <dd>
-                                <span class="badge-access">
-                                    <i class="bi bi-unlock-fill me-1" aria-hidden="true"></i>Slobodan pristup
-                                </span>
+                                <span class="meta-pill meta-pill-open"><i class="bi bi-unlock" aria-hidden="true"></i>Otvoreni</span>
                             </dd>
                         </div>
                         {% endif %}
                     </dl>
                 </div>
             </div>
-        </section>
 
-        <!-- Chapters -->
-        {% if chapters %}
-        <section class="mb-4" data-reveal aria-labelledby="chapters-heading">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 id="chapters-heading" class="info-card-heading h5 mb-0">
-                    <i class="bi bi-collection me-2" aria-hidden="true"></i>Poglavlja
-                </h2>
-                <span class="publisher-pub-count">{{ chapters|length }}</span>
-            </div>
-            <div class="article-list">
-                {% for chapter in chapters %}
-                <a href="{% url 'portal-monographs:chapter-detail' monograph_pk=monograph.pk pk=chapter.pk %}"
-                   class="article-list-item">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="article-list-content">
-                            <h3 class="article-list-title">{{ chapter.order }}. {{ chapter.title }}</h3>
-                            {% if chapter.contributors.exists %}
-                            <p class="article-list-authors">
-                                {% for c in chapter.contributors.all|slice:":3" %}{{ c.given_name }} {{ c.surname }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if chapter.contributors.count > 3 %} i dr.{% endif %}
-                            </p>
-                            {% endif %}
-                            <p class="article-list-authors mb-0">
-                                <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ chapter.full_doi }}
-                            </p>
-                        </div>
-                        <div class="text-end flex-shrink-0 ms-3">
-                            {% if chapter.first_page %}
-                            <span class="article-list-pages">str. {{ chapter.first_page }}{% if chapter.last_page %}&ndash;{{ chapter.last_page }}{% endif %}</span>
-                            {% endif %}
-                        </div>
+            <!-- Chapters -->
+            <section class="pub-section" aria-labelledby="chapters-heading">
+                <div class="pub-section-head pub-section-head-inline">
+                    <div>
+                        <p class="section-label"><span class="gradient-accent-bar" aria-hidden="true"></span>Sadržaj</p>
+                        <h2 id="chapters-heading" class="pub-section-title">
+                            <i class="bi bi-collection me-2" aria-hidden="true"></i>Poglavlja
+                        </h2>
                     </div>
-                </a>
-                {% endfor %}
+                    {% if chapters %}
+                    <span class="publisher-pub-count">{{ chapters|length }}</span>
+                    {% endif %}
+                </div>
+                {% if chapters %}
+                <div class="article-list mono-chapter-list">
+                    {% for chapter in chapters %}
+                    <a href="{% url 'portal-monographs:chapter-detail' monograph_pk=monograph.pk pk=chapter.pk %}"
+                       class="article-list-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="article-list-content">
+                                <h3 class="article-list-title">{{ chapter.order }}. {{ chapter.title }}</h3>
+                                {% if chapter.contributors.exists %}
+                                <p class="article-list-authors">
+                                    {% for c in chapter.contributors.all|slice:":3" %}{{ c.given_name }} {{ c.surname }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if chapter.contributors.count > 3 %} i dr.{% endif %}
+                                </p>
+                                {% endif %}
+                                <p class="mono-chapter-doi mb-0">
+                                    <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ chapter.full_doi }}
+                                </p>
+                            </div>
+                            <div class="text-end flex-shrink-0 ms-3">
+                                {% if chapter.first_page %}
+                                <span class="article-list-pages">str. {{ chapter.first_page }}{% if chapter.last_page %}&ndash;{{ chapter.last_page }}{% endif %}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="pub-issues-empty">
+                    <i class="bi bi-inbox" aria-hidden="true"></i>
+                    Nema objavljenih poglavlja.
+                </p>
+                {% endif %}
+            </section>
+        </article>
+    </div>
+
+    <!-- Sidebar: cover + quick facts + publisher + contact -->
+    <div class="col-lg-4" data-reveal data-reveal-delay="1">
+        <!-- Cover -->
+        <div class="pub-cover-panel">
+            {% if monograph.cover_image %}
+            <img src="{{ monograph.cover_image.url }}"
+                 alt="Naslovna slika: {{ monograph.title }}">
+            {% else %}
+            <div class="pub-cover-placeholder" role="img" aria-label="Monografija">
+                <i class="bi bi-book" aria-hidden="true"></i>
             </div>
-        </section>
-        {% endif %}
+            {% endif %}
+        </div>
 
-        <!-- Back to Monographs -->
-        <a href="{% url 'portal-monographs:monograph-list' %}" class="btn btn-back">
-            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
-            Nazad na monografije
-        </a>
-    </article>
+        <!-- Quick facts meta card -->
+        <div class="card detail-meta-card sidebar-meta-card">
+            <div class="card-body">
+                <h2 class="sidebar-card-title">
+                    <i class="bi bi-info-circle me-2" aria-hidden="true"></i>Ključni podaci
+                </h2>
+                <dl class="detail-meta-list mb-0">
+                    {% if monograph.isbn_print or monograph.isbn_online %}
+                    <div class="detail-meta-row">
+                        <dt><i class="bi bi-upc" aria-hidden="true"></i>ISBN</dt>
+                        <dd>{{ monograph.isbn_print|default:monograph.isbn_online }}</dd>
+                    </div>
+                    {% endif %}
 
-    <!-- Sidebar -->
-    <aside class="col-lg-4 fade-in-up fade-in-up-2">
-        {% if monograph.cover_image %}
-        <!-- Cover Image -->
-        <div class="card sidebar-card mb-3" data-reveal>
-            <div class="card-body text-center">
-                <img src="{{ monograph.cover_image.url }}"
-                     alt="Naslovna slika: {{ monograph.title }}"
-                     class="pub-detail-cover img-fluid"
-                     style="max-height: 400px;">
+                    <div class="detail-meta-row">
+                        <dt><i class="bi bi-calendar3" aria-hidden="true"></i>Godina</dt>
+                        <dd>{{ monograph.year }}</dd>
+                    </div>
+
+                    {% if monograph.language %}
+                    <div class="detail-meta-row">
+                        <dt><i class="bi bi-translate" aria-hidden="true"></i>Jezik</dt>
+                        <dd>{{ monograph.language }}</dd>
+                    </div>
+                    {% endif %}
+
+                    <div class="detail-meta-row">
+                        <dt><i class="bi bi-hash" aria-hidden="true"></i>DOI</dt>
+                        <dd><a href="{{ doi_url }}" rel="external" target="_blank"><span class="meta-doi-value">{{ full_doi }}</span></a></dd>
+                    </div>
+
+                    {% if chapters %}
+                    <div class="detail-meta-row">
+                        <dt><i class="bi bi-collection" aria-hidden="true"></i>Poglavlja</dt>
+                        <dd>{{ chapters|length }}</dd>
+                    </div>
+                    {% endif %}
+
+                    <div class="detail-meta-row">
+                        <dt><i class="bi bi-shield-check" aria-hidden="true"></i>Pristup</dt>
+                        <dd>
+                            {% if monograph.free_to_read %}
+                            <span class="meta-pill meta-pill-open"><i class="bi bi-unlock" aria-hidden="true"></i>Otvoreni</span>
+                            {% else %}
+                            <span class="meta-pill meta-pill-restricted"><i class="bi bi-lock" aria-hidden="true"></i>Ograničeni</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                </dl>
             </div>
         </div>
-        {% endif %}
 
-        <!-- Publisher Info Card -->
-        <div class="card sidebar-card mb-3" data-reveal data-reveal-delay="1">
+        <!-- Publisher card -->
+        <div class="card sidebar-card">
             <div class="card-body">
                 <h2 class="sidebar-card-title">
                     <i class="bi bi-building me-2" aria-hidden="true"></i>Izdavač
@@ -273,28 +359,15 @@
             </div>
         </div>
 
-        <!-- DOI Card -->
-        <div class="card sidebar-card mb-3" data-reveal data-reveal-delay="2">
-            <div class="card-body">
-                <h2 class="sidebar-card-title">
-                    <i class="bi bi-link-45deg me-2" aria-hidden="true"></i>DOI
-                </h2>
-                <p class="mb-0">
-                    <a href="{{ doi_url }}" rel="external" target="_blank">
-                        {{ full_doi }}
-                    </a>
-                </p>
-            </div>
-        </div>
-
         <!-- Contact CTA -->
-        <div class="card sidebar-card mt-3" data-reveal>
-            <div class="card-body text-center">
-                <p class="mb-3 small text-muted-custom">Imate pitanje o ovoj monografiji?</p>
+        <div class="card sidebar-card pub-contact-card">
+            <div class="card-body">
+                <span class="contact-cta-icon"><i class="bi bi-chat-dots" aria-hidden="true"></i></span>
+                <p>Imate pitanje o ovoj monografiji?</p>
                 <a href="{% url 'contact' %}" class="btn btn-doi-outline btn-sm">Kontaktirajte nas</a>
             </div>
         </div>
-    </aside>
+    </div>
 </div>
 
 <!-- Floating Action Bar -->

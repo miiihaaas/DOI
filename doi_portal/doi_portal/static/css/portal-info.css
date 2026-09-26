@@ -1,0 +1,125 @@
+/* ==========================================================================
+   Portal Info Pages — About ("O portalu") & Contact ("Kontakt")
+   Polish layer on top of portal.css (doi.rs design system).
+   Brand: Raleway · green #5cb46a / teal #033333 · --brand-gradient(-soft).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Section headings — replaces .info-card-heading so there is NO left border
+   line. Keeps the .gradient-accent-bar underneath as the single accent.
+   -------------------------------------------------------------------------- */
+.info-section-title {
+    color: var(--color-dark);
+    font-weight: 700;
+    font-size: 1.4rem;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.6rem;
+}
+
+/* Consistent vertical rhythm between the stacked content sections. */
+.about-section:last-child { margin-bottom: 0 !important; }
+
+.about-lead {
+    margin-bottom: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   Services — two-up grid on wider screens, with a hover accent that keeps
+   the cards on-brand (icon fills with the brand gradient).
+   -------------------------------------------------------------------------- */
+@media (min-width: 576px) {
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+
+.service-item {
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.service-item::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--brand-gradient);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.service-item:hover {
+    transform: translateY(-3px);
+}
+
+.service-item:hover::before {
+    opacity: 1;
+}
+
+.service-item:hover .service-icon {
+    background: var(--brand-gradient);
+    color: #fff;
+}
+
+.service-icon {
+    transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar cards — subtle gradient cap ties them to the brand.
+   -------------------------------------------------------------------------- */
+.info-sidebar-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.info-sidebar-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--brand-gradient);
+    opacity: 0.9;
+}
+
+.about-sidebar-list a {
+    transition: color 0.2s ease;
+}
+
+/* --------------------------------------------------------------------------
+   Contact form card — a slightly more prominent gradient header.
+   -------------------------------------------------------------------------- */
+.contact-form-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.contact-form-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: var(--brand-gradient);
+}
+
+.contact-form-card .card-body {
+    position: relative;
+    z-index: 1;
+}
+
+.contact-label {
+    margin-bottom: 0.4rem;
+}
+
+/* Send icon nudges on hover for a bit of life. */
+.btn-contact i {
+    transition: transform 0.2s ease;
+}
+
+.btn-contact:hover i {
+    transform: translateX(3px);
+}

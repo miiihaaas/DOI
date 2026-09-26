@@ -1,9 +1,9 @@
 {% load static i18n portal_tags %}
 
 {% if is_paginated %}
-<p class="pub-result-count">{{ page_obj.paginator.count }} publikacij{{ page_obj.paginator.count|pluralize:"a,e,a" }}</p>
+<p class="pub-result-count">Prikazano publikacija: <strong>{{ page_obj.paginator.count }}</strong></p>
 {% else %}
-<p class="pub-result-count">{{ publications|length }} publikacij{{ publications|length|pluralize:"a,e,a" }}</p>
+<p class="pub-result-count">Prikazano publikacija: <strong>{{ publications|length }}</strong></p>
 {% endif %}
 
 <div class="table-responsive pub-table-wrap">

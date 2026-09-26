@@ -5,6 +5,8 @@
 
 {% block meta_description %}Saznajte više o DOI Portalu za registraciju DOI identifikatora naučnih publikacija u Srbiji. Misija, usluge i kontakt informacije.{% endblock %}
 
+{% block css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/portal-info.css' %}">{% endblock %}
+
 {% block portal_content %}
 <!-- Gradient page header banner (doi.rs style) -->
 <header class="portal-page-header" data-reveal>
@@ -19,7 +21,7 @@
     <!-- Main Content (2/3) -->
     <div class="col-lg-8">
         <section aria-labelledby="mission-title" class="about-section mb-5" data-reveal>
-            <h2 id="mission-title" class="info-card-heading h4 mb-3">
+            <h2 id="mission-title" class="info-section-title">
                 Misija portala
             </h2>
             <div class="gradient-accent-bar mb-3"></div>
@@ -35,7 +37,7 @@
         </section>
 
         <section aria-labelledby="about-org-title" class="about-section mb-5" data-reveal>
-            <h2 id="about-org-title" class="info-card-heading h4 mb-3">
+            <h2 id="about-org-title" class="info-section-title">
                 O nama
             </h2>
             <div class="gradient-accent-bar mb-3"></div>
@@ -48,7 +50,7 @@
         </section>
 
         <section aria-labelledby="services-title" class="about-section mb-5" data-reveal>
-            <h2 id="services-title" class="info-card-heading h4 mb-3">
+            <h2 id="services-title" class="info-section-title">
                 Naše usluge
             </h2>
             <div class="gradient-accent-bar mb-3"></div>
@@ -96,7 +98,7 @@
     <!-- Sidebar (1/3) -->
     <div class="col-lg-4">
         <!-- Contact Card -->
-        <section aria-labelledby="contact-title" class="card sidebar-card mb-4" data-reveal data-reveal-delay="1">
+        <section aria-labelledby="contact-title" class="card sidebar-card info-sidebar-card mb-4" data-reveal data-reveal-delay="1">
             <div class="card-body">
                 <h3 class="sidebar-card-title" id="contact-title">
                     Kontakt
@@ -143,7 +145,7 @@
         </section>
 
         <!-- Useful Links Card -->
-        <section aria-labelledby="links-title" class="card sidebar-card mb-4" data-reveal data-reveal-delay="2">
+        <section aria-labelledby="links-title" class="card sidebar-card info-sidebar-card mb-4" data-reveal data-reveal-delay="2">
             <div class="card-body">
                 <h3 class="sidebar-card-title" id="links-title">
                     Korisni linkovi
@@ -178,7 +180,7 @@
         </section>
 
         <!-- DOI Info Card -->
-        <section aria-labelledby="doi-info-title" class="card sidebar-card doi-info-card" data-reveal data-reveal-delay="3">
+        <section aria-labelledby="doi-info-title" class="card sidebar-card info-sidebar-card doi-info-card" data-reveal data-reveal-delay="3">
             <div class="card-body">
                 <h3 class="sidebar-card-title" id="doi-info-title">
                     Šta je DOI?
