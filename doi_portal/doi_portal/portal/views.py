@@ -70,20 +70,47 @@ class PublisherPublicListView(ListView):
     template_name = "portal/publishers/publisher_list.html"
     context_object_name = "publishers"
 
+    # Sort options: GET param value -> (label, queryset ordering)
+    SORT_OPTIONS = {
+        "name": ("Naziv (A-Š)", "name"),
+        "-name": ("Naziv (Š-A)", "-name"),
+        "-count": ("Broj publikacija (najviše)", "-pub_count"),
+        "count": ("Broj publikacija (najmanje)", "pub_count"),
+    }
+    DEFAULT_SORT = "name"
+
+    def get_current_sort(self):
+        """Return a validated sort key from the GET params."""
+        sort = self.request.GET.get("sort", self.DEFAULT_SORT)
+        return sort if sort in self.SORT_OPTIONS else self.DEFAULT_SORT
+
     def get_queryset(self):
         """
-        Return all active (non-deleted) publishers.
+        Return all active (non-deleted) publishers, annotated with a
+        publication count and ordered per the selected sort.
 
         SoftDeleteManager already excludes is_deleted=True records.
         """
-        return Publisher.objects.all().order_by("name")
+        ordering = self.SORT_OPTIONS[self.get_current_sort()][1]
+        # Secondary ordering by name keeps count-sorts stable/alphabetical.
+        order_args = [ordering] if ordering.endswith("name") else [ordering, "name"]
+        return (
+            Publisher.objects.all()
+            .annotate(pub_count=models.Count("publications"))
+            .order_by(*order_args)
+        )
 
     def get_context_data(self, **kwargs):
-        """Add breadcrumbs to context."""
+        """Add breadcrumbs and sort state to context."""
         context = super().get_context_data(**kwargs)
         context["breadcrumbs"] = [
             {"label": "Početna", "url": reverse("home")},
             {"label": "Izdavači", "url": None},
+        ]
+        context["current_sort"] = self.get_current_sort()
+        context["sort_options"] = [
+            {"value": value, "label": label}
+            for value, (label, _ordering) in self.SORT_OPTIONS.items()
         ]
         return context
 

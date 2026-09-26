@@ -17,64 +17,30 @@
 
 <section>
     {% if monographs %}
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="row g-4">
         {% for monograph in monographs %}
-        <div class="col" data-reveal data-reveal-delay="{% cycle '0' '1' '2' %}">
-            <article class="card h-100 publication-card">
-                {% if monograph.cover_image %}
-                <img src="{{ monograph.cover_image.url }}"
-                     class="card-img-top"
-                     alt="Naslovna slika: {{ monograph.title }}">
-                {% else %}
-                <div class="card-img-placeholder">
-                    <i class="bi bi-book display-4" aria-hidden="true"></i>
-                </div>
-                {% endif %}
-                <div class="card-body">
-                    <div class="mb-2">
-                        <span class="badge-type">
-                            <i class="bi bi-book me-1" aria-hidden="true"></i>
-                            Monografija
-                        </span>
-                        {% if monograph.free_to_read %}
-                        <span class="badge-access ms-1">
-                            <i class="bi bi-unlock me-1" aria-hidden="true"></i>Slobodan pristup
-                        </span>
+        <div class="col-md-6" data-reveal data-reveal-delay="{% cycle '0' '1' %}">
+            <article class="card h-100 publication-card monograph-card">
+                <a href="{% url 'portal-monographs:monograph-detail' monograph.pk %}" class="mono-link">
+                    <div class="mono-cover">
+                        {% if monograph.cover_image %}
+                        <img src="{{ monograph.cover_image.url }}" alt="Korica: {{ monograph.title }}">
+                        {% else %}
+                        <i class="bi bi-book mono-cover-icon" aria-hidden="true"></i>
                         {% endif %}
                     </div>
-                    <h3 class="h6 card-title">
-                        <a href="{% url 'portal-monographs:monograph-detail' monograph.pk %}"
-                           class="text-decoration-none stretched-link">
-                            {{ monograph.title }}
-                        </a>
-                    </h3>
-                    {% if monograph.contributors.exists %}
-                    <p class="card-text small mb-1">
-                        <i class="bi bi-person me-1" aria-hidden="true"></i>
-                        {% for contributor in monograph.contributors.all|slice:":3" %}{{ contributor.given_name }} {{ contributor.surname }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if monograph.contributors.count > 3 %} i dr.{% endif %}
-                    </p>
-                    {% endif %}
-                    <p class="card-text small mb-1">
-                        <i class="bi bi-calendar me-1" aria-hidden="true"></i>
-                        {{ monograph.year }}
-                    </p>
-                    <p class="card-text small mb-1">
-                        <i class="bi bi-building me-1" aria-hidden="true"></i>
-                        {{ monograph.publisher.name }}
-                    </p>
-                    {% if monograph.isbn_print or monograph.isbn_online %}
-                    <p class="card-text small mb-1">
-                        <i class="bi bi-upc me-1" aria-hidden="true"></i>
-                        ISBN: {{ monograph.isbn_print|default:monograph.isbn_online }}
-                    </p>
-                    {% endif %}
-                    <p class="card-text small mb-0">
-                        <span class="badge bg-light text-dark border">
-                            <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>
-                            {{ monograph.full_doi }}
-                        </span>
-                    </p>
-                </div>
+                    <div class="mono-body">
+                        <h3 class="mono-title">{{ monograph.title }}</h3>
+                        {% if monograph.contributors.exists %}<p class="mono-authors">{% for contributor in monograph.contributors.all|slice:":3" %}{{ contributor.given_name }} {{ contributor.surname }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if monograph.contributors.count > 3 %} i dr.{% endif %}</p>{% endif %}
+                        <div class="mono-meta">
+                            {% if monograph.year %}<span class="mono-meta-item"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ monograph.year }}</span>{% endif %}
+                            {% if monograph.full_doi %}<span class="mono-meta-item mono-doi"><i class="bi bi-link-45deg" aria-hidden="true"></i>{{ monograph.full_doi }}</span>{% endif %}
+                        </div>
+                        <div class="mono-actions">
+                            <span class="mono-cta">Detaljnije <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+                        </div>
+                    </div>
+                </a>
             </article>
         </div>
         {% endfor %}

@@ -25,6 +25,55 @@ def issue_label(issue):
     return issue.label
 
 
+#: ISO 639-1 (and a few common variants) -> Serbian language names.
+LANGUAGE_NAMES = {
+    "sr": "Srpski",
+    "sr-latn": "Srpski (latinica)",
+    "sr-cyrl": "Srpski (ćirilica)",
+    "en": "Engleski",
+    "de": "Nemački",
+    "fr": "Francuski",
+    "ru": "Ruski",
+    "es": "Španski",
+    "it": "Italijanski",
+    "hr": "Hrvatski",
+    "bs": "Bosanski",
+    "sl": "Slovenački",
+    "mk": "Makedonski",
+    "bg": "Bugarski",
+    "hu": "Mađarski",
+    "ro": "Rumunski",
+    "sq": "Albanski",
+    "el": "Grčki",
+    "tr": "Turski",
+    "pt": "Portugalski",
+    "pl": "Poljski",
+    "cs": "Češki",
+    "sk": "Slovački",
+    "uk": "Ukrajinski",
+    "zh": "Kineski",
+    "ja": "Japanski",
+    "ar": "Arapski",
+    "la": "Latinski",
+}
+
+
+@register.filter(name="language_name")
+def language_name(code):
+    """
+    Convert an ISO 639-1 language code to its full Serbian name.
+
+    Falls back to the original (upper-cased) code when unknown, so nothing
+    ever renders blank.
+
+    Usage: {{ publication.language|language_name }}
+    """
+    if not code:
+        return ""
+    key = str(code).strip().lower()
+    return LANGUAGE_NAMES.get(key, str(code).upper())
+
+
 @register.filter(name="highlight_search")
 def highlight_search(text, query):
     """

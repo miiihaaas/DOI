@@ -26,6 +26,17 @@
 <!-- Skip to content link for accessibility (NFR15) -->
 <a href="#main-content" class="skip-link visually-hidden-focusable">{% trans "Preskoči na sadržaj" %}</a>
 
+<!-- Top contact bar -->
+<div class="portal-topbar d-none d-md-block">
+    <div class="container">
+        <div class="topbar-inner">
+            <a href="mailto:info@doi.rs" class="topbar-link"><i class="bi bi-envelope-fill" aria-hidden="true"></i> info@doi.rs</a>
+            <span class="topbar-sep" aria-hidden="true"></span>
+            <a href="tel:+381616183078" class="topbar-link"><i class="bi bi-telephone-fill" aria-hidden="true"></i> +381 61 6183078</a>
+        </div>
+    </div>
+</div>
+
 <!-- Sticky Header -->
 <header class="portal-header sticky-top">
     <nav class="navbar navbar-expand-lg navbar-dark">
@@ -39,13 +50,21 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link{% if request.resolver_match.url_name == 'publisher-list' %} active{% endif %}" href="{% url 'portal:publisher-list' %}">Izdavači</a>
+                        <a class="nav-link{% if request.resolver_match.url_name == 'home' %} active{% endif %}" href="{% url 'home' %}">Početna</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link{% if request.resolver_match.namespace == 'portal-publications' %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}">Publikacije</a>
+                        <a class="nav-link{% if request.resolver_match.url_name == 'publisher-list' or request.resolver_match.url_name == 'publisher-detail' %} active{% endif %}" href="{% url 'portal:publisher-list' %}">Izdavači</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link{% if request.resolver_match.namespace == 'portal-monographs' %} active{% endif %}" href="{% url 'portal-monographs:monograph-list' %}">Monografije</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle{% if request.resolver_match.namespace == 'portal-publications' or request.resolver_match.namespace == 'portal-monographs' %} active{% endif %}" href="#" id="publikacijeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Publikacije</a>
+                        <ul class="dropdown-menu portal-dropdown-menu" aria-labelledby="publikacijeDropdown">
+                            <li><a class="dropdown-item" href="{% url 'portal-publications:publication-list' %}">Sve publikacije</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'portal-publications:publication-list' %}?type=JOURNAL"><i class="bi bi-journal-text" aria-hidden="true"></i>Časopisi</a></li>
+                            <li><a class="dropdown-item" href="{% url 'portal-publications:publication-list' %}?type=CONFERENCE"><i class="bi bi-people" aria-hidden="true"></i>Zbornici</a></li>
+                            <li><a class="dropdown-item" href="{% url 'portal-monographs:monograph-list' %}"><i class="bi bi-book" aria-hidden="true"></i>Monografije</a></li>
+                            <li><a class="dropdown-item" href="{% url 'portal-publications:publication-list' %}?type=OTHER"><i class="bi bi-file-earmark" aria-hidden="true"></i>Ostalo</a></li>
+                        </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link{% if request.resolver_match.url_name == 'about' %} active{% endif %}" href="{% url 'about' %}">O portalu</a>
@@ -97,16 +116,48 @@
 </main>
 
 <!-- Footer -->
-<footer class="portal-footer text-light py-4 mt-auto">
+<footer class="portal-footer text-light mt-auto">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-6">
+        <div class="row gy-4 portal-footer-top">
+            <!-- Brand + contact -->
+            <div class="col-lg-5 col-md-12">
                 <img src="{% static 'images/doi-logo-negative.png' %}" alt="DOI Portal" class="footer-logo" width="480" height="160">
-                <p class="footer-description mb-0">Portal za registraciju DOI identifikatora naučnih publikacija.</p>
+                <p class="footer-description">Portal za registraciju DOI identifikatora naučnih publikacija.</p>
+                <ul class="list-unstyled footer-contact mb-0">
+                    <li><i class="bi bi-geo-alt-fill" aria-hidden="true"></i><span>Nikole Lunjevice 3, Gornji Milanovac</span></li>
+                    <li><i class="bi bi-envelope-fill" aria-hidden="true"></i><a href="mailto:info@doi.rs">info@doi.rs</a></li>
+                    <li><i class="bi bi-telephone-fill" aria-hidden="true"></i><a href="tel:+381616183078">+381 61 6183078</a></li>
+                    <li><i class="bi bi-clock-fill" aria-hidden="true"></i><span>Ponedeljak - Petak: 08:00 - 16:00</span></li>
+                </ul>
             </div>
-            <div class="col-md-6 text-md-end">
-                <p class="footer-copyright mb-0">&copy; 2026 DOI Portal</p>
+            <!-- Navigation -->
+            <div class="col-lg-3 col-md-6">
+                <h5 class="footer-heading">Navigacija</h5>
+                <ul class="list-unstyled footer-links mb-0">
+                    <li><a href="{% url 'home' %}">Početna</a></li>
+                    <li><a href="{% url 'portal-publications:publication-list' %}">Publikacije</a></li>
+                    <li><a href="{% url 'portal-monographs:monograph-list' %}">Monografije</a></li>
+                    <li><a href="{% url 'portal:publisher-list' %}">Izdavači</a></li>
+                    <li><a href="{% url 'about' %}">O portalu</a></li>
+                    <li><a href="{% url 'contact' %}">Kontakt</a></li>
+                </ul>
             </div>
+            <!-- Quick links -->
+            <div class="col-lg-4 col-md-6">
+                <h5 class="footer-heading">Brzi linkovi</h5>
+                <ul class="list-unstyled footer-links mb-0">
+                    <li><a href="{% url 'article-search' %}">Pretraga članaka</a></li>
+                    <li><a href="{% url 'portal-publications:publication-list' %}?type=JOURNAL">Časopisi</a></li>
+                    <li><a href="{% url 'portal-publications:publication-list' %}?type=CONFERENCE">Zbornici</a></li>
+                    <li><a href="{% url 'contact' %}">Kontakt forma</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="portal-footer-bottom">
+        <div class="container">
+            <p class="footer-copyright mb-0">&copy; 2026 DOI Portal. Sva prava zadržana.</p>
+            <p class="footer-madeby mb-0">Portal za registraciju DOI identifikatora naučnih publikacija</p>
         </div>
     </div>
 </footer>

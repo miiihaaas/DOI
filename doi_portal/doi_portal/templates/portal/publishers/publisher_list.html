@@ -16,6 +16,18 @@
 </header>
 
 {% if publishers %}
+<div class="list-toolbar" data-reveal>
+    <p class="result-count">Prikazano izdavača: <strong>{{ publishers|length }}</strong></p>
+    <form method="get" class="sort-control" role="search">
+        <label for="sortSelect">Sortiraj</label>
+        <select name="sort" id="sortSelect" class="form-select" onchange="this.form.submit()" aria-label="Sortiranje izdavača">
+            {% for opt in sort_options %}
+            <option value="{{ opt.value }}"{% if opt.value == current_sort %} selected{% endif %}>{{ opt.label }}</option>
+            {% endfor %}
+        </select>
+        <noscript><button type="submit" class="btn btn-doi-outline btn-sm">Primeni</button></noscript>
+    </form>
+</div>
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for publisher in publishers %}
     <div class="col" data-reveal data-reveal-delay="{% cycle '0' '1' '2' %}">
@@ -41,9 +53,12 @@
                 <p class="card-text small">{{ publisher.description|truncatewords:30 }}</p>
                 {% endif %}
             </div>
-            <div class="card-footer bg-transparent">
+            <div class="card-footer bg-transparent d-flex align-items-center justify-content-between">
                 <span class="doi-prefix-badge">
                     <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ publisher.doi_prefix }}
+                </span>
+                <span class="doi-prefix-badge" title="Broj publikacija">
+                    <i class="bi bi-journal-text me-1" aria-hidden="true"></i>{{ publisher.pub_count }}
                 </span>
             </div>
         </article>
