@@ -6,18 +6,21 @@
 {% block meta_description %}Izdanje {{ issue|issue_label }} publikacije {{ issue.publication.title }} na DOI Portalu.{% endblock meta_description %}
 
 {% block portal_content %}
+<a href="{% url 'portal-publications:publication-detail' issue.publication.slug %}" class="btn-back d-inline-block mb-3" data-reveal>
+    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad na publikaciju
+</a>
+
+<header class="portal-page-header" data-reveal>
+    <p class="page-eyebrow">{{ issue.publication.title }}</p>
+    <h1 class="page-title h2">{{ issue|issue_label }}</h1>
+    {% if issue.title %}
+    <p class="page-subtitle">{{ issue.title }}</p>
+    {% endif %}
+</header>
+
 <div class="row">
-    <div class="col-lg-8 fade-in-up">
+    <div class="col-lg-8" data-reveal>
         <article>
-            <div class="mb-4">
-                <h1 class="section-title h3 mb-1">{{ issue.publication.title }}</h1>
-                <p class="issue-volume-label">{{ issue|issue_label }}</p>
-            </div>
-
-            {% if issue.title %}
-            <p class="lead" style="color: var(--color-text-secondary);">{{ issue.title }}</p>
-            {% endif %}
-
             <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
                 <span class="badge {{ issue.status_badge_class }}">{{ issue.get_status_display }}</span>
                 {% if issue.publication_month %}
@@ -40,7 +43,7 @@
 
             {% if issue.pdf_file %}
             <div class="mb-4">
-                <a href="{{ issue.pdf_file.url }}" class="btn btn-primary" target="_blank">
+                <a href="{{ issue.pdf_file.url }}" class="btn-doi" target="_blank">
                     <i class="bi bi-file-earmark-pdf me-1"></i>Preuzmi PDF
                 </a>
             </div>
@@ -159,7 +162,7 @@
     </div>
 
     <!-- Sidebar -->
-    <aside class="col-lg-4 fade-in-up fade-in-up-2">
+    <aside class="col-lg-4" data-reveal data-reveal-delay="1">
         <!-- Publication Info Card -->
         <div class="card sidebar-card mb-3">
             <div class="card-body">

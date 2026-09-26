@@ -6,16 +6,19 @@
 {% block meta_description %}Pregledajte sve izdavače registrovane na DOI Portalu. Pronađite naučne časopise i publikacije srpskih akademskih institucija.{% endblock meta_description %}
 
 {% block portal_content %}
-<div class="mb-4 fade-in-up">
-    <p class="section-label mb-1">REGISTROVANI</p>
-    <h1 class="section-title h2 mb-1">Izdavači</h1>
-    <p class="text-secondary mb-0">Akademske institucije i izdavačke kuće registrovane na portalu</p>
-</div>
+<header class="portal-page-header" data-reveal>
+    <p class="page-eyebrow">Izdavači</p>
+    <h1 class="page-title">Registrovani izdavači</h1>
+    <p class="page-subtitle">
+        Akademske institucije i izdavačke kuće registrovane na DOI Portalu.
+        {% if publishers %}Trenutno je registrovano {{ publishers|length }} izdavača.{% endif %}
+    </p>
+</header>
 
 {% if publishers %}
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for publisher in publishers %}
-    <div class="col fade-in-up fade-in-up-{{ forloop.counter }}">
+    <div class="col" data-reveal data-reveal-delay="{% cycle '0' '1' '2' %}">
         <article class="card h-100 publisher-card">
             {% if publisher.logo %}
             <div class="publisher-logo-wrap">
@@ -48,7 +51,7 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="empty-state fade-in-up">
+<div class="empty-state" data-reveal>
     <i class="bi bi-building" aria-hidden="true"></i>
     <p class="lead">Nema registrovanih izdavača.</p>
 </div>

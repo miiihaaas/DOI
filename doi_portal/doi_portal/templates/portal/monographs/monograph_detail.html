@@ -10,11 +10,13 @@
     <!-- Main Content -->
     <article class="col-lg-8 fade-in-up">
         <!-- Title -->
-        <div class="mb-4">
+        <div class="mb-4" data-reveal>
+            <p class="page-eyebrow mb-2">Monografija</p>
             <h1 class="section-title h3 mb-2">{{ monograph.title }}</h1>
             {% if monograph.subtitle %}
             <p class="article-subtitle mb-3">{{ monograph.subtitle }}</p>
             {% endif %}
+            <div class="gradient-accent-bar mb-3"></div>
             <div class="d-flex flex-wrap gap-2">
                 <span class="badge-type">
                     <i class="bi bi-book me-1" aria-hidden="true"></i>
@@ -29,7 +31,7 @@
         </div>
 
         <!-- Contributors -->
-        <section class="article-authors mb-4" aria-labelledby="contributors-heading">
+        <section class="article-authors mb-4" data-reveal aria-labelledby="contributors-heading">
             <h2 id="contributors-heading" class="info-card-heading h5 mb-3">Kontributori</h2>
             {% for contributor in contributors %}
             <div class="author-card mb-3">
@@ -73,7 +75,7 @@
 
         <!-- Abstract -->
         {% if monograph.abstract %}
-        <section class="article-abstract mb-4" aria-labelledby="abstract-heading">
+        <section class="article-abstract mb-4" data-reveal aria-labelledby="abstract-heading">
             <h2 id="abstract-heading" class="info-card-heading h5 mb-3">Apstrakt</h2>
             <div class="abstract-content">
                 <p>{{ monograph.abstract|linebreaksbr }}</p>
@@ -83,7 +85,7 @@
 
         <!-- Keywords -->
         {% if monograph.keywords %}
-        <section class="article-keywords mb-4" aria-labelledby="keywords-heading">
+        <section class="article-keywords mb-4" data-reveal aria-labelledby="keywords-heading">
             <h2 id="keywords-heading" class="info-card-heading h5 mb-3">Ključne reči</h2>
             <div>
                 {% for kw in monograph.keywords %}
@@ -94,7 +96,7 @@
         {% endif %}
 
         <!-- Metadata -->
-        <section class="article-metadata mb-4" aria-labelledby="metadata-heading">
+        <section class="article-metadata mb-4" data-reveal aria-labelledby="metadata-heading">
             <h2 id="metadata-heading" class="info-card-heading h5 mb-3">Podaci o monografiji</h2>
             <div class="card detail-meta-card">
                 <div class="card-body">
@@ -188,65 +190,64 @@
 
         <!-- Chapters -->
         {% if chapters %}
-        <section class="mb-4" aria-labelledby="chapters-heading">
-            <div class="card detail-meta-card">
-                <div class="card-body">
-                    <h2 id="chapters-heading" class="info-card-heading h5 mb-3">
-                        <i class="bi bi-collection me-2" aria-hidden="true"></i>Poglavlja
-                    </h2>
-                    <div class="issue-list">
-                        {% for chapter in chapters %}
-                        <a href="{% url 'portal-monographs:chapter-detail' monograph_pk=monograph.pk pk=chapter.pk %}"
-                           class="issue-list-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <div class="issue-icon me-3">
-                                        <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-                                    </div>
-                                    <div>
-                                        <strong class="issue-label">{{ chapter.order }}. {{ chapter.title }}</strong>
-                                        {% if chapter.contributors.exists %}
-                                        <span class="issue-title d-block">
-                                            {% for c in chapter.contributors.all|slice:":3" %}{{ c.given_name }} {{ c.surname }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if chapter.contributors.count > 3 %} i dr.{% endif %}
-                                        </span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="text-end">
-                                    {% if chapter.first_page %}
-                                    <span class="issue-date d-block">str. {{ chapter.first_page }}{% if chapter.last_page %}&ndash;{{ chapter.last_page }}{% endif %}</span>
-                                    {% endif %}
-                                    <span class="issue-article-count">
-                                        <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>
-                                        {{ chapter.full_doi }}
-                                    </span>
-                                </div>
-                            </div>
-                        </a>
-                        {% endfor %}
+        <section class="mb-4" data-reveal aria-labelledby="chapters-heading">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 id="chapters-heading" class="info-card-heading h5 mb-0">
+                    <i class="bi bi-collection me-2" aria-hidden="true"></i>Poglavlja
+                </h2>
+                <span class="publisher-pub-count">{{ chapters|length }}</span>
+            </div>
+            <div class="article-list">
+                {% for chapter in chapters %}
+                <a href="{% url 'portal-monographs:chapter-detail' monograph_pk=monograph.pk pk=chapter.pk %}"
+                   class="article-list-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="article-list-content">
+                            <h3 class="article-list-title">{{ chapter.order }}. {{ chapter.title }}</h3>
+                            {% if chapter.contributors.exists %}
+                            <p class="article-list-authors">
+                                {% for c in chapter.contributors.all|slice:":3" %}{{ c.given_name }} {{ c.surname }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if chapter.contributors.count > 3 %} i dr.{% endif %}
+                            </p>
+                            {% endif %}
+                            <p class="article-list-authors mb-0">
+                                <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ chapter.full_doi }}
+                            </p>
+                        </div>
+                        <div class="text-end flex-shrink-0 ms-3">
+                            {% if chapter.first_page %}
+                            <span class="article-list-pages">str. {{ chapter.first_page }}{% if chapter.last_page %}&ndash;{{ chapter.last_page }}{% endif %}</span>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
+                </a>
+                {% endfor %}
             </div>
         </section>
         {% endif %}
+
+        <!-- Back to Monographs -->
+        <a href="{% url 'portal-monographs:monograph-list' %}" class="btn btn-back">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+            Nazad na monografije
+        </a>
     </article>
 
     <!-- Sidebar -->
     <aside class="col-lg-4 fade-in-up fade-in-up-2">
         {% if monograph.cover_image %}
         <!-- Cover Image -->
-        <div class="card sidebar-card mb-3">
+        <div class="card sidebar-card mb-3" data-reveal>
             <div class="card-body text-center">
                 <img src="{{ monograph.cover_image.url }}"
                      alt="Naslovna slika: {{ monograph.title }}"
-                     class="img-fluid rounded shadow-sm"
+                     class="pub-detail-cover img-fluid"
                      style="max-height: 400px;">
             </div>
         </div>
         {% endif %}
 
         <!-- Publisher Info Card -->
-        <div class="card sidebar-card mb-3">
+        <div class="card sidebar-card mb-3" data-reveal data-reveal-delay="1">
             <div class="card-body">
                 <h2 class="sidebar-card-title">
                     <i class="bi bi-building me-2" aria-hidden="true"></i>Izdavač
@@ -273,7 +274,7 @@
         </div>
 
         <!-- DOI Card -->
-        <div class="card sidebar-card mb-3">
+        <div class="card sidebar-card mb-3" data-reveal data-reveal-delay="2">
             <div class="card-body">
                 <h2 class="sidebar-card-title">
                     <i class="bi bi-link-45deg me-2" aria-hidden="true"></i>DOI

@@ -9,15 +9,15 @@
 <!-- Hero Section -->
 <section class="hero-section text-white py-5 mb-5 fade-in-up" aria-labelledby="hero-title">
   <div class="text-center py-4 px-3 position-relative" style="z-index: 1;">
-    <p class="section-label mb-2" style="color: rgba(255,255,255,0.7); letter-spacing: 0.1em;">NAUČNE PUBLIKACIJE</p>
+    <p class="section-label mb-2" style="color: rgba(255,255,255,0.7); letter-spacing: 0.12em;">NAUČNE PUBLIKACIJE</p>
     <h1 id="hero-title" class="mb-3" style="color: #fff;">DOI Portal</h1>
     <p class="lead mb-4">Portal za registraciju DOI identifikatora naučnih publikacija</p>
-    <form action="/search/" method="get" class="mx-auto" style="max-width: 560px;" role="search">
+    <form action="/search/" method="get" class="mx-auto" style="max-width: 580px;" role="search">
       <div class="input-group input-group-lg">
         <input type="search" name="q" class="form-control"
                placeholder="Pretražite po naslovu, autoru, ključnim rečima..."
                aria-label="Pretraga članaka">
-        <button type="submit" class="btn btn-search" style="min-width: 52px; min-height: 52px;">
+        <button type="submit" class="btn btn-search" style="min-width: 56px; min-height: 56px;">
           <i class="bi bi-search" aria-hidden="true"></i>
           <span class="visually-hidden">Pretraži</span>
         </button>
@@ -27,41 +27,41 @@
 </section>
 
 <!-- Statistics Cards -->
-<section class="mb-5 fade-in-up fade-in-up-1" aria-labelledby="stats-title">
+<section class="mb-5" aria-labelledby="stats-title">
   <h2 id="stats-title" class="visually-hidden">Statistike portala</h2>
   <div class="row g-4">
-    <div class="col-md-4">
+    <div class="col-md-4" data-reveal>
       <a href="{% url 'portal-publications:publication-list' %}" class="text-decoration-none" aria-label="Publikacije - {{ stats.total_publications }} ukupno">
         <div class="card h-100 text-center stat-card">
-          <div class="card-body py-4">
+          <div class="card-body py-5">
             <div class="stat-icon stat-icon-publications">
               <i class="bi bi-journal-text" aria-hidden="true"></i>
             </div>
-            <span class="stat-number d-block">{{ stats.total_publications }}</span>
+            <span class="stat-number d-block" data-count-to="{{ stats.total_publications }}">{{ stats.total_publications }}</span>
             <p class="stat-label mb-0">Publikacije</p>
           </div>
         </div>
       </a>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-4" data-reveal data-reveal-delay="1">
       <div class="card h-100 text-center stat-card">
-        <div class="card-body py-4">
+        <div class="card-body py-5">
           <div class="stat-icon stat-icon-articles">
             <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
           </div>
-          <span class="stat-number d-block">{{ stats.published_articles_count }}</span>
+          <span class="stat-number d-block" data-count-to="{{ stats.published_articles_count }}">{{ stats.published_articles_count }}</span>
           <p class="stat-label mb-0">Objavljeni članci</p>
         </div>
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-4" data-reveal data-reveal-delay="2">
       <a href="{% url 'portal:publisher-list' %}" class="text-decoration-none" aria-label="Izdavači - {{ stats.total_publishers }} ukupno">
         <div class="card h-100 text-center stat-card">
-          <div class="card-body py-4">
+          <div class="card-body py-5">
             <div class="stat-icon stat-icon-publishers">
               <i class="bi bi-building" aria-hidden="true"></i>
             </div>
-            <span class="stat-number d-block">{{ stats.total_publishers }}</span>
+            <span class="stat-number d-block" data-count-to="{{ stats.total_publishers }}">{{ stats.total_publishers }}</span>
             <p class="stat-label mb-0">Izdavači</p>
           </div>
         </div>
@@ -71,37 +71,39 @@
 </section>
 
 <!-- Recent Publications -->
-<section class="mb-5 fade-in-up fade-in-up-2" aria-labelledby="recent-publications-title">
-  <div class="d-flex justify-content-between align-items-center mb-4">
+<section class="mb-5" aria-labelledby="recent-publications-title">
+  <div class="d-flex justify-content-between align-items-end mb-4" data-reveal>
     <div>
       <p class="section-label mb-1">NAJNOVIJE</p>
       <h2 id="recent-publications-title" class="section-subtitle h4 mb-0">Publikacije</h2>
+      <span class="gradient-accent-bar d-block mt-2"></span>
     </div>
     <a href="{% url 'portal-publications:publication-list' %}" class="section-link">Prikaži sve &rarr;</a>
   </div>
   {% if recent_publications %}
   <div class="row g-4">
     {% for pub in recent_publications %}
-    <div class="col-md-4 col-sm-6">
-      <div class="card h-100 publication-card">
-        {% if pub.cover_image %}
-        <img src="{{ pub.cover_image.url }}" class="card-img-top" alt="{{ pub.title }}">
-        {% else %}
-        <div class="card-img-placeholder">
-          <i class="bi {{ pub.type_icon }} display-3" aria-hidden="true"></i>
-        </div>
-        {% endif %}
-        <div class="card-body">
-          <h3 class="card-title h6">
-            <a href="{% url 'portal-publications:publication-detail' slug=pub.slug %}" class="stretched-link">{{ pub.title }}</a>
-          </h3>
-          <p class="card-text small mb-0">
-            <span class="badge-type me-1">{{ pub.type_display }}</span>
-            <span class="mx-1">&middot;</span>
-            {{ pub.publisher.name }}
-          </p>
-        </div>
-      </div>
+    <div class="col-md-6" data-reveal data-reveal-delay="{% cycle '0' '1' %}">
+      <article class="card h-100 publication-card publication-card-h">
+        <a href="{% url 'portal-publications:publication-detail' slug=pub.slug %}" class="pub-card-h-link">
+          <div class="pub-card-h-cover">
+            {% if pub.cover_image %}
+            <img src="{{ pub.cover_image.url }}" class="pub-cover-img" alt="Naslovna strana: {{ pub.title }}">
+            {% elif pub.publisher.logo %}
+            <img src="{{ pub.publisher.logo.url }}" class="pub-logo-img" alt="{{ pub.publisher.name }}">
+            {% else %}
+            <i class="bi {{ pub.type_icon }} pub-cover-icon" aria-hidden="true"></i>
+            {% endif %}
+          </div>
+          <div class="pub-card-h-body">
+            <span class="badge-type align-self-start">{{ pub.type_display }}</span>
+            <h3 class="pub-card-h-title">{{ pub.title }}</h3>
+            <p class="pub-card-h-publisher">
+              <i class="bi bi-building" aria-hidden="true"></i>{{ pub.publisher.name }}
+            </p>
+          </div>
+        </a>
+      </article>
     </div>
     {% endfor %}
   </div>
@@ -114,13 +116,14 @@
 </section>
 
 <!-- Quick Links -->
-<section class="mb-4 fade-in-up fade-in-up-3" aria-labelledby="quick-links-title">
-  <div class="mb-4">
+<section class="mb-4" aria-labelledby="quick-links-title">
+  <div class="mb-4" data-reveal>
     <p class="section-label mb-1">NAVIGACIJA</p>
     <h2 id="quick-links-title" class="section-subtitle h4 mb-0">Brzi linkovi</h2>
+    <span class="gradient-accent-bar d-block mt-2"></span>
   </div>
   <div class="row g-4">
-    <div class="col-md-4">
+    <div class="col-md-4" data-reveal>
       <a href="{% url 'portal-publications:publication-list' %}" class="text-decoration-none">
         <div class="card h-100 text-center quick-link-card">
           <div class="card-body">
@@ -132,7 +135,7 @@
         </div>
       </a>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-4" data-reveal data-reveal-delay="1">
       <a href="{% url 'portal:publisher-list' %}" class="text-decoration-none">
         <div class="card h-100 text-center quick-link-card">
           <div class="card-body">
@@ -144,7 +147,7 @@
         </div>
       </a>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-4" data-reveal data-reveal-delay="2">
       <a href="{% url 'about' %}" class="text-decoration-none">
         <div class="card h-100 text-center quick-link-card">
           <div class="card-body">

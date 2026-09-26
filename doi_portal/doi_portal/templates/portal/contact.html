@@ -6,15 +6,16 @@
 {% block meta_description %}Kontaktirajte DOI Portal tim - pošaljite nam vašu poruku ili pitanje{% endblock %}
 
 {% block portal_content %}
+<!-- Gradient page header banner (doi.rs style) -->
+<header class="portal-page-header" data-reveal>
+    <p class="page-eyebrow">KONTAKT</p>
+    <h1 class="page-title">Kontaktirajte nas</h1>
+    <p class="page-subtitle">Imate pitanje ili predlog? Popunite formu i javićemo vam se.</p>
+</header>
+
 <div class="row">
     <!-- Main Content - Form (2/3) -->
-    <div class="col-lg-8 mb-4 fade-in-up">
-        <div class="mb-4">
-            <p class="section-label mb-1">PIŠITE NAM</p>
-            <h1 class="section-title mb-1">Kontaktirajte nas</h1>
-            <p class="about-text mb-0">Imate pitanje ili predlog? Popunite formu i javićemo vam se.</p>
-        </div>
-
+    <div class="col-lg-8 mb-4" data-reveal>
         <div class="card detail-meta-card">
             <div class="card-body p-4">
                 <form method="post" novalidate>
@@ -58,7 +59,7 @@
                         {% endif %}
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-contact">
+                    <button type="submit" class="btn btn-doi btn-contact">
                         <i class="bi bi-send me-2" aria-hidden="true"></i>Pošalji poruku
                     </button>
                 </form>
@@ -67,8 +68,8 @@
     </div>
 
     <!-- Sidebar (1/3) -->
-    <div class="col-lg-4 fade-in-up fade-in-up-2">
-        <div class="card sidebar-card mb-4" aria-labelledby="contact-info-title">
+    <div class="col-lg-4">
+        <div class="card sidebar-card mb-4" aria-labelledby="contact-info-title" data-reveal data-reveal-delay="1">
             <div class="card-body">
                 <h3 class="sidebar-card-title" id="contact-info-title">
                     <i class="bi bi-info-circle me-2" aria-hidden="true"></i>Kontakt informacije
@@ -96,7 +97,7 @@
             </div>
         </div>
 
-        <div class="card sidebar-card mb-4" aria-labelledby="links-title">
+        <div class="card sidebar-card mb-4" aria-labelledby="links-title" data-reveal data-reveal-delay="2">
             <div class="card-body">
                 <h3 class="sidebar-card-title" id="links-title">
                     <i class="bi bi-link-45deg me-2" aria-hidden="true"></i>Korisni linkovi

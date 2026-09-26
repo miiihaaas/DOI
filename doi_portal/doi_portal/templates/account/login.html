@@ -16,12 +16,18 @@
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --doi-primary: #5CB46A;
+      --doi-primary: #5cb46a;
       --doi-primary-hover: #68cc6c;
       --doi-teal: #033333;
+      --doi-gradient: linear-gradient(305deg, #5cb46a 0%, #033333 100%);
+      --doi-gradient-hover: linear-gradient(305deg, #033333 0%, #5cb46a 100%);
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     body {
@@ -30,86 +36,116 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #022828 0%, var(--doi-teal) 40%, var(--doi-primary) 100%);
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #eef2f1;
+      font-family: 'Raleway', system-ui, -apple-system, sans-serif;
+      padding: 1.5rem;
     }
 
-    .login-container {
+    .login-shell {
       width: 100%;
-      max-width: 420px;
-      padding: 1rem;
-    }
-
-    .login-card {
-      background: rgba(255, 255, 255, 0.97);
-      border-radius: 1rem;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      max-width: 960px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #ffffff;
+      border-radius: 1.25rem;
       overflow: hidden;
-      backdrop-filter: blur(10px);
+      box-shadow: 0 30px 80px -20px rgba(3, 51, 51, 0.35);
     }
 
-    .login-header {
-      background: var(--doi-teal);
-      padding: 2rem 2rem 1.75rem;
-      text-align: center;
+    /* ===== Left brand panel ===== */
+    .brand-panel {
       position: relative;
+      background: var(--doi-gradient);
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      color: #ffffff;
       overflow: hidden;
     }
 
-    .login-header::before {
+    .brand-panel::before {
       content: '';
       position: absolute;
-      top: -50%;
-      right: -50%;
+      top: -40%;
+      right: -30%;
+      width: 90%;
+      height: 90%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -35%;
+      left: -25%;
+      width: 80%;
+      height: 80%;
+      background: radial-gradient(circle, rgba(92, 180, 106, 0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand-logo {
+      position: relative;
       width: 100%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(92, 180, 106, 0.15) 0%, transparent 70%);
+      max-width: 260px;
+      height: auto;
+      margin-bottom: 1.75rem;
     }
 
-    .login-logo {
-      width: 56px;
-      height: 56px;
-      background: var(--doi-primary);
-      border-radius: 0.75rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 0.75rem;
-      font-size: 1.5rem;
-      color: white;
+    .brand-tagline {
       position: relative;
-      box-shadow: 0 4px 12px rgba(92, 180, 106, 0.4);
+      font-size: 1.05rem;
+      font-weight: 500;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.92);
+      margin: 0 0 0.5rem;
+      max-width: 22rem;
     }
 
-    .login-header h1 {
-      color: white;
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin: 0 0 0.25rem;
+    .brand-sub {
       position: relative;
-    }
-
-    .login-header p {
-      color: rgba(255, 255, 255, 0.65);
-      font-size: 0.875rem;
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.7);
       margin: 0;
-      position: relative;
+      max-width: 22rem;
     }
 
-    .login-body {
-      padding: 2rem;
+    /* ===== Right form panel ===== */
+    .form-panel {
+      padding: 3rem 2.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .form-panel h1 {
+      color: var(--doi-teal);
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 0 0 0.35rem;
+    }
+
+    .form-panel .form-intro {
+      color: #6b7c7c;
+      font-size: 0.9rem;
+      margin: 0 0 1.75rem;
     }
 
     .form-label {
       font-weight: 600;
       color: var(--doi-teal);
-      font-size: 0.875rem;
+      font-size: 0.85rem;
+      margin-bottom: 0.35rem;
     }
 
     .form-control {
       border: 2px solid #e2e8f0;
-      border-radius: 0.5rem;
-      padding: 0.625rem 0.875rem;
+      border-radius: 0.6rem;
+      padding: 0.65rem 0.9rem;
+      font-family: inherit;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
@@ -127,12 +163,12 @@
     }
 
     .input-icon-wrapper .form-control {
-      padding-left: 2.5rem;
+      padding-left: 2.6rem;
     }
 
     .input-icon-wrapper .input-icon {
       position: absolute;
-      left: 0.875rem;
+      left: 0.95rem;
       top: 50%;
       transform: translateY(-50%);
       color: #a0aec0;
@@ -147,24 +183,37 @@
     }
 
     .btn-login {
-      background: var(--doi-primary);
+      background: var(--doi-gradient);
       border: none;
-      color: white;
-      font-weight: 600;
-      padding: 0.7rem;
-      border-radius: 0.5rem;
+      color: #ffffff;
+      font-family: inherit;
+      font-weight: 700;
+      padding: 0.8rem;
+      border-radius: 50px;
       font-size: 1rem;
-      transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+      box-shadow: 0 10px 30px -8px rgba(92, 180, 106, 0.45);
+      transition: filter 0.25s ease, background 0.25s ease, transform 0.1s ease, box-shadow 0.25s ease;
     }
 
     .btn-login:hover {
-      background: var(--doi-primary-hover);
-      color: white;
-      box-shadow: 0 4px 12px rgba(92, 180, 106, 0.35);
+      background: var(--doi-gradient-hover);
+      filter: brightness(120%);
+      color: #ffffff;
+      box-shadow: 0 14px 34px -8px rgba(92, 180, 106, 0.55);
+    }
+
+    .btn-login:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 0.25rem rgba(92, 180, 106, 0.35), 0 10px 30px -8px rgba(92, 180, 106, 0.45);
     }
 
     .btn-login:active {
       transform: scale(0.98);
+    }
+
+    .form-check-input {
+      cursor: pointer;
     }
 
     .form-check-input:checked {
@@ -177,22 +226,28 @@
       border-color: var(--doi-primary);
     }
 
+    .form-check-label {
+      color: var(--doi-teal);
+      cursor: pointer;
+    }
+
     .login-link {
       color: var(--doi-primary);
       text-decoration: none;
-      font-weight: 500;
+      font-weight: 600;
       transition: color 0.2s ease;
     }
 
     .login-link:hover {
-      color: var(--doi-primary-hover);
+      color: var(--doi-teal);
       text-decoration: underline;
     }
 
     .back-link {
-      color: rgba(255, 255, 255, 0.7);
+      color: #6b7c7c;
       text-decoration: none;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
+      font-weight: 500;
       transition: color 0.2s ease;
       display: inline-flex;
       align-items: center;
@@ -200,15 +255,15 @@
     }
 
     .back-link:hover {
-      color: white;
+      color: var(--doi-primary);
     }
 
     .alert-danger {
       background-color: rgba(220, 53, 69, 0.08);
       border: 1px solid rgba(220, 53, 69, 0.2);
       color: #842029;
-      border-radius: 0.5rem;
-      font-size: 0.875rem;
+      border-radius: 0.6rem;
+      font-size: 0.85rem;
     }
 
     .divider {
@@ -227,164 +282,136 @@
       background: #e2e8f0;
     }
 
-    /* Floating particles decoration */
-    .bg-decoration {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      overflow: hidden;
-      z-index: 0;
-    }
+    /* ===== Responsive: stack panels ===== */
+    @media (max-width: 767.98px) {
+      .login-shell {
+        grid-template-columns: 1fr;
+        max-width: 460px;
+      }
 
-    .bg-decoration span {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(92, 180, 106, 0.08);
-      animation: float 20s infinite ease-in-out;
-    }
+      .brand-panel {
+        padding: 2.25rem 2rem;
+        text-align: center;
+        align-items: center;
+      }
 
-    .bg-decoration span:nth-child(1) {
-      width: 300px;
-      height: 300px;
-      top: -10%;
-      left: -5%;
-      animation-delay: 0s;
-    }
+      .brand-logo {
+        max-width: 200px;
+        margin-bottom: 1.25rem;
+      }
 
-    .bg-decoration span:nth-child(2) {
-      width: 200px;
-      height: 200px;
-      bottom: 10%;
-      right: -5%;
-      animation-delay: -5s;
-    }
+      .brand-sub {
+        display: none;
+      }
 
-    .bg-decoration span:nth-child(3) {
-      width: 150px;
-      height: 150px;
-      top: 50%;
-      left: 50%;
-      animation-delay: -10s;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(30px, -30px) scale(1.05); }
-      66% { transform: translate(-20px, 20px) scale(0.95); }
-    }
-
-    .login-container {
-      position: relative;
-      z-index: 1;
+      .form-panel {
+        padding: 2.25rem 1.75rem;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Background decoration -->
-  <div class="bg-decoration">
-    <span></span>
-    <span></span>
-    <span></span>
-  </div>
-
-  <div class="login-container">
-    <div class="login-card">
-      <div class="login-header">
-        <div class="login-logo">
-          <i class="bi bi-journal-bookmark-fill"></i>
-        </div>
-        <h1>DOI Portal</h1>
-        <p>Sistem za upravljanje DOI identifikatorima</p>
-      </div>
-
-      <div class="login-body">
-        {% if form.errors %}
-        <div class="alert alert-danger" role="alert">
-          <i class="bi bi-exclamation-circle me-1"></i>
-          Email adresa i/ili lozinka nisu tačni.
-        </div>
-        {% endif %}
-
-        <form method="post" action="{% url 'account_login' %}">
-          {% csrf_token %}
-
-          <div class="mb-3">
-            <label for="id_login" class="form-label">Email</label>
-            <div class="input-icon-wrapper">
-              <input type="email"
-                     name="login"
-                     id="id_login"
-                     class="form-control {% if form.login.errors %}is-invalid{% endif %}"
-                     placeholder="vasa@email.adresa"
-                     autocomplete="email"
-                     required />
-              <i class="bi bi-envelope input-icon"></i>
-            </div>
-            {% if form.login.errors %}
-            <div class="invalid-feedback d-block">{{ form.login.errors.0 }}</div>
-            {% endif %}
-          </div>
-
-          <div class="mb-3">
-            <label for="id_password" class="form-label">Lozinka</label>
-            <div class="input-icon-wrapper">
-              <input type="password"
-                     name="password"
-                     id="id_password"
-                     class="form-control {% if form.password.errors %}is-invalid{% endif %}"
-                     placeholder="Unesite lozinku"
-                     autocomplete="current-password"
-                     required />
-              <i class="bi bi-lock input-icon"></i>
-            </div>
-            {% if form.password.errors %}
-            <div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>
-            {% endif %}
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            {% if form.remember %}
-            <div class="form-check">
-              <input type="checkbox"
-                     name="remember"
-                     id="id_remember"
-                     class="form-check-input" />
-              <label for="id_remember" class="form-check-label small">
-                Zapamti me
-              </label>
-            </div>
-            {% endif %}
-            <a href="{% url 'account_reset_password' %}" class="login-link small">
-              Zaboravili ste lozinku?
-            </a>
-          </div>
-
-          {% if redirect_field_value %}
-          <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-          {% endif %}
-
-          <button type="submit" class="btn btn-login w-100">
-            <i class="bi bi-box-arrow-in-right me-1"></i>Prijava
-          </button>
-        </form>
-
-        {% if ACCOUNT_ALLOW_REGISTRATION %}
-        <div class="divider my-4">ili</div>
-        <div class="text-center">
-          <span class="text-muted small">Nemate nalog?</span>
-          <a href="{% url 'account_signup' %}" class="login-link ms-1 small">
-            Registrujte se
-          </a>
-        </div>
-        {% endif %}
-      </div>
+  <div class="login-shell">
+    <!-- Left brand panel -->
+    <div class="brand-panel">
+      <img class="brand-logo"
+           src="{% static 'images/doi-logo-negative.png' %}"
+           alt="DOI Portal" width="480" height="160" />
+      <p class="brand-tagline">Sistem za upravljanje DOI identifikatorima</p>
+      <p class="brand-sub">Registracija, deponovanje i praćenje digitalnih objekata na jednom mestu.</p>
     </div>
 
-    <div class="text-center mt-4">
-      <a href="{% url 'home' %}" class="back-link">
-        <i class="bi bi-arrow-left"></i>
-        Nazad na početnu
-      </a>
+    <!-- Right form panel -->
+    <div class="form-panel">
+      <h1>Prijava</h1>
+      <p class="form-intro">Pristupite svom nalogu na DOI Portalu.</p>
+
+      {% if form.errors %}
+      <div class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-circle me-1"></i>
+        Email adresa i/ili lozinka nisu tačni.
+      </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'account_login' %}">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label for="id_login" class="form-label">Email</label>
+          <div class="input-icon-wrapper">
+            <input type="email"
+                   name="login"
+                   id="id_login"
+                   class="form-control {% if form.login.errors %}is-invalid{% endif %}"
+                   placeholder="vasa@email.adresa"
+                   autocomplete="email"
+                   required />
+            <i class="bi bi-envelope input-icon"></i>
+          </div>
+          {% if form.login.errors %}
+          <div class="invalid-feedback d-block">{{ form.login.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_password" class="form-label">Lozinka</label>
+          <div class="input-icon-wrapper">
+            <input type="password"
+                   name="password"
+                   id="id_password"
+                   class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                   placeholder="Unesite lozinku"
+                   autocomplete="current-password"
+                   required />
+            <i class="bi bi-lock input-icon"></i>
+          </div>
+          {% if form.password.errors %}
+          <div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          {% if form.remember %}
+          <div class="form-check">
+            <input type="checkbox"
+                   name="remember"
+                   id="id_remember"
+                   class="form-check-input" />
+            <label for="id_remember" class="form-check-label small">
+              Zapamti me
+            </label>
+          </div>
+          {% endif %}
+          <a href="{% url 'account_reset_password' %}" class="login-link small">
+            Zaboravili ste lozinku?
+          </a>
+        </div>
+
+        {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+        {% endif %}
+
+        <button type="submit" class="btn btn-login w-100">
+          <i class="bi bi-box-arrow-in-right me-1"></i>Prijava
+        </button>
+      </form>
+
+      {% if ACCOUNT_ALLOW_REGISTRATION %}
+      <div class="divider my-4">ili</div>
+      <div class="text-center">
+        <span class="text-muted small">Nemate nalog?</span>
+        <a href="{% url 'account_signup' %}" class="login-link ms-1 small">
+          Registrujte se
+        </a>
+      </div>
+      {% endif %}
+
+      <div class="text-center mt-4">
+        <a href="{% url 'home' %}" class="back-link">
+          <i class="bi bi-arrow-left"></i>
+          Nazad na početnu
+        </a>
+      </div>
     </div>
   </div>
 </body>

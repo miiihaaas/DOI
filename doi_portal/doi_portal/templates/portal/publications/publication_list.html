@@ -6,9 +6,18 @@
 {% block meta_description %}Pregledajte sve naučne publikacije na DOI Portalu. Filtrirajte po tipu, oblasti, jeziku i pristupu.{% endblock meta_description %}
 
 {% block portal_content %}
+<header class="portal-page-header" data-reveal>
+    <p class="page-eyebrow">Publikacije</p>
+    <h1 class="page-title">Katalog publikacija</h1>
+    <p class="page-subtitle">
+        Naučni časopisi, zbornici i serijske publikacije registrovane na DOI Portalu.
+        Filtrirajte po tipu, oblasti, jeziku i vrsti pristupa.
+    </p>
+</header>
+
 <div class="row">
     <!-- Filter Sidebar -->
-    <aside class="col-lg-3 mb-4 fade-in-up">
+    <aside class="col-lg-3 mb-4" data-reveal>
         <div class="card filter-sidebar-card">
             <div class="card-body">
                 <h2 class="filter-sidebar-title">
@@ -148,10 +157,10 @@
     </aside>
 
     <!-- Main Content -->
-    <section class="col-lg-9 fade-in-up fade-in-up-1">
-        <div class="mb-4">
-            <p class="section-label mb-1">KATALOG</p>
-            <h1 class="section-title h3 mb-0">Publikacije</h1>
+    <section class="col-lg-9" data-reveal data-reveal-delay="1">
+        <div class="d-flex align-items-center mb-4">
+            <span class="gradient-accent-bar me-3"></span>
+            <p class="section-label mb-0">Rezultati pretrage</p>
         </div>
 
         <div id="publication-results" aria-live="polite">

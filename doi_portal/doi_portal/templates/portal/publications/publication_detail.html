@@ -6,12 +6,21 @@
 {% block meta_description %}{{ publication.title }} - {{ publication.type_display }} na DOI Portalu. {{ publication.description|truncatewords:30 }}{% endblock meta_description %}
 
 {% block portal_content %}
+<a href="{% url 'portal-publications:publication-list' %}" class="btn-back d-inline-block mb-3" data-reveal>
+    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad na publikacije
+</a>
+
+<header class="portal-page-header" data-reveal>
+    <p class="page-eyebrow">{{ publication.type_display }}</p>
+    <h1 class="page-title h2">{{ publication.title }}</h1>
+    <p class="page-subtitle">{{ publication.publisher.name }}</p>
+</header>
+
 <div class="row">
     <!-- Publication Info -->
-    <div class="col-lg-8 fade-in-up">
+    <div class="col-lg-8" data-reveal>
         <article>
             <div class="mb-4">
-                <h1 class="section-title h3 mb-3">{{ publication.title }}</h1>
                 <div class="d-flex flex-wrap gap-2">
                     <span class="badge-type">
                         <i class="{{ publication.type_icon }} me-1" aria-hidden="true"></i>
@@ -226,7 +235,7 @@
     </div>
 
     <!-- Sidebar -->
-    <div class="col-lg-4 fade-in-up fade-in-up-2">
+    <div class="col-lg-4" data-reveal data-reveal-delay="1">
         <div class="card sidebar-card">
             <div class="card-body">
                 <h2 class="sidebar-card-title">
