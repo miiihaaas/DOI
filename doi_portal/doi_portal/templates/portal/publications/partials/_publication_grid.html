@@ -8,6 +8,133 @@
 
 <div class="table-responsive pub-table-wrap">
     <table class="pub-table">
+        {% if active_type == 'JOURNAL' %}
+        {# ---- JOURNAL: Naziv · Oblast · ISSN/eISSN · Prvo objavljivanje · Pristup · Izdavač · Jezik ---- #}
+        <thead>
+            <tr>
+                <th class="pub-th-name">Naziv publikacije</th>
+                <th>Oblast</th>
+                <th>ISSN / eISSN</th>
+                <th>Prvo objavljivanje</th>
+                <th>Pristup</th>
+                <th>Izdavač</th>
+                <th>Jezik</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for publication in publications %}
+            <tr class="pub-row">
+                <td class="pub-name-cell">
+                    <span class="pub-row-icon">
+                        {% if publication.cover_image %}<img src="{{ publication.cover_image.url }}" alt="">{% else %}<i class="bi {{ publication.type_icon }}" aria-hidden="true"></i>{% endif %}
+                    </span>
+                    <a href="{% url 'portal-publications:publication-detail' slug=publication.slug %}" class="pub-row-name">{{ publication.title }}</a>
+                </td>
+                <td class="pub-subject-cell">{{ publication.subject_area|default:"—" }}</td>
+                <td class="pub-idcell">
+                    <span class="pub-idrow"><span class="pub-idlabel">ISSN</span><span class="pub-idval">{{ publication.issn_print|default:"—" }}</span></span>
+                    <span class="pub-idrow"><span class="pub-idlabel">eISSN</span><span class="pub-idval">{{ publication.issn_online|default:"—" }}</span></span>
+                </td>
+                <td class="pub-year-cell">{{ publication.first_year|default:"—" }}</td>
+                <td>
+                    {% if publication.access_type == 'OPEN' %}<span class="access-pill access-open"><i class="bi bi-unlock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>
+                    {% else %}<span class="access-pill access-restricted"><i class="bi bi-lock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>{% endif %}
+                </td>
+                <td><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
+                <td class="pub-lang-cell">{{ publication.language|language_name|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Nema publikacija koje odgovaraju kriterijumima.</p></div></td></tr>
+            {% endfor %}
+        </tbody>
+
+        {% elif active_type == 'CONFERENCE' %}
+        {# ---- CONFERENCE: Naziv · Oblast · ISBN/ISSN · Godina izdanja · Pristup · Izdavač · Urednik/Urednici · Broj radova · Jezik ---- #}
+        <thead>
+            <tr>
+                <th class="pub-th-name">Naziv publikacije</th>
+                <th>Oblast</th>
+                <th>ISBN / ISSN</th>
+                <th>Godina izdanja</th>
+                <th>Pristup</th>
+                <th>Izdavač</th>
+                <th>Urednik/Urednici</th>
+                <th>Broj radova</th>
+                <th>Jezik</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for publication in publications %}
+            <tr class="pub-row">
+                <td class="pub-name-cell">
+                    <span class="pub-row-icon">
+                        {% if publication.cover_image %}<img src="{{ publication.cover_image.url }}" alt="">{% else %}<i class="bi {{ publication.type_icon }}" aria-hidden="true"></i>{% endif %}
+                    </span>
+                    <a href="{% url 'portal-publications:publication-detail' slug=publication.slug %}" class="pub-row-name">{{ publication.title }}</a>
+                </td>
+                <td class="pub-subject-cell">{{ publication.subject_area|default:"—" }}</td>
+                <td class="pub-idcell">
+                    <span class="pub-idrow"><span class="pub-idlabel">ISBN</span><span class="pub-idval">—</span></span>
+                    <span class="pub-idrow"><span class="pub-idlabel">ISSN</span><span class="pub-idval">{{ publication.series_issn|default:publication.issn_print|default:"—" }}</span></span>
+                </td>
+                <td class="pub-year-cell">{{ publication.last_year|default:"—" }}</td>
+                <td>
+                    {% if publication.access_type == 'OPEN' %}<span class="access-pill access-open"><i class="bi bi-unlock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>
+                    {% else %}<span class="access-pill access-restricted"><i class="bi bi-lock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>{% endif %}
+                </td>
+                <td><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
+                <td class="pub-editor-cell">—</td>
+                <td><span class="pub-count-pill">{{ publication.published_article_count }}</span></td>
+                <td class="pub-lang-cell">{{ publication.language|language_name|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Nema publikacija koje odgovaraju kriterijumima.</p></div></td></tr>
+            {% endfor %}
+        </tbody>
+
+        {% elif active_type == 'OTHER' %}
+        {# ---- OTHER: Naziv · Tip publikacije · Oblast · ISBN · Godina izdanja · Pristup · Izdavač · Autor/Autori · Jezik ---- #}
+        <thead>
+            <tr>
+                <th class="pub-th-name">Naziv publikacije</th>
+                <th>Tip publikacije</th>
+                <th>Oblast</th>
+                <th>ISBN</th>
+                <th>Godina izdanja</th>
+                <th>Pristup</th>
+                <th>Izdavač</th>
+                <th>Autor/Autori</th>
+                <th>Jezik</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for publication in publications %}
+            <tr class="pub-row">
+                <td class="pub-name-cell">
+                    <span class="pub-row-icon">
+                        {% if publication.cover_image %}<img src="{{ publication.cover_image.url }}" alt="">{% else %}<i class="bi {{ publication.type_icon }}" aria-hidden="true"></i>{% endif %}
+                    </span>
+                    <a href="{% url 'portal-publications:publication-detail' slug=publication.slug %}" class="pub-row-name">{{ publication.title }}</a>
+                </td>
+                <td class="pub-subtype-cell">—</td>
+                <td class="pub-subject-cell">{{ publication.subject_area|default:"—" }}</td>
+                <td class="pub-idcell"><span class="pub-idval">—</span></td>
+                <td class="pub-year-cell">{{ publication.last_year|default:"—" }}</td>
+                <td>
+                    {% if publication.access_type == 'OPEN' %}<span class="access-pill access-open"><i class="bi bi-unlock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>
+                    {% else %}<span class="access-pill access-restricted"><i class="bi bi-lock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>{% endif %}
+                </td>
+                <td><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
+                <td class="pub-author-cell">—</td>
+                <td class="pub-lang-cell">{{ publication.language|language_name|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Nema publikacija koje odgovaraju kriterijumima.</p></div></td></tr>
+            {% endfor %}
+        </tbody>
+
+        {% else %}
+        {# ---- GENERIC (mixed / all): Naziv · Vrsta · Oblast · Pristup · Izdavač · Jezik ---- #}
         <thead>
             <tr>
                 <th class="pub-th-name">Naziv publikacije</th>
@@ -40,6 +167,7 @@
             <tr><td colspan="6"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Nema publikacija koje odgovaraju kriterijumima.</p></div></td></tr>
             {% endfor %}
         </tbody>
+        {% endif %}
     </table>
 </div>
 

@@ -472,6 +472,55 @@
     text-decoration: underline;
 }
 
+/* ---- ID cell (ISSN/eISSN, ISBN/ISSN, ISBN) — stacked labelled values -- */
+.pub-idcell {
+    line-height: 1.35;
+    white-space: nowrap;
+}
+.pub-idrow {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+}
+.pub-idlabel {
+    display: inline-block;
+    min-width: 3.1rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+}
+.pub-idval {
+    font-family: "SFMono-Regular", ui-monospace, "Menlo", "Consolas", monospace;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-dark);
+}
+
+/* ---- Year cell ------------------------------------------------------- */
+.pub-year-cell {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+}
+
+/* ---- Count pill (Broj radova) — green pill look ---------------------- */
+.pub-count-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.85rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 20px;
+    background: var(--pub-green-tint-14);
+    color: var(--color-primary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+
 /* ---- Subject / language cells --------------------------------------- */
 .pub-subject-cell,
 .pub-lang-cell {

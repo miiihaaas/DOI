@@ -211,6 +211,19 @@ class PublicationPublicListView(ListView):
                 | models.Q(publisher__name__icontains=search)
             )
 
+        # Derived columns for the type-specific tables:
+        #  - broj radova (published articles across the publication's issues)
+        #  - prvo/poslednje objavljivanje (min/max issue year)
+        queryset = queryset.annotate(
+            published_article_count=models.Count(
+                "issues__articles",
+                filter=models.Q(issues__articles__status=ArticleStatus.PUBLISHED),
+                distinct=True,
+            ),
+            first_year=models.Min("issues__year"),
+            last_year=models.Max("issues__year"),
+        )
+
         # Alphabetical sorting by name
         sort = self.request.GET.get("sort", "name")
         queryset = queryset.order_by("-title" if sort == "-name" else "title")
@@ -285,6 +298,12 @@ class PublicationPublicListView(ListView):
             {"value": "name", "label": "Naziv (A-Š)"},
             {"value": "-name", "label": "Naziv (Š-A)"},
         ]
+
+        # When exactly one type is selected, the table shows that type's
+        # specific columns (Časopisi / Zbornici / Ostalo); otherwise a
+        # generic column set.
+        types = context["current_types"]
+        context["active_type"] = types[0] if len(types) == 1 else None
 
         # Convenience: any filter active?
         context["has_active_filters"] = bool(
@@ -832,15 +851,44 @@ class MonographPublicListView(ListView):
     paginate_by = 12
 
     def get_queryset(self):
-        return Monograph.objects.filter(
-            status=MonographStatus.PUBLISHED,
-        ).select_related("publisher").order_by("-year", "-created_at")
+        queryset = (
+            Monograph.objects.filter(status=MonographStatus.PUBLISHED)
+            .select_related("publisher")
+            .prefetch_related("contributors")
+            .annotate(
+                published_chapter_count=models.Count(
+                    "chapters",
+                    filter=models.Q(chapters__status=MonographStatus.PUBLISHED),
+                    distinct=True,
+                ),
+            )
+        )
+
+        # Search by monograph title OR publisher name
+        search = self.request.GET.get("search")
+        if search:
+            queryset = queryset.filter(
+                models.Q(title__icontains=search)
+                | models.Q(publisher__name__icontains=search)
+            )
+
+        # Alphabetical sort (default), else newest first
+        sort = self.request.GET.get("sort", "name")
+        if sort == "-name":
+            return queryset.order_by("-title")
+        return queryset.order_by("title")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["breadcrumbs"] = [
             {"label": "Početna", "url": reverse("home")},
             {"label": "Monografije", "url": None},
+        ]
+        context["search_query"] = self.request.GET.get("search", "")
+        context["current_sort"] = self.request.GET.get("sort", "name")
+        context["sort_options"] = [
+            {"value": "name", "label": "Naziv (A-Š)"},
+            {"value": "-name", "label": "Naziv (Š-A)"},
         ]
         return context
 

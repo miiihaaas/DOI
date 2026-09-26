@@ -1,0 +1,26 @@
+/* =====================================================================
+   DOI Portal — Monographs List (page-scoped)
+   Loaded AFTER portal-publications-table.css — reuses its classes and
+   adds only monograph-specific tweaks.
+   ===================================================================== */
+
+/* Small green count pill for "Broj radova" (published chapters). */
+.mono-count-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.6rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 50px;
+    background: rgba(92, 180, 106, 0.14);
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* Author cell — allow wrapping but keep it compact. */
+.mono-author-cell {
+    color: var(--color-text-secondary);
+    min-width: 150px;
+}
