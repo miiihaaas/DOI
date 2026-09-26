@@ -6,6 +6,12 @@
 {% block meta_description %}{{ article.abstract|truncatewords:30 }}{% endblock meta_description %}
 
 {% block portal_content %}
+<!-- Back to parent issue -->
+<a href="{% url 'portal-publications:issue-detail' slug=article.issue.publication.slug pk=article.issue.pk %}"
+   class="btn-back d-inline-block mb-3" data-reveal>
+  <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad na {{ "issue"|term:article.issue.publication.publication_type|lower }}
+</a>
+
 <!-- WITHDRAWN Banner -->
 {% if is_withdrawn %}
 <div class="alert alert-danger withdrawn-banner d-flex align-items-start mb-4" role="alert">
@@ -20,23 +26,35 @@
 </div>
 {% endif %}
 
+<!-- Gradient page header -->
+<header class="portal-page-header" data-reveal>
+  <p class="page-eyebrow">{{ article.issue.publication.get_publication_type_display|default:"ČLANAK" }}</p>
+  <h1 class="page-title h2">{{ article.title|render_markup }}</h1>
+  <p class="page-subtitle">
+    {% for author in article.authors.all %}{{ author.given_name }} {{ author.surname }}{% if not forloop.last %}, {% endif %}{% empty %}{{ article.issue.publication.title }}{% endfor %}
+  </p>
+</header>
+
 <div class="row">
   <!-- Main Content -->
-  <article class="col-lg-8 fade-in-up">
-    <!-- Title -->
-    <h1 class="article-title mb-2">{{ article.title|render_markup }}</h1>
-    {% if article.subtitle %}
-    <p class="article-subtitle mb-3">{{ article.subtitle|render_markup }}</p>
-    {% endif %}
-    {% if article.original_language_title %}
-    <h2 class="article-alt-title mb-2">{{ article.original_language_title|render_markup }}</h2>
-    {% endif %}
-    {% if article.original_language_subtitle %}
-    <p class="article-alt-subtitle mb-3">{{ article.original_language_subtitle|render_markup }}</p>
+  <article class="col-lg-8">
+    <!-- Subtitle / alternate titles -->
+    {% if article.subtitle or article.original_language_title or article.original_language_subtitle %}
+    <div class="mb-4" data-reveal>
+      {% if article.subtitle %}
+      <p class="article-subtitle mb-2">{{ article.subtitle|render_markup }}</p>
+      {% endif %}
+      {% if article.original_language_title %}
+      <h2 class="article-alt-title mb-2">{{ article.original_language_title|render_markup }}</h2>
+      {% endif %}
+      {% if article.original_language_subtitle %}
+      <p class="article-alt-subtitle mb-0">{{ article.original_language_subtitle|render_markup }}</p>
+      {% endif %}
+    </div>
     {% endif %}
 
     <!-- Status & Date -->
-    <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-4" data-reveal>
       <span class="badge {{ article.status_badge_class }}">{{ article.get_status_display }}</span>
       {% if article.published_at %}
       <span class="issue-date-inline">
@@ -47,7 +65,7 @@
     </div>
 
     <!-- Authors -->
-    <section class="article-authors mb-4" aria-labelledby="authors-heading">
+    <section class="article-authors mb-4" data-reveal aria-labelledby="authors-heading">
       <h2 id="authors-heading" class="info-card-heading h5 mb-3">Autori</h2>
       {% for author in article.authors.all %}
       <div class="author-card mb-3">
@@ -90,7 +108,7 @@
 
     <!-- Abstract -->
     {% if article.abstract %}
-    <section class="article-abstract mb-4" aria-labelledby="abstract-heading">
+    <section class="article-abstract mb-4" data-reveal aria-labelledby="abstract-heading">
       <h2 id="abstract-heading" class="info-card-heading h5 mb-3">Apstrakt</h2>
       <div class="abstract-content">
         <p>{{ article.abstract|render_markup }}</p>
@@ -100,11 +118,11 @@
 
     <!-- Keywords -->
     {% if article.keywords %}
-    <section class="article-keywords mb-4" aria-labelledby="keywords-heading">
+    <section class="article-keywords mb-4" data-reveal aria-labelledby="keywords-heading">
       <h2 id="keywords-heading" class="info-card-heading h5 mb-3">Ključne reči</h2>
-      <div>
+      <div class="d-flex flex-wrap gap-2">
         {% for kw in article.keywords %}
-        <span class="badge bg-light text-dark border me-1 mb-1 keyword-tag">{{ kw }}</span>
+        <span class="badge bg-light text-dark border keyword-tag">{{ kw }}</span>
         {% endfor %}
       </div>
     </section>
@@ -112,7 +130,7 @@
 
     <!-- Funding -->
     {% if article.fundings.exists %}
-    <section class="article-funding mb-4" aria-labelledby="funding-heading">
+    <section class="article-funding mb-4" data-reveal aria-labelledby="funding-heading">
       <h2 id="funding-heading" class="info-card-heading h5 mb-3">Finansiranje</h2>
       {% for funding in article.fundings.all %}
       <div class="funding-item mb-1">
@@ -127,7 +145,7 @@
 
     <!-- External Resource Links -->
     {% if article.use_external_resource and article.external_landing_url %}
-    <section class="article-external-resource mb-4" aria-labelledby="external-heading">
+    <section class="article-external-resource mb-4" data-reveal aria-labelledby="external-heading">
       <h2 id="external-heading" class="info-card-heading h5 mb-3">Originalni izvor</h2>
       <div class="alert alert-info">
         <i class="bi bi-box-arrow-up-right me-2" aria-hidden="true"></i>
@@ -146,66 +164,83 @@
       </div>
     </section>
     {% endif %}
-
-    <!-- Article Metadata -->
-    <section class="article-metadata mb-4" aria-labelledby="metadata-heading">
-      <h2 id="metadata-heading" class="info-card-heading h5 mb-3">Metapodaci</h2>
-      <div class="card detail-meta-card">
-        <div class="card-body">
-          <dl class="detail-meta-list mb-0">
-            <div class="detail-meta-row">
-              <dt>DOI</dt>
-              <dd>
-                <a href="{{ doi_url }}" rel="external" target="_blank" aria-label="DOI: {{ full_doi }}">{{ full_doi }}</a>
-              </dd>
-            </div>
-
-            {% if article.first_page %}
-            <div class="detail-meta-row">
-              <dt>Stranice</dt>
-              <dd>{{ article.first_page }}{% if article.last_page %}&ndash;{{ article.last_page }}{% endif %}</dd>
-            </div>
-            {% endif %}
-
-            <div class="detail-meta-row">
-              <dt>Jezik</dt>
-              <dd>{{ article.language }}</dd>
-            </div>
-
-            <div class="detail-meta-row">
-              <dt>Tip sadržaja</dt>
-              <dd>{{ article.get_publication_type_display }}</dd>
-            </div>
-
-            {% if article.license_url %}
-            <div class="detail-meta-row">
-              <dt>Licenca</dt>
-              <dd>
-                <a href="{{ article.license_url }}" rel="external" target="_blank" aria-label="Licenca: {{ article.license_url }}">{{ article.license_url }}</a>
-              </dd>
-            </div>
-            {% endif %}
-
-            {% if article.free_to_read %}
-            <div class="detail-meta-row">
-              <dt>Pristup</dt>
-              <dd>
-                <span class="badge-access">
-                  <i class="bi bi-unlock-fill me-1" aria-hidden="true"></i>Slobodan pristup
-                </span>
-              </dd>
-            </div>
-            {% endif %}
-          </dl>
-        </div>
-      </div>
-    </section>
   </article>
 
   <!-- Sidebar -->
-  <aside class="col-lg-4 fade-in-up fade-in-up-2">
+  <aside class="col-lg-4">
+    <!-- Actions Card -->
+    {% if has_pdf %}
+    <div class="card sidebar-card mb-3" data-reveal>
+      <div class="card-body">
+        <h2 class="sidebar-card-title">
+          <i class="bi bi-file-earmark-arrow-down me-2" aria-hidden="true"></i>Preuzimanje
+        </h2>
+        <a href="{{ pdf_download_url }}"
+           class="btn-doi w-100"
+           download="{{ pdf_download_filename }}"
+           aria-label="Preuzmi PDF">
+          <i class="bi bi-file-earmark-pdf-fill" aria-hidden="true"></i>Preuzmi PDF
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Metadata Card -->
+    <div class="card sidebar-card mb-3" data-reveal data-reveal-delay="1">
+      <div class="card-body">
+        <h2 class="sidebar-card-title">
+          <i class="bi bi-info-circle me-2" aria-hidden="true"></i>Metapodaci
+        </h2>
+        <dl class="detail-meta-list mb-0">
+          <div class="detail-meta-row">
+            <dt>DOI</dt>
+            <dd>
+              <a href="{{ doi_url }}" rel="external" target="_blank" aria-label="DOI: {{ full_doi }}">{{ full_doi }}</a>
+            </dd>
+          </div>
+
+          {% if article.first_page %}
+          <div class="detail-meta-row">
+            <dt>Stranice</dt>
+            <dd>{{ article.first_page }}{% if article.last_page %}&ndash;{{ article.last_page }}{% endif %}</dd>
+          </div>
+          {% endif %}
+
+          <div class="detail-meta-row">
+            <dt>Jezik</dt>
+            <dd>{{ article.language }}</dd>
+          </div>
+
+          <div class="detail-meta-row">
+            <dt>Tip sadržaja</dt>
+            <dd>{{ article.get_publication_type_display }}</dd>
+          </div>
+
+          {% if article.license_url %}
+          <div class="detail-meta-row">
+            <dt>Licenca</dt>
+            <dd>
+              <a href="{{ article.license_url }}" rel="external" target="_blank" aria-label="Licenca: {{ article.license_url }}">{{ article.license_url }}</a>
+            </dd>
+          </div>
+          {% endif %}
+
+          {% if article.free_to_read %}
+          <div class="detail-meta-row">
+            <dt>Pristup</dt>
+            <dd>
+              <span class="badge-access">
+                <i class="bi bi-unlock-fill me-1" aria-hidden="true"></i>Slobodan pristup
+              </span>
+            </dd>
+          </div>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+
     <!-- Publication Info Card -->
-    <div class="card sidebar-card mb-3">
+    <div class="card sidebar-card mb-3" data-reveal data-reveal-delay="2">
       <div class="card-body">
         <h2 class="sidebar-card-title">
           <i class="bi bi-journal-text me-2" aria-hidden="true"></i>Publikacija
@@ -232,7 +267,7 @@
     </div>
 
     <!-- Publisher Info Card -->
-    <div class="card sidebar-card mb-3">
+    <div class="card sidebar-card mb-3" data-reveal data-reveal-delay="3">
       <div class="card-body">
         <h2 class="sidebar-card-title">
           <i class="bi bi-building me-2" aria-hidden="true"></i>Izdavač
@@ -247,6 +282,14 @@
             {{ article.issue.publication.publisher.name }}
           </a>
         </p>
+      </div>
+    </div>
+
+    <!-- Contact CTA Card -->
+    <div class="card sidebar-card mb-3" data-reveal>
+      <div class="card-body text-center">
+        <p class="mb-3 small text-muted-custom">Imate pitanje o ovom radu?</p>
+        <a href="{% url 'contact' %}" class="btn btn-doi-outline btn-sm">Kontaktirajte nas</a>
       </div>
     </div>
   </aside>

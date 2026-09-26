@@ -4,29 +4,64 @@
 
 {% block title %}Pretraga članaka{% if query %} - "{{ query }}"{% endif %}{% endblock title %}
 
+{% block css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/portal-search.css' %}">{% endblock css %}
+
 {% block portal_content %}
+<!-- Search Hero Banner -->
+<header class="portal-page-header search-hero" data-reveal>
+  <p class="page-eyebrow">Pretraga</p>
+  <h1 class="page-title">Pretraga članaka</h1>
+  <p class="page-subtitle">
+    Pronađite naučne članke po naslovu, imenu autora ili ključnim rečima
+    i otvorite njihove landing stranice.
+  </p>
+
+  <!-- Search Form -->
+  <form action="{% url 'article-search' %}" method="get" role="search" class="search-hero-form">
+    <div class="input-group search-hero-input-group">
+      <span class="input-group-text search-hero-icon" aria-hidden="true">
+        <i class="bi bi-search"></i>
+      </span>
+      <input type="search" name="q" value="{{ query }}" class="form-control"
+             placeholder="Pretražite članke po naslovu, autoru, ključnim rečima..."
+             aria-label="Pretraga članaka"
+             minlength="3">
+      <button type="submit" class="btn btn-doi search-hero-btn">
+        <span class="d-none d-sm-inline">Pretraži</span>
+        <i class="bi bi-arrow-right d-sm-none" aria-hidden="true"></i>
+      </button>
+    </div>
+    {% if query and query|length < min_query_length %}
+    <p class="search-hero-hint" role="alert">
+      <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
+      Unesite najmanje {{ min_query_length }} karaktera za pretragu.
+    </p>
+    {% endif %}
+  </form>
+</header>
+
 <div class="row">
   <!-- Filter Sidebar (Desktop) -->
-  <aside class="col-lg-3 mb-4 d-none d-lg-block">
+  <aside class="col-lg-3 mb-4 d-none d-lg-block filter-sidebar" data-reveal>
     {% include "portal/partials/_article_filter_sidebar.html" %}
   </aside>
 
   <!-- Mobile Filter Button -->
   <div class="d-lg-none mb-3">
-    <button class="btn btn-outline-primary w-100"
+    <button class="btn-doi-outline w-100 justify-content-center"
             type="button"
             data-bs-toggle="offcanvas"
             data-bs-target="#filterOffcanvas"
             aria-controls="filterOffcanvas">
       <i class="bi bi-funnel" aria-hidden="true"></i> Filteri
       {% if has_active_filters %}
-        <span class="badge bg-primary ms-1">Aktivni</span>
+        <span class="badge-access ms-1">Aktivni</span>
       {% endif %}
     </button>
   </div>
 
   <!-- Mobile Offcanvas -->
-  <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="filterOffcanvas"
+  <div class="offcanvas offcanvas-start d-lg-none filter-sidebar" tabindex="-1" id="filterOffcanvas"
        aria-labelledby="filterOffcanvasLabel">
     <div class="offcanvas-header">
       <h5 class="offcanvas-title" id="filterOffcanvasLabel">Filteri</h5>
@@ -34,33 +69,18 @@
     </div>
     <div class="offcanvas-body">
       {% include "portal/partials/_article_filter_sidebar.html" %}
-      <button type="button" class="btn btn-primary w-100 mt-3" data-bs-dismiss="offcanvas">
+      <button type="button" class="btn-doi w-100 justify-content-center mt-3" data-bs-dismiss="offcanvas">
         Primeni filtere
       </button>
     </div>
   </div>
 
   <!-- Main Content -->
-  <section class="col-lg-9">
-    <h1 class="h3 mb-3">Pretraga članaka</h1>
-
-    <!-- Search Form -->
-    <form action="{% url 'article-search' %}" method="get" role="search" class="mb-4">
-      <div class="input-group">
-        <input type="search" name="q" value="{{ query }}" class="form-control"
-               placeholder="Pretražite članke po naslovu, autoru, ključnim rečima..."
-               aria-label="Pretraga članaka"
-               minlength="3">
-        <button type="submit" class="btn btn-primary">
-          <i class="bi bi-search"></i> Pretraži
-        </button>
-      </div>
-      {% if query and query|length < min_query_length %}
-      <div class="form-text text-warning mt-1">
-        Unesite najmanje {{ min_query_length }} karaktera za pretragu.
-      </div>
-      {% endif %}
-    </form>
+  <section class="col-lg-9" data-reveal data-reveal-delay="1">
+    <div class="d-flex align-items-center mb-4">
+      <span class="gradient-accent-bar me-3"></span>
+      <p class="section-label mb-0">Rezultati pretrage</p>
+    </div>
 
     <!-- Results -->
     <div id="search-results" class="search-results" aria-live="polite">

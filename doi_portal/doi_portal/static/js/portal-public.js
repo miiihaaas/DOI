@@ -185,10 +185,56 @@
     });
   }
 
+  /* ---------------------------------------------------------------
+     5. Split word reveal for headings (doi.rs SplitText-style)
+  --------------------------------------------------------------- */
+  function initSplitReveal() {
+    if (prefersReduced) return;
+    var gsap = window.gsap;
+    var ScrollTrigger = window.ScrollTrigger;
+    if (!gsap || !ScrollTrigger) return;
+    gsap.registerPlugin(ScrollTrigger);
+
+    var selector = ".hero-content h1, .portal-page-header .page-title";
+    var els = document.querySelectorAll(selector);
+
+    els.forEach(function (el) {
+      // Only split plain-text headings (no child elements) and only once.
+      if (el.dataset.splitDone || el.children.length) return;
+
+      var tokens = el.textContent.split(/(\s+)/);
+      el.textContent = "";
+      var words = [];
+      tokens.forEach(function (tok) {
+        if (tok.trim() === "") {
+          el.appendChild(document.createTextNode(tok));
+          return;
+        }
+        var span = document.createElement("span");
+        span.className = "reveal-word";
+        span.textContent = tok;
+        el.appendChild(span);
+        words.push(span);
+      });
+      el.dataset.splitDone = "1";
+
+      gsap.set(words, { yPercent: 45, opacity: 0 });
+      gsap.to(words, {
+        yPercent: 0,
+        opacity: 1,
+        duration: 0.6,
+        ease: "power3.out",
+        stagger: 0.035,
+        scrollTrigger: { trigger: el, start: "top 90%", once: true }
+      });
+    });
+  }
+
   onReady(function () {
     initCursorBall();
     initCounters();
     initReveal();
     initLenis();
+    initSplitReveal();
   });
 })();

@@ -1,92 +1,192 @@
 {% extends "portal/base.html" %}
+{% load static i18n %}
 
-{% block title %}{{ component.title|default:component.doi_suffix }} - DOI Portal{% endblock %}
+{% block title %}{{ component.title|default:component.doi_suffix }} - DOI Portal{% endblock title %}
 
-{% block content %}
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
-      {# Component Header #}
-      <div class="mb-4">
-        {% if component.format_mime_type %}
-        <span class="badge bg-info mb-2">{{ component.format_mime_type }}</span>
-        {% endif %}
-        <h1 class="h2">{{ component.title|default:"Komponenta" }}</h1>
-      </div>
+{% block meta_description %}{{ component.title|default:"Komponenta" }} - Komponenta na DOI Portalu. {{ component.description|truncatewords:30 }}{% endblock meta_description %}
 
-      {# Contributors #}
-      {% if contributors %}
-      <div class="mb-4">
-        <h6 class="text-muted mb-2">Kontributori</h6>
-        <ul class="list-unstyled">
-          {% for contributor in contributors %}
-          <li class="mb-1">
-            {% if contributor.given_name %}{{ contributor.given_name }} {% endif %}{{ contributor.surname }}{% if contributor.suffix %}, {{ contributor.suffix }}{% endif %}
-            <small class="text-muted">({{ contributor.get_contributor_role_display }})</small>
-            {% if contributor.orcid %}
-            <a href="https://orcid.org/{{ contributor.orcid }}" target="_blank" rel="noopener" class="ms-1">
-              <img src="https://orcid.org/sites/default/files/images/orcid_16x16.png" alt="ORCID" style="width:16px;height:16px;">
-            </a>
-            {% endif %}
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-      {% endif %}
-
-      {# Description #}
-      {% if component.description %}
-      <div class="mb-4">
-        <h6 class="text-muted mb-2">Opis</h6>
-        <p>{{ component.description }}</p>
-      </div>
-      {% endif %}
-
-      {# Metadata #}
-      <div class="card mb-4">
-        <div class="card-body">
-          <dl class="row mb-0">
-            <dt class="col-sm-4">DOI</dt>
-            <dd class="col-sm-8">
-              <a href="{{ doi_url }}" target="_blank" rel="noopener">
-                {{ full_doi }}
-              </a>
-            </dd>
-
-            <dt class="col-sm-4">Parent DOI</dt>
-            <dd class="col-sm-8">
-              <a href="{{ parent_doi_url }}" target="_blank" rel="noopener">
-                {{ parent_doi }}
-              </a>
-            </dd>
-
-            {% if component.format_mime_type %}
-            <dt class="col-sm-4">Format</dt>
-            <dd class="col-sm-8">{{ component.format_mime_type }}</dd>
-            {% endif %}
-
-            {% if component.publication_year %}
-            <dt class="col-sm-4">Datum publikacije</dt>
-            <dd class="col-sm-8">
-              {{ component.publication_year }}{% if component.publication_month %}-{{ component.publication_month|stringformat:"02d" }}{% endif %}{% if component.publication_day %}-{{ component.publication_day|stringformat:"02d" }}{% endif %}
-            </dd>
-            {% endif %}
-
-            <dt class="col-sm-4">Izdavač</dt>
-            <dd class="col-sm-8">{{ publisher.name }}</dd>
-
-            {% if component.resource_url %}
-            <dt class="col-sm-4">Resurs</dt>
-            <dd class="col-sm-8">
-              <a href="{{ component.resource_url }}" target="_blank" rel="noopener">
-                {{ component.resource_url }}
-              </a>
-            </dd>
-            {% endif %}
-          </dl>
+{% block portal_content %}
+<div class="row">
+    <!-- Main Content -->
+    <article class="col-lg-8 fade-in-up">
+        <!-- Title -->
+        <div class="mb-4" data-reveal>
+            <p class="page-eyebrow mb-2">Komponenta</p>
+            <h1 class="section-title h3 mb-2">{{ component.title|default:"Komponenta" }}</h1>
+            <div class="gradient-accent-bar mb-3"></div>
+            <div class="d-flex flex-wrap gap-2">
+                <span class="badge-type">
+                    <i class="bi bi-puzzle me-1" aria-hidden="true"></i>
+                    Komponenta
+                </span>
+                {% if component.format_mime_type %}
+                <span class="badge-access">
+                    <i class="bi bi-file-earmark-code me-1" aria-hidden="true"></i>{{ component.format_mime_type }}
+                </span>
+                {% endif %}
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
+
+        <!-- Contributors -->
+        {% if contributors %}
+        <section class="article-authors mb-4" data-reveal aria-labelledby="contributors-heading">
+            <h2 id="contributors-heading" class="info-card-heading h5 mb-3">Kontributori</h2>
+            {% for contributor in contributors %}
+            <div class="author-card mb-3">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="author-avatar">
+                        {{ contributor.given_name|first }}{{ contributor.surname|first }}
+                    </div>
+                    <div>
+                        <span class="author-name">
+                            {% if contributor.given_name %}{{ contributor.given_name }} {% endif %}{{ contributor.surname }}{% if contributor.suffix %} {{ contributor.suffix }}{% endif %}
+                        </span>
+                        <small class="text-muted">({{ contributor.get_contributor_role_display }})</small>
+                        {% if contributor.orcid %}
+                        <a href="https://orcid.org/{{ contributor.orcid }}"
+                           class="orcid-link ms-1"
+                           rel="external"
+                           target="_blank"
+                           aria-label="ORCID profil za {{ contributor.given_name }} {{ contributor.surname }}: {{ contributor.orcid }}">
+                            <img src="https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png"
+                                 alt="ORCID" width="16" height="16">
+                            {{ contributor.orcid }}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        <!-- Description -->
+        {% if component.description %}
+        <section class="article-abstract mb-4" data-reveal aria-labelledby="description-heading">
+            <h2 id="description-heading" class="info-card-heading h5 mb-3">Opis</h2>
+            <div class="abstract-content">
+                <p>{{ component.description|linebreaksbr }}</p>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Metadata -->
+        <section class="article-metadata mb-4" data-reveal aria-labelledby="metadata-heading">
+            <h2 id="metadata-heading" class="info-card-heading h5 mb-3">Metapodaci</h2>
+            <div class="card detail-meta-card">
+                <div class="card-body">
+                    <dl class="detail-meta-list mb-0">
+                        <div class="detail-meta-row">
+                            <dt>DOI</dt>
+                            <dd>
+                                <a href="{{ doi_url }}" rel="external" target="_blank" aria-label="DOI: {{ full_doi }}">{{ full_doi }}</a>
+                            </dd>
+                        </div>
+
+                        <div class="detail-meta-row">
+                            <dt>Parent DOI</dt>
+                            <dd>
+                                <a href="{{ parent_doi_url }}" rel="external" target="_blank" aria-label="Parent DOI: {{ parent_doi }}">{{ parent_doi }}</a>
+                            </dd>
+                        </div>
+
+                        {% if component.format_mime_type %}
+                        <div class="detail-meta-row">
+                            <dt>Format</dt>
+                            <dd>{{ component.format_mime_type }}</dd>
+                        </div>
+                        {% endif %}
+
+                        {% if component.publication_year %}
+                        <div class="detail-meta-row">
+                            <dt>Datum publikacije</dt>
+                            <dd>{{ component.publication_year }}{% if component.publication_month %}-{{ component.publication_month|stringformat:"02d" }}{% endif %}{% if component.publication_day %}-{{ component.publication_day|stringformat:"02d" }}{% endif %}</dd>
+                        </div>
+                        {% endif %}
+
+                        <div class="detail-meta-row">
+                            <dt>Izdavač</dt>
+                            <dd>{{ publisher.name }}</dd>
+                        </div>
+
+                        {% if component.resource_url %}
+                        <div class="detail-meta-row">
+                            <dt>Resurs</dt>
+                            <dd>
+                                <a href="{{ component.resource_url }}" rel="external" target="_blank" aria-label="Resurs: {{ component.resource_url }}">{{ component.resource_url }}</a>
+                            </dd>
+                        </div>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </section>
+
+        <!-- Back to Home -->
+        <a href="{% url 'home' %}" class="btn btn-back">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+            Nazad na početnu
+        </a>
+    </article>
+
+    <!-- Sidebar -->
+    <aside class="col-lg-4 fade-in-up fade-in-up-2">
+        <!-- Publisher Info Card -->
+        <div class="card sidebar-card mb-3" data-reveal>
+            <div class="card-body">
+                <h2 class="sidebar-card-title">
+                    <i class="bi bi-building me-2" aria-hidden="true"></i>Izdavač
+                </h2>
+                {% if publisher.logo %}
+                <img src="{{ publisher.logo.url }}"
+                     class="sidebar-publisher-logo mb-2"
+                     alt="Logo: {{ publisher.name }}">
+                {% endif %}
+                <p class="mb-0">
+                    {% if publisher.slug %}
+                    <a href="{% url 'portal:publisher-detail' publisher.slug %}">{{ publisher.name }}</a>
+                    {% else %}
+                    {{ publisher.name }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- DOI Card -->
+        <div class="card sidebar-card mb-3" data-reveal data-reveal-delay="1">
+            <div class="card-body">
+                <h2 class="sidebar-card-title">
+                    <i class="bi bi-link-45deg me-2" aria-hidden="true"></i>DOI
+                </h2>
+                <p class="mb-0">
+                    <a href="{{ doi_url }}" rel="external" target="_blank">
+                        {{ full_doi }}
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Parent DOI Card -->
+        <div class="card sidebar-card mb-3" data-reveal data-reveal-delay="2">
+            <div class="card-body">
+                <h2 class="sidebar-card-title">
+                    <i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Parent DOI
+                </h2>
+                <p class="mb-0">
+                    <a href="{{ parent_doi_url }}" rel="external" target="_blank">
+                        {{ parent_doi }}
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Contact CTA -->
+        <div class="card sidebar-card mt-3" data-reveal>
+            <div class="card-body text-center">
+                <p class="mb-3 small text-muted-custom">Imate pitanje o ovoj komponenti?</p>
+                <a href="{% url 'contact' %}" class="btn btn-doi-outline btn-sm">Kontaktirajte nas</a>
+            </div>
+        </div>
+    </aside>
 </div>
-{% endblock %}
+{% endblock portal_content %}

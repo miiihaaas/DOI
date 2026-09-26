@@ -70,7 +70,7 @@
                         <a class="nav-link{% if request.resolver_match.url_name == 'about' %} active{% endif %}" href="{% url 'about' %}">O portalu</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link{% if request.resolver_match.url_name == 'contact' %} active{% endif %}" href="{% url 'contact' %}">Kontakt</a>
+                        <a class="navbar-cta" href="{% url 'contact' %}"><i class="bi bi-envelope" aria-hidden="true"></i> Kontakt</a>
                     </li>
                     {% if request.user.is_authenticated %}
                     <li class="nav-item">
@@ -114,6 +114,24 @@
         {% block portal_content %}{% endblock portal_content %}
     </div>
 </main>
+
+<!-- Pre-footer CTA band (doi.rs pattern, site-wide) -->
+{% block prefooter_cta %}
+<section class="prefooter-cta">
+    <div class="container">
+        <div class="cta-band" data-reveal aria-labelledby="prefooter-cta-title">
+            <div class="cta-text">
+                <p class="cta-eyebrow">DOI REGISTRACIJA</p>
+                <h2 id="prefooter-cta-title" class="h3">Registrujte svoje publikacije uz DOI</h2>
+                <p class="cta-sub">Osigurajte trajnu vidljivost i lakše citiranje radova — pošaljite nam upit o registraciji DOI brojeva za časopise, zbornike i monografije.</p>
+            </div>
+            <a href="{% url 'contact' %}" class="btn-cta-light">
+                <i class="bi bi-envelope" aria-hidden="true"></i> Kontaktirajte nas
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock prefooter_cta %}
 
 <!-- Footer -->
 <footer class="portal-footer text-light mt-auto">
