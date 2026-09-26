@@ -1,6 +1,8 @@
 {% extends "portal/base.html" %}
 {% load static i18n %}
 
+{% block css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/portal-publishers.css' %}">{% endblock css %}
+
 {% block title %}Izdavači - DOI Portal{% endblock title %}
 
 {% block meta_description %}Pregledajte sve izdavače registrovane na DOI Portalu. Pronađite naučne časopise i publikacije srpskih akademskih institucija.{% endblock meta_description %}
@@ -10,7 +12,7 @@
     <p class="page-eyebrow">Izdavači</p>
     <h1 class="page-title">Registrovani izdavači</h1>
     <p class="page-subtitle">
-        Akademske institucije i izdavačke kuće registrovane na DOI Portalu.
+        Akademske institucije i izdavačke kuće registrovane na portalu doi.rs.
         {% if publishers %}Trenutno je registrovano {{ publishers|length }} izdavača.{% endif %}
     </p>
 </header>
@@ -32,17 +34,21 @@
     {% for publisher in publishers %}
     <div class="col" data-reveal data-reveal-delay="{% cycle '0' '1' '2' %}">
         <article class="card h-100 publisher-card">
-            {% if publisher.logo %}
-            <div class="publisher-logo-wrap">
-                <img src="{{ publisher.logo.url }}"
-                     class="card-img-top"
-                     alt="{{ publisher.name }} logo">
-            </div>
-            {% else %}
-            <div class="card-img-placeholder">
-                <i class="bi bi-building" aria-hidden="true"></i>
-            </div>
-            {% endif %}
+            <a href="{% url 'portal:publisher-detail' publisher.slug %}"
+               class="publisher-logo-link"
+               aria-label="{{ publisher.name }} — detalji izdavača">
+                {% if publisher.logo %}
+                <div class="publisher-logo-wrap">
+                    <img src="{{ publisher.logo.url }}"
+                         class="card-img-top"
+                         alt="{{ publisher.name }} logo">
+                </div>
+                {% else %}
+                <div class="card-img-placeholder">
+                    <i class="bi bi-building" aria-hidden="true"></i>
+                </div>
+                {% endif %}
+            </a>
             <div class="card-body">
                 <h2 class="h5 card-title">
                     <a href="{% url 'portal:publisher-detail' publisher.slug %}">
@@ -52,14 +58,21 @@
                 {% if publisher.description %}
                 <p class="card-text small">{{ publisher.description|truncatewords:30 }}</p>
                 {% endif %}
+                <div class="publisher-card-meta">
+                    <span class="doi-prefix-badge" title="DOI prefiks">
+                        <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ publisher.doi_prefix }}
+                    </span>
+                    <span class="doi-prefix-badge" title="Broj publikacija">
+                        <i class="bi bi-journal-text me-1" aria-hidden="true"></i>{{ publisher.pub_count }} publikacija
+                    </span>
+                </div>
             </div>
-            <div class="card-footer bg-transparent d-flex align-items-center justify-content-between">
-                <span class="doi-prefix-badge">
-                    <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ publisher.doi_prefix }}
-                </span>
-                <span class="doi-prefix-badge" title="Broj publikacija">
-                    <i class="bi bi-journal-text me-1" aria-hidden="true"></i>{{ publisher.pub_count }}
-                </span>
+            <div class="card-footer bg-transparent d-flex align-items-center justify-content-end">
+                <a href="{% url 'portal:publisher-detail' publisher.slug %}"
+                   class="btn btn-doi-outline btn-sm">
+                    Opširnije
+                    <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                </a>
             </div>
         </article>
     </div>

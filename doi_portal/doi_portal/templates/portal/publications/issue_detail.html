@@ -1,27 +1,31 @@
 {% extends "portal/base.html" %}
 {% load static i18n portal_tags markup_tags terminology %}
 
+{% block css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/portal-publication-detail.css' %}">{% endblock css %}
+
 {% block title %}{{ issue.publication.title }} - {{ issue|issue_label }} - DOI Portal{% endblock title %}
 
 {% block meta_description %}Izdanje {{ issue|issue_label }} publikacije {{ issue.publication.title }} na DOI Portalu.{% endblock meta_description %}
 
 {% block portal_content %}
-<a href="{% url 'portal-publications:publication-detail' issue.publication.slug %}" class="btn-back d-inline-block mb-3" data-reveal>
+<a href="{% url 'portal-publications:publication-detail' issue.publication.slug %}" class="btn-back pub-detail-back d-inline-block" data-reveal>
     <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad na publikaciju
 </a>
 
-<header class="portal-page-header" data-reveal>
-    <p class="page-eyebrow">{{ issue.publication.title }}</p>
+<header class="portal-page-header pub-detail-header" data-reveal>
+    <p class="page-eyebrow">
+        <i class="{{ issue.publication.type_icon }}" aria-hidden="true"></i>{{ issue.publication.title }}
+    </p>
     <h1 class="page-title h2">{{ issue|issue_label }}</h1>
     {% if issue.title %}
     <p class="page-subtitle">{{ issue.title }}</p>
     {% endif %}
 </header>
 
-<div class="row">
-    <div class="col-lg-8" data-reveal>
+<div class="row g-4 pub-detail-layout">
+    <div class="col-lg-8 issue-detail-body" data-reveal>
         <article>
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+            <div class="issue-detail-meta">
                 <span class="badge {{ issue.status_badge_class }}">{{ issue.get_status_display }}</span>
                 {% if issue.publication_month %}
                 <span class="issue-date-inline">
@@ -32,38 +36,32 @@
             </div>
 
             {% if issue.doi_suffix %}
-            <div class="issue-doi-box mb-4">
-                <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>
-                <strong>DOI:</strong>
-                <a href="https://doi.org/{{ issue.publication.publisher.doi_prefix }}/{{ issue.doi_suffix }}">
-                    {{ issue.publication.publisher.doi_prefix }}/{{ issue.doi_suffix }}
-                </a>
+            <div class="mb-4">
+                <span class="issue-doi-box">
+                    <i class="bi bi-link-45deg" aria-hidden="true"></i>
+                    <strong>DOI:</strong>
+                    <a href="https://doi.org/{{ issue.publication.publisher.doi_prefix }}/{{ issue.doi_suffix }}">
+                        {{ issue.publication.publisher.doi_prefix }}/{{ issue.doi_suffix }}
+                    </a>
+                </span>
             </div>
             {% endif %}
 
             {% if issue.pdf_file %}
-            <div class="mb-4">
+            <div class="issue-actions">
                 <a href="{{ issue.pdf_file.url }}" class="btn-doi" target="_blank">
-                    <i class="bi bi-file-earmark-pdf me-1"></i>Preuzmi PDF
+                    <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>Preuzmi PDF
                 </a>
-            </div>
-            {% endif %}
-
-            {% if issue.cover_image %}
-            <div class="mb-4">
-                <img src="{{ issue.cover_image.url }}"
-                     class="pub-detail-cover"
-                     alt="Naslovna slika: {{ issue.publication.title }} {{ issue|issue_label }}">
             </div>
             {% endif %}
 
             <!-- Conference Proceedings -->
             {% if issue.publication.publication_type == "CONFERENCE" %}
             {% if issue.proceedings_title or issue.proceedings_publisher_name or issue.proceedings_publisher_place or issue.isbn_print or issue.isbn_online %}
-            <div class="card detail-meta-card mb-4">
+            <div class="card detail-meta-card">
                 <div class="card-body">
-                    <h2 class="info-card-heading h5 mb-3">
-                        <i class="bi bi-people me-2" aria-hidden="true"></i>Podaci o zborniku
+                    <h2 class="info-card-heading h5">
+                        <i class="bi bi-people" aria-hidden="true"></i>Podaci o zborniku
                     </h2>
                     <dl class="detail-meta-list mb-0">
                         {% if issue.proceedings_title %}
@@ -103,11 +101,14 @@
             {% endif %}
 
             <!-- Articles Section -->
-            <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="info-card-heading h5 mb-0">
-                        <i class="bi bi-file-earmark-text me-2" aria-hidden="true"></i>{{ "article_plural"|term:issue.publication.publication_type }}
-                    </h2>
+            <section class="issue-panel">
+                <div class="issue-articles-head">
+                    <div class="pub-section-head mb-0">
+                        <p class="section-label"><span class="gradient-accent-bar" aria-hidden="true"></span>Sadržaj izdanja</p>
+                        <h2 class="pub-section-title">
+                            <i class="bi bi-file-earmark-text me-2" aria-hidden="true"></i>{{ "article_plural"|term:issue.publication.publication_type }}
+                        </h2>
+                    </div>
                     {% if articles %}
                     <span class="publisher-pub-count">{{ articles|length }}</span>
                     {% endif %}
@@ -150,7 +151,7 @@
                     <p>{{ "article_plural"|term:issue.publication.publication_type }} će biti dostupni uskoro.</p>
                 </div>
                 {% endif %}
-            </div>
+            </section>
 
             <!-- Back to Publication -->
             <a href="{% url 'portal-publications:publication-detail' issue.publication.slug %}"
@@ -163,8 +164,52 @@
 
     <!-- Sidebar -->
     <aside class="col-lg-4" data-reveal data-reveal-delay="1">
+        <!-- Cover -->
+        {% if issue.cover_image %}
+        <div class="pub-cover-panel">
+            <img src="{{ issue.cover_image.url }}"
+                 alt="Naslovna slika: {{ issue.publication.title }} {{ issue|issue_label }}">
+        </div>
+        {% endif %}
+
+        <!-- Issue quick facts -->
+        <div class="card detail-meta-card sidebar-meta-card issue-side-meta">
+            <div class="card-body">
+                <h2 class="sidebar-card-title">
+                    <i class="bi bi-info-circle me-2" aria-hidden="true"></i>Podaci o izdanju
+                </h2>
+                <dl class="detail-meta-list mb-0">
+                    <div class="detail-meta-row">
+                        <dt>Status</dt>
+                        <dd><span class="badge {{ issue.status_badge_class }}">{{ issue.get_status_display }}</span></dd>
+                    </div>
+                    {% if issue.publication_month %}
+                    <div class="detail-meta-row">
+                        <dt>Datum</dt>
+                        <dd>{% if issue.publication_day %}{{ issue.publication_day }}.{% endif %}{{ issue.publication_month }}.{{ issue.year }}.</dd>
+                    </div>
+                    {% endif %}
+                    {% if issue.doi_suffix %}
+                    <div class="detail-meta-row">
+                        <dt>DOI</dt>
+                        <dd>
+                            <a href="https://doi.org/{{ issue.publication.publisher.doi_prefix }}/{{ issue.doi_suffix }}">
+                                <span class="meta-doi-value">{{ issue.publication.publisher.doi_prefix }}/{{ issue.doi_suffix }}</span>
+                            </a>
+                        </dd>
+                    </div>
+                    {% endif %}
+                </dl>
+                {% if issue.pdf_file %}
+                <a href="{{ issue.pdf_file.url }}" class="btn btn-doi-outline btn-sm w-100 mt-3" target="_blank">
+                    <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>Preuzmi PDF
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
         <!-- Publication Info Card -->
-        <div class="card sidebar-card mb-3">
+        <div class="card sidebar-card">
             <div class="card-body">
                 <h2 class="sidebar-card-title">
                     <i class="bi bi-journal-text me-2" aria-hidden="true"></i>Publikacija

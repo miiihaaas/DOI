@@ -1,0 +1,213 @@
+/* ==========================================================================
+   Portal — Publishers pages (list + detail)
+   Loaded AFTER portal.css, so declarations here win on equal specificity.
+   Scope: publisher_list.html + publisher_detail.html only.
+   ========================================================================== */
+
+/* ==========================================================================
+   PUBLISHER LIST — cards
+   ========================================================================== */
+
+.publisher-card {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+/* (d) Subtle brand-gradient glow tucked into the top-right corner */
+.publisher-card::after {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: var(--brand-gradient-soft);
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.publisher-card:hover::after {
+    opacity: 0.8;
+    transform: scale(1.12);
+}
+
+/* Keep card content above the glow */
+.publisher-card > .publisher-logo-link,
+.publisher-card > .card-body,
+.publisher-card > .card-footer {
+    position: relative;
+    z-index: 1;
+}
+
+/* (b) Whole logo block is a link */
+.publisher-logo-link {
+    display: block;
+    text-decoration: none;
+    background-color: #fff;
+}
+
+/* (a) WHITE logo backgrounds (override lavender surface from portal.css) */
+.publisher-card .publisher-logo-wrap,
+.publisher-card .card-img-placeholder {
+    background: #fff;
+    background-color: #fff;
+    transition: transform 0.25s ease;
+}
+
+.publisher-logo-link:hover .publisher-logo-wrap .card-img-top,
+.publisher-logo-link:focus-visible .publisher-logo-wrap .card-img-top {
+    transform: scale(1.03);
+}
+
+.publisher-logo-link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
+
+.publisher-card .card-img-top {
+    transition: transform 0.25s ease;
+}
+
+/* (c) Cleaner info hierarchy below the logo */
+.publisher-card .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+}
+
+.publisher-card .card-title {
+    margin-bottom: 0;
+}
+
+.publisher-card .card-text {
+    margin-bottom: 0;
+}
+
+.publisher-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.9rem;
+    margin-top: auto;
+    padding-top: 0.5rem;
+}
+
+.publisher-card-meta .doi-prefix-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+}
+
+.publisher-card-meta .doi-prefix-badge i {
+    color: var(--color-primary);
+}
+
+/* (e) Footer holds the "Opširnije" CTA */
+.publisher-card .card-footer {
+    border-top: 1px solid var(--color-border-subtle);
+    padding: 0.75rem 1.25rem;
+}
+
+.publisher-card .card-footer .btn-doi-outline {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* ==========================================================================
+   PUBLISHER DETAIL — logo + contact block
+   ========================================================================== */
+
+/* (3) Logo sits on a WHITE background */
+.publisher-detail-logo-wrap {
+    background: #fff;
+    background-color: #fff;
+}
+
+/* (3) White panel behind the contact text with thin divider rows */
+.publisher-detail-card .card-body {
+    background: #fff;
+}
+
+.publisher-info-list--divided {
+    margin-bottom: 0;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.publisher-info-list--divided li {
+    margin-bottom: 0;
+    padding: 0.9rem 1rem;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border-subtle);
+    transition: background-color 0.18s ease;
+}
+
+.publisher-info-list--divided li:last-child {
+    border-bottom: 0;
+}
+
+.publisher-info-list--divided li:hover {
+    background-color: var(--color-surface-base);
+}
+
+.publisher-info-content {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.publisher-info-list--divided .publisher-info-label {
+    margin-bottom: 0.15rem;
+}
+
+.publisher-info-list--divided .publisher-info-icon {
+    background: var(--brand-gradient-soft);
+}
+
+/* ==========================================================================
+   PUBLISHER DETAIL — publication covers shown FULL (no crop)
+   ========================================================================== */
+
+.publication-card .pub-cover-panel {
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: var(--color-surface-base);
+    border-bottom: 1px solid var(--color-border-subtle);
+    overflow: hidden;
+}
+
+.publication-card .pub-cover-img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 8px 20px rgba(3, 51, 51, 0.14);
+}
+
+.publication-card .pub-cover-panel--empty {
+    background: #fff;
+}
+
+.publication-card .pub-cover-icon {
+    font-size: 2.75rem;
+    color: var(--color-text-secondary);
+    opacity: 0.4;
+}
+
+@media (max-width: 575.98px) {
+    .publication-card .pub-cover-panel {
+        height: 200px;
+    }
+}

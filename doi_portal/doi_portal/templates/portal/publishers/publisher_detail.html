@@ -1,6 +1,8 @@
 {% extends "portal/base.html" %}
 {% load static i18n %}
 
+{% block css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/portal-publishers.css' %}">{% endblock css %}
+
 {% block title %}{{ publisher.name }} - DOI Portal{% endblock title %}
 
 {% block meta_description %}{{ publisher.name }} - Pregledajte publikacije i kontakt informacije izdavača na DOI Portalu.{% endblock meta_description %}
@@ -36,14 +38,14 @@
                 </h2>
                 <div class="gradient-accent-bar mb-3"></div>
 
-                <ul class="list-unstyled publisher-info-list">
+                <ul class="list-unstyled publisher-info-list publisher-info-list--divided">
                     {% if publisher.contact_email %}
                     <li>
                         <div class="publisher-info-icon">
                             <i class="bi bi-envelope" aria-hidden="true"></i>
                         </div>
-                        <div>
-                            <span class="publisher-info-label">Email</span>
+                        <div class="publisher-info-content">
+                            <span class="publisher-info-label">Imejl</span>
                             <a href="mailto:{{ publisher.contact_email }}">{{ publisher.contact_email }}</a>
                         </div>
                     </li>
@@ -54,7 +56,7 @@
                         <div class="publisher-info-icon">
                             <i class="bi bi-telephone" aria-hidden="true"></i>
                         </div>
-                        <div>
+                        <div class="publisher-info-content">
                             <span class="publisher-info-label">Telefon</span>
                             <span class="publisher-info-value">{{ publisher.contact_phone }}</span>
                         </div>
@@ -66,8 +68,8 @@
                         <div class="publisher-info-icon">
                             <i class="bi bi-globe" aria-hidden="true"></i>
                         </div>
-                        <div>
-                            <span class="publisher-info-label">Web sajt</span>
+                        <div class="publisher-info-content">
+                            <span class="publisher-info-label">Veb-sajt</span>
                             <a href="{{ publisher.website }}" target="_blank" rel="noopener noreferrer">
                                 {{ publisher.website }}
                                 <i class="bi bi-box-arrow-up-right" style="font-size: 0.7rem;" aria-hidden="true"></i>
@@ -80,7 +82,7 @@
                         <div class="publisher-info-icon">
                             <i class="bi bi-link-45deg" aria-hidden="true"></i>
                         </div>
-                        <div>
+                        <div class="publisher-info-content">
                             <span class="publisher-info-label">DOI prefiks</span>
                             <span class="doi-prefix-badge">{{ publisher.doi_prefix }}</span>
                         </div>
@@ -109,13 +111,15 @@
             <div class="col" data-reveal data-reveal-delay="{% cycle '0' '1' %}">
                 <article class="card h-100 publication-card">
                     {% if publication.cover_image %}
-                    <img src="{{ publication.cover_image.url }}"
-                         class="card-img-top"
-                         alt="{{ publication.title }} naslovna slika"
-                         loading="lazy">
+                    <div class="pub-cover-panel">
+                        <img src="{{ publication.cover_image.url }}"
+                             class="pub-cover-img"
+                             alt="{{ publication.title }} naslovna slika"
+                             loading="lazy">
+                    </div>
                     {% else %}
-                    <div class="card-img-placeholder">
-                        <i class="{{ publication.type_icon }} display-5" aria-hidden="true"></i>
+                    <div class="pub-cover-panel pub-cover-panel--empty">
+                        <i class="{{ publication.type_icon }} pub-cover-icon" aria-hidden="true"></i>
                     </div>
                     {% endif %}
                     <div class="card-body">

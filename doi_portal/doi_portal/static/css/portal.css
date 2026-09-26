@@ -162,7 +162,9 @@ h3 { font-size: clamp(1.35rem, 1.8vw, 1.6rem); line-height: 1.35; }
     position: relative;
 }
 
-.portal-header .nav-link.active::after {
+/* Active underline uses ::before so it never collides with the Bootstrap
+   dropdown caret (which lives on ::after of the same .dropdown-toggle). */
+.portal-header .nav-link.active::before {
     content: '';
     position: absolute;
     bottom: 0;
@@ -2719,10 +2721,14 @@ html.lenis, html.lenis body { height: auto; }
     padding: 0.45rem 2.2rem 0.45rem 1.1rem;
     font-size: 0.88rem;
     font-weight: 600;
-    color: var(--color-dark);
+    color: var(--color-text-primary);
     cursor: pointer;
     width: auto;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sort-control .form-select option {
+    color: var(--color-text-primary);
 }
 
 .sort-control .form-select:focus {
