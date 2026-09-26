@@ -16,7 +16,8 @@ from django.db.models import Count, Q, QuerySet
 from slugify import slugify
 
 from doi_portal.articles.models import Article, ArticleStatus, Author
-from doi_portal.publications.models import Publication
+from doi_portal.monographs.models import Monograph
+from doi_portal.publications.models import Publication, PublicationType
 from doi_portal.publishers.models import Publisher
 
 __all__ = [
@@ -33,6 +34,8 @@ __all__ = [
     "get_monograph_pdf_download_filename",
     "get_pdf_download_filename",
     "get_portal_statistics",
+    "get_publication_type_counts",
+    "get_recent_articles",
     "get_recent_publications",
     "search_articles",
 ]
@@ -188,6 +191,52 @@ def get_recent_publications(limit: int = 6) -> QuerySet[Publication]:
         Publication.objects.select_related("publisher")
         .order_by("-created_at")[:limit]
     )
+
+
+def get_recent_articles(limit: int = 8) -> QuerySet[Article]:
+    """
+    Get the most recently published articles for the home page.
+
+    Only PUBLISHED articles are shown. Ordered by publish date (falling back
+    to creation date for articles without an explicit published_at).
+    select_related/prefetch avoids N+1 queries when rendering the cards
+    (publication type/name, open-access flag, authors).
+
+    Args:
+        limit: Maximum number of articles to return (default 8 = 2 rows x 4).
+
+    Returns:
+        QuerySet of published Article objects, newest first.
+    """
+    return (
+        Article.objects.filter(status=ArticleStatus.PUBLISHED)
+        .select_related("issue__publication__publisher")
+        .prefetch_related("authors")
+        .order_by("-published_at", "-created_at")[:limit]
+    )
+
+
+def get_publication_type_counts() -> dict[str, int]:
+    """
+    Count content grouped by publication type for the home page type blocks.
+
+    Časopisi (JOURNAL), Zbornici (CONFERENCE), Ostalo (OTHER) come from
+    Publication; Monografije is the separate Monograph model.
+
+    Returns:
+        Dict with keys: journals, conferences, other, monographs.
+    """
+    pub_counts = Publication.objects.aggregate(
+        journals=Count("id", filter=Q(publication_type=PublicationType.JOURNAL)),
+        conferences=Count("id", filter=Q(publication_type=PublicationType.CONFERENCE)),
+        other=Count("id", filter=Q(publication_type=PublicationType.OTHER)),
+    )
+    return {
+        "journals": pub_counts["journals"] or 0,
+        "conferences": pub_counts["conferences"] or 0,
+        "other": pub_counts["other"] or 0,
+        "monographs": Monograph.objects.count(),
+    }
 
 
 # =============================================================================

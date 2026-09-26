@@ -44,6 +44,8 @@ from doi_portal.portal.services import get_chapter_pdf_download_filename
 from doi_portal.portal.services import get_monograph_pdf_download_filename
 from doi_portal.portal.services import get_pdf_download_filename
 from doi_portal.portal.services import get_portal_statistics
+from doi_portal.portal.services import get_publication_type_counts
+from doi_portal.portal.services import get_recent_articles
 from doi_portal.portal.services import get_recent_publications
 from doi_portal.portal.services import search_articles
 
@@ -392,6 +394,8 @@ class PortalHomeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["stats"] = get_portal_statistics()
+        context["type_counts"] = get_publication_type_counts()
+        context["recent_articles"] = get_recent_articles()
         context["recent_publications"] = get_recent_publications()
         # No breadcrumbs on home page (it IS the root)
         return context

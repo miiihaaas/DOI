@@ -7,159 +7,149 @@
 
 {% block portal_content %}
 <!-- Hero Section -->
-<section class="hero-section text-white py-5 mb-5 fade-in-up" aria-labelledby="hero-title">
-  <div class="text-center py-4 px-3 position-relative" style="z-index: 1;">
-    <p class="section-label mb-2" style="color: rgba(255,255,255,0.7); letter-spacing: 0.12em;">NAUČNE PUBLIKACIJE</p>
-    <h1 id="hero-title" class="mb-3" style="color: #fff;">DOI Portal</h1>
-    <p class="lead mb-4">Portal za registraciju DOI identifikatora naučnih publikacija</p>
-    <form action="/search/" method="get" class="mx-auto" style="max-width: 580px;" role="search">
-      <div class="input-group input-group-lg">
-        <input type="search" name="q" class="form-control"
-               placeholder="Pretražite po naslovu, autoru, ključnim rečima..."
-               aria-label="Pretraga članaka">
-        <button type="submit" class="btn btn-search" style="min-width: 56px; min-height: 56px;">
-          <i class="bi bi-search" aria-hidden="true"></i>
-          <span class="visually-hidden">Pretraži</span>
-        </button>
-      </div>
-    </form>
-  </div>
-</section>
-
-<!-- Statistics Cards -->
-<section class="mb-5" aria-labelledby="stats-title">
-  <h2 id="stats-title" class="visually-hidden">Statistike portala</h2>
-  <div class="row g-4">
-    <div class="col-md-4" data-reveal>
-      <a href="{% url 'portal-publications:publication-list' %}" class="text-decoration-none" aria-label="Publikacije - {{ stats.total_publications }} ukupno">
-        <div class="card h-100 text-center stat-card">
-          <div class="card-body py-5">
-            <div class="stat-icon stat-icon-publications">
-              <i class="bi bi-journal-text" aria-hidden="true"></i>
-            </div>
-            <span class="stat-number d-block" data-count-to="{{ stats.total_publications }}">{{ stats.total_publications }}</span>
-            <p class="stat-label mb-0">Publikacije</p>
-          </div>
+<section class="hero-section text-white mb-5 fade-in-up" aria-labelledby="hero-title">
+  <div class="hero-grid">
+    <div class="hero-content">
+      <p class="hero-eyebrow">NAUČNE PUBLIKACIJE SRBIJE</p>
+      <h1 id="hero-title">DOI Portal</h1>
+      <p class="hero-intro">
+        Nacionalna platforma za registraciju DOI identifikatora i pristup naučnim
+        publikacijama. Pretražite članke po naslovu, autoru ili ključnim rečima.
+      </p>
+      <form action="/search/" method="get" role="search">
+        <div class="input-group input-group-lg">
+          <input type="search" name="q" class="form-control"
+                 placeholder="Pretražite po naslovu, autoru, ključnim rečima..."
+                 aria-label="Pretraga članaka">
+          <button type="submit" class="btn btn-search" style="min-width: 56px; min-height: 56px;">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <span class="visually-hidden">Pretraži</span>
+          </button>
         </div>
-      </a>
+      </form>
     </div>
-    <div class="col-md-4" data-reveal data-reveal-delay="1">
-      <div class="card h-100 text-center stat-card">
-        <div class="card-body py-5">
-          <div class="stat-icon stat-icon-articles">
-            <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-          </div>
-          <span class="stat-number d-block" data-count-to="{{ stats.published_articles_count }}">{{ stats.published_articles_count }}</span>
-          <p class="stat-label mb-0">Objavljeni članci</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4" data-reveal data-reveal-delay="2">
-      <a href="{% url 'portal:publisher-list' %}" class="text-decoration-none" aria-label="Izdavači - {{ stats.total_publishers }} ukupno">
-        <div class="card h-100 text-center stat-card">
-          <div class="card-body py-5">
-            <div class="stat-icon stat-icon-publishers">
-              <i class="bi bi-building" aria-hidden="true"></i>
-            </div>
-            <span class="stat-number d-block" data-count-to="{{ stats.total_publishers }}">{{ stats.total_publishers }}</span>
-            <p class="stat-label mb-0">Izdavači</p>
-          </div>
-        </div>
-      </a>
+    <div class="hero-graphic" aria-hidden="true">
+      <svg class="node-net" viewBox="0 0 360 300" fill="none" xmlns="http://www.w3.org/2000/svg" role="presentation">
+        <g class="float-group">
+          <!-- edges -->
+          <line class="edge" x1="60" y1="60" x2="150" y2="40"/>
+          <line class="edge" x1="150" y1="40" x2="250" y2="80"/>
+          <line class="edge" x1="250" y1="80" x2="320" y2="150"/>
+          <line class="edge" x1="60" y1="60" x2="90" y2="150"/>
+          <line class="edge-lit" x1="90" y1="150" x2="200" y2="170"/>
+          <line class="edge-lit" x1="200" y1="170" x2="250" y2="80"/>
+          <line class="edge" x1="90" y1="150" x2="60" y2="240"/>
+          <line class="edge" x1="60" y1="240" x2="170" y2="260"/>
+          <line class="edge" x1="170" y1="260" x2="200" y2="170"/>
+          <line class="edge-lit" x1="200" y1="170" x2="290" y2="240"/>
+          <line class="edge" x1="320" y1="150" x2="290" y2="240"/>
+          <line class="edge" x1="170" y1="260" x2="290" y2="240"/>
+          <!-- nodes -->
+          <circle class="node-ring" cx="250" cy="80" r="14"/>
+          <circle class="node-ring" cx="90" cy="150" r="17"/>
+          <circle class="node-ring" cx="290" cy="240" r="14"/>
+          <circle class="node node-lg" cx="90" cy="150" r="7"/>
+          <circle class="node" cx="250" cy="80" r="6" style="animation-delay:.4s"/>
+          <circle class="node" cx="290" cy="240" r="6" style="animation-delay:.9s"/>
+          <circle class="node" cx="60" cy="60" r="5" style="animation-delay:.2s"/>
+          <circle class="node" cx="150" cy="40" r="4" style="animation-delay:1.1s"/>
+          <circle class="node" cx="320" cy="150" r="4" style="animation-delay:.7s"/>
+          <circle class="node" cx="200" cy="170" r="5" style="animation-delay:1.4s"/>
+          <circle class="node" cx="60" cy="240" r="4" style="animation-delay:.5s"/>
+          <circle class="node" cx="170" cy="260" r="5" style="animation-delay:1.7s"/>
+        </g>
+      </svg>
     </div>
   </div>
 </section>
 
-<!-- Recent Publications -->
-<section class="mb-5" aria-labelledby="recent-publications-title">
+<!-- Publication type blocks -->
+<section class="mb-5" aria-labelledby="types-title">
+  <div class="mb-4" data-reveal>
+    <p class="section-label mb-1">SADRŽAJ PORTALA</p>
+    <h2 id="types-title" class="section-subtitle h4 mb-0">Vrste publikacija</h2>
+    <span class="gradient-accent-bar d-block mt-2"></span>
+  </div>
+  <div class="type-blocks">
+    <a href="{% url 'portal-publications:publication-list' %}?type=JOURNAL" class="type-block" data-reveal>
+      <div class="type-block-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></div>
+      <span class="type-block-count" data-counter data-count-to="{{ type_counts.journals }}">{{ type_counts.journals }}</span>
+      <p class="type-block-name">Časopisi</p>
+    </a>
+    <a href="{% url 'portal-publications:publication-list' %}?type=CONFERENCE" class="type-block" data-reveal data-reveal-delay="1">
+      <div class="type-block-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
+      <span class="type-block-count" data-counter data-count-to="{{ type_counts.conferences }}">{{ type_counts.conferences }}</span>
+      <p class="type-block-name">Zbornici</p>
+    </a>
+    <a href="{% url 'portal-monographs:monograph-list' %}" class="type-block" data-reveal data-reveal-delay="2">
+      <div class="type-block-icon"><i class="bi bi-book" aria-hidden="true"></i></div>
+      <span class="type-block-count" data-counter data-count-to="{{ type_counts.monographs }}">{{ type_counts.monographs }}</span>
+      <p class="type-block-name">Monografije</p>
+    </a>
+    <a href="{% url 'portal-publications:publication-list' %}?type=OTHER" class="type-block" data-reveal data-reveal-delay="3">
+      <div class="type-block-icon"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></div>
+      <span class="type-block-count" data-counter data-count-to="{{ type_counts.other }}">{{ type_counts.other }}</span>
+      <p class="type-block-name">Ostalo</p>
+    </a>
+  </div>
+</section>
+
+<!-- Most recent articles -->
+<section class="mb-5" aria-labelledby="recent-articles-title">
   <div class="d-flex justify-content-between align-items-end mb-4" data-reveal>
     <div>
       <p class="section-label mb-1">NAJNOVIJE</p>
-      <h2 id="recent-publications-title" class="section-subtitle h4 mb-0">Publikacije</h2>
+      <h2 id="recent-articles-title" class="section-subtitle h4 mb-0">Najnoviji članci</h2>
       <span class="gradient-accent-bar d-block mt-2"></span>
     </div>
-    <a href="{% url 'portal-publications:publication-list' %}" class="section-link">Prikaži sve &rarr;</a>
+    <a href="{% url 'article-search' %}" class="section-link">Pretraga članaka &rarr;</a>
   </div>
-  {% if recent_publications %}
-  <div class="row g-4">
-    {% for pub in recent_publications %}
-    <div class="col-md-6" data-reveal data-reveal-delay="{% cycle '0' '1' %}">
-      <article class="card h-100 publication-card publication-card-h">
-        <a href="{% url 'portal-publications:publication-detail' slug=pub.slug %}" class="pub-card-h-link">
-          <div class="pub-card-h-cover">
-            {% if pub.cover_image %}
-            <img src="{{ pub.cover_image.url }}" class="pub-cover-img" alt="Naslovna strana: {{ pub.title }}">
-            {% elif pub.publisher.logo %}
-            <img src="{{ pub.publisher.logo.url }}" class="pub-logo-img" alt="{{ pub.publisher.name }}">
-            {% else %}
-            <i class="bi {{ pub.type_icon }} pub-cover-icon" aria-hidden="true"></i>
-            {% endif %}
-          </div>
-          <div class="pub-card-h-body">
-            <span class="badge-type align-self-start">{{ pub.type_display }}</span>
-            <h3 class="pub-card-h-title">{{ pub.title }}</h3>
-            <p class="pub-card-h-publisher">
-              <i class="bi bi-building" aria-hidden="true"></i>{{ pub.publisher.name }}
-            </p>
-          </div>
-        </a>
-      </article>
-    </div>
+  {% if recent_articles %}
+  <div class="articles-grid">
+    {% for article in recent_articles %}
+    {% with pub=article.issue.publication %}
+    <article class="article-card" data-reveal data-reveal-delay="{% cycle '0' '1' '2' '3' %}">
+      <div class="article-card-top">
+        <div class="article-badges">
+          {% if pub %}
+          <span class="article-type-badge"><i class="bi {{ pub.type_icon }}" aria-hidden="true"></i>{{ pub.type_display }}</span>
+          {% endif %}
+          {% if article.is_open_access %}
+          <span class="oa-badge oa-open" title="Otvoreni pristup"><i class="bi bi-unlock-fill" aria-hidden="true"></i><span class="visually-hidden">Otvoreni pristup</span></span>
+          {% else %}
+          <span class="oa-badge oa-closed" title="Ograničen pristup"><i class="bi bi-lock-fill" aria-hidden="true"></i><span class="visually-hidden">Ograničen pristup</span></span>
+          {% endif %}
+        </div>
+        {% if article.first_page and article.last_page %}
+        <span class="article-pages"><i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>{{ article.first_page }}&ndash;{{ article.last_page }}</span>
+        {% endif %}
+      </div>
+      <h3 class="article-title">
+        <a href="{% url 'portal-articles:article-detail' article.pk %}">{{ article.title }}</a>
+      </h3>
+      {% if article.authors_display %}
+      <p class="article-authors">{{ article.authors_display }}</p>
+      {% endif %}
+      {% if article.abstract %}
+      <p class="article-abstract">{{ article.abstract|striptags|truncatechars:170 }}</p>
+      {% endif %}
+      {% if pub %}
+      <p class="article-publication">{{ pub.title }}</p>
+      {% endif %}
+      <div class="article-card-footer">
+        <span class="article-date">{% firstof article.published_at article.created_at as pubdate %}{{ pubdate|date:"d.m.Y." }}</span>
+        <a href="{% url 'portal-articles:article-detail' article.pk %}" class="article-more">Opširnije <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+      </div>
+    </article>
+    {% endwith %}
     {% endfor %}
   </div>
   {% else %}
   <div class="text-center py-4 empty-state">
-    <i class="bi bi-journal-text display-6 mb-2 d-block" aria-hidden="true"></i>
-    <p>Nema dostupnih publikacija.</p>
+    <i class="bi bi-file-earmark-text display-6 mb-2 d-block" aria-hidden="true"></i>
+    <p>Nema dostupnih članaka.</p>
   </div>
   {% endif %}
-</section>
-
-<!-- Quick Links -->
-<section class="mb-4" aria-labelledby="quick-links-title">
-  <div class="mb-4" data-reveal>
-    <p class="section-label mb-1">NAVIGACIJA</p>
-    <h2 id="quick-links-title" class="section-subtitle h4 mb-0">Brzi linkovi</h2>
-    <span class="gradient-accent-bar d-block mt-2"></span>
-  </div>
-  <div class="row g-4">
-    <div class="col-md-4" data-reveal>
-      <a href="{% url 'portal-publications:publication-list' %}" class="text-decoration-none">
-        <div class="card h-100 text-center quick-link-card">
-          <div class="card-body">
-            <div class="quick-link-icon">
-              <i class="bi bi-journal-text" aria-hidden="true"></i>
-            </div>
-            <h3 class="mb-0">Publikacije</h3>
-          </div>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-4" data-reveal data-reveal-delay="1">
-      <a href="{% url 'portal:publisher-list' %}" class="text-decoration-none">
-        <div class="card h-100 text-center quick-link-card">
-          <div class="card-body">
-            <div class="quick-link-icon">
-              <i class="bi bi-building" aria-hidden="true"></i>
-            </div>
-            <h3 class="mb-0">Izdavači</h3>
-          </div>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-4" data-reveal data-reveal-delay="2">
-      <a href="{% url 'about' %}" class="text-decoration-none">
-        <div class="card h-100 text-center quick-link-card">
-          <div class="card-body">
-            <div class="quick-link-icon">
-              <i class="bi bi-info-circle" aria-hidden="true"></i>
-            </div>
-            <h3 class="mb-0">O portalu</h3>
-          </div>
-        </div>
-      </a>
-    </div>
-  </div>
 </section>
 
 <!-- CTA band (contact focus) -->

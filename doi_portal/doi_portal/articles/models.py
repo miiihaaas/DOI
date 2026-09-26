@@ -361,6 +361,42 @@ class Article(SoftDeleteMixin, models.Model):
         """Return count of authors for this article."""
         return self.authors.count()
 
+    @property
+    def is_open_access(self) -> bool:
+        """
+        Whether the article is openly accessible.
+
+        True if the article itself is marked free-to-read, or its parent
+        publication has OPEN access. Compared against the raw enum value
+        ("OPEN") to avoid a cross-app import.
+        """
+        if self.free_to_read:
+            return True
+        publication = getattr(getattr(self, "issue", None), "publication", None)
+        return getattr(publication, "access_type", None) == "OPEN"
+
+    @property
+    def authors_display(self) -> str:
+        """
+        Human-readable author list, e.g. "A", "A i B", "A, B i C",
+        or "A, B i C + 2" when there are more than three authors.
+
+        Uses prefetched/ordered authors; safe for list rendering.
+        """
+        authors = list(self.authors.all())
+        names = [str(a) for a in authors]
+        if not names:
+            return ""
+        shown = names[:3]
+        remainder = len(names) - len(shown)
+        if len(shown) == 1:
+            base = shown[0]
+        else:
+            base = ", ".join(shown[:-1]) + " i " + shown[-1]
+        if remainder > 0:
+            return f"{base} + {remainder}"
+        return base
+
 
 class Author(SoftDeleteMixin, models.Model):
     """
