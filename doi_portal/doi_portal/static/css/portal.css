@@ -3189,6 +3189,92 @@ html.lenis, html.lenis body { height: auto; }
     .articles-grid { grid-template-columns: 1fr; }
 }
 
+/* ===========================
+   Filter accordion (publications sidebar)
+   =========================== */
+
+.filter-accordion .accordion-item {
+    border: none;
+    border-bottom: 1px solid var(--color-border-subtle);
+    background: transparent;
+}
+
+.filter-accordion .accordion-item:last-child { border-bottom: none; }
+
+.filter-accordion .accordion-button {
+    padding: 0.85rem 0.15rem;
+    background: transparent;
+    color: var(--color-dark);
+    font-weight: 700;
+    font-size: 0.92rem;
+    box-shadow: none;
+    --bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%235cb46a' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.2'%3e%3cpath d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%235cb46a' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.2'%3e%3cpath d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+.filter-accordion .accordion-button:not(.collapsed) {
+    background: transparent;
+    color: var(--color-primary);
+    box-shadow: none;
+}
+
+.filter-accordion .accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
+    outline: none;
+}
+
+.filter-accordion .accordion-button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+.filter-accordion .accordion-body {
+    padding: 0 0.15rem 0.9rem;
+}
+
+.filter-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.45rem;
+    padding-left: 1.6em;
+}
+
+.filter-check:last-child { margin-bottom: 0.1rem; }
+
+.filter-check .form-check-input { margin-left: -1.6em; cursor: pointer; }
+
+.filter-check .form-check-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.filter-count {
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: var(--color-surface-base);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 20px;
+    padding: 0.02rem 0.5rem;
+    min-width: 1.75rem;
+    text-align: center;
+}
+
+.filter-check .form-check-input:checked ~ .form-check-label .filter-count {
+    background: rgba(92, 180, 106, 0.14);
+    border-color: transparent;
+    color: var(--color-primary);
+}
+
 /* Site-wide pre-footer CTA band spacing */
 .prefooter-cta {
     padding: 0.5rem 0 3.75rem;

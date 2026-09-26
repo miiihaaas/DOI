@@ -226,19 +226,44 @@ class PublicationPublicListView(ListView):
         context["publication_types"] = PublicationType.choices
         context["access_types"] = AccessType.choices
 
-        # Dynamic filter options from database
-        context["subject_areas"] = (
-            Publication.objects.exclude(subject_area="")
-            .values_list("subject_area", flat=True)
-            .distinct()
-            .order_by("subject_area")
+        # Facet counts (how many publications exist per filter option)
+        def _facet_counts(field, base=None):
+            base = Publication.objects.all() if base is None else base
+            return {
+                row[field]: row["n"]
+                for row in base.values(field).annotate(n=models.Count("id"))
+            }
+
+        type_counts = _facet_counts("publication_type")
+        access_counts = _facet_counts("access_type")
+        subject_counts = _facet_counts(
+            "subject_area", Publication.objects.exclude(subject_area="")
         )
-        context["languages"] = (
-            Publication.objects.exclude(language="")
-            .values_list("language", flat=True)
-            .distinct()
-            .order_by("language")
+        language_counts = _facet_counts(
+            "language", Publication.objects.exclude(language="")
         )
+
+        # Option lists WITH counts for the accordion filter sidebar
+        context["type_options"] = [
+            {"value": value, "label": label, "count": type_counts.get(value, 0)}
+            for value, label in PublicationType.choices
+        ]
+        context["access_options"] = [
+            {"value": value, "label": label, "count": access_counts.get(value, 0)}
+            for value, label in AccessType.choices
+        ]
+        context["subject_options"] = [
+            {"value": subject, "count": count}
+            for subject, count in sorted(subject_counts.items())
+        ]
+        context["language_options"] = [
+            {"value": code, "count": count}
+            for code, count in sorted(language_counts.items())
+        ]
+
+        # Dynamic filter options from database (kept for backward compatibility)
+        context["subject_areas"] = [o["value"] for o in context["subject_options"]]
+        context["languages"] = [o["value"] for o in context["language_options"]]
 
         # Active filters for UI state (multi-select checkboxes - AC #2)
         context["current_types"] = self.request.GET.getlist("type")
