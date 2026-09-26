@@ -401,7 +401,7 @@ CLAMAV_PORT = env.int("CLAMAV_PORT", default=3310)
 # Override in production settings with actual admin email
 CONTACT_FORM_RECIPIENT_EMAIL = env(
     "CONTACT_FORM_RECIPIENT_EMAIL",
-    default="admin@example.com"
+    default="info@doi.rs"
 )
 # DEFAULT_FROM_EMAIL is already defined by Cookiecutter Django in production settings
 

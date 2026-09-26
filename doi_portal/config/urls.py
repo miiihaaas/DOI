@@ -11,7 +11,10 @@ from doi_portal.core.views import DashboardView
 from doi_portal.portal.views import AboutView
 from doi_portal.portal.views import ArticleSearchView
 from doi_portal.portal.views import ContactView
+from doi_portal.portal.views import NewsletterSubscribeView
 from doi_portal.portal.views import PortalHomeView
+from doi_portal.portal.views import PrivacyPolicyView
+from doi_portal.portal.views import TermsOfUseView
 
 urlpatterns = [
     path("", PortalHomeView.as_view(), name="home"),
@@ -21,6 +24,11 @@ urlpatterns = [
     path("about/", AboutView.as_view(), name="about"),
     # Story 4.9: Contact form (public)
     path("contact/", ContactView.as_view(), name="contact"),
+    # Newsletter signup (footer, public POST)
+    path("newsletter/subscribe/", NewsletterSubscribeView.as_view(), name="newsletter-subscribe"),
+    # Legal pages (public)
+    path("politika-privatnosti/", PrivacyPolicyView.as_view(), name="privacy-policy"),
+    path("uslovi-koriscenja/", TermsOfUseView.as_view(), name="terms-of-use"),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management

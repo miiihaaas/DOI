@@ -23,17 +23,21 @@ import smtplib
 
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
+from django.core.validators import validate_email
 from django.db import models
 from django.db.models.functions import Cast
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
 from django.views.generic import FormView
 from django.views.generic import ListView
 from django.views.generic import TemplateView
+from django.views.generic import View
 
 from doi_portal.articles.models import Article, ArticleStatus, PdfStatus
 from doi_portal.core.markup import strip_markup
@@ -1299,3 +1303,95 @@ def chapter_citation_download(request, monograph_pk, pk):
     response = HttpResponse(citation_text, content_type=content_type)
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
+
+
+# =============================================================================
+# Newsletter subscription + legal pages (public)
+# =============================================================================
+
+
+def _safe_back_url(request, fallback_name="home"):
+    """Return the referring URL if it is same-host, else a safe fallback."""
+    referer = request.META.get("HTTP_REFERER", "")
+    if referer and url_has_allowed_host_and_scheme(
+        referer,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return referer
+    return reverse(fallback_name)
+
+
+class NewsletterSubscribeView(View):
+    """
+    Handle newsletter ("Pretplatite se na bilten") sign-ups from the footer.
+
+    Emails the submitted address to the portal contact inbox
+    (settings.CONTACT_FORM_RECIPIENT_EMAIL = info@doi.rs). Public, POST-only.
+    """
+
+    def get(self, request, *args, **kwargs):
+        return redirect("home")
+
+    def post(self, request, *args, **kwargs):
+        email = (request.POST.get("email") or "").strip()
+        back = _safe_back_url(request)
+
+        # Honeypot: bots fill this hidden field; humans never see it.
+        if request.POST.get("website"):
+            messages.success(request, "Hvala! Uspešno ste se prijavili na bilten.")
+            return redirect(back)
+
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, "Unesite ispravnu imejl adresu.")
+            return redirect(back)
+
+        try:
+            send_mail(
+                subject="[DOI Portal] Nova prijava na bilten",
+                message=(
+                    f"Nova prijava na bilten sa DOI Portala.\n\n"
+                    f"Imejl adresa: {email}\n"
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.CONTACT_FORM_RECIPIENT_EMAIL],
+                fail_silently=False,
+            )
+            messages.success(request, "Hvala! Uspešno ste se prijavili na bilten.")
+        except (OSError, smtplib.SMTPException) as exc:
+            logger.error(f"Newsletter subscription email failed: {exc}")
+            messages.error(
+                request,
+                "Prijava trenutno nije moguća. Pokušajte kasnije.",
+            )
+        return redirect(back)
+
+
+class PrivacyPolicyView(TemplateView):
+    """Public 'Politika privatnosti' page."""
+
+    template_name = "portal/privacy_policy.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {"label": "Politika privatnosti", "url": None},
+        ]
+        return context
+
+
+class TermsOfUseView(TemplateView):
+    """Public 'Uslovi korišćenja' page."""
+
+    template_name = "portal/terms_of_use.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Početna", "url": reverse("home")},
+            {"label": "Uslovi korišćenja", "url": None},
+        ]
+        return context

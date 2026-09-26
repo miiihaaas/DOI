@@ -30,9 +30,9 @@
 <div class="portal-topbar d-none d-md-block">
     <div class="container">
         <div class="topbar-inner">
-            <a href="mailto:info@doi.rs" class="topbar-link"><i class="bi bi-envelope-fill" aria-hidden="true"></i> info@doi.rs</a>
+            <a href="mailto:info@doi.rs" class="topbar-link"><i class="bi bi-envelope" aria-hidden="true"></i> info@doi.rs</a>
             <span class="topbar-sep" aria-hidden="true"></span>
-            <a href="tel:+381616183078" class="topbar-link"><i class="bi bi-telephone-fill" aria-hidden="true"></i> +381 61 6183078</a>
+            <a href="tel:+381616183078" class="topbar-link"><i class="bi bi-telephone" aria-hidden="true"></i> +381 61 6183078</a>
         </div>
     </div>
 </div>
@@ -137,45 +137,66 @@
 <footer class="portal-footer text-light mt-auto">
     <div class="container">
         <div class="row gy-4 portal-footer-top">
-            <!-- Brand + contact -->
-            <div class="col-lg-5 col-md-12">
+            <!-- Block 1: logo + impresum / kontakt -->
+            <div class="col-lg-4 col-md-12">
                 <img src="{% static 'images/doi-logo-negative.png' %}" alt="DOI Portal" class="footer-logo" width="480" height="160">
                 <p class="footer-description">Portal za registraciju DOI identifikatora naučnih publikacija.</p>
                 <ul class="list-unstyled footer-contact mb-0">
-                    <li><i class="bi bi-geo-alt-fill" aria-hidden="true"></i><span>Nikole Lunjevice 3, Gornji Milanovac</span></li>
-                    <li><i class="bi bi-envelope-fill" aria-hidden="true"></i><a href="mailto:info@doi.rs">info@doi.rs</a></li>
-                    <li><i class="bi bi-telephone-fill" aria-hidden="true"></i><a href="tel:+381616183078">+381 61 6183078</a></li>
-                    <li><i class="bi bi-clock-fill" aria-hidden="true"></i><span>Ponedeljak - Petak: 08:00 - 16:00</span></li>
+                    <li><i class="bi bi-geo-alt" aria-hidden="true"></i><span>Nikole Lunjevice 3, Gornji Milanovac</span></li>
+                    <li><i class="bi bi-envelope" aria-hidden="true"></i><a href="mailto:info@doi.rs">info@doi.rs</a></li>
+                    <li><i class="bi bi-telephone" aria-hidden="true"></i><a href="tel:+381616183078">+381 61 6183078</a></li>
+                    <li><i class="bi bi-clock" aria-hidden="true"></i><span>Ponedeljak - Petak: 08:00 - 16:00</span></li>
                 </ul>
             </div>
-            <!-- Navigation -->
-            <div class="col-lg-3 col-md-6">
-                <h5 class="footer-heading">Navigacija</h5>
+            <!-- Block 2: meni -->
+            <div class="col-lg-2 col-md-4 col-6">
+                <h5 class="footer-heading">Meni</h5>
                 <ul class="list-unstyled footer-links mb-0">
                     <li><a href="{% url 'home' %}">Početna</a></li>
-                    <li><a href="{% url 'portal-publications:publication-list' %}">Publikacije</a></li>
-                    <li><a href="{% url 'portal-monographs:monograph-list' %}">Monografije</a></li>
                     <li><a href="{% url 'portal:publisher-list' %}">Izdavači</a></li>
+                    <li><a href="{% url 'portal-publications:publication-list' %}">Publikacije</a></li>
                     <li><a href="{% url 'about' %}">O portalu</a></li>
                     <li><a href="{% url 'contact' %}">Kontakt</a></li>
                 </ul>
             </div>
-            <!-- Quick links -->
-            <div class="col-lg-4 col-md-6">
-                <h5 class="footer-heading">Brzi linkovi</h5>
+            <!-- Block 3: korisni linkovi (eksterni) -->
+            <div class="col-lg-3 col-md-4 col-6">
+                <h5 class="footer-heading">Korisni linkovi</h5>
                 <ul class="list-unstyled footer-links mb-0">
-                    <li><a href="{% url 'article-search' %}">Pretraga članaka</a></li>
-                    <li><a href="{% url 'portal-publications:publication-list' %}?type=JOURNAL">Časopisi</a></li>
-                    <li><a href="{% url 'portal-publications:publication-list' %}?type=CONFERENCE">Zbornici</a></li>
-                    <li><a href="{% url 'contact' %}">Kontakt forma</a></li>
+                    <li><a href="https://www.crossref.org/community/sponsors/" target="_blank" rel="noopener noreferrer">Ovlašćeni sponzori</a></li>
+                    <li><a href="https://www.doi.org/" target="_blank" rel="noopener noreferrer">DOI Foundation</a></li>
+                    <li><a href="https://www.crossref.org/documentation/member-setup/" target="_blank" rel="noopener noreferrer">Registracija na Crossref</a></li>
+                    <li><a href="https://www.crossref.org/events/" target="_blank" rel="noopener noreferrer">Vebinari i događaji</a></li>
+                    <li><a href="https://www.crossref.org/services/crossmark/" target="_blank" rel="noopener noreferrer">Crossmark</a></li>
+                    <li><a href="https://www.webofscience.com/" target="_blank" rel="noopener noreferrer">Web of Science</a></li>
                 </ul>
+            </div>
+            <!-- Block 4: newsletter -->
+            <div class="col-lg-3 col-md-4">
+                <h5 class="footer-heading">Pretplatite se na bilten</h5>
+                <p class="footer-description">Primajte obaveštenja o novim publikacijama i uslugama.</p>
+                <form class="footer-newsletter" method="post" action="{% url 'newsletter-subscribe' %}">
+                    {% csrf_token %}
+                    <div class="d-none" aria-hidden="true">
+                        <label for="nl_website">Website</label>
+                        <input type="text" name="website" id="nl_website" tabindex="-1" autocomplete="off">
+                    </div>
+                    <div class="newsletter-field">
+                        <label for="nl_email" class="visually-hidden">Imejl adresa</label>
+                        <input type="email" name="email" id="nl_email" class="form-control" placeholder="Imejl adresa" required>
+                        <button type="submit" class="btn btn-doi w-100 mt-2">Prijavite se</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
     <div class="portal-footer-bottom">
         <div class="container">
-            <p class="footer-copyright mb-0">&copy; 2026 DOI Portal. Sva prava zadržana.</p>
-            <p class="footer-madeby mb-0">Portal za registraciju DOI identifikatora naučnih publikacija</p>
+            <p class="footer-copyright mb-0">Copyright &copy; 2026. doi.rs. Sva prava zadržana.</p>
+            <ul class="list-unstyled footer-legal-links mb-0">
+                <li><a href="{% url 'privacy-policy' %}">Politika privatnosti</a></li>
+                <li><a href="{% url 'terms-of-use' %}">Uslovi korišćenja</a></li>
+            </ul>
         </div>
     </div>
 </footer>
