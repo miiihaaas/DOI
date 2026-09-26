@@ -1,5 +1,6 @@
 {% extends "portal/base.html" %}
 {% load static i18n portal_tags %}
+{% block css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/portal-publications-table.css' %}">{% endblock css %}
 
 {% block title %}Publikacije - DOI Portal{% endblock title %}
 
@@ -11,168 +12,113 @@
     <h1 class="page-title">Katalog publikacija</h1>
     <p class="page-subtitle">
         Naučni časopisi, zbornici i serijske publikacije registrovane na DOI Portalu.
-        Filtrirajte po tipu, oblasti, jeziku i vrsti pristupa.
     </p>
 </header>
 
-<div class="row">
-    <!-- Filter Sidebar -->
-    <aside class="col-lg-3 mb-4 filter-sidebar" data-reveal>
-        <div class="card filter-sidebar-card">
-            <div class="card-body">
-                <h2 class="filter-sidebar-title d-flex align-items-center">
-                    <i class="bi bi-funnel me-2" aria-hidden="true"></i>
-                    <span>Filteri</span>
-                </h2>
+<form class="pub-filter-bar" method="get" role="search" data-reveal>
+    <div class="pub-search">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="text" name="search" value="{{ search_query }}" placeholder="Pretraga po nazivu ili izdavaču..."
+               aria-label="Pretraga publikacija po nazivu ili izdavaču"
+               hx-get="{% url 'portal-publications:publication-list' %}" hx-trigger="keyup changed delay:350ms"
+               hx-target="#publication-results" hx-include="[name='type'],[name='subject'],[name='access'],[name='language'],[name='sort']" hx-replace-url="true">
+    </div>
 
-                <!-- Search Box -->
-                <div class="mb-4">
-                    <label for="search-input" class="filter-label">Pretraživanje</label>
-                    <input type="text"
-                           id="search-input"
-                           name="search"
-                           class="form-control"
-                           placeholder="Pretražite publikacije..."
-                           value="{{ search_query }}"
-                           hx-get="{% url 'portal-publications:publication-list' %}"
-                           hx-trigger="keyup changed delay:300ms"
-                           hx-target="#publication-results"
-                           hx-include="[name='type'],[name='subject'],[name='access'],[name='language']"
-                           hx-replace-url="true"
-                           aria-label="Pretražite publikacije po naslovu">
-                </div>
-
-                <div class="accordion filter-accordion" id="filterAccordion">
-                    <!-- Type Filter -->
-                    <div class="accordion-item">
-                        <h3 class="accordion-header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#flt-type" aria-expanded="true" aria-controls="flt-type">
-                                Tip publikacije
-                            </button>
-                        </h3>
-                        <div id="flt-type" class="accordion-collapse collapse show">
-                            <div class="accordion-body">
-                                {% for opt in type_options %}
-                                <div class="form-check filter-check">
-                                    <input class="form-check-input" type="checkbox" name="type" id="type-{{ opt.value }}" value="{{ opt.value }}"
-                                           {% if opt.value in current_types %}checked{% endif %}
-                                           hx-get="{% url 'portal-publications:publication-list' %}"
-                                           hx-trigger="change"
-                                           hx-target="#publication-results"
-                                           hx-include="[name='search'],[name='type'],[name='subject'],[name='access'],[name='language']"
-                                           hx-push-url="true">
-                                    <label class="form-check-label" for="type-{{ opt.value }}">
-                                        {{ opt.label }}<span class="filter-count">{{ opt.count }}</span>
-                                    </label>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Subject Area Filter -->
-                    {% if subject_options %}
-                    <div class="accordion-item">
-                        <h3 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flt-subject" aria-expanded="false" aria-controls="flt-subject">
-                                Naučna oblast
-                            </button>
-                        </h3>
-                        <div id="flt-subject" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                {% for opt in subject_options %}
-                                <div class="form-check filter-check">
-                                    <input class="form-check-input" type="checkbox" name="subject" id="subject-{{ forloop.counter }}" value="{{ opt.value }}"
-                                           {% if opt.value in current_subjects %}checked{% endif %}
-                                           hx-get="{% url 'portal-publications:publication-list' %}"
-                                           hx-trigger="change"
-                                           hx-target="#publication-results"
-                                           hx-include="[name='search'],[name='type'],[name='subject'],[name='access'],[name='language']"
-                                           hx-push-url="true">
-                                    <label class="form-check-label" for="subject-{{ forloop.counter }}">
-                                        {{ opt.value }}<span class="filter-count">{{ opt.count }}</span>
-                                    </label>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- Access Type Filter -->
-                    <div class="accordion-item">
-                        <h3 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flt-access" aria-expanded="false" aria-controls="flt-access">
-                                Tip pristupa
-                            </button>
-                        </h3>
-                        <div id="flt-access" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                {% for opt in access_options %}
-                                <div class="form-check filter-check">
-                                    <input class="form-check-input" type="checkbox" name="access" id="access-{{ opt.value }}" value="{{ opt.value }}"
-                                           {% if opt.value in current_access %}checked{% endif %}
-                                           hx-get="{% url 'portal-publications:publication-list' %}"
-                                           hx-trigger="change"
-                                           hx-target="#publication-results"
-                                           hx-include="[name='search'],[name='type'],[name='subject'],[name='access'],[name='language']"
-                                           hx-push-url="true">
-                                    <label class="form-check-label" for="access-{{ opt.value }}">
-                                        {{ opt.label }}<span class="filter-count">{{ opt.count }}</span>
-                                    </label>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Language Filter -->
-                    {% if language_options %}
-                    <div class="accordion-item">
-                        <h3 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flt-language" aria-expanded="false" aria-controls="flt-language">
-                                Jezik
-                            </button>
-                        </h3>
-                        <div id="flt-language" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                {% for opt in language_options %}
-                                <div class="form-check filter-check">
-                                    <input class="form-check-input" type="checkbox" name="language" id="language-{{ opt.value }}" value="{{ opt.value }}"
-                                           {% if opt.value in current_languages %}checked{% endif %}
-                                           hx-get="{% url 'portal-publications:publication-list' %}"
-                                           hx-trigger="change"
-                                           hx-target="#publication-results"
-                                           hx-include="[name='search'],[name='type'],[name='subject'],[name='access'],[name='language']"
-                                           hx-push-url="true">
-                                    <label class="form-check-label" for="language-{{ opt.value }}">
-                                        {{ opt.value|language_name }}<span class="filter-count">{{ opt.count }}</span>
-                                    </label>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- Reset All Filters -->
-                {% if has_active_filters %}
-                <a href="{% url 'portal-publications:publication-list' %}" class="btn btn-doi-outline btn-sm w-100 mt-3">
-                    <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Obrišite filtere
-                </a>
-                {% endif %}
-            </div>
+    <!-- Vrsta -->
+    <div class="pub-filter dropdown">
+        <button class="pub-filter-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+            Vrsta{% if current_types %} <span class="pub-filter-count">{{ current_types|length }}</span>{% endif %}
+        </button>
+        <div class="dropdown-menu pub-filter-menu">
+            {% for opt in type_options %}
+            <label class="pub-filter-option">
+                <input type="checkbox" name="type" value="{{ opt.value }}" {% if opt.value in current_types %}checked{% endif %}
+                       hx-get="{% url 'portal-publications:publication-list' %}" hx-trigger="change" hx-target="#publication-results"
+                       hx-include="[name='search'],[name='type'],[name='subject'],[name='access'],[name='language'],[name='sort']" hx-push-url="true">
+                <span class="pub-filter-optlabel">{{ opt.label }}</span><span class="pub-filter-optcount">{{ opt.count }}</span>
+            </label>
+            {% endfor %}
         </div>
+    </div>
+
+    <!-- Oblast -->
+    <div class="pub-filter dropdown">
+        <button class="pub-filter-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+            Oblast{% if current_subjects %} <span class="pub-filter-count">{{ current_subjects|length }}</span>{% endif %}
+        </button>
+        <div class="dropdown-menu pub-filter-menu">
+            {% for opt in subject_options %}
+            <label class="pub-filter-option">
+                <input type="checkbox" name="subject" value="{{ opt.value }}" {% if opt.value in current_subjects %}checked{% endif %}
+                       hx-get="{% url 'portal-publications:publication-list' %}" hx-trigger="change" hx-target="#publication-results"
+                       hx-include="[name='search'],[name='type'],[name='subject'],[name='access'],[name='language'],[name='sort']" hx-push-url="true">
+                <span class="pub-filter-optlabel">{{ opt.value }}</span><span class="pub-filter-optcount">{{ opt.count }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pristup -->
+    <div class="pub-filter dropdown">
+        <button class="pub-filter-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+            Pristup{% if current_access %} <span class="pub-filter-count">{{ current_access|length }}</span>{% endif %}
+        </button>
+        <div class="dropdown-menu pub-filter-menu">
+            {% for opt in access_options %}
+            <label class="pub-filter-option">
+                <input type="checkbox" name="access" value="{{ opt.value }}" {% if opt.value in current_access %}checked{% endif %}
+                       hx-get="{% url 'portal-publications:publication-list' %}" hx-trigger="change" hx-target="#publication-results"
+                       hx-include="[name='search'],[name='type'],[name='subject'],[name='access'],[name='language'],[name='sort']" hx-push-url="true">
+                <span class="pub-filter-optlabel">{{ opt.label }}</span><span class="pub-filter-optcount">{{ opt.count }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Jezik -->
+    <div class="pub-filter dropdown">
+        <button class="pub-filter-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+            Jezik{% if current_languages %} <span class="pub-filter-count">{{ current_languages|length }}</span>{% endif %}
+        </button>
+        <div class="dropdown-menu pub-filter-menu">
+            {% for opt in language_options %}
+            <label class="pub-filter-option">
+                <input type="checkbox" name="language" value="{{ opt.value }}" {% if opt.value in current_languages %}checked{% endif %}
+                       hx-get="{% url 'portal-publications:publication-list' %}" hx-trigger="change" hx-target="#publication-results"
+                       hx-include="[name='search'],[name='type'],[name='subject'],[name='access'],[name='language'],[name='sort']" hx-push-url="true">
+                <span class="pub-filter-optlabel">{{ opt.value|language_name }}</span><span class="pub-filter-optcount">{{ opt.count }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Sort -->
+    <div class="pub-filter pub-sort">
+        <label for="pubSort" class="visually-hidden">Sortiranje</label>
+        <select name="sort" id="pubSort" class="form-select"
+                hx-get="{% url 'portal-publications:publication-list' %}" hx-trigger="change" hx-target="#publication-results"
+                hx-include="[name='search'],[name='type'],[name='subject'],[name='access'],[name='language']" hx-push-url="true">
+            {% for o in sort_options %}<option value="{{ o.value }}" {% if o.value == current_sort %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
+        </select>
+    </div>
+
+    {% if has_active_filters %}
+    <a href="{% url 'portal-publications:publication-list' %}" class="pub-filter-reset"><i class="bi bi-x-circle" aria-hidden="true"></i> Obriši filtere</a>
+    {% endif %}
+</form>
+
+<div class="row g-4">
+    <aside class="col-lg-3">
+        <nav class="pub-type-nav" data-reveal aria-label="Vrste publikacija">
+            <p class="pub-type-nav-title">Vrste publikacija</p>
+            <a class="pub-type-link{% if not current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}"><i class="bi bi-collection" aria-hidden="true"></i>Sve publikacije</a>
+            <a class="pub-type-link{% if 'JOURNAL' in current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}?type=JOURNAL"><i class="bi bi-journal-text" aria-hidden="true"></i>Časopisi</a>
+            <a class="pub-type-link{% if 'CONFERENCE' in current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}?type=CONFERENCE"><i class="bi bi-people" aria-hidden="true"></i>Zbornici</a>
+            <a class="pub-type-link" href="{% url 'portal-monographs:monograph-list' %}"><i class="bi bi-book" aria-hidden="true"></i>Monografije</a>
+            <a class="pub-type-link{% if 'OTHER' in current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}?type=OTHER"><i class="bi bi-file-earmark" aria-hidden="true"></i>Ostalo</a>
+        </nav>
     </aside>
-
-    <!-- Main Content -->
     <section class="col-lg-9" data-reveal data-reveal-delay="1">
-        <div class="d-flex align-items-center mb-4">
-            <span class="gradient-accent-bar me-3"></span>
-            <p class="section-label mb-0">Rezultati pretrage</p>
-        </div>
-
         <div id="publication-results" aria-live="polite">
             {% include "portal/publications/partials/_publication_grid.html" %}
         </div>

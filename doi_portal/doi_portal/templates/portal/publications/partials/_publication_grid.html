@@ -1,46 +1,46 @@
-{% load static i18n %}
+{% load static i18n portal_tags %}
 
-{% if publications %}
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    {% for publication in publications %}
-    <div class="col">
-        <article class="card h-100 publication-card">
-            {% if publication.cover_image %}
-            <img src="{{ publication.cover_image.url }}"
-                 class="card-img-top"
-                 alt="{{ publication.title }} naslovna slika"
-                 loading="lazy">
-            {% else %}
-            <div class="card-img-placeholder">
-                <i class="{{ publication.type_icon }} display-4" aria-hidden="true"></i>
-            </div>
-            {% endif %}
-            <div class="card-body d-flex flex-column">
-                <div class="d-flex flex-wrap gap-1 mb-2">
-                    <span class="badge-type">
-                        <i class="{{ publication.type_icon }} me-1" aria-hidden="true"></i>
-                        {{ publication.type_display }}
+{% if is_paginated %}
+<p class="pub-result-count">{{ page_obj.paginator.count }} publikacij{{ page_obj.paginator.count|pluralize:"a,e,a" }}</p>
+{% else %}
+<p class="pub-result-count">{{ publications|length }} publikacij{{ publications|length|pluralize:"a,e,a" }}</p>
+{% endif %}
+
+<div class="table-responsive pub-table-wrap">
+    <table class="pub-table">
+        <thead>
+            <tr>
+                <th class="pub-th-name">Naziv publikacije</th>
+                <th>Vrsta</th>
+                <th>Oblast</th>
+                <th>Pristup</th>
+                <th>Izdavač</th>
+                <th>Jezik</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for publication in publications %}
+            <tr class="pub-row">
+                <td class="pub-name-cell">
+                    <span class="pub-row-icon">
+                        {% if publication.cover_image %}<img src="{{ publication.cover_image.url }}" alt="">{% else %}<i class="bi {{ publication.type_icon }}" aria-hidden="true"></i>{% endif %}
                     </span>
-                    {% if publication.access_type == "OPEN" %}
-                    <span class="badge-access">
-                        <i class="bi bi-unlock me-1" aria-hidden="true"></i>Otvoreni pristup
-                    </span>
-                    {% endif %}
-                </div>
-                <h3 class="h6 card-title">
-                    <a href="{% url 'portal-publications:publication-detail' publication.slug %}"
-                       class="text-decoration-none stretched-link">
-                        {{ publication.title }}
-                    </a>
-                </h3>
-                <p class="card-text small mb-0 mt-auto">
-                    <i class="bi bi-building me-1" aria-hidden="true"></i>
-                    {{ publication.publisher.name }}
-                </p>
-            </div>
-        </article>
-    </div>
-    {% endfor %}
+                    <a href="{% url 'portal-publications:publication-detail' slug=publication.slug %}" class="pub-row-name">{{ publication.title }}</a>
+                </td>
+                <td><span class="pub-type-tag">{{ publication.type_display }}</span></td>
+                <td class="pub-subject-cell">{{ publication.subject_area|default:"—" }}</td>
+                <td>
+                    {% if publication.access_type == 'OPEN' %}<span class="access-pill access-open"><i class="bi bi-unlock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>
+                    {% else %}<span class="access-pill access-restricted"><i class="bi bi-lock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>{% endif %}
+                </td>
+                <td><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
+                <td class="pub-lang-cell">{{ publication.language|language_name|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Nema publikacija koje odgovaraju kriterijumima.</p></div></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 
 <!-- Pagination -->
@@ -90,15 +90,4 @@
         {% endif %}
     </ul>
 </nav>
-{% endif %}
-
-{% else %}
-<!-- Empty State -->
-<div class="empty-state">
-    <i class="bi bi-journal-text" aria-hidden="true"></i>
-    <p class="lead">Nema publikacija koje odgovaraju kriterijumima pretrage.</p>
-    <a href="{% url 'portal-publications:publication-list' %}" class="btn-doi-outline mt-2">
-        <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Obrišite sve filtere
-    </a>
-</div>
 {% endif %}

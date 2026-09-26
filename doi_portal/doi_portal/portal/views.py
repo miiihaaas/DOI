@@ -203,10 +203,17 @@ class PublicationPublicListView(ListView):
         if languages:
             queryset = queryset.filter(language__in=languages)
 
-        # Search by title
+        # Search by publication title OR publisher name
         search = self.request.GET.get("search")
         if search:
-            queryset = queryset.filter(title__icontains=search)
+            queryset = queryset.filter(
+                models.Q(title__icontains=search)
+                | models.Q(publisher__name__icontains=search)
+            )
+
+        # Alphabetical sorting by name
+        sort = self.request.GET.get("sort", "name")
+        queryset = queryset.order_by("-title" if sort == "-name" else "title")
 
         return queryset
 
@@ -271,6 +278,13 @@ class PublicationPublicListView(ListView):
         context["current_access"] = self.request.GET.getlist("access")
         context["current_languages"] = self.request.GET.getlist("language")
         context["search_query"] = self.request.GET.get("search", "")
+
+        # Alphabetical sort control
+        context["current_sort"] = self.request.GET.get("sort", "name")
+        context["sort_options"] = [
+            {"value": "name", "label": "Naziv (A-Š)"},
+            {"value": "-name", "label": "Naziv (Š-A)"},
+        ]
 
         # Convenience: any filter active?
         context["has_active_filters"] = bool(
