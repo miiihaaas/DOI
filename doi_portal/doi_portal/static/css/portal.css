@@ -2844,13 +2844,22 @@ html.lenis, html.lenis body { height: auto; }
 
 .hero-section .hero-grid {
     display: grid;
-    grid-template-columns: 1.12fr 0.88fr;
+    grid-template-columns: 1fr;
     gap: 2rem;
     align-items: center;
     text-align: left;
     padding: 2.75rem 2.5rem;
     position: relative;
     z-index: 1;
+}
+
+/* Live connected-dots network across the whole hero (behind content) */
+#hero-constellation {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: inherit;
 }
 
 .hero-content .hero-eyebrow {

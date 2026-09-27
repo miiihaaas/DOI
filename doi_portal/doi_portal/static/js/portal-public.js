@@ -233,41 +233,42 @@
   /* ---------------------------------------------------------------
      6. Animated connected-dots background (site-wide, subtle)
   --------------------------------------------------------------- */
-  function initConstellation() {
-    var canvas = document.getElementById("bg-constellation");
+  function makeConstellation(canvas, opts) {
     if (!canvas || prefersReduced) return;
     var ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    var GREEN = "92, 180, 106";
-    var TEAL = "3, 51, 51";
+    opts = opts || {};
+    var dot = opts.dot || "92, 180, 106";
+    var line = opts.line || "3, 51, 51";
+    var mouseLine = opts.mouseLine || "92, 180, 106";
+    var sizeEl = opts.sizeEl || null;   // element to size to; null = viewport
     var w = 0, h = 0, dpr = 1, particles = [], raf = null;
     var mouse = { x: null, y: null };
-    var small = window.matchMedia("(max-width: 768px)").matches;
 
-    function config() {
-      small = window.matchMedia("(max-width: 768px)").matches;
-      return {
-        count: small ? Math.min(30, Math.round(window.innerWidth / 16)) : Math.min(90, Math.round(window.innerWidth / 20)),
-        maxDist: small ? 120 : 160
-      };
+    function vw() { return sizeEl ? sizeEl.clientWidth : window.innerWidth; }
+    function vh() { return sizeEl ? sizeEl.clientHeight : window.innerHeight; }
+    function small() { return window.matchMedia("(max-width: 768px)").matches; }
+    function count() {
+      var cap = sizeEl ? 55 : 90;
+      return small() ? Math.min(sizeEl ? 22 : 30, Math.round(vw() / 16)) : Math.min(cap, Math.round(vw() / 20));
     }
+    function maxDist() { return (small() ? 120 : 160) * dpr; }
 
     function resize() {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
-      w = canvas.width = Math.floor(window.innerWidth * dpr);
-      h = canvas.height = Math.floor(window.innerHeight * dpr);
-      canvas.style.width = window.innerWidth + "px";
-      canvas.style.height = window.innerHeight + "px";
+      var pw = vw() || 1, ph = vh() || 1;
+      w = canvas.width = Math.floor(pw * dpr);
+      h = canvas.height = Math.floor(ph * dpr);
+      canvas.style.width = pw + "px";
+      canvas.style.height = ph + "px";
     }
 
     function seed() {
-      var cfg = config();
       particles = [];
-      for (var i = 0; i < cfg.count; i++) {
+      var n = count();
+      for (var i = 0; i < n; i++) {
         particles.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
+          x: Math.random() * w, y: Math.random() * h,
           vx: (Math.random() - 0.5) * 0.32 * dpr,
           vy: (Math.random() - 0.5) * 0.32 * dpr,
           r: (Math.random() * 1.5 + 0.8) * dpr
@@ -276,78 +277,79 @@
     }
 
     function frame() {
-      var cfg = config();
-      var md = cfg.maxDist * dpr;
+      var md = maxDist();
       ctx.clearRect(0, 0, w, h);
-
       for (var i = 0; i < particles.length; i++) {
         var p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
+        p.x += p.vx; p.y += p.vy;
         if (p.x < 0 || p.x > w) p.vx *= -1;
         if (p.y < 0 || p.y > h) p.vy *= -1;
-
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(" + GREEN + ", 0.75)";
+        ctx.fillStyle = "rgba(" + dot + ", 0.75)";
         ctx.fill();
-
         for (var j = i + 1; j < particles.length; j++) {
           var q = particles[j];
-          var dx = p.x - q.x, dy = p.y - q.y;
-          var d = Math.sqrt(dx * dx + dy * dy);
+          var dx = p.x - q.x, dy = p.y - q.y, d = Math.sqrt(dx * dx + dy * dy);
           if (d < md) {
-            ctx.strokeStyle = "rgba(" + TEAL + ", " + ((1 - d / md) * 0.34) + ")";
+            ctx.strokeStyle = "rgba(" + line + ", " + ((1 - d / md) * 0.34) + ")";
             ctx.lineWidth = dpr;
             ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(q.x, q.y);
-            ctx.stroke();
+            ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
           }
         }
-
         if (mouse.x !== null) {
           var mx = mouse.x * dpr, my = mouse.y * dpr;
-          var mdx = p.x - mx, mdy = p.y - my;
-          var dm = Math.sqrt(mdx * mdx + mdy * mdy);
+          var dmx = p.x - mx, dmy = p.y - my, dm = Math.sqrt(dmx * dmx + dmy * dmy);
           var reach = md * 1.5;
           if (dm < reach) {
-            ctx.strokeStyle = "rgba(" + GREEN + ", " + ((1 - dm / reach) * 0.55) + ")";
+            ctx.strokeStyle = "rgba(" + mouseLine + ", " + ((1 - dm / reach) * 0.55) + ")";
             ctx.lineWidth = dpr;
             ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(mx, my);
-            ctx.stroke();
+            ctx.moveTo(p.x, p.y); ctx.lineTo(mx, my); ctx.stroke();
           }
         }
       }
       raf = window.requestAnimationFrame(frame);
     }
 
-    resize();
-    seed();
-
-    var resizeT;
+    resize(); seed();
+    var rt;
     window.addEventListener("resize", function () {
-      window.clearTimeout(resizeT);
-      resizeT = window.setTimeout(function () { resize(); seed(); }, 200);
+      window.clearTimeout(rt);
+      rt = window.setTimeout(function () { resize(); seed(); }, 200);
     });
-
-    if (!small) {
-      window.addEventListener("mousemove", function (e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+    if (!small()) {
+      window.addEventListener("mousemove", function (e) {
+        if (sizeEl) {
+          var r = sizeEl.getBoundingClientRect();
+          if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) {
+            mouse.x = null; mouse.y = null; return;
+          }
+          mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
+        } else {
+          mouse.x = e.clientX; mouse.y = e.clientY;
+        }
+      });
       window.addEventListener("mouseout", function () { mouse.x = null; mouse.y = null; });
     }
-
-    // Pause when tab hidden (save CPU/battery)
     document.addEventListener("visibilitychange", function () {
-      if (document.hidden) {
-        if (raf) { window.cancelAnimationFrame(raf); raf = null; }
-      } else if (!raf) {
-        raf = window.requestAnimationFrame(frame);
-      }
+      if (document.hidden) { if (raf) { window.cancelAnimationFrame(raf); raf = null; } }
+      else if (!raf) { raf = window.requestAnimationFrame(frame); }
     });
-
     frame();
+  }
+
+  function initConstellation() {
+    // Site-wide subtle background on the light page
+    makeConstellation(document.getElementById("bg-constellation"), {
+      dot: "92, 180, 106", line: "3, 51, 51", mouseLine: "92, 180, 106"
+    });
+    // Hero-local network on the dark hero (light colors for contrast)
+    makeConstellation(document.getElementById("hero-constellation"), {
+      dot: "255, 255, 255", line: "104, 204, 108", mouseLine: "255, 255, 255",
+      sizeEl: document.querySelector(".hero-section")
+    });
   }
 
   onReady(function () {
