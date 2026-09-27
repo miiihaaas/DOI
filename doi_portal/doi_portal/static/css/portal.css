@@ -2853,13 +2853,32 @@ html.lenis, html.lenis body { height: auto; }
     z-index: 1;
 }
 
-/* Live connected-dots network across the whole hero (behind content) */
-#hero-constellation {
+/* Single large soft animated shape inside the hero (behind content) */
+.hero-orb {
     position: absolute;
-    inset: 0;
+    top: -25%;
+    right: -12%;
+    width: 62%;
+    height: 165%;
     z-index: 0;
     pointer-events: none;
-    border-radius: inherit;
+    background: radial-gradient(circle at 42% 42%,
+        rgba(104, 204, 108, 0.30) 0%,
+        rgba(104, 204, 108, 0.10) 45%,
+        transparent 70%);
+    filter: blur(42px);
+    border-radius: 50%;
+    animation: heroOrbFloat 26s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+@keyframes heroOrbFloat {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-26%, 16%) scale(1.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-orb { animation: none; }
 }
 
 .hero-content .hero-eyebrow {
@@ -3358,14 +3377,33 @@ html.lenis, html.lenis body { height: auto; }
    Animated connected-dots background (site-wide)
    =========================== */
 
-#bg-constellation {
+#bg-orb {
     position: fixed;
-    inset: 0;               /* fills the viewport without the 100vw scrollbar overflow */
+    top: 6%;
+    left: 10%;
+    width: 58vmax;
+    height: 58vmax;
     z-index: -1;            /* behind all content, above body background */
     pointer-events: none;
-    opacity: 0.9;
+    background: radial-gradient(circle at 38% 34%,
+        rgba(92, 180, 106, 0.16) 0%,
+        rgba(3, 51, 51, 0.06) 52%,
+        transparent 72%);
+    filter: blur(34px);
+    border-radius: 42% 58% 60% 40% / 45% 45% 55% 55%;
+    animation: orbFloat 32s ease-in-out infinite alternate;
+    will-change: transform, border-radius;
+}
+
+@keyframes orbFloat {
+    0%   { transform: translate(-8%, -6%) scale(1) rotate(0deg);
+           border-radius: 42% 58% 60% 40% / 45% 45% 55% 55%; }
+    50%  { transform: translate(22%, 16%) scale(1.18) rotate(9deg);
+           border-radius: 56% 44% 42% 58% / 55% 52% 48% 45%; }
+    100% { transform: translate(6%, 28%) scale(1.08) rotate(-6deg);
+           border-radius: 48% 52% 55% 45% / 50% 48% 52% 50%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    #bg-constellation { display: none !important; }
+    #bg-orb { animation: none; }
 }

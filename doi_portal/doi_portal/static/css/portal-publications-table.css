@@ -267,83 +267,52 @@
 }
 
 /* =====================================================================
-   SIDE MENU — TYPE NAVIGATION
+   TYPE NAVIGATION — HORIZONTAL TAB BAR
    ===================================================================== */
-.pub-type-nav {
-    background: #fff;
-    border: 1px solid var(--color-border);
-    border-radius: 14px;
-    box-shadow: var(--pub-shadow-rest);
-    padding: 0.75rem;
-    position: sticky;
-    top: 90px;
+.pub-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 1.25rem;
+    /* hide scrollbar (Firefox / IE) */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
-.pub-type-nav-title {
-    display: block;
-    padding: 0.5rem 0.85rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--color-text-secondary);
+.pub-tabs::-webkit-scrollbar {
+    display: none; /* hide scrollbar (WebKit) */
 }
 
-.pub-type-link {
-    position: relative;
-    display: flex;
+.pub-tab {
+    display: inline-flex;
     align-items: center;
-    gap: 0.7rem;
-    padding: 0.65rem 0.85rem;
-    border-radius: 10px;
-    color: var(--color-text-primary);
+    gap: 0.5rem;
+    padding: 0.7rem 1.1rem;
+    color: var(--color-text-secondary);
     font-weight: 600;
-    font-size: 0.92rem;
     text-decoration: none;
-    transition: background 0.16s ease, color 0.16s ease;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: color 0.16s ease, border-color 0.16s ease;
 }
-.pub-type-link i,
-.pub-type-link .bi {
+.pub-tab i,
+.pub-tab .bi {
     color: var(--color-primary);
     font-size: 1.05rem;
     flex-shrink: 0;
-    transition: color 0.16s ease;
 }
-.pub-type-link:hover,
-.pub-type-link:focus {
-    background: var(--pub-green-tint-10);
+.pub-tab:hover,
+.pub-tab:focus {
     color: var(--color-dark);
     text-decoration: none;
 }
 
-/* Active type — light green highlight (not a dark block) + green accent bar */
-.pub-type-link.active {
-    background: rgba(92, 180, 106, 0.14);
+/* Active tab — underline indicator (no vertical line, no dark block) */
+.pub-tab.active {
     color: var(--color-dark);
-    padding-left: 1.05rem;
-}
-.pub-type-link.active::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0.35rem;
-    bottom: 0.35rem;
-    width: 4px;
-    border-radius: 0 4px 4px 0;
-    background: var(--brand-gradient);
-}
-.pub-type-link.active i,
-.pub-type-link.active .bi {
-    color: var(--color-primary);
-}
-/* Count badge inside a type link (optional) */
-.pub-type-link .pub-type-count {
-    margin-left: auto;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--color-text-secondary);
-}
-.pub-type-link.active .pub-type-count {
-    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
 }
 
 /* =====================================================================
@@ -546,39 +515,8 @@
    RESPONSIVE
    ===================================================================== */
 
-/* Under 992px: side menu stacks above table (Bootstrap cols), un-stick.
-   Turn it into a compact horizontal scrolling row of chips so it doesn't
-   dominate the screen on tablets/phones. */
-@media (max-width: 991.98px) {
-    .pub-type-nav {
-        position: static;
-        top: auto;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        white-space: nowrap;
-    }
-    .pub-type-nav-title {
-        display: none;
-    }
-    .pub-type-link {
-        flex: 0 0 auto;
-        padding: 0.5rem 0.85rem;
-        border: 1px solid var(--color-border);
-        border-radius: 50px;
-        font-size: 0.85rem;
-    }
-    .pub-type-link.active {
-        padding-left: 0.85rem;
-    }
-    /* accent bar reads badly on a pill chip — drop it in the horizontal layout */
-    .pub-type-link.active::before {
-        display: none;
-    }
-}
+/* On narrow screens the tab bar keeps its horizontal-scroll behaviour
+   (defined on .pub-tabs above) so tabs never wrap or dominate the screen. */
 
 /* Under 768px: compact filter bar, side-scrolling table */
 @media (max-width: 767.98px) {

@@ -133,8 +133,49 @@
             {% endfor %}
         </tbody>
 
+        {% elif active_type == 'MONOGRAPH' %}
+        {# ---- MONOGRAPH: Naziv · Oblast · ISBN · Godina izdanja · Pristup · Izdavač · Autor/Autori · Broj radova · Jezik ---- #}
+        <thead>
+            <tr>
+                <th class="pub-th-name">Naziv publikacije</th>
+                <th>Oblast</th>
+                <th>ISBN</th>
+                <th>Godina izdanja</th>
+                <th>Pristup</th>
+                <th>Izdavač</th>
+                <th>Autor/Autori</th>
+                <th>Broj radova</th>
+                <th>Jezik</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for monograph in publications %}
+            <tr class="pub-row">
+                <td class="pub-name-cell">
+                    <span class="pub-row-icon">
+                        {% if monograph.cover_image %}<img src="{{ monograph.cover_image.url }}" alt="">{% else %}<i class="bi bi-book" aria-hidden="true"></i>{% endif %}
+                    </span>
+                    <a href="{% url 'portal-monographs:monograph-detail' monograph.pk %}" class="pub-row-name">{{ monograph.title }}</a>
+                </td>
+                <td class="pub-subject-cell" data-label="Oblast">—</td>
+                <td class="pub-idcell" data-label="ISBN"><span class="pub-idval">{{ monograph.isbn_print|default:monograph.isbn_online|default:"—" }}</span></td>
+                <td class="pub-year-cell" data-label="Godina izdanja">{{ monograph.year|default:"—" }}</td>
+                <td data-label="Pristup">
+                    {% if monograph.free_to_read %}<span class="access-pill access-open"><i class="bi bi-unlock" aria-hidden="true"></i>Otvoreni pristup</span>
+                    {% else %}<span class="access-pill access-restricted"><i class="bi bi-lock" aria-hidden="true"></i>Ograničeni pristup</span>{% endif %}
+                </td>
+                <td data-label="Izdavač">{% if monograph.publisher %}<a href="{% url 'portal:publisher-detail' monograph.publisher.slug %}" class="pub-publisher-link">{{ monograph.publisher.name }}</a>{% else %}—{% endif %}</td>
+                <td class="pub-author-cell" data-label="Autor/Autori">{% for c in monograph.contributors.all|slice:":3" %}{{ c.given_name }} {{ c.surname }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}{% if monograph.contributors.count > 3 %} i dr.{% endif %}</td>
+                <td data-label="Broj radova"><span class="pub-count-pill">{{ monograph.published_chapter_count }}</span></td>
+                <td class="pub-lang-cell" data-label="Jezik">{{ monograph.language|language_name|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Nema monografija koje odgovaraju kriterijumima.</p></div></td></tr>
+            {% endfor %}
+        </tbody>
+
         {% else %}
-        {# ---- GENERIC (mixed / all): Naziv · Vrsta · Oblast · Pristup · Izdavač · Jezik ---- #}
+        {# ---- GENERIC (combined all / mixed): unified rows (publikacije + monografije) ---- #}
         <thead>
             <tr>
                 <th class="pub-th-name">Naziv publikacije</th>
@@ -146,22 +187,20 @@
             </tr>
         </thead>
         <tbody>
-            {% for publication in publications %}
+            {% for row in publications %}
             <tr class="pub-row">
                 <td class="pub-name-cell">
-                    <span class="pub-row-icon">
-                        {% if publication.cover_image %}<img src="{{ publication.cover_image.url }}" alt="">{% else %}<i class="bi {{ publication.type_icon }}" aria-hidden="true"></i>{% endif %}
-                    </span>
-                    <a href="{% url 'portal-publications:publication-detail' slug=publication.slug %}" class="pub-row-name">{{ publication.title }}</a>
+                    <span class="pub-row-icon"><i class="bi {{ row.type_icon }}" aria-hidden="true"></i></span>
+                    <a href="{{ row.detail_url }}" class="pub-row-name">{{ row.name }}</a>
                 </td>
-                <td data-label="Vrsta"><span class="pub-type-tag">{{ publication.type_display }}</span></td>
-                <td class="pub-subject-cell" data-label="Oblast">{{ publication.subject_area|default:"—" }}</td>
+                <td data-label="Vrsta"><span class="pub-type-tag">{{ row.type_display }}</span></td>
+                <td class="pub-subject-cell" data-label="Oblast">{{ row.subject_area|default:"—" }}</td>
                 <td data-label="Pristup">
-                    {% if publication.access_type == 'OPEN' %}<span class="access-pill access-open"><i class="bi bi-unlock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>
-                    {% else %}<span class="access-pill access-restricted"><i class="bi bi-lock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>{% endif %}
+                    {% if row.is_open %}<span class="access-pill access-open"><i class="bi bi-unlock" aria-hidden="true"></i>{{ row.access_label }}</span>
+                    {% else %}<span class="access-pill access-restricted"><i class="bi bi-lock" aria-hidden="true"></i>{{ row.access_label }}</span>{% endif %}
                 </td>
-                <td data-label="Izdavač"><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
-                <td class="pub-lang-cell" data-label="Jezik">{{ publication.language|language_name|default:"—" }}</td>
+                <td data-label="Izdavač">{% if row.publisher_url %}<a href="{{ row.publisher_url }}" class="pub-publisher-link">{{ row.publisher_name }}</a>{% else %}{{ row.publisher_name|default:"—" }}{% endif %}</td>
+                <td class="pub-lang-cell" data-label="Jezik">{{ row.language|language_name|default:"—" }}</td>
             </tr>
             {% empty %}
             <tr><td colspan="6"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Nema publikacija koje odgovaraju kriterijumima.</p></div></td></tr>

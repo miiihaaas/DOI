@@ -358,6 +358,5 @@
     initReveal();
     initLenis();
     initSplitReveal();
-    initConstellation();
   });
 })();

@@ -15,6 +15,14 @@
     </p>
 </header>
 
+<nav class="pub-tabs" data-reveal aria-label="Vrste publikacija">
+    <a class="pub-tab{% if not current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}"><i class="bi bi-collection" aria-hidden="true"></i>Sve publikacije</a>
+    <a class="pub-tab{% if 'JOURNAL' in current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}?type=JOURNAL"><i class="bi bi-journal-text" aria-hidden="true"></i>Časopisi</a>
+    <a class="pub-tab{% if 'CONFERENCE' in current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}?type=CONFERENCE"><i class="bi bi-people" aria-hidden="true"></i>Zbornici</a>
+    <a class="pub-tab{% if 'MONOGRAPH' in current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}?type=MONOGRAPH"><i class="bi bi-book" aria-hidden="true"></i>Monografije</a>
+    <a class="pub-tab{% if 'OTHER' in current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}?type=OTHER"><i class="bi bi-file-earmark" aria-hidden="true"></i>Ostalo</a>
+</nav>
+
 <form class="pub-filter-bar" method="get" role="search" data-reveal>
     <div class="pub-search">
         <i class="bi bi-search" aria-hidden="true"></i>
@@ -111,21 +119,7 @@
     </div>
 </form>
 
-<div class="row g-4">
-    <aside class="col-lg-3">
-        <nav class="pub-type-nav" data-reveal aria-label="Vrste publikacija">
-            <p class="pub-type-nav-title">Vrste publikacija</p>
-            <a class="pub-type-link{% if not current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}"><i class="bi bi-collection" aria-hidden="true"></i>Sve publikacije</a>
-            <a class="pub-type-link{% if 'JOURNAL' in current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}?type=JOURNAL"><i class="bi bi-journal-text" aria-hidden="true"></i>Časopisi</a>
-            <a class="pub-type-link{% if 'CONFERENCE' in current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}?type=CONFERENCE"><i class="bi bi-people" aria-hidden="true"></i>Zbornici</a>
-            <a class="pub-type-link" href="{% url 'portal-monographs:monograph-list' %}"><i class="bi bi-book" aria-hidden="true"></i>Monografije</a>
-            <a class="pub-type-link{% if 'OTHER' in current_types %} active{% endif %}" href="{% url 'portal-publications:publication-list' %}?type=OTHER"><i class="bi bi-file-earmark" aria-hidden="true"></i>Ostalo</a>
-        </nav>
-    </aside>
-    <section class="col-lg-9" data-reveal data-reveal-delay="1">
-        <div id="publication-results" aria-live="polite">
-            {% include "portal/publications/partials/_publication_grid.html" %}
-        </div>
-    </section>
+<div id="publication-results" aria-live="polite" data-reveal data-reveal-delay="1">
+    {% include "portal/publications/partials/_publication_grid.html" %}
 </div>
 {% endblock portal_content %}

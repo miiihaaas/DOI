@@ -164,9 +164,59 @@ class PublisherPublicDetailView(DetailView):
 # =============================================================================
 
 
+def _unified_pub_row(publication):
+    """Normalize a Publication into a generic table row (for the combined list)."""
+    return {
+        "name": publication.title,
+        "detail_url": reverse(
+            "portal-publications:publication-detail",
+            kwargs={"slug": publication.slug},
+        ),
+        "type_display": publication.type_display,
+        "type_icon": publication.type_icon,
+        "subject_area": publication.subject_area or "",
+        "is_open": publication.access_type == AccessType.OPEN,
+        "access_label": publication.get_access_type_display(),
+        "publisher_name": publication.publisher.name,
+        "publisher_url": reverse(
+            "portal:publisher-detail", kwargs={"slug": publication.publisher.slug}
+        ),
+        "language": publication.language or "",
+        "sort_key": (publication.title or "").lower(),
+    }
+
+
+def _unified_mono_row(monograph):
+    """Normalize a Monograph into a generic table row (for the combined list)."""
+    publisher = monograph.publisher
+    return {
+        "name": monograph.title,
+        "detail_url": reverse(
+            "portal-monographs:monograph-detail", kwargs={"pk": monograph.pk}
+        ),
+        "type_display": "Monografija",
+        "type_icon": "bi-book",
+        "subject_area": "",
+        "is_open": bool(monograph.free_to_read),
+        "access_label": "Otvoreni pristup" if monograph.free_to_read else "Ograničeni pristup",
+        "publisher_name": publisher.name if publisher else "",
+        "publisher_url": (
+            reverse("portal:publisher-detail", kwargs={"slug": publisher.slug})
+            if publisher and publisher.slug
+            else ""
+        ),
+        "language": monograph.language or "",
+        "sort_key": (monograph.title or "").lower(),
+    }
+
+
 class PublicationPublicListView(ListView):
     """
-    Public listing of all active publications with filters.
+    Public listing of all publications with filters.
+
+    "Publikacija" is the umbrella term for everything on the portal, so the
+    default (unfiltered) list combines Publications AND Monographs. Selecting a
+    single type shows that type's specific columns.
 
     FR17: Posetilac moze pregledati listu svih publikacija sa filterima.
     FR40: Posetilac moze filtrirati publikacije po vrsti, oblasti, pristupu, jeziku.
@@ -177,44 +227,59 @@ class PublicationPublicListView(ListView):
     context_object_name = "publications"
     paginate_by = 12
 
-    def get_queryset(self):
-        """Return filtered queryset of active publications."""
-        queryset = Publication.objects.select_related("publisher").order_by("title")
+    MONOGRAPH_TYPE = "MONOGRAPH"
 
-        # Filter by type (multi-select checkboxes - AC #2)
-        pub_types = self.request.GET.getlist("type")
-        valid_types = [t for t in pub_types if t in [c[0] for c in PublicationType.choices]]
-        if valid_types:
-            queryset = queryset.filter(publication_type__in=valid_types)
+    def _valid_pub_types(self):
+        return {c[0] for c in PublicationType.choices}
 
-        # Filter by subject area (multi-select checkboxes)
+    def _selected_types(self):
+        valid = self._valid_pub_types() | {self.MONOGRAPH_TYPE}
+        return [t for t in self.request.GET.getlist("type") if t in valid]
+
+    def _pub_only_filters_active(self):
+        """True when a publication-only facet filter (subject/access/language) is set."""
+        return bool(
+            self.request.GET.getlist("subject")
+            or self.request.GET.getlist("access")
+            or self.request.GET.getlist("language")
+        )
+
+    def get_active_type(self):
+        types = self._selected_types()
+        return types[0] if len(types) == 1 else None
+
+    def _publications_qs(self):
+        qs = Publication.objects.select_related("publisher").order_by("title")
+
+        pub_types = [
+            t for t in self.request.GET.getlist("type") if t in self._valid_pub_types()
+        ]
+        if pub_types:
+            qs = qs.filter(publication_type__in=pub_types)
+
         subjects = self.request.GET.getlist("subject")
         if subjects:
-            queryset = queryset.filter(subject_area__in=subjects)
+            qs = qs.filter(subject_area__in=subjects)
 
-        # Filter by access type (multi-select checkboxes)
-        access_values = self.request.GET.getlist("access")
-        valid_access = [a for a in access_values if a in [c[0] for c in AccessType.choices]]
-        if valid_access:
-            queryset = queryset.filter(access_type__in=valid_access)
+        access_values = [
+            a for a in self.request.GET.getlist("access")
+            if a in [c[0] for c in AccessType.choices]
+        ]
+        if access_values:
+            qs = qs.filter(access_type__in=access_values)
 
-        # Filter by language (multi-select checkboxes)
         languages = self.request.GET.getlist("language")
         if languages:
-            queryset = queryset.filter(language__in=languages)
+            qs = qs.filter(language__in=languages)
 
-        # Search by publication title OR publisher name
-        search = self.request.GET.get("search")
+        search = (self.request.GET.get("search") or "").strip()
         if search:
-            queryset = queryset.filter(
+            qs = qs.filter(
                 models.Q(title__icontains=search)
                 | models.Q(publisher__name__icontains=search)
             )
 
-        # Derived columns for the type-specific tables:
-        #  - broj radova (published articles across the publication's issues)
-        #  - prvo/poslednje objavljivanje (min/max issue year)
-        queryset = queryset.annotate(
+        qs = qs.annotate(
             published_article_count=models.Count(
                 "issues__articles",
                 filter=models.Q(issues__articles__status=ArticleStatus.PUBLISHED),
@@ -223,12 +288,60 @@ class PublicationPublicListView(ListView):
             first_year=models.Min("issues__year"),
             last_year=models.Max("issues__year"),
         )
-
-        # Alphabetical sorting by name
         sort = self.request.GET.get("sort", "name")
-        queryset = queryset.order_by("-title" if sort == "-name" else "title")
+        return qs.order_by("-title" if sort == "-name" else "title")
 
-        return queryset
+    def _monographs_qs(self):
+        qs = (
+            Monograph.objects.filter(status=MonographStatus.PUBLISHED)
+            .select_related("publisher")
+            .prefetch_related("contributors")
+            .annotate(
+                published_chapter_count=models.Count(
+                    "chapters",
+                    filter=models.Q(chapters__status=MonographStatus.PUBLISHED),
+                    distinct=True,
+                )
+            )
+        )
+        search = (self.request.GET.get("search") or "").strip()
+        if search:
+            qs = qs.filter(
+                models.Q(title__icontains=search)
+                | models.Q(publisher__name__icontains=search)
+            )
+        sort = self.request.GET.get("sort", "name")
+        return qs.order_by("-title" if sort == "-name" else "title")
+
+    def get_queryset(self):
+        active = self.get_active_type()
+
+        # Single publication type -> that type's specific columns (real objects)
+        if active in self._valid_pub_types():
+            return self._publications_qs()
+        # Single "Monografija" type -> monograph columns (real Monograph objects)
+        if active == self.MONOGRAPH_TYPE:
+            return self._monographs_qs()
+
+        # Combined / all / multi-select -> unified generic rows (pubs + monographs)
+        types = self._selected_types()
+        pub_types = [t for t in types if t in self._valid_pub_types()]
+        want_pubs = bool(pub_types) or not types
+        want_monographs = (
+            (self.MONOGRAPH_TYPE in types) or (not types)
+        ) and not self._pub_only_filters_active()
+
+        rows = []
+        if want_pubs:
+            rows.extend(_unified_pub_row(p) for p in self._publications_qs())
+        if want_monographs:
+            rows.extend(_unified_mono_row(m) for m in self._monographs_qs())
+
+        rows.sort(
+            key=lambda r: r["sort_key"],
+            reverse=self.request.GET.get("sort", "name") == "-name",
+        )
+        return rows
 
     def get_template_names(self):
         """Return partial template for HTMX requests."""
@@ -263,10 +376,15 @@ class PublicationPublicListView(ListView):
             "language", Publication.objects.exclude(language="")
         )
 
-        # Option lists WITH counts for the accordion filter sidebar
+        # Option lists WITH counts. "Monografija" is a type too (monographs are
+        # publications in the umbrella sense), inserted between Zbornik and Ostalo.
+        mono_count = Monograph.objects.filter(status=MonographStatus.PUBLISHED).count()
+        pub_labels = dict(PublicationType.choices)
         context["type_options"] = [
-            {"value": value, "label": label, "count": type_counts.get(value, 0)}
-            for value, label in PublicationType.choices
+            {"value": PublicationType.JOURNAL, "label": pub_labels[PublicationType.JOURNAL], "count": type_counts.get(PublicationType.JOURNAL, 0)},
+            {"value": PublicationType.CONFERENCE, "label": pub_labels[PublicationType.CONFERENCE], "count": type_counts.get(PublicationType.CONFERENCE, 0)},
+            {"value": self.MONOGRAPH_TYPE, "label": "Monografija", "count": mono_count},
+            {"value": PublicationType.OTHER, "label": pub_labels[PublicationType.OTHER], "count": type_counts.get(PublicationType.OTHER, 0)},
         ]
         context["access_options"] = [
             {"value": value, "label": label, "count": access_counts.get(value, 0)}
@@ -300,10 +418,9 @@ class PublicationPublicListView(ListView):
         ]
 
         # When exactly one type is selected, the table shows that type's
-        # specific columns (Časopisi / Zbornici / Ostalo); otherwise a
-        # generic column set.
-        types = context["current_types"]
-        context["active_type"] = types[0] if len(types) == 1 else None
+        # specific columns (Časopisi / Zbornici / Monografije / Ostalo);
+        # otherwise a generic (combined) column set.
+        context["active_type"] = self.get_active_type()
 
         # Convenience: any filter active?
         context["has_active_filters"] = bool(

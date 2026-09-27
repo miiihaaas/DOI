@@ -4,6 +4,17 @@
    adds only monograph-specific tweaks.
    ===================================================================== */
 
+/* Full-width results section (replaces the old two-column row/aside layout).
+   The tab bar now spans the top, and the table uses the whole container. */
+.pub-results-full {
+    width: 100%;
+}
+
+.pub-results-full .pub-table-wrap,
+.pub-results-full .pub-table {
+    width: 100%;
+}
+
 /* Small green count pill for "Broj radova" (published chapters). */
 .mono-count-pill {
     display: inline-flex;
