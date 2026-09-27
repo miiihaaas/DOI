@@ -180,8 +180,35 @@ h3 { font-size: clamp(1.35rem, 1.8vw, 1.6rem); line-height: 1.35; }
 .portal-header .navbar-cta,
 .portal-header .navbar-brand,
 .portal-header .dropdown-item,
-.portal-header .navbar-toggler {
+.portal-header .navbar-toggler,
+.portal-header .nav-link *,
+.portal-header .dropdown-toggle {
     -webkit-tap-highlight-color: transparent;
+}
+
+/* In the collapsed mobile menu, tapping a link must not show an outline/box */
+@media (max-width: 991.98px) {
+    .portal-header .navbar-collapse .nav-link,
+    .portal-header .navbar-collapse .dropdown-item,
+    .portal-header .navbar-cta {
+        -webkit-tap-highlight-color: transparent;
+    }
+    .portal-header .navbar-collapse .nav-link:focus,
+    .portal-header .navbar-collapse .nav-link:focus-visible,
+    .portal-header .navbar-collapse .nav-link:active,
+    .portal-header .navbar-collapse .dropdown-item:focus,
+    .portal-header .navbar-collapse .dropdown-item:active,
+    .portal-header .navbar-cta:focus,
+    .portal-header .navbar-cta:focus-visible,
+    .portal-header .navbar-cta:active {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    /* the active underline bar reads as a stray rectangle in the vertical
+       collapsed menu — hide it there, the color already marks the active item */
+    .portal-header .navbar-collapse .nav-link.active::before {
+        display: none;
+    }
 }
 
 /* Hamburger icon - white */
@@ -2474,10 +2501,21 @@ html.lenis, html.lenis body { height: auto; }
     width: 100%;
     justify-content: center;
     font-size: 0.95rem;
+    font-weight: 600;
     letter-spacing: normal;
-    padding: 0.6rem 1.1rem;
-    box-shadow: 0 6px 16px -8px rgba(92, 180, 106, 0.5);
+    padding: 0.62rem 1.1rem;
+    box-shadow: none;
+    transform: none;
 }
+
+.footer-newsletter .btn-doi:hover,
+.footer-newsletter .btn-doi:focus-visible {
+    transform: none;
+    box-shadow: none;
+    filter: brightness(112%);
+}
+
+.footer-newsletter .newsletter-field { display: block; }
 
 @media (max-width: 575.98px) {
     .portal-footer-bottom .container { justify-content: center; text-align: center; }
@@ -3194,10 +3232,11 @@ html.lenis, html.lenis body { height: auto; }
 .article-more:hover i { transform: translateX(2px); }
 
 /* Keep the "Opširnije" button clearly visible when the whole card is hovered */
-.article-card:hover .article-more {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-    color: #fff;
+.article-card:hover .article-more,
+.article-more:hover {
+    background: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: #fff !important;
     box-shadow: var(--brand-glow);
 }
 
@@ -3304,4 +3343,20 @@ html.lenis, html.lenis body { height: auto; }
 
 @media (min-width: 992px) {
     .prefooter-cta { padding: 1rem 0 4.5rem; }
+}
+
+/* ===========================
+   Animated connected-dots background (site-wide)
+   =========================== */
+
+#bg-constellation {
+    position: fixed;
+    inset: 0;               /* fills the viewport without the 100vw scrollbar overflow */
+    z-index: -1;            /* behind all content, above body background */
+    pointer-events: none;
+    opacity: 0.9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #bg-constellation { display: none !important; }
 }

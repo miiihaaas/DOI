@@ -24,6 +24,9 @@
                hx-target="#publication-results" hx-include="[name='type'],[name='subject'],[name='access'],[name='language'],[name='sort']" hx-replace-url="true">
     </div>
 
+    <button class="pub-filter-toggle-mobile" type="button" data-bs-toggle="collapse" data-bs-target="#pubFilters" aria-expanded="false" aria-controls="pubFilters"><i class="bi bi-funnel" aria-hidden="true"></i> Filteri</button>
+
+    <div class="pub-filter-collapse collapse" id="pubFilters">
     <!-- Vrsta -->
     <div class="pub-filter dropdown">
         <button class="pub-filter-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
@@ -105,6 +108,7 @@
     {% if has_active_filters %}
     <a href="{% url 'portal-publications:publication-list' %}" class="pub-filter-reset"><i class="bi bi-x-circle" aria-hidden="true"></i> Obriši filtere</a>
     {% endif %}
+    </div>
 </form>
 
 <div class="row g-4">

@@ -1169,7 +1169,7 @@ Ova poruka je automatski poslata sa DOI Portal kontakt forme.
             )
             messages.success(
                 self.request,
-                "Hvala vam na poruci! Odgovorićemo u najkraćem mogućem roku."
+                "Hvala Vam na poruci! Odgovorićemo u najkraćem mogućem roku."
             )
         except (OSError, smtplib.SMTPException) as e:
             logger.error(f"Contact form email failed: {e}")

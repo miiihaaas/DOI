@@ -158,3 +158,23 @@
         flex-direction: column;
     }
 }
+
+/* =====================================================================
+   MONOGRAPHS LIST — mobile stacked cards (label-per-cell pattern)
+   Mirrors the responsive approach used for the Publications table.
+   Mobile-only: desktop layout is unchanged.
+   ===================================================================== */
+@media (max-width: 640px) {
+    .pub-table-wrap { overflow: visible; border: none; background: transparent; box-shadow: none; border-radius: 0; }
+    .pub-table { min-width: 0; width: 100%; }
+    .pub-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .pub-table tbody, .pub-table tr, .pub-table td { display: block; width: 100%; }
+    .pub-table tr.pub-row { background:#fff; border:1px solid var(--color-border); border-radius:12px; margin-bottom:0.85rem; padding:0.85rem 1rem; box-shadow:0 0 30px 3px rgba(3,51,51,0.04); }
+    .pub-table td { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.4rem 0; border:none; text-align:right; }
+    .pub-table td::before { content: attr(data-label); font-weight:700; font-size:0.78rem; color:var(--color-text-secondary); text-align:left; flex-shrink:0; }
+    .pub-table td.pub-name-cell { border-bottom:1px solid var(--color-border-subtle); padding-bottom:0.7rem; margin-bottom:0.4rem; text-align:left; }
+    .pub-table td.pub-name-cell::before { display:none; }
+    .pub-table td:last-child { padding-bottom:0; }
+    .pub-table td[colspan] { display:block; text-align:center; }
+    .pub-table td[colspan]::before { display:none; }
+}

@@ -30,18 +30,18 @@
                     </span>
                     <a href="{% url 'portal-publications:publication-detail' slug=publication.slug %}" class="pub-row-name">{{ publication.title }}</a>
                 </td>
-                <td class="pub-subject-cell">{{ publication.subject_area|default:"—" }}</td>
-                <td class="pub-idcell">
+                <td class="pub-subject-cell" data-label="Oblast">{{ publication.subject_area|default:"—" }}</td>
+                <td class="pub-idcell" data-label="ISSN / eISSN">
                     <span class="pub-idrow"><span class="pub-idlabel">ISSN</span><span class="pub-idval">{{ publication.issn_print|default:"—" }}</span></span>
                     <span class="pub-idrow"><span class="pub-idlabel">eISSN</span><span class="pub-idval">{{ publication.issn_online|default:"—" }}</span></span>
                 </td>
-                <td class="pub-year-cell">{{ publication.first_year|default:"—" }}</td>
-                <td>
+                <td class="pub-year-cell" data-label="Prvo objavljivanje">{{ publication.first_year|default:"—" }}</td>
+                <td data-label="Pristup">
                     {% if publication.access_type == 'OPEN' %}<span class="access-pill access-open"><i class="bi bi-unlock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>
                     {% else %}<span class="access-pill access-restricted"><i class="bi bi-lock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>{% endif %}
                 </td>
-                <td><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
-                <td class="pub-lang-cell">{{ publication.language|language_name|default:"—" }}</td>
+                <td data-label="Izdavač"><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
+                <td class="pub-lang-cell" data-label="Jezik">{{ publication.language|language_name|default:"—" }}</td>
             </tr>
             {% empty %}
             <tr><td colspan="7"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Nema publikacija koje odgovaraju kriterijumima.</p></div></td></tr>
@@ -72,20 +72,20 @@
                     </span>
                     <a href="{% url 'portal-publications:publication-detail' slug=publication.slug %}" class="pub-row-name">{{ publication.title }}</a>
                 </td>
-                <td class="pub-subject-cell">{{ publication.subject_area|default:"—" }}</td>
-                <td class="pub-idcell">
+                <td class="pub-subject-cell" data-label="Oblast">{{ publication.subject_area|default:"—" }}</td>
+                <td class="pub-idcell" data-label="ISBN / ISSN">
                     <span class="pub-idrow"><span class="pub-idlabel">ISBN</span><span class="pub-idval">—</span></span>
                     <span class="pub-idrow"><span class="pub-idlabel">ISSN</span><span class="pub-idval">{{ publication.series_issn|default:publication.issn_print|default:"—" }}</span></span>
                 </td>
-                <td class="pub-year-cell">{{ publication.last_year|default:"—" }}</td>
-                <td>
+                <td class="pub-year-cell" data-label="Godina izdanja">{{ publication.last_year|default:"—" }}</td>
+                <td data-label="Pristup">
                     {% if publication.access_type == 'OPEN' %}<span class="access-pill access-open"><i class="bi bi-unlock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>
                     {% else %}<span class="access-pill access-restricted"><i class="bi bi-lock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>{% endif %}
                 </td>
-                <td><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
-                <td class="pub-editor-cell">—</td>
-                <td><span class="pub-count-pill">{{ publication.published_article_count }}</span></td>
-                <td class="pub-lang-cell">{{ publication.language|language_name|default:"—" }}</td>
+                <td data-label="Izdavač"><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
+                <td class="pub-editor-cell" data-label="Urednik/Urednici">—</td>
+                <td data-label="Broj radova"><span class="pub-count-pill">{{ publication.published_article_count }}</span></td>
+                <td class="pub-lang-cell" data-label="Jezik">{{ publication.language|language_name|default:"—" }}</td>
             </tr>
             {% empty %}
             <tr><td colspan="9"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Nema publikacija koje odgovaraju kriterijumima.</p></div></td></tr>
@@ -116,17 +116,17 @@
                     </span>
                     <a href="{% url 'portal-publications:publication-detail' slug=publication.slug %}" class="pub-row-name">{{ publication.title }}</a>
                 </td>
-                <td class="pub-subtype-cell">—</td>
-                <td class="pub-subject-cell">{{ publication.subject_area|default:"—" }}</td>
-                <td class="pub-idcell"><span class="pub-idval">—</span></td>
-                <td class="pub-year-cell">{{ publication.last_year|default:"—" }}</td>
-                <td>
+                <td class="pub-subtype-cell" data-label="Tip publikacije">—</td>
+                <td class="pub-subject-cell" data-label="Oblast">{{ publication.subject_area|default:"—" }}</td>
+                <td class="pub-idcell" data-label="ISBN"><span class="pub-idval">—</span></td>
+                <td class="pub-year-cell" data-label="Godina izdanja">{{ publication.last_year|default:"—" }}</td>
+                <td data-label="Pristup">
                     {% if publication.access_type == 'OPEN' %}<span class="access-pill access-open"><i class="bi bi-unlock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>
                     {% else %}<span class="access-pill access-restricted"><i class="bi bi-lock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>{% endif %}
                 </td>
-                <td><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
-                <td class="pub-author-cell">—</td>
-                <td class="pub-lang-cell">{{ publication.language|language_name|default:"—" }}</td>
+                <td data-label="Izdavač"><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
+                <td class="pub-author-cell" data-label="Autor/Autori">—</td>
+                <td class="pub-lang-cell" data-label="Jezik">{{ publication.language|language_name|default:"—" }}</td>
             </tr>
             {% empty %}
             <tr><td colspan="9"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Nema publikacija koje odgovaraju kriterijumima.</p></div></td></tr>
@@ -154,14 +154,14 @@
                     </span>
                     <a href="{% url 'portal-publications:publication-detail' slug=publication.slug %}" class="pub-row-name">{{ publication.title }}</a>
                 </td>
-                <td><span class="pub-type-tag">{{ publication.type_display }}</span></td>
-                <td class="pub-subject-cell">{{ publication.subject_area|default:"—" }}</td>
-                <td>
+                <td data-label="Vrsta"><span class="pub-type-tag">{{ publication.type_display }}</span></td>
+                <td class="pub-subject-cell" data-label="Oblast">{{ publication.subject_area|default:"—" }}</td>
+                <td data-label="Pristup">
                     {% if publication.access_type == 'OPEN' %}<span class="access-pill access-open"><i class="bi bi-unlock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>
                     {% else %}<span class="access-pill access-restricted"><i class="bi bi-lock" aria-hidden="true"></i>{{ publication.get_access_type_display }}</span>{% endif %}
                 </td>
-                <td><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
-                <td class="pub-lang-cell">{{ publication.language|language_name|default:"—" }}</td>
+                <td data-label="Izdavač"><a href="{% url 'portal:publisher-detail' publication.publisher.slug %}" class="pub-publisher-link">{{ publication.publisher.name }}</a></td>
+                <td class="pub-lang-cell" data-label="Jezik">{{ publication.language|language_name|default:"—" }}</td>
             </tr>
             {% empty %}
             <tr><td colspan="6"><div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Nema publikacija koje odgovaraju kriterijumima.</p></div></td></tr>

@@ -629,3 +629,118 @@
         min-width: 200px;
     }
 }
+
+/* =====================================================================
+   MOBILE FILTER COLLAPSE (search stays visible; filters behind a toggle)
+   ===================================================================== */
+/* Toggle button is hidden everywhere except on narrow screens */
+.pub-filter-toggle-mobile {
+    display: none;
+}
+
+/* DESKTOP & TABLET (>= 641px): the collapse wrapper is always open and inline,
+   so the filter bar looks and behaves exactly as before. */
+@media (min-width: 641px) {
+    .pub-filter-collapse {
+        display: flex !important;
+        height: auto !important;
+        visibility: visible !important;
+        overflow: visible;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .pub-filter-toggle-mobile {
+        display: none !important;
+    }
+}
+
+/* MOBILE (<= 640px): show the toggle, let Bootstrap collapse the filters. */
+@media (max-width: 640px) {
+    .pub-filter-toggle-mobile {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        flex: 1 1 100%;
+        width: 100%;
+        background: #fff;
+        border: 2px solid var(--color-border);
+        border-radius: 50px;
+        padding: 0.5rem 1.1rem;
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .pub-filter-toggle-mobile:hover,
+    .pub-filter-toggle-mobile:focus,
+    .pub-filter-toggle-mobile[aria-expanded="true"] {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: var(--pub-focus-ring);
+    }
+    .pub-filter-toggle-mobile .bi {
+        color: var(--color-primary);
+    }
+
+    /* The collapse spans full width and stacks its filters; never clip menus. */
+    .pub-filter-collapse {
+        flex: 1 1 100%;
+        width: 100%;
+        overflow: visible;
+    }
+    .pub-filter-collapse.show,
+    .pub-filter-collapse.collapsing {
+        margin-top: 0.5rem;
+    }
+    .pub-filter-collapse .pub-filter,
+    .pub-filter-collapse .pub-sort {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    .pub-filter-collapse .pub-filter:last-child,
+    .pub-filter-collapse .pub-sort:last-child {
+        margin-bottom: 0;
+    }
+    .pub-filter-collapse .pub-filter-toggle,
+    .pub-filter-collapse .pub-sort .form-select {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .pub-filter-collapse .pub-filter-reset {
+        width: 100%;
+        justify-content: center;
+        margin-top: 0.25rem;
+    }
+    /* Dropdown menu drops full-width under its toggle instead of overflowing. */
+    .pub-filter-collapse .pub-filter-menu {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+}
+
+/* =====================================================================
+   MOBILE (<= 640px): TABLE → STACKED CARDS (label-per-cell)
+   ===================================================================== */
+@media (max-width: 640px) {
+    .pub-table-wrap { overflow: visible; border: none; background: transparent; box-shadow: none; border-radius: 0; }
+    .pub-table { min-width: 0; width: 100%; }
+    .pub-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .pub-table tbody, .pub-table tr, .pub-table td { display: block; width: 100%; }
+    .pub-table tr.pub-row { background: #fff; border: 1px solid var(--color-border); border-radius: 12px; margin-bottom: 0.85rem; padding: 0.85rem 1rem; box-shadow: 0 0 30px 3px rgba(3,51,51,0.04); }
+    /* keep the last card's full border + bottom padding (base removes them) */
+    .pub-table tbody tr:last-child.pub-row { border-bottom: 1px solid var(--color-border); margin-bottom: 0; }
+    .pub-table td { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; border: none; text-align: right; }
+    .pub-table td::before { content: attr(data-label); font-weight: 700; font-size: 0.78rem; color: var(--color-text-secondary); text-align: left; flex-shrink: 0; }
+    /* Naziv becomes the card header: icon + name, no label */
+    .pub-table td.pub-name-cell { justify-content: flex-start; min-width: 0; border-bottom: 1px solid var(--color-border-subtle); padding-bottom: 0.7rem; margin-bottom: 0.4rem; text-align: left; }
+    .pub-table td.pub-name-cell::before { display: none; }
+    .pub-table td:last-child { padding-bottom: 0; }
+    /* the empty-state row must span normally */
+    .pub-table td[colspan] { display: block; text-align: center; }
+    .pub-table td[colspan]::before { display: none; }
+}
