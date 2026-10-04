@@ -30,43 +30,68 @@
     ball.id = "cursor-ball";
     ball.setAttribute("aria-hidden", "true");
     document.body.appendChild(ball);
-    document.body.classList.add("has-cursor-ball");
 
-    var mouseX = window.innerWidth / 2;
-    var mouseY = window.innerHeight / 2;
-    var ballX = mouseX;
-    var ballY = mouseY;
+    var mouseX = 0;
+    var mouseY = 0;
+    var ballX = 0;
+    var ballY = 0;
     var visible = false;
+    var running = false;
+    var lastTime = 0;
+    // Time constant of the follow easing (ms). ~18ms == lerp 0.6 per 60Hz frame:
+    // the ring sits practically on the pointer with a barely visible glide
+    // (doi.rs: GSAP ratio 0.99 + 0.08s tween). Frame-rate independent.
+    var FOLLOW_TAU = 18;
+
+    function place() {
+      ball.style.transform = "translate3d(" + ballX + "px, " + ballY + "px, 0)";
+    }
+
+    function frame(now) {
+      var dt = Math.min(now - lastTime, 50);
+      lastTime = now;
+      var k = 1 - Math.exp(-dt / FOLLOW_TAU);
+      ballX += (mouseX - ballX) * k;
+      ballY += (mouseY - ballY) * k;
+      if (Math.abs(mouseX - ballX) < 0.1 && Math.abs(mouseY - ballY) < 0.1) {
+        ballX = mouseX;
+        ballY = mouseY;
+        place();
+        running = false; // settled: stop until the next mousemove
+        return;
+      }
+      place();
+      window.requestAnimationFrame(frame);
+    }
 
     document.addEventListener("mousemove", function (e) {
       mouseX = e.clientX;
       mouseY = e.clientY;
       if (!visible) {
+        // (Re)appear directly under the pointer instead of flying in
         visible = true;
+        ballX = mouseX;
+        ballY = mouseY;
+        place();
         ball.style.opacity = "1";
       }
-    });
+      if (!running) {
+        running = true;
+        lastTime = window.performance.now();
+        window.requestAnimationFrame(frame);
+      }
+    }, { passive: true });
 
-    document.addEventListener("mouseleave", function () {
+    document.documentElement.addEventListener("mouseleave", function () {
       ball.style.opacity = "0";
       visible = false;
     });
 
-    var interactiveSel = 'a, button, input, textarea, select, label, [role="button"], .stat-card, .publication-card, .quick-link-card, .publisher-card';
+    var interactiveSel = 'a, button, input, textarea, select, label, [role="button"], .stat-card, .publication-card, .publisher-card';
     document.addEventListener("mouseover", function (e) {
-      if (e.target.closest(interactiveSel)) ball.classList.add("is-active");
+      var t = e.target;
+      ball.classList.toggle("is-active", !!(t && t.closest && t.closest(interactiveSel)));
     });
-    document.addEventListener("mouseout", function (e) {
-      if (e.target.closest(interactiveSel)) ball.classList.remove("is-active");
-    });
-
-    (function raf() {
-      // Smooth trailing (lerp)
-      ballX += (mouseX - ballX) * 0.18;
-      ballY += (mouseY - ballY) * 0.18;
-      ball.style.transform = "translate(" + ballX + "px, " + ballY + "px) translate(-50%, -50%)";
-      window.requestAnimationFrame(raf);
-    })();
   }
 
   /* ---------------------------------------------------------------

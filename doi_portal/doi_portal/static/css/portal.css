@@ -2149,58 +2149,58 @@ mark {
     position: fixed;
     top: 0;
     left: 0;
-    width: 38px;
-    height: 38px;
-    border: 1px solid rgba(3, 51, 51, 0.28);
-    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;      /* centre on the pointer; JS only writes translate() */
     pointer-events: none;
-    box-sizing: border-box;
-    transform: translate(-50%, -50%);
     z-index: 999999;
-    transition: width 0.25s ease, height 0.25s ease,
-                background-color 0.25s ease, border-color 0.25s ease;
-    mix-blend-mode: normal;
+    opacity: 0;                   /* shown by JS on first mousemove */
+    transition: opacity 0.2s ease;
+    will-change: transform;
 }
 
+/* Ring + dot live on pseudo-elements so their scale can transition smoothly
+   while the host's inline transform (position) stays un-transitioned. */
+#cursor-ball::before,
 #cursor-ball::after {
     content: '';
     position: absolute;
+    border-radius: 50%;
+    transition: transform 0.3s ease, opacity 0.3s ease,
+                background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Neutral mid-grey: readable on white sections and on the dark hero/footer */
+#cursor-ball::before {
+    inset: 0;
+    box-sizing: border-box;
+    border: 1px solid rgba(156, 156, 156, 0.5);
+    background-color: transparent;
+}
+
+#cursor-ball::after {
     left: 50%;
     top: 50%;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
+    width: 3px;
+    height: 3px;
+    margin: -1.5px 0 0 -1.5px;
     background: var(--color-primary);
-    transform: translate(-50%, -50%);
-    transition: transform 0.25s ease;
 }
 
-/* Grow + green tint when hovering interactive elements */
-#cursor-ball.is-active {
-    width: 56px;
-    height: 56px;
-    border-color: rgba(92, 180, 106, 0.7);
-    background-color: rgba(92, 180, 106, 0.1);
+/* Hover on interactive elements: bigger, grey, semi-transparent (doi.rs) */
+#cursor-ball.is-active::before {
+    transform: scale(1.7);
+    border-color: rgba(156, 156, 156, 0.25);
+    background-color: rgba(156, 156, 156, 0.22);
 }
 
-#cursor-ball.is-active::after { transform: translate(-50%, -50%) scale(0); }
-
-body.has-cursor-ball { cursor: none; }
-body.has-cursor-ball a,
-body.has-cursor-ball button,
-body.has-cursor-ball input,
-body.has-cursor-ball textarea,
-body.has-cursor-ball select,
-body.has-cursor-ball label,
-body.has-cursor-ball [role="button"] { cursor: none; }
+#cursor-ball.is-active::after {
+    transform: scale(1.7);
+    opacity: 0.35;
+}
 
 @media (max-width: 1024px), (hover: none), (pointer: coarse) {
     #cursor-ball { display: none !important; }
-    body.has-cursor-ball,
-    body.has-cursor-ball * { cursor: auto; }
-    body.has-cursor-ball a,
-    body.has-cursor-ball button,
-    body.has-cursor-ball [role="button"] { cursor: pointer; }
 }
 
 /* ===========================
@@ -2225,7 +2225,6 @@ html.lenis, html.lenis body { height: auto; }
     }
     [data-reveal] { opacity: 1 !important; transform: none !important; }
     #cursor-ball { display: none !important; }
-    body.has-cursor-ball, body.has-cursor-ball * { cursor: auto; }
 }
 
 /* ===========================
@@ -2985,9 +2984,11 @@ html.lenis, html.lenis body { height: auto; }
    Home — Publication type blocks
    =========================== */
 
+/* Desktop: all blocks (4 or 5) share one row in equal columns */
 .type-blocks {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
     gap: 1.25rem;
 }
 
@@ -3015,13 +3016,16 @@ html.lenis, html.lenis body { height: auto; }
     transition: transform 0.3s ease;
 }
 
-.type-block:hover {
+/* Hover lift only for linked blocks; a non-link (div) block stays static */
+a.type-block:hover {
     border-color: var(--color-primary);
     transform: translateY(-4px);
     box-shadow: var(--brand-glow);
 }
 
-.type-block:hover::after { transform: scaleX(1); }
+a.type-block:hover::after { transform: scaleX(1); }
+
+.type-block:not(a) { cursor: default; }
 
 .type-block-icon {
     width: 66px;
@@ -3042,13 +3046,14 @@ html.lenis, html.lenis body { height: auto; }
 .type-block:nth-child(2) .type-block-icon { animation-delay: 0.6s; }
 .type-block:nth-child(3) .type-block-icon { animation-delay: 1.2s; }
 .type-block:nth-child(4) .type-block-icon { animation-delay: 1.8s; }
+.type-block:nth-child(5) .type-block-icon { animation-delay: 2.4s; }
 
 @keyframes typeFloat {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-7px); }
 }
 
-.type-block:hover .type-block-icon {
+a.type-block:hover .type-block-icon {
     transform: translateY(-3px) rotate(-6deg) scale(1.06);
 }
 
@@ -3075,12 +3080,38 @@ html.lenis, html.lenis body { height: auto; }
     margin: 0;
 }
 
+/* 5 in a row: tighter padding/type so counts and names fit the narrower block */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .type-block { padding: 1.6rem 0.75rem 1.4rem; }
+    .type-block-name { font-size: 1.1rem; }
+}
+
+/* Tablet: 12-col track. 4 blocks -> one row; exactly 5 -> 3 + 2 centred */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .type-blocks {
+        grid-auto-flow: row;
+        grid-auto-columns: auto;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .type-block { grid-column: span 3; }
+    .type-block:first-child:nth-last-child(5),
+    .type-block:first-child:nth-last-child(5) ~ .type-block { grid-column: span 4; }
+    .type-block:first-child:nth-last-child(5) ~ .type-block:nth-child(4) { grid-column: 3 / span 4; }
+}
+
+/* Phone: 2 columns; an odd last block spans the full row (2 + 2 + 1) */
 @media (max-width: 767.98px) {
-    .type-blocks { grid-template-columns: repeat(2, 1fr); }
+    .type-blocks {
+        grid-auto-flow: row;
+        grid-auto-columns: auto;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .type-block:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 
 @media (max-width: 359.98px) {
-    .type-blocks { grid-template-columns: 1fr; }
+    .type-blocks { grid-template-columns: minmax(0, 1fr); }
+    .type-block:last-child:nth-child(odd) { grid-column: auto; }
 }
 
 /* ===========================

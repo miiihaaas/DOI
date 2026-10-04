@@ -16,7 +16,7 @@ from django.db.models import Count, Q, QuerySet
 from slugify import slugify
 
 from doi_portal.articles.models import Article, ArticleStatus, Author
-from doi_portal.monographs.models import Monograph
+from doi_portal.monographs.models import Monograph, MonographChapter, MonographStatus
 from doi_portal.publications.models import Publication, PublicationType
 from doi_portal.publishers.models import Publisher
 
@@ -34,6 +34,7 @@ __all__ = [
     "get_monograph_pdf_download_filename",
     "get_pdf_download_filename",
     "get_portal_statistics",
+    "get_public_article_count",
     "get_publication_type_counts",
     "get_recent_articles",
     "get_recent_publications",
@@ -195,10 +196,13 @@ def get_recent_publications(limit: int = 6) -> QuerySet[Publication]:
 
 def get_recent_articles(limit: int = 8) -> QuerySet[Article]:
     """
-    Get the most recently published articles for the home page.
+    Get the most recently added articles for the home page.
 
-    Only PUBLISHED articles are shown. Ordered by publish date (falling back
-    to creation date for articles without an explicit published_at).
+    Only PUBLISHED articles are shown. Ordered by the date the article was
+    ENTERED into the system (created_at, newest first; id as tie-breaker),
+    not by published_at - "najnoviji" on the home page means most recently
+    added to the portal.
+    SoftDeleteManager already excludes is_deleted=True records.
     select_related/prefetch avoids N+1 queries when rendering the cards
     (publication type/name, open-access flag, authors).
 
@@ -212,8 +216,33 @@ def get_recent_articles(limit: int = 8) -> QuerySet[Article]:
         Article.objects.filter(status=ArticleStatus.PUBLISHED)
         .select_related("issue__publication__publisher")
         .prefetch_related("authors")
-        .order_by("-published_at", "-created_at")[:limit]
+        .order_by("-created_at", "-id")[:limit]
     )
+
+
+def get_public_article_count() -> int:
+    """
+    Count all publicly visible articles for the home page "Članci" block.
+
+    Sum of:
+    - PUBLISHED articles (Article), and
+    - PUBLISHED monograph chapters whose monograph is also PUBLISHED
+      (and not soft-deleted).
+
+    No extra filtering by issue status - consistent with the "Broj radova"
+    column in the public publication list.
+    SoftDeleteManager already excludes is_deleted=True articles/chapters.
+
+    Returns:
+        Total number of published articles and monograph chapters.
+    """
+    articles = Article.objects.filter(status=ArticleStatus.PUBLISHED).count()
+    chapters = MonographChapter.objects.filter(
+        status=MonographStatus.PUBLISHED,
+        monograph__status=MonographStatus.PUBLISHED,
+        monograph__is_deleted=False,
+    ).count()
+    return articles + chapters
 
 
 def get_publication_type_counts() -> dict[str, int]:
@@ -221,10 +250,11 @@ def get_publication_type_counts() -> dict[str, int]:
     Count content grouped by publication type for the home page type blocks.
 
     Časopisi (JOURNAL), Zbornici (CONFERENCE), Ostalo (OTHER) come from
-    Publication; Monografije is the separate Monograph model.
+    Publication; Monografije is the separate Monograph model. Članci is the
+    total number of public articles (see get_public_article_count).
 
     Returns:
-        Dict with keys: journals, conferences, other, monographs.
+        Dict with keys: journals, conferences, other, monographs, articles.
     """
     pub_counts = Publication.objects.aggregate(
         journals=Count("id", filter=Q(publication_type=PublicationType.JOURNAL)),
@@ -236,6 +266,7 @@ def get_publication_type_counts() -> dict[str, int]:
         "conferences": pub_counts["conferences"] or 0,
         "other": pub_counts["other"] or 0,
         "monographs": Monograph.objects.count(),
+        "articles": get_public_article_count(),
     }
 
 

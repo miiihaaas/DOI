@@ -6,12 +6,26 @@ Tests cover: PortalHomeView, get_portal_statistics(), get_recent_publications().
 AC: #1-#8 coverage via view and service tests.
 """
 
+from datetime import timedelta
+
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
-from doi_portal.articles.models import ArticleStatus
+from doi_portal.articles.models import Article, ArticleStatus
 from doi_portal.articles.tests.factories import ArticleFactory
-from doi_portal.portal.services import get_portal_statistics, get_recent_publications
+from doi_portal.monographs.models import MonographStatus
+from doi_portal.monographs.tests.factories import (
+    MonographChapterFactory,
+    MonographFactory,
+)
+from doi_portal.portal.services import (
+    get_portal_statistics,
+    get_public_article_count,
+    get_publication_type_counts,
+    get_recent_articles,
+    get_recent_publications,
+)
 from doi_portal.portal.tests.factories import PublicationFactory, PublisherFactory
 
 
@@ -110,6 +124,180 @@ class TestRecentPublications:
 
         result = get_recent_publications(limit=3)
         assert len(result) <= 3
+
+
+# =============================================================================
+# Service Tests: get_recent_articles()
+# =============================================================================
+
+
+def _set_created_at(article, created_at):
+    """created_at is auto_now_add - override it via queryset update."""
+    Article.all_objects.filter(pk=article.pk).update(created_at=created_at)
+
+
+@pytest.mark.django_db
+class TestRecentArticles:
+    """Tests for get_recent_articles service function."""
+
+    def test_ordered_by_created_at_desc(self):
+        """Newest ENTERED article comes first."""
+        now = timezone.now()
+        oldest = ArticleFactory(status=ArticleStatus.PUBLISHED)
+        newest = ArticleFactory(status=ArticleStatus.PUBLISHED)
+        middle = ArticleFactory(status=ArticleStatus.PUBLISHED)
+        _set_created_at(oldest, now - timedelta(days=30))
+        _set_created_at(newest, now - timedelta(days=1))
+        _set_created_at(middle, now - timedelta(days=10))
+
+        result = [a.pk for a in get_recent_articles()]
+
+        assert result == [newest.pk, middle.pk, oldest.pk]
+
+    def test_created_at_wins_over_published_at(self):
+        """Order follows created_at even when published_at is reversed."""
+        now = timezone.now()
+        entered_first = ArticleFactory(
+            status=ArticleStatus.PUBLISHED,
+            published_at=now,  # most recently published
+        )
+        entered_last = ArticleFactory(
+            status=ArticleStatus.PUBLISHED,
+            published_at=now - timedelta(days=365),  # published long ago
+        )
+        _set_created_at(entered_first, now - timedelta(days=20))
+        _set_created_at(entered_last, now - timedelta(days=2))
+
+        result = [a.pk for a in get_recent_articles()]
+
+        assert result == [entered_last.pk, entered_first.pk]
+
+    def test_id_breaks_created_at_ties(self):
+        """Articles with identical created_at are ordered by id descending."""
+        same = timezone.now() - timedelta(days=3)
+        first = ArticleFactory(status=ArticleStatus.PUBLISHED)
+        second = ArticleFactory(status=ArticleStatus.PUBLISHED)
+        _set_created_at(first, same)
+        _set_created_at(second, same)
+
+        result = [a.pk for a in get_recent_articles()]
+
+        assert result == [second.pk, first.pk]
+
+    def test_excludes_non_published(self):
+        """DRAFT and WITHDRAWN articles are not listed."""
+        published = ArticleFactory(status=ArticleStatus.PUBLISHED)
+        ArticleFactory(status=ArticleStatus.DRAFT)
+        ArticleFactory(status=ArticleStatus.WITHDRAWN)
+
+        result = [a.pk for a in get_recent_articles()]
+
+        assert result == [published.pk]
+
+    def test_excludes_soft_deleted(self):
+        """Soft-deleted published articles are not listed."""
+        active = ArticleFactory(status=ArticleStatus.PUBLISHED)
+        deleted = ArticleFactory(status=ArticleStatus.PUBLISHED)
+        deleted.soft_delete()
+
+        result = [a.pk for a in get_recent_articles()]
+
+        assert result == [active.pk]
+
+    def test_default_limit_is_8(self):
+        """Returns at most 8 articles by default."""
+        ArticleFactory.create_batch(10, status=ArticleStatus.PUBLISHED)
+
+        assert len(get_recent_articles()) == 8
+
+    def test_custom_limit(self):
+        """Respects custom limit parameter."""
+        ArticleFactory.create_batch(5, status=ArticleStatus.PUBLISHED)
+
+        assert len(get_recent_articles(limit=3)) == 3
+
+
+# =============================================================================
+# Service Tests: get_public_article_count()
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestPublicArticleCount:
+    """Tests for get_public_article_count service function."""
+
+    def test_empty_database_returns_zero(self):
+        assert get_public_article_count() == 0
+
+    def test_sums_published_articles_and_chapters(self):
+        """Published articles + published chapters of published monographs."""
+        ArticleFactory.create_batch(3, status=ArticleStatus.PUBLISHED)
+        monograph = MonographFactory(status=MonographStatus.PUBLISHED)
+        MonographChapterFactory.create_batch(
+            2, monograph=monograph, status=MonographStatus.PUBLISHED
+        )
+
+        assert get_public_article_count() == 5
+
+    def test_excludes_non_published_articles(self):
+        """DRAFT and WITHDRAWN articles are not counted."""
+        ArticleFactory(status=ArticleStatus.PUBLISHED)
+        ArticleFactory(status=ArticleStatus.DRAFT)
+        ArticleFactory(status=ArticleStatus.WITHDRAWN)
+
+        assert get_public_article_count() == 1
+
+    def test_excludes_non_published_chapters(self):
+        """DRAFT/WITHDRAWN chapters of a published monograph are not counted."""
+        monograph = MonographFactory(status=MonographStatus.PUBLISHED)
+        MonographChapterFactory(monograph=monograph, status=MonographStatus.PUBLISHED)
+        MonographChapterFactory(monograph=monograph, status=MonographStatus.DRAFT)
+        MonographChapterFactory(monograph=monograph, status=MonographStatus.WITHDRAWN)
+
+        assert get_public_article_count() == 1
+
+    def test_excludes_chapters_of_non_published_monograph(self):
+        """Published chapters of DRAFT/WITHDRAWN monographs are not counted."""
+        draft = MonographFactory(status=MonographStatus.DRAFT)
+        withdrawn = MonographFactory(status=MonographStatus.WITHDRAWN)
+        MonographChapterFactory(monograph=draft, status=MonographStatus.PUBLISHED)
+        MonographChapterFactory(monograph=withdrawn, status=MonographStatus.PUBLISHED)
+
+        assert get_public_article_count() == 0
+
+    def test_excludes_soft_deleted(self):
+        """Soft-deleted articles and chapters are not counted."""
+        ArticleFactory(status=ArticleStatus.PUBLISHED)
+        deleted_article = ArticleFactory(status=ArticleStatus.PUBLISHED)
+        deleted_article.soft_delete()
+
+        monograph = MonographFactory(status=MonographStatus.PUBLISHED)
+        MonographChapterFactory(monograph=monograph, status=MonographStatus.PUBLISHED)
+        deleted_chapter = MonographChapterFactory(
+            monograph=monograph, status=MonographStatus.PUBLISHED
+        )
+        deleted_chapter.soft_delete()
+
+        assert get_public_article_count() == 2
+
+    def test_excludes_chapters_of_soft_deleted_monograph(self):
+        """Chapters of a soft-deleted monograph are not counted."""
+        monograph = MonographFactory(status=MonographStatus.PUBLISHED)
+        MonographChapterFactory(monograph=monograph, status=MonographStatus.PUBLISHED)
+        monograph.soft_delete()
+
+        assert get_public_article_count() == 0
+
+    def test_type_counts_exposes_articles_key(self):
+        """get_publication_type_counts includes the total under 'articles'."""
+        ArticleFactory(status=ArticleStatus.PUBLISHED)
+        monograph = MonographFactory(status=MonographStatus.PUBLISHED)
+        MonographChapterFactory(monograph=monograph, status=MonographStatus.PUBLISHED)
+
+        counts = get_publication_type_counts()
+
+        assert counts["articles"] == 2
+        assert counts["monographs"] == 1
 
 
 # =============================================================================
@@ -213,3 +401,42 @@ class TestPortalHomeView:
         response = client.get(reverse("home"))
         content = response.content.decode()
         assert "Pregledajte naučne publikacije i članke" in content
+
+    def test_home_context_has_article_count(self, client):
+        """Context exposes total public article count as type_counts.articles."""
+        ArticleFactory.create_batch(2, status=ArticleStatus.PUBLISHED)
+        ArticleFactory(status=ArticleStatus.DRAFT)
+        monograph = MonographFactory(status=MonographStatus.PUBLISHED)
+        MonographChapterFactory(monograph=monograph, status=MonographStatus.PUBLISHED)
+
+        response = client.get(reverse("home"))
+
+        assert response.context["type_counts"]["articles"] == 3
+
+    def test_home_shows_articles_type_block(self, client):
+        """Fifth "Članci" block is rendered with the counter markup."""
+        ArticleFactory.create_batch(2, status=ArticleStatus.PUBLISHED)
+        monograph = MonographFactory(status=MonographStatus.PUBLISHED)
+        MonographChapterFactory(monograph=monograph, status=MonographStatus.PUBLISHED)
+
+        response = client.get(reverse("home"))
+        content = response.content.decode()
+
+        assert content.count('class="type-block-count"') == 5
+        assert '<p class="type-block-name">Članci</p>' in content
+        assert 'data-counter data-count-to="3">3</span>' in content
+
+    def test_home_article_card_shows_created_at_date(self, client):
+        """Article card date is the entry date (created_at), not published_at."""
+        now = timezone.now()
+        article = ArticleFactory(
+            status=ArticleStatus.PUBLISHED,
+            published_at=now.replace(year=2001, month=2, day=3),
+        )
+        _set_created_at(article, now.replace(year=2019, month=5, day=17))
+
+        response = client.get(reverse("home"))
+        content = response.content.decode()
+
+        assert "17.05.2019." in content
+        assert "03.02.2001." not in content
