@@ -37,7 +37,8 @@
 }
 
 .search-hero-input-group .form-control::placeholder {
-    color: var(--color-text-secondary);
+    color: var(--placeholder-color, #a3b1b1);
+    font-style: italic;
 }
 
 .search-hero-input-group .form-control:focus {

@@ -305,7 +305,8 @@ h3 { font-size: clamp(1.35rem, 1.8vw, 1.6rem); line-height: 1.35; }
 }
 
 .hero-section .form-control::placeholder {
-    color: var(--color-text-secondary);
+    color: var(--placeholder-color, #a3b1b1);
+    font-style: italic;
     font-size: 0.94rem;
 }
 
@@ -1119,7 +1120,8 @@ h3 { font-size: clamp(1.35rem, 1.8vw, 1.6rem); line-height: 1.35; }
 }
 
 .portal-content .form-control::placeholder {
-    color: var(--color-text-secondary);
+    color: var(--placeholder-color, #a3b1b1);
+    font-style: italic;
 }
 
 /* ===========================
@@ -2487,6 +2489,7 @@ html.lenis, html.lenis body { height: auto; }
 
 .footer-newsletter .form-control::placeholder {
     color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
 }
 
 .footer-newsletter .form-control:focus {

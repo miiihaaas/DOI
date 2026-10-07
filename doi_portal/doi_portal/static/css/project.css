@@ -16,3 +16,17 @@
   background-color: #f2dede;
   border-color: #eed3d7;
 }
+
+/* Placeholder: italic and lighter than entered text, everywhere */
+:root {
+  --placeholder-color: #a3b1b1;
+}
+
+input::placeholder,
+textarea::placeholder,
+.form-control::placeholder,
+.ts-control input::placeholder {
+  color: var(--placeholder-color);
+  font-style: italic;
+  opacity: 1;
+}

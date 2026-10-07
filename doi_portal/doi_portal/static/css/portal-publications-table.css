@@ -85,7 +85,8 @@
 }
 .pub-search input::placeholder,
 .pub-search .form-control::placeholder {
-    color: var(--color-text-secondary);
+    color: var(--placeholder-color, #a3b1b1);
+    font-style: italic;
     font-weight: 400;
 }
 .pub-search input:focus,
