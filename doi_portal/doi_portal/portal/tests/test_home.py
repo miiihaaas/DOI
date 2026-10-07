@@ -6,6 +6,7 @@ Tests cover: PortalHomeView, get_portal_statistics(), get_recent_publications().
 AC: #1-#8 coverage via view and service tests.
 """
 
+import re
 from datetime import timedelta
 
 import pytest
@@ -414,7 +415,7 @@ class TestPortalHomeView:
         assert response.context["type_counts"]["articles"] == 3
 
     def test_home_shows_articles_type_block(self, client):
-        """Fifth "Članci" block is rendered with the counter markup."""
+        """"Članci" block is rendered first, with the counter markup."""
         ArticleFactory.create_batch(2, status=ArticleStatus.PUBLISHED)
         monograph = MonographFactory(status=MonographStatus.PUBLISHED)
         MonographChapterFactory(monograph=monograph, status=MonographStatus.PUBLISHED)
@@ -425,6 +426,11 @@ class TestPortalHomeView:
         assert content.count('class="type-block-count"') == 5
         assert '<p class="type-block-name">Članci</p>' in content
         assert 'data-counter data-count-to="3">3</span>' in content
+        names = re.findall(r'<p class="type-block-name">([^<]+)</p>', content)
+        assert names == ["Članci", "Časopisi", "Zbornici", "Monografije", "Ostalo"]
+        assert content.index(
+            '<p class="type-block-name">Članci</p>',
+        ) < content.index('<p class="type-block-name">Časopisi</p>')
 
     def test_home_article_card_shows_created_at_date(self, client):
         """Article card date is the entry date (created_at), not published_at."""

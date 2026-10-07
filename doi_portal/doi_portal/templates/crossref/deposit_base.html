@@ -1,0 +1,291 @@
+{% extends "admin_base.html" %}
+{% load static %}
+{% comment %}
+  Shared shell of the three Crossref deposit pages
+  (issue_crossref_deposit.html, monograph_crossref_deposit.html,
+  component_crossref_deposit.html).
+
+  It owns everything that is identical for the three families:
+  Prism.js assets, the section stylesheet and the page behaviour.
+  The child template only resolves its own URLs in {% block content %} and
+  includes crossref/partials/_deposit_page.html.
+{% endcomment %}
+
+{% block css %}
+{{ block.super }}
+{# Prism.js (XML preview): theme + line-numbers + line-highlight plugins #}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.css" />
+<link href="{% static 'css/admin-crossref.css' %}" rel="stylesheet" />
+{% endblock css %}
+
+{% block javascript %}
+{{ block.super }}
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.js"></script>
+{% endblock javascript %}
+
+{% block inline_javascript %}
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Regenerate confirmation ---------- */
+  window.showRegenerateModal = function (event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    var el = document.getElementById('regenerateModal');
+    if (el) bootstrap.Modal.getOrCreateInstance(el).show();
+  };
+
+  /* ---------- XML preview modal ---------- */
+  function previewModal() {
+    return document.getElementById('xmlPreviewModal');
+  }
+
+  function previewCode() {
+    var modal = previewModal();
+    return modal ? modal.querySelector('code.language-xml') : null;
+  }
+
+  window.loadXmlPreview = function (url) {
+    if (!url) {
+      var btn = document.getElementById('xmlPreviewBtn');
+      url = btn ? btn.getAttribute('data-xml-preview-url') : '';
+    }
+    if (!url) return;
+
+    fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.text();
+      })
+      .then(function (html) {
+        var existing = previewModal();
+        if (existing) {
+          var instance = bootstrap.Modal.getInstance(existing);
+          if (instance) instance.dispose();
+          existing.remove();
+        }
+        var marker = document.body.lastChild;
+        document.body.insertAdjacentHTML('beforeend', html);
+
+        var modal = previewModal();
+        if (!modal) {
+          // No XML: the response is a bare alert, not the modal. Drop what was just appended.
+          while (document.body.lastChild && document.body.lastChild !== marker) {
+            document.body.removeChild(document.body.lastChild);
+          }
+          showToast('XML nije generisan.', 'danger');
+          return;
+        }
+        modal.addEventListener('shown.bs.modal', function () {
+          var code = previewCode();
+          if (code && typeof Prism !== 'undefined' && !code.dataset.highlighted) {
+            Prism.highlightElement(code);
+            code.dataset.highlighted = '1';
+          }
+        });
+        modal.addEventListener('hidden.bs.modal', function () {
+          modal.remove();
+        });
+        bootstrap.Modal.getOrCreateInstance(modal).show();
+      })
+      .catch(function (error) {
+        console.error('Error loading XML preview:', error);
+        showToast('Greška pri učitavanju XML pregleda.', 'danger');
+      });
+  };
+
+  function scrollToLine(lineNumber) {
+    var modal = previewModal();
+    if (!modal || !lineNumber) return;
+    var rows = modal.querySelectorAll('.line-numbers-rows > span');
+    var target = rows[lineNumber - 1];
+    if (target) {
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    }
+  }
+
+  function scrollToSection(name) {
+    var code = previewCode();
+    if (!code) return;
+    var text = code.textContent;
+    var match = text.match(new RegExp('<' + name + '[>\\s]', 'i'));
+    if (match) scrollToLine(text.substring(0, match.index).split('\n').length);
+  }
+
+  function scrollToFirstError() {
+    var modal = previewModal();
+    var lines = ((modal && modal.getAttribute('data-error-lines')) || '').split(',').filter(Boolean);
+    if (lines.length) scrollToLine(parseInt(lines[0], 10));
+  }
+
+  function fallbackCopy(text) {
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.className = 'visually-hidden';
+    (previewModal() || document.body).appendChild(area);
+    area.select();
+    try {
+      document.execCommand('copy');
+      showToast('XML kopiran u clipboard', 'success');
+    } catch (err) {
+      console.error('Clipboard fallback failed:', err);
+      showToast('Greška pri kopiranju', 'danger');
+    }
+    area.remove();
+  }
+
+  function copyXml() {
+    var code = previewCode();
+    if (!code) return;
+    var text = code.textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        showToast('XML kopiran u clipboard', 'success');
+      }).catch(function () {
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+  // Kept for any markup that still calls it directly.
+  window.copyXmlToClipboard = copyXml;
+
+  /* ---------- Toast ---------- */
+  function showToast(message, type) {
+    var container = document.getElementById('xmlPreviewToast');
+    if (!container) return;
+    var toast = document.createElement('div');
+    toast.className = 'toast crossref-toast align-items-center' + (type === 'danger' ? ' crossref-toast--danger' : '');
+    toast.setAttribute('role', type === 'danger' ? 'alert' : 'status');
+    toast.setAttribute('aria-atomic', 'true');
+
+    var row = document.createElement('div');
+    row.className = 'd-flex';
+    var body = document.createElement('div');
+    body.className = 'toast-body';
+    var icon = document.createElement('i');
+    icon.className = 'bi bi-' + (type === 'danger' ? 'x-circle' : 'check-circle') + ' me-2';
+    icon.setAttribute('aria-hidden', 'true');
+    body.appendChild(icon);
+    body.appendChild(document.createTextNode(message));
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'btn-close btn-close-white me-2 m-auto';
+    close.setAttribute('data-bs-dismiss', 'toast');
+    close.setAttribute('aria-label', 'Zatvori');
+    row.appendChild(body);
+    row.appendChild(close);
+    toast.appendChild(row);
+    container.appendChild(toast);
+
+    toast.addEventListener('hidden.bs.toast', function () { toast.remove(); });
+    new bootstrap.Toast(toast, { delay: 3000 }).show();
+  }
+
+  /* ---------- Keep the stepper in sync with what the user just did ---------- */
+  // Re-render the page region in place (no navigation, so a running download is not interrupted).
+  // The soft refresh replaces #crossref-deposit, so a response still on its way to a
+  // node inside it would land in a detached element (and a successful generate would
+  // never trigger the reload below). It is therefore skipped while such a request is
+  // in flight, and a pending one is cancelled when a generate/regenerate starts.
+  var softRefreshTimer = null;
+  var requestsInFlight = 0;
+
+  function scheduleSoftRefresh() {
+    window.clearTimeout(softRefreshTimer);
+    softRefreshTimer = window.setTimeout(function () {
+      softRefreshTimer = null;
+      if (requestsInFlight === 0) refreshDepositPage();
+    }, 1500);
+  }
+
+  document.body.addEventListener('htmx:beforeSend', function (event) {
+    var detail = event.detail || {};
+    var root = document.getElementById('crossref-deposit');
+    var target = detail.target;
+    // Only requests that write inside the region; the soft refresh itself targets the root.
+    if (!root || !target || target === root || !root.contains(target) || !detail.xhr) return;
+    if (target.id === 'generation-step-content') {
+      window.clearTimeout(softRefreshTimer);
+      softRefreshTimer = null;
+    }
+    requestsInFlight += 1;
+    // loadend fires for success, error, abort and timeout alike.
+    detail.xhr.addEventListener('loadend', function () {
+      requestsInFlight = Math.max(0, requestsInFlight - 1);
+    });
+  });
+
+  function refreshDepositPage() {
+    var root = document.getElementById('crossref-deposit');
+    if (!root || typeof htmx === 'undefined') return;
+    htmx.ajax('GET', window.location.href, {
+      target: '#crossref-deposit',
+      select: '#crossref-deposit',
+      swap: 'outerHTML'
+    });
+  }
+
+  document.addEventListener('click', function (event) {
+    var el = event.target.closest('[data-xml-preview-url], [data-xml-section], [data-xml-first-error], [data-xml-copy], [data-crossref-download]');
+    if (!el) return;
+
+    if (el.hasAttribute('data-xml-preview-url')) {
+      event.preventDefault();
+      window.loadXmlPreview(el.getAttribute('data-xml-preview-url'));
+    } else if (el.hasAttribute('data-xml-section')) {
+      scrollToSection(el.getAttribute('data-xml-section'));
+    } else if (el.hasAttribute('data-xml-first-error')) {
+      scrollToFirstError();
+    } else if (el.hasAttribute('data-xml-copy')) {
+      copyXml();
+    } else if (el.hasAttribute('data-crossref-download')) {
+      // A download creates an export record: step 5 and the export history change.
+      var warning = el.closest('#downloadWarningModal');
+      if (warning) {
+        var instance = bootstrap.Modal.getInstance(warning);
+        if (instance) instance.hide();
+      }
+      scheduleSoftRefresh();
+    }
+  });
+
+  document.body.addEventListener('htmx:afterSwap', function (event) {
+    var target = event.detail && event.detail.target;
+    if (!target) return;
+    // XML (re)generated: steps 2-5 changed -> show the fresh state.
+    if (target.id === 'generation-step-content' && target.querySelector('[data-generation-state="success"]')) {
+      window.location.reload();
+    }
+    // Marked as deposited: header badge and the last step changed.
+    if (target.id === 'deposit-status' && target.querySelector('[data-deposit-state="deposited"]')) {
+      window.location.reload();
+    }
+  });
+
+  // The download warning arrives through hx-swap="beforeend" on <body>: open it and clean up after.
+  document.body.addEventListener('htmx:load', function (event) {
+    var elt = event.detail && event.detail.elt;
+    if (!elt || !elt.querySelector) return;
+    var modal = elt.id === 'downloadWarningModal' ? elt : elt.querySelector('#downloadWarningModal');
+    if (!modal || modal.dataset.opened) return;
+    modal.dataset.opened = '1';
+    modal.addEventListener('hidden.bs.modal', function () {
+      modal.remove();
+    });
+    bootstrap.Modal.getOrCreateInstance(modal).show();
+  });
+})();
+</script>
+{% endblock inline_javascript %}

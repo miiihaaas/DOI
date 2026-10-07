@@ -242,6 +242,42 @@ class TestWizardStep3:
         assert article is not None
         assert article.status == ArticleStatus.DRAFT
         assert article.issue == conference_issue
+        # Success: list goes to the form's own hx-target, no retarget
+        assert "HX-Retarget" not in response
+
+    def test_paper_add_invalid_retargets_form(self, client, urednik_user, conference_publication, conference_issue):
+        """Invalid POST must land in the form container, not in #paper-list."""
+        client.force_login(urednik_user)
+        url = reverse("wizard:paper-add", args=[conference_publication.pk])
+        response = client.post(url, {"title": ""}, HTTP_HX_REQUEST="true")
+        assert response.status_code == 200
+        assert response.context["form"].errors
+        assert response["HX-Retarget"] == "#paper-form-container"
+        assert response["HX-Reswap"] == "innerHTML"
+        assert not Article.objects.filter(issue=conference_issue).exists()
+
+    def test_paper_edit_invalid_retargets_form(self, client, urednik_user, conference_publication, draft_article):
+        """Invalid edit POST must land in the form container, not in #paper-list."""
+        client.force_login(urednik_user)
+        url = reverse("wizard:paper-edit", args=[conference_publication.pk, draft_article.pk])
+        response = client.post(url, {"title": ""}, HTTP_HX_REQUEST="true")
+        assert response.status_code == 200
+        assert response.context["form"].errors
+        assert response["HX-Retarget"] == "#paper-form-container"
+        assert response["HX-Reswap"] == "innerHTML"
+        draft_article.refresh_from_db()
+        assert draft_article.title == "Test Paper"
+
+    def test_paper_form_get_has_no_retarget(self, client, urednik_user, conference_publication, draft_article):
+        """GET of the form is swapped by the caller's hx-target: no retarget header."""
+        client.force_login(urednik_user)
+        for url in (
+            reverse("wizard:paper-add", args=[conference_publication.pk]),
+            reverse("wizard:paper-edit", args=[conference_publication.pk, draft_article.pk]),
+        ):
+            response = client.get(url, HTTP_HX_REQUEST="true")
+            assert response.status_code == 200
+            assert "HX-Retarget" not in response
 
     def test_paper_delete_removes_article(self, client, urednik_user, conference_publication, draft_article):
         client.force_login(urednik_user)

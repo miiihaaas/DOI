@@ -88,12 +88,17 @@ class TestPasswordResetRequest:
         assert reverse("account_login") in content
 
     def test_password_reset_page_uses_bootstrap_styling(self, client):
-        """AC#1: Password reset form uses Bootstrap 5 styling."""
+        """AC#1: Password reset form uses the shared auth layout (Bootstrap 5)."""
         response = client.get(reverse("account_reset_password"))
         assert response.status_code == 200
         content = response.content.decode()
-        # Check for Bootstrap 5 classes
-        assert "card" in content
+        # Same standalone layout as the login page (account/_auth_layout.html),
+        # which replaced the Bootstrap card of the cookiecutter base template.
+        assert "account/_auth_layout.html" in [t.name for t in response.templates]
+        assert "css/auth.css" in content
+        assert 'class="login-shell"' in content
+        # Bootstrap 5 classes
+        assert "form-control" in content
         assert "btn-primary" in content
 
 

@@ -554,6 +554,22 @@ class TestPublicationPublicListView:
         assert "<!DOCTYPE" not in content
         # But should contain our publication
         assert "HTMX Test" in content
+        assert "HX-Request" in response["Vary"]
+
+    def test_htmx_history_restore_returns_full_page(self, client):
+        """Back after an htmx history miss sends both headers and must get the full page."""
+        PublicationFactory(title="HTMX Test")
+
+        url = reverse("portal-publications:publication-list")
+        response = client.get(
+            url,
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_HISTORY_RESTORE_REQUEST="true",
+        )
+
+        assert response.status_code == 200
+        assert "<!DOCTYPE" in response.content.decode()
+        assert "HX-Request" in response["Vary"]
 
     # --- Task 8.11: Test non-HTMX request returns full page ---
 

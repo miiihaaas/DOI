@@ -1,64 +1,40 @@
 {% extends "admin_base.html" %}
+{% load ui_tags %}
 
 {% block title %}Obriši monografiju - DOI Portal{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-6">
-        <div class="card shadow-sm border-danger">
-            <div class="card-header bg-danger text-white">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Potvrda brisanja
-                </h5>
-            </div>
-            <div class="card-body">
-                <p class="mb-3">
-                    Da li ste sigurni da želite da obrišete ovu monografiju?
-                </p>
+{% include "components/_page_header.html" with title="Obriši monografiju" icon="bi-trash" only %}
 
-                <div class="card bg-light mb-3">
-                    <div class="card-body">
-                        <dl class="mb-0">
-                            <dt>Naslov</dt>
-                            <dd>{{ monograph.title }}</dd>
+<div class="row">
+  <div class="col-xl-8">
+    <div class="card">
+      <div class="card-body">
+        <p>Da li ste sigurni da želite da obrišete ovu monografiju?</p>
 
-                            <dt>Izdavač</dt>
-                            <dd>{{ monograph.publisher.name }}</dd>
+        <dl class="admin-dl mb-3">
+          <div class="admin-dl-row admin-dl-row--wide"><dt>Naslov</dt><dd>{{ monograph.title }}</dd></div>
+          <div class="admin-dl-row"><dt>Izdavač</dt><dd>{{ monograph.publisher.name }}</dd></div>
+          <div class="admin-dl-row"><dt>DOI</dt><dd class="mono-id">{{ monograph.full_doi }}</dd></div>
+          <div class="admin-dl-row"><dt>Status</dt><dd>{% include "components/_status_badge.html" with label=monograph.get_status_display tone=monograph.status|status_tone only %}</dd></div>
+          <div class="admin-dl-row"><dt>Kreirano</dt><dd>{{ monograph.created_at|date:"d.m.Y. H:i" }}</dd></div>
+        </dl>
 
-                            <dt>DOI</dt>
-                            <dd>{{ monograph.full_doi }}</dd>
-
-                            <dt>Status</dt>
-                            <dd>
-                                <span class="badge {% if monograph.status == 'DRAFT' %}bg-secondary{% elif monograph.status == 'PUBLISHED' %}bg-success{% else %}bg-danger{% endif %}">
-                                    {{ monograph.get_status_display }}
-                                </span>
-                            </dd>
-
-                            <dt>Kreirano</dt>
-                            <dd>{{ monograph.created_at|date:"d.m.Y. H:i" }}</dd>
-                        </dl>
-                    </div>
-                </div>
-
-                <div class="alert alert-warning" role="alert">
-                    <i class="bi bi-info-circle me-2"></i>
-                    Monografija i sva njena poglavlja će biti označeni kao obrisani, ali podaci će ostati sačuvani u bazi.
-                </div>
-
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="d-flex justify-content-between">
-                        <a href="{% url 'monographs:list' %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>Odustani
-                        </a>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-trash me-1"></i>Obriši monografiju
-                        </button>
-                    </div>
-                </form>
-            </div>
+        <div class="status-strip status-strip--pending" role="status">
+          <span class="status-strip__item"><i class="bi bi-info-circle" aria-hidden="true"></i>Monografija i sva njena poglavlja će biti označeni kao obrisani, ali podaci će ostati sačuvani u bazi.</span>
         </div>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-actions">
+            <div class="form-actions__start">
+              <a href="{% url 'monographs:detail' monograph.pk %}" class="btn btn-outline-secondary">Otkaži</a>
+            </div>
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1" aria-hidden="true"></i>Obriši monografiju</button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}

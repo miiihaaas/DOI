@@ -183,7 +183,7 @@ class TestCrossrefDepositView:
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "Crossref Deposit" in content
+        assert "Crossref deponovanje" in content
         assert "Pre-validacija" in content
         assert "Generisanje XML" in content
         assert "XSD Validacija" in content
@@ -261,8 +261,8 @@ class TestCrossrefDepositView:
         assert "breadcrumbs" in context
         breadcrumbs = context["breadcrumbs"]
         assert len(breadcrumbs) >= 2
-        # Last breadcrumb should be Crossref Deposit
-        assert "Crossref Deposit" in breadcrumbs[-1]["label"]
+        # Last breadcrumb names the page
+        assert "Crossref deponovanje" in breadcrumbs[-1]["label"]
 
     def test_ready_for_crossref_shown_when_complete(
         self, client, admin_user, issue_with_xml,

@@ -1,198 +1,101 @@
 {% extends "admin_base.html" %}
+{% load ui_tags %}
 
 {% block title %}Publikacije - DOI Portal{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0 page-title">
-        <i class="bi bi-journal-text me-2"></i>Publikacije
-    </h1>
-    {% if can_create %}
-    <a href="{% url 'publications:create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>Nova publikacija
-    </a>
-    <a href="{% url 'wizard:conference-start' %}" class="btn btn-outline-primary ms-2">
-        <i class="bi bi-megaphone me-1"></i>Registruj konferenciju
-    </a>
-    {% endif %}
-</div>
+{% url 'publications:list' as list_url %}
+{% firstof search_query current_type current_publisher as filters_active %}
 
-<!-- Filters -->
-<div class="card admin-card mb-4 filter-card">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-3">
-                <label for="type" class="form-label admin-form-label">Tip publikacije</label>
-                <select name="type" id="type" class="form-select">
-                    <option value="">Svi tipovi</option>
-                    {% for value, label in publication_types %}
-                    <option value="{{ value }}" {% if current_type == value %}selected{% endif %}>
-                        {{ label }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-5">
-                <label for="search" class="form-label admin-form-label">Pretraga</label>
-                <input type="text" name="search" id="search" class="form-control"
-                       placeholder="Pretraži po naslovu..." value="{{ search_query }}">
-            </div>
-            <div class="col-md-4 d-flex align-items-end gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-search me-1"></i>Filtriraj
-                </button>
-                <a href="{% url 'publications:list' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-lg me-1"></i>Poništi
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
+{% pageheader title="Publikacije" icon="bi-journal-text" %}
+  {% if can_create %}
+  <a href="{% url 'wizard:conference-start' %}" class="btn btn-outline-primary"><i class="bi bi-megaphone me-1" aria-hidden="true"></i>Registruj konferenciju</a>
+  <a href="{% url 'publications:create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova publikacija</a>
+  {% endif %}
+{% endpageheader %}
 
-<div class="card admin-card">
-    <div class="card-body p-0">
-        {% if publications %}
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>
-                            <a href="?sort=title&order={% if current_sort == 'title' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_publisher %}&publisher={{ current_publisher }}{% endif %}"
-                               class="text-decoration-none"
-                               aria-label="Sortiraj po naslovu">
-                                Naslov
-                                {% if current_sort == 'title' %}
-                                    <i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?sort=type&order={% if current_sort == 'type' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_publisher %}&publisher={{ current_publisher }}{% endif %}"
-                               class="text-decoration-none"
-                               aria-label="Sortiraj po tipu">
-                                Tip
-                                {% if current_sort == 'type' %}
-                                    <i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?sort=publisher&order={% if current_sort == 'publisher' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_publisher %}&publisher={{ current_publisher }}{% endif %}"
-                               class="text-decoration-none"
-                               aria-label="Sortiraj po izdavaču">
-                                Izdavač
-                                {% if current_sort == 'publisher' %}
-                                    <i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>Izdanja</th>
-                        <th>Pristup</th>
-                        <th>
-                            <a href="?sort=created&order={% if current_sort == 'created' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_publisher %}&publisher={{ current_publisher }}{% endif %}"
-                               class="text-decoration-none"
-                               aria-label="Sortiraj po datumu kreiranja">
-                                Kreirano
-                                {% if current_sort == 'created' %}
-                                    <i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1"></i>
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th class="text-end">Akcije</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for publication in publications %}
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <span class="admin-table-icon me-2">
-                                    <i class="{{ publication.type_icon }}"></i>
-                                </span>
-                                <a href="{% url 'publications:detail' publication.slug %}" class="fw-semibold">{{ publication.title }}</a>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="badge bg-doi-teal">{{ publication.type_display }}</span>
-                        </td>
-                        <td class="text-muted">{{ publication.publisher.name }}</td>
-                        <td>
-                            <span class="badge bg-doi-teal">{{ publication.issue_count_annotation }}</span>
-                        </td>
-                        <td>
-                            {% if publication.access_type == 'OPEN' %}
-                            <span class="badge bg-success">Otvoreni pristup</span>
-                            {% else %}
-                            <span class="badge bg-warning text-dark">Ograničeni pristup</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-muted">{{ publication.created_at|date:"d.m.Y." }}</td>
-                        <td class="text-end">
-                            <div class="admin-actions">
-                                {% if can_edit %}
-                                <a href="{% url 'publications:update' publication.slug %}" class="btn btn-sm btn-outline-primary" title="Izmeni">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                {% endif %}
-                                {% if can_delete %}
-                                <a href="{% url 'publications:delete' publication.slug %}" class="btn btn-sm btn-outline-danger" title="Obriši">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+{% filterbar reset_url=list_url active=filters_active count=page_obj.paginator.count count_forms="publikacija,publikacije,publikacija" autosubmit=True %}
+  <div class="filter-bar__search">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <input type="search" name="search" id="search" value="{{ search_query }}" class="form-control" placeholder="Pretraži po naslovu…" aria-label="Pretraga po naslovu">
+  </div>
+  <select name="type" id="type" class="form-select" aria-label="Tip publikacije">
+    <option value="">Svi tipovi</option>
+    {% for value, label in publication_types %}
+    <option value="{{ value }}"{% if current_type == value %} selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  {% if current_publisher %}<input type="hidden" name="publisher" value="{{ current_publisher }}">{% endif %}
+  {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ current_sort }}">{% endif %}
+  {% if request.GET.order %}<input type="hidden" name="order" value="{{ current_order }}">{% endif %}
+{% endfilterbar %}
 
-        {% if is_paginated %}
-        <nav aria-label="Navigacija stranica" class="mt-4 px-3 pb-3">
-            <ul class="pagination justify-content-center mb-0">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_publisher %}&publisher={{ current_publisher }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_order %}&order={{ current_order }}{% endif %}">
-                        Prethodna
-                    </a>
-                </li>
-                {% endif %}
-
-                <li class="page-item disabled">
-                    <span class="page-link">
-                        Stranica {{ page_obj.number }} od {{ page_obj.paginator.num_pages }}
-                    </span>
-                </li>
-
-                {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_publisher %}&publisher={{ current_publisher }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_order %}&order={{ current_order }}{% endif %}">
-                        Sledeća
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
-
-        {% else %}
-        <div class="text-center py-5">
-            <i class="bi bi-journal-text admin-empty-icon d-block mb-3"></i>
-            {% if search_query or current_type %}
-            <p class="text-muted mb-3">Nema publikacija koje odgovaraju filterima.</p>
-            <a href="{% url 'publications:list' %}" class="btn btn-outline-secondary me-2">
-                <i class="bi bi-x-lg me-1"></i>Poništi filtere
-            </a>
+<div class="card">
+  {% if publications %}
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th{% if current_sort == 'title' %} aria-sort="{% if current_order == 'asc' %}ascending{% else %}descending{% endif %}"{% endif %}>
+            <a href="{% if current_sort == 'title' and current_order == 'asc' %}{% querystring sort='title' order='desc' page=None %}{% else %}{% querystring sort='title' order='asc' page=None %}{% endif %}" aria-label="Sortiraj po naslovu">Naslov{% if current_sort == 'title' %}<i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1" aria-hidden="true"></i>{% endif %}</a>
+          </th>
+          <th{% if current_sort == 'type' %} aria-sort="{% if current_order == 'asc' %}ascending{% else %}descending{% endif %}"{% endif %}>
+            <a href="{% if current_sort == 'type' and current_order == 'asc' %}{% querystring sort='type' order='desc' page=None %}{% else %}{% querystring sort='type' order='asc' page=None %}{% endif %}" aria-label="Sortiraj po tipu">Tip{% if current_sort == 'type' %}<i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1" aria-hidden="true"></i>{% endif %}</a>
+          </th>
+          <th class="d-none d-md-table-cell"{% if current_sort == 'publisher' %} aria-sort="{% if current_order == 'asc' %}ascending{% else %}descending{% endif %}"{% endif %}>
+            <a href="{% if current_sort == 'publisher' and current_order == 'asc' %}{% querystring sort='publisher' order='desc' page=None %}{% else %}{% querystring sort='publisher' order='asc' page=None %}{% endif %}" aria-label="Sortiraj po izdavaču">Izdavač{% if current_sort == 'publisher' %}<i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1" aria-hidden="true"></i>{% endif %}</a>
+          </th>
+          <th class="num">Izdanja</th>
+          <th class="d-none d-lg-table-cell">Pristup</th>
+          <th class="d-none d-lg-table-cell"{% if current_sort == 'created' %} aria-sort="{% if current_order == 'asc' %}ascending{% else %}descending{% endif %}"{% endif %}>
+            <a href="{% if current_sort == 'created' and current_order == 'asc' %}{% querystring sort='created' order='desc' page=None %}{% else %}{% querystring sort='created' order='asc' page=None %}{% endif %}" aria-label="Sortiraj po datumu kreiranja">Kreirano{% if current_sort == 'created' %}<i class="bi bi-sort-{% if current_order == 'asc' %}up{% else %}down{% endif %} ms-1" aria-hidden="true"></i>{% endif %}</a>
+          </th>
+          <th class="col-actions"><span class="visually-hidden">Akcije</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for publication in publications %}
+        <tr>
+          <td>
+            <a href="{% url 'publications:detail' publication.slug %}" class="cell-title">{{ publication.title }}</a>
+            <div class="cell-meta d-md-none">{{ publication.publisher.name }}</div>
+          </td>
+          <td>{% include "components/_status_badge.html" with label=publication.type_display icon=publication.type_icon only %}</td>
+          <td class="cell-meta d-none d-md-table-cell">{{ publication.publisher.name }}</td>
+          <td class="num">
+            <a href="{% url 'issues:list' %}?publication={{ publication.pk }}" title="Izdanja ove publikacije">{{ publication.issue_count_annotation }}</a>
+          </td>
+          <td class="d-none d-lg-table-cell">
+            {% if publication.access_type == 'OPEN' %}
+            {% include "components/_status_badge.html" with label="Otvoreni" icon="bi-unlock" only %}
             {% else %}
-            <p class="text-muted mb-3">Nema publikacija.</p>
+            {% include "components/_status_badge.html" with label="Ograničeni" icon="bi-lock" only %}
             {% endif %}
-            {% if can_create %}
-            <a href="{% url 'publications:create' %}" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i>Dodaj prvu publikaciju
-            </a>
-            {% endif %}
-        </div>
-        {% endif %}
-    </div>
+          </td>
+          <td class="cell-meta d-none d-lg-table-cell">{{ publication.created_at|date:"d.m.Y." }}</td>
+          <td class="col-actions">
+            <div class="row-actions">
+              {% if can_edit %}
+              <a href="{% url 'publications:update' publication.slug %}" class="btn-icon" title="Izmeni" aria-label="Izmeni: {{ publication.title }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+              {% endif %}
+              {% if can_delete %}
+              <a href="{% url 'publications:delete' publication.slug %}" class="btn-icon btn-icon--danger" title="Obriši" aria-label="Obriši: {{ publication.title }}"><i class="bi bi-trash" aria-hidden="true"></i></a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "components/_pagination.html" %}
+  {% elif filters_active %}
+  {% include "components/_empty_state.html" with icon="bi-funnel" text="Nema publikacija koje odgovaraju filterima." action_url=list_url action_label="Poništi filtere" only %}
+  {% elif can_create %}
+  {% url 'publications:create' as create_url %}
+  {% include "components/_empty_state.html" with icon="bi-journal-text" text="Nema publikacija." action_url=create_url action_label="Dodaj prvu publikaciju" action_icon="bi-plus-lg" action_primary=True only %}
+  {% else %}
+  {% include "components/_empty_state.html" with icon="bi-journal-text" text="Nema publikacija." only %}
+  {% endif %}
 </div>
 {% endblock %}

@@ -170,6 +170,54 @@ class TestPublisherListView:
         assert "Active" in content
         assert "Deleted" not in content
 
+    def test_list_search_by_name(self, client, admin_user):
+        """Search filters publishers by name."""
+        Publisher.objects.create(name="Matica srpska", doi_prefix="10.1111")
+        Publisher.objects.create(name="Zavod", doi_prefix="10.2222")
+        login_user(client, "admin@test.com")
+        response = client.get(reverse("publishers:list"), {"q": "matica"})
+
+        names = [p.name for p in response.context["publishers"]]
+        assert names == ["Matica srpska"]
+        assert response.context["search_query"] == "matica"
+
+    def test_list_search_by_doi_prefix(self, client, admin_user):
+        """Search filters publishers by DOI prefix."""
+        Publisher.objects.create(name="Matica srpska", doi_prefix="10.1111")
+        Publisher.objects.create(name="Zavod", doi_prefix="10.2222")
+        login_user(client, "admin@test.com")
+        response = client.get(reverse("publishers:list"), {"q": "10.2222"})
+
+        names = [p.name for p in response.context["publishers"]]
+        assert names == ["Zavod"]
+
+    def test_list_search_no_results_offers_reset(
+        self, client, admin_user, sample_publisher,
+    ):
+        """A search without matches shows the filtered empty state."""
+        login_user(client, "admin@test.com")
+        response = client.get(reverse("publishers:list"), {"q": "nepostojeci"})
+
+        content = response.content.decode()
+        assert "Nema izdavača koji odgovaraju pretrazi." in content
+        assert "Poništi" in content
+
+    def test_list_is_paginated(self, client, admin_user):
+        """List shows 20 publishers per page and keeps the search on page links."""
+        for i in range(25):
+            Publisher.objects.create(
+                name=f"Izdavac {i:02d}", doi_prefix=f"10.{5000 + i}",
+            )
+        login_user(client, "admin@test.com")
+
+        response = client.get(reverse("publishers:list"), {"q": "Izdavac"})
+        assert response.context["is_paginated"] is True
+        assert len(response.context["publishers"]) == 20  # noqa: PLR2004
+        assert "q=Izdavac" in response.content.decode()
+
+        response = client.get(reverse("publishers:list"), {"q": "Izdavac", "page": 2})
+        assert len(response.context["publishers"]) == 5  # noqa: PLR2004
+
     def test_list_has_breadcrumbs(self, client, admin_user):
         """Test list view has breadcrumbs context."""
         login_user(client, "admin@test.com")

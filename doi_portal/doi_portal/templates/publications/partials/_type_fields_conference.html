@@ -1,87 +1,43 @@
-<!-- Conference-specific fields partial -->
+{# Conference-specific fields. Rendered inside #type-specific-fields (initial render and HTMX swap). #}
 <div class="type-fields-section">
-    <div class="form-section-divider"></div>
-    <h6 class="form-section-title">
-        <i class="bi bi-people me-2"></i>Polja za konferenciju
-    </h6>
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label for="id_conference_name" class="form-label">Naziv konferencije</label>
-            <input type="text" name="conference_name" id="id_conference_name"
-                   class="form-control {% if form.conference_name.errors %}is-invalid{% endif %}"
-                   placeholder="Puni naziv konferencije"
-                   value="{% if form.conference_name.value %}{{ form.conference_name.value }}{% endif %}">
-            {% if form.conference_name.errors %}
-            <div class="invalid-feedback">{{ form.conference_name.errors.0 }}</div>
-            {% endif %}
-        </div>
-        <div class="col-md-3 mb-3">
-            <label for="id_conference_acronym" class="form-label">Akronim</label>
-            <input type="text" name="conference_acronym" id="id_conference_acronym"
-                   class="form-control {% if form.conference_acronym.errors %}is-invalid{% endif %}"
-                   placeholder="npr. NK2026"
-                   value="{% if form.conference_acronym.value %}{{ form.conference_acronym.value }}{% endif %}">
-            {% if form.conference_acronym.errors %}
-            <div class="invalid-feedback">{{ form.conference_acronym.errors.0 }}</div>
-            {% endif %}
-        </div>
-        <div class="col-md-3 mb-3">
-            <label for="id_conference_number" class="form-label">Broj konferencije</label>
-            <input type="number" name="conference_number" id="id_conference_number"
-                   class="form-control {% if form.conference_number.errors %}is-invalid{% endif %}"
-                   placeholder="npr. 15"
-                   min="1"
-                   value="{% if form.conference_number.value %}{{ form.conference_number.value }}{% endif %}">
-            {% if form.conference_number.errors %}
-            <div class="invalid-feedback">{{ form.conference_number.errors.0 }}</div>
-            {% else %}
-            <div class="form-text">npr. 15. po redu</div>
-            {% endif %}
-        </div>
+  <hr class="form-section-divider">
+  <h2 class="form-section-title"><i class="bi bi-people me-2" aria-hidden="true"></i>Podaci o konferenciji</h2>
+  <div class="row g-3">
+    {% include "components/_field.html" with field=form.conference_name label="Naziv konferencije" class="col-md-8" only %}
+    {% include "components/_field.html" with field=form.conference_acronym label="Akronim" class="col-md-4" only %}
+    {% include "components/_field.html" with field=form.conference_number label="Broj konferencije" help="npr. 15. po redu" class="col-md-4" only %}
+
+    {# Hand-rendered: type="date" needs the value as Y-m-d regardless of the active locale #}
+    {% with value=form.conference_date.value %}
+    <div class="field field--input col-md-4{% if form.conference_date.errors %} has-error{% endif %}">
+      <label class="field__label" for="id_conference_date">Datum početka</label>
+      <input type="date" name="conference_date" id="id_conference_date"
+             class="form-control{% if form.conference_date.errors %} is-invalid{% endif %}"
+             {% if form.conference_date.errors %}aria-invalid="true" aria-describedby="id_conference_date_error"{% endif %}
+             value="{{ value|date:'Y-m-d'|default:value|default_if_none:'' }}">
+      {% if form.conference_date.errors %}
+      <div class="field__error invalid-feedback d-block" id="id_conference_date_error">
+        {% for error in form.conference_date.errors %}<div>{{ error }}</div>{% endfor %}
+      </div>
+      {% endif %}
     </div>
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label for="id_conference_location" class="form-label">Lokacija</label>
-            <input type="text" name="conference_location" id="id_conference_location"
-                   class="form-control {% if form.conference_location.errors %}is-invalid{% endif %}"
-                   placeholder="npr. Beograd, Srbija"
-                   value="{% if form.conference_location.value %}{{ form.conference_location.value }}{% endif %}">
-            {% if form.conference_location.errors %}
-            <div class="invalid-feedback">{{ form.conference_location.errors.0 }}</div>
-            {% endif %}
-        </div>
-        <div class="col-md-3 mb-3">
-            <label for="id_conference_date" class="form-label">Datum početka</label>
-            <input type="date" name="conference_date" id="id_conference_date"
-                   class="form-control {% if form.conference_date.errors %}is-invalid{% endif %}"
-                   value="{% if form.conference_date.value %}{{ form.conference_date.value|date:'Y-m-d' }}{% endif %}">
-            {% if form.conference_date.errors %}
-            <div class="invalid-feedback">{{ form.conference_date.errors.0 }}</div>
-            {% endif %}
-        </div>
-        <div class="col-md-3 mb-3">
-            <label for="id_conference_date_end" class="form-label">Datum završetka</label>
-            <input type="date" name="conference_date_end" id="id_conference_date_end"
-                   class="form-control {% if form.conference_date_end.errors %}is-invalid{% endif %}"
-                   value="{% if form.conference_date_end.value %}{{ form.conference_date_end.value|date:'Y-m-d' }}{% endif %}">
-            {% if form.conference_date_end.errors %}
-            <div class="invalid-feedback">{{ form.conference_date_end.errors.0 }}</div>
-            {% endif %}
-        </div>
+    {% endwith %}
+    {% with value=form.conference_date_end.value %}
+    <div class="field field--input col-md-4{% if form.conference_date_end.errors %} has-error{% endif %}">
+      <label class="field__label" for="id_conference_date_end">Datum završetka</label>
+      <input type="date" name="conference_date_end" id="id_conference_date_end"
+             class="form-control{% if form.conference_date_end.errors %} is-invalid{% endif %}"
+             {% if form.conference_date_end.errors %}aria-invalid="true" aria-describedby="id_conference_date_end_error"{% endif %}
+             value="{{ value|date:'Y-m-d'|default:value|default_if_none:'' }}">
+      {% if form.conference_date_end.errors %}
+      <div class="field__error invalid-feedback d-block" id="id_conference_date_end_error">
+        {% for error in form.conference_date_end.errors %}<div>{{ error }}</div>{% endfor %}
+      </div>
+      {% endif %}
     </div>
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label for="id_series_issn" class="form-label">ISSN serije</label>
-            <input type="text" name="series_issn" id="id_series_issn"
-                   class="form-control {% if form.series_issn.errors %}is-invalid{% endif %}"
-                   placeholder="####-####"
-                   pattern="\d{4}-\d{3}[\dX]"
-                   value="{% if form.series_issn.value %}{{ form.series_issn.value }}{% endif %}">
-            {% if form.series_issn.errors %}
-            <div class="invalid-feedback">{{ form.series_issn.errors.0 }}</div>
-            {% else %}
-            <div class="form-text">ISSN za seriju zbornika radova</div>
-            {% endif %}
-        </div>
-    </div>
+    {% endwith %}
+
+    {% include "components/_field.html" with field=form.conference_location label="Lokacija" class="col-md-6" only %}
+    {% include "components/_field.html" with field=form.series_issn label="ISSN serije" help="ISSN serije zbornika, ako postoji. Format: 1234-5678" class="col-md-6" only %}
+  </div>
 </div>

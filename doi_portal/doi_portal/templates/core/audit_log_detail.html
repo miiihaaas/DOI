@@ -1,144 +1,128 @@
 {% extends "admin_base.html" %}
+{% load static ui_tags %}
 
-{% block title %}Detalj #{{ entry.pk }} - Revizioni log - DOI Portal{% endblock %}
+{% block title %}{{ entry.get_action_display|capfirst }}: {{ page_title|truncatechars:60 }} - Revizioni log - DOI Portal{% endblock %}
+
+{% block css %}
+  {{ block.super }}
+  <link href="{% static 'css/admin-system.css' %}" rel="stylesheet" />
+{% endblock css %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0"><i class="bi bi-clock-history me-2"></i>Detalj #{{ entry.pk }}</h1>
-    <a href="{% url 'core:audit-log-list' %}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Nazad na listu
-    </a>
-</div>
+{% with model_name=entry.content_type.name|capfirst when=entry.timestamp|date:"d.m.Y. H:i:s" %}
+{% with header_meta=model_name|add:" · "|add:when header_title=page_title|truncatechars:90 %}
+  {% if entry.action == 0 %}
+    {% pageheader title=header_title icon="bi-clock-history" badge="Kreiranje" badge_tone="success" meta=header_meta %}
+      <a href="{% url 'core:audit-log-list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad</a>
+    {% endpageheader %}
+  {% elif entry.action == 1 %}
+    {% pageheader title=header_title icon="bi-clock-history" badge="Izmena" badge_tone="pending" meta=header_meta %}
+      <a href="{% url 'core:audit-log-list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad</a>
+    {% endpageheader %}
+  {% elif entry.action == 2 %}
+    {% pageheader title=header_title icon="bi-clock-history" badge="Brisanje" badge_tone="danger" meta=header_meta %}
+      <a href="{% url 'core:audit-log-list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad</a>
+    {% endpageheader %}
+  {% else %}
+    {% pageheader title=header_title icon="bi-clock-history" badge=entry.get_action_display meta=header_meta %}
+      <a href="{% url 'core:audit-log-list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad</a>
+    {% endpageheader %}
+  {% endif %}
+{% endwith %}
+{% endwith %}
 
-<!-- Metadata -->
-<div class="card admin-card mb-4">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Metapodaci</h5>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <table class="table table-borderless">
-                    <tr>
-                        <th class="text-muted" style="width: 40%;">Vreme</th>
-                        <td>{{ entry.timestamp|date:"d.m.Y. H:i:s" }}</td>
-                    </tr>
-                    <tr>
-                        <th class="text-muted">Korisnik</th>
-                        <td>
-                            {% if entry.actor %}
-                                {{ entry.actor.email }}
-                            {% else %}
-                                <span class="text-muted">Sistem</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th class="text-muted">Akcija</th>
-                        <td>
-                            {% if entry.action == 0 %}
-                                <span class="badge bg-success">Kreiranje</span>
-                            {% elif entry.action == 1 %}
-                                <span class="badge bg-warning text-dark">Izmena</span>
-                            {% elif entry.action == 2 %}
-                                <span class="badge bg-danger">Brisanje</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <div class="col-md-6">
-                <table class="table table-borderless">
-                    <tr>
-                        <th class="text-muted" style="width: 40%;">Model</th>
-                        <td>{{ entry.content_type }}</td>
-                    </tr>
-                    <tr>
-                        <th class="text-muted">Object ID</th>
-                        <td>{{ entry.object_pk }}</td>
-                    </tr>
-                    <tr>
-                        <th class="text-muted">Objekat</th>
-                        <td>{{ entry.object_repr }}</td>
-                    </tr>
-                    {% if entry.remote_addr %}
-                    <tr>
-                        <th class="text-muted">IP adresa</th>
-                        <td>{{ entry.remote_addr }}</td>
-                    </tr>
-                    {% endif %}
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Changes -->
-{% if entry.action == 1 and changes_data %}
-<!-- UPDATE: Side by side old vs new -->
-<div class="card admin-card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Izmene</h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Polje</th>
-                        <th>Stara vrednost</th>
-                        <th>Nova vrednost</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for field, vals in changes_data.items %}
-                    <tr>
-                        <td><strong>{{ field }}</strong></td>
-                        <td class="text-danger">{{ vals.old|default:"-" }}</td>
-                        <td class="text-success">{{ vals.new|default:"-" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-{% elif entry.action == 0 and changes_data %}
-<!-- CREATE: Show set values -->
-<div class="card admin-card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Postavljene vrednosti</h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Polje</th>
-                        <th>Vrednost</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for field, vals in changes_data.items %}
-                    <tr>
-                        <td><strong>{{ field }}</strong></td>
-                        <td>{{ vals.new|default:"-" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-{% elif entry.action == 2 %}
-<!-- DELETE: Show object repr -->
-<div class="card admin-card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Obrisani objekat</h5>
-    </div>
-    <div class="card-body">
+<div class="row g-3">
+  {# Changes #}
+  <div class="col-xl-8">
+    {% if entry.action == 1 and changes_data %}
+    <section class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title"><i class="bi bi-arrow-left-right me-2" aria-hidden="true"></i>Izmene</h2>
+        <span class="badge bg-secondary">{{ changes_data|length }}</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table--dense audit-diff">
+          <thead>
+            <tr>
+              <th>Polje</th>
+              <th>Stara vrednost</th>
+              <th>Nova vrednost</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for field, vals in changes_data.items %}
+            <tr>
+              <td><code class="admin-code">{{ field }}</code></td>
+              <td>{% if vals.old and vals.old != "None" %}<del class="audit-diff__old">{{ vals.old }}</del>{% else %}<span class="cell-meta">prazno</span>{% endif %}</td>
+              <td>{% if vals.new and vals.new != "None" %}<ins class="audit-diff__new">{{ vals.new }}</ins>{% else %}<span class="cell-meta">prazno</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% elif entry.action == 0 and changes_data %}
+    <section class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title"><i class="bi bi-plus-square me-2" aria-hidden="true"></i>Postavljene vrednosti</h2>
+        <span class="badge bg-secondary">{{ changes_data|length }}</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table--dense audit-diff">
+          <thead>
+            <tr>
+              <th>Polje</th>
+              <th>Vrednost</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for field, vals in changes_data.items %}
+            <tr>
+              <td><code class="admin-code">{{ field }}</code></td>
+              <td>{% if vals.new and vals.new != "None" %}{{ vals.new }}{% else %}<span class="cell-meta">prazno</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% elif entry.action == 2 %}
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title"><i class="bi bi-trash me-2" aria-hidden="true"></i>Obrisani objekat</h2>
+      </div>
+      <div class="card-body">
         <p class="mb-0">{{ entry.object_repr }}</p>
+      </div>
+    </section>
+    {% else %}
+    <div class="card">
+      {% include "components/_empty_state.html" with icon="bi-clock-history" text="Za ovaj unos nisu zabeležene izmene polja." compact=True only %}
     </div>
+    {% endif %}
+  </div>
+
+  {# Metadata #}
+  <div class="col-xl-4">
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title"><i class="bi bi-info-circle me-2" aria-hidden="true"></i>Metapodaci</h2>
+      </div>
+      <div class="card-body">
+        <dl class="admin-dl admin-dl--single">
+          <div class="admin-dl-row"><dt>Vreme</dt><dd>{{ entry.timestamp|date:"d.m.Y. H:i:s" }}</dd></div>
+          <div class="admin-dl-row"><dt>Korisnik</dt><dd>{% if entry.actor %}{{ entry.actor.email }}{% else %}<span class="text-muted">Sistem</span>{% endif %}</dd></div>
+          <div class="admin-dl-row"><dt>Akcija</dt><dd>{% if entry.action == 0 %}Kreiranje{% elif entry.action == 1 %}Izmena{% elif entry.action == 2 %}Brisanje{% else %}{{ entry.get_action_display }}{% endif %}</dd></div>
+          <div class="admin-dl-row"><dt>Model</dt><dd>{{ entry.content_type.name|capfirst }}</dd></div>
+          <div class="admin-dl-row"><dt>ID objekta</dt><dd class="mono-id">{{ entry.object_pk }}</dd></div>
+          <div class="admin-dl-row"><dt>Objekat</dt><dd>{{ entry.object_repr }}</dd></div>
+          {% if entry.remote_addr %}
+          <div class="admin-dl-row"><dt>IP adresa</dt><dd class="mono-id">{{ entry.remote_addr }}</dd></div>
+          {% endif %}
+          <div class="admin-dl-row"><dt>Unos br.</dt><dd class="mono-id">{{ entry.pk }}</dd></div>
+        </dl>
+      </div>
+    </section>
+  </div>
 </div>
-{% endif %}
 {% endblock %}

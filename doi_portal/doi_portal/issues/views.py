@@ -5,6 +5,7 @@ Story 2.6: Issue admin CRUD views with row-level permissions.
 """
 
 from django.contrib import messages
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
@@ -38,6 +39,9 @@ def _get_pub_type_from_publication_id(publication_id):
             pass
     return PublicationType.JOURNAL
 
+
+# A purely numeric search term this short is also tried as a year
+YEAR_MAX_DIGITS = 4
 
 # Whitelist of allowed sort fields
 ALLOWED_SORT_FIELDS = {
@@ -74,7 +78,7 @@ class IssueListView(PublisherScopedMixin, ListView):
         return queryset.none()
 
     def get_queryset(self):
-        """Filter issues by publication, status; apply sorting and scoping."""
+        """Filter issues by publication, status, search; apply sorting and scoping."""
         queryset = super().get_queryset().select_related(
             "publication", "publication__publisher"
         )
@@ -91,6 +95,21 @@ class IssueListView(PublisherScopedMixin, ListView):
         status = self.request.GET.get("status")
         if status and status in [choice[0] for choice in IssueStatus.choices]:
             queryset = queryset.filter(status=status)
+
+        # Text search: issue title, volume, number, proceedings title,
+        # publication title; a purely numeric query also matches the year.
+        search = self.request.GET.get("q", "").strip()
+        if search:
+            search_filter = (
+                Q(title__icontains=search)
+                | Q(volume__icontains=search)
+                | Q(issue_number__icontains=search)
+                | Q(proceedings_title__icontains=search)
+                | Q(publication__title__icontains=search)
+            )
+            if search.isdecimal() and len(search) <= YEAR_MAX_DIGITS:
+                search_filter |= Q(year=int(search))
+            queryset = queryset.filter(search_filter)
 
         # Sorting
         sort_field = self.request.GET.get("sort", "year")
@@ -145,6 +164,16 @@ class IssueListView(PublisherScopedMixin, ListView):
         context["status_choices"] = IssueStatus.choices
         context["current_status"] = self.request.GET.get("status", "")
         context["current_publication"] = self.request.GET.get("publication", "")
+        context["search_query"] = self.request.GET.get("q", "").strip()
+        # Filter bar state: "Poništi" clears status/search but keeps the
+        # publication scope the list was opened with.
+        context["filters_active"] = bool(
+            context["current_status"] or context["search_query"],
+        )
+        reset_url = reverse("issues:list")
+        if publication:
+            reset_url = f"{reset_url}?publication={publication.pk}"
+        context["filter_reset_url"] = reset_url
         context["current_sort"] = self.request.GET.get("sort", "year")
         context["current_order"] = self.request.GET.get("order", "desc")
 

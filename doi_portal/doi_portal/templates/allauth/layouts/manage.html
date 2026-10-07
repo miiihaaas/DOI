@@ -1,6 +1,14 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
+{% comment %}
+  allauth "manage" pages (email addresses, password change, two-factor
+  authentication) render inside the dashboard shell through allauth/elements/*.
+  The shell provides flash messages; `content` is the shell's main block and
+  `extra_body` carries allauth's page scripts.
+{% endcomment %}
+{% load i18n %}
 
-{% block main %}
-  {% block content %}
-  {% endblock content %}
-{% endblock main %}
+{% block title %}{% block head_title %}{% endblock head_title %} - DOI Portal{% endblock title %}
+
+{% block content %}{% endblock content %}
+
+{% block inline_javascript %}{% block extra_body %}{% endblock extra_body %}{% endblock inline_javascript %}

@@ -1,184 +1,102 @@
 {% extends "admin_base.html" %}
+{% load ui_tags %}
 
 {% block title %}{{ form_title }} - DOI Portal{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0 page-title">
-        <i class="bi bi-journal-text me-2"></i>{{ form_title }}
-    </h1>
-</div>
+{% pageheader title=form_title icon="bi-journal-text" %}{% endpageheader %}
 
-<div class="row justify-content-center">
-    <div class="col-lg-10">
-        <div class="card admin-card section-card">
-            <div class="card-header">
-                <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
+<div class="row">
+  <div class="col-xl-8">
+    <div class="card">
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+
+          {% if form.errors %}
+          <div class="status-strip status-strip--danger" role="alert">
+            {% for error in form.non_field_errors %}
+            <span class="status-strip__item"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ error }}</span>
+            {% empty %}
+            <span class="status-strip__item"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>Ispravite označena polja i pokušajte ponovo.</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <h2 class="form-section-title"><i class="bi bi-info-circle me-2" aria-hidden="true"></i>Osnovni podaci</h2>
+          <div class="row g-3">
+            {% include "components/_field.html" with field=form.title label="Naslov" class="col-md-8" hide_help=True only %}
+            {% include "components/_field.html" with field=form.publisher label="Izdavač" class="col-md-4" only %}
+
+            {# Hand-rendered: the select drives the HTMX swap of #type-specific-fields #}
+            <div class="field field--select col-md-4{% if form.publication_type.errors %} has-error{% endif %}">
+              <label class="field__label" for="id_publication_type">Tip publikacije<span class="field__req" aria-hidden="true">*</span></label>
+              <select name="publication_type"
+                      id="id_publication_type"
+                      class="form-select{% if form.publication_type.errors %} is-invalid{% endif %}"
+                      required
+                      {% if form.publication_type.errors %}aria-invalid="true" aria-describedby="id_publication_type_error"{% endif %}
+                      hx-get="{% url 'publications:htmx-type-fields' %}"
+                      hx-target="#type-specific-fields"
+                      hx-trigger="change"
+                      hx-include="this"
+                      hx-swap="innerHTML">
+                {% for value, label in publication_types %}
+                <option value="{{ value }}"{% if form.publication_type.value == value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              {% if form.publication_type.errors %}
+              <div class="field__error invalid-feedback d-block" id="id_publication_type_error">
+                {% for error in form.publication_type.errors %}<div>{{ error }}</div>{% endfor %}
+              </div>
+              {% endif %}
             </div>
-            <div class="card-body">
-                <form method="post" enctype="multipart/form-data" novalidate>
-                    {% csrf_token %}
+            {% include "components/_field.html" with field=form.language label="Jezik" class="col-md-4" only %}
+            {% include "components/_field.html" with field=form.access_type label="Tip pristupa" class="col-md-4" only %}
+          </div>
 
-                    <!-- Form Errors Summary -->
-                    {% if form.errors %}
-                    <div class="alert alert-danger mb-4">
-                        <h6 class="alert-heading mb-2">
-                            <i class="bi bi-exclamation-triangle me-2"></i>Ispravite sledeće greške:
-                        </h6>
-                        <ul class="mb-0">
-                            {% for field in form %}
-                                {% for error in field.errors %}
-                                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
-                                {% endfor %}
-                            {% endfor %}
-                            {% for error in form.non_field_errors %}
-                            <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
+          {# Type-specific section, swapped by HTMX when the type changes #}
+          <div id="type-specific-fields">
+            {% if form.publication_type.value == 'JOURNAL' or not form.publication_type.value %}
+              {% include "publications/partials/_type_fields_journal.html" %}
+            {% elif form.publication_type.value == 'CONFERENCE' %}
+              {% include "publications/partials/_type_fields_conference.html" %}
+            {% else %}
+              {% include "publications/partials/_type_fields_other.html" %}
+            {% endif %}
+          </div>
 
-                    <div class="row">
-                        <div class="col-md-8 mb-3">
-                            <label for="id_title" class="form-label admin-form-label">Naslov <span class="text-danger">*</span></label>
-                            {{ form.title }}
-                            {% if form.title.errors %}
-                            <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="id_publisher" class="form-label admin-form-label">Izdavač <span class="text-danger">*</span></label>
-                            {{ form.publisher }}
-                            {% if form.publisher.errors %}
-                            <div class="invalid-feedback d-block">{{ form.publisher.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
+          <hr class="form-section-divider">
+          <h2 class="form-section-title"><i class="bi bi-card-text me-2" aria-hidden="true"></i>Opis i naslovna slika</h2>
+          <div class="row g-3">
+            {% include "components/_field.html" with field=form.subject_area label="Naučna oblast" class="col-md-6" only %}
+            {% include "components/_field.html" with field=form.description label="Opis" class="col-12" only %}
 
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="id_publication_type" class="form-label admin-form-label">Tip publikacije <span class="text-danger">*</span></label>
-                            <select name="publication_type"
-                                    id="id_publication_type"
-                                    class="form-select"
-                                    hx-get="{% url 'publications:htmx-type-fields' %}"
-                                    hx-target="#type-specific-fields"
-                                    hx-trigger="change"
-                                    hx-include="this"
-                                    hx-swap="innerHTML">
-                                {% for value, label in publication_types %}
-                                <option value="{{ value }}" {% if form.publication_type.value == value %}selected{% endif %}>
-                                    {{ label }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            {% if form.publication_type.errors %}
-                            <div class="invalid-feedback d-block">{{ form.publication_type.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="id_language" class="form-label admin-form-label">Jezik</label>
-                            {{ form.language }}
-                            <div class="form-text">ISO 639-1 kod (npr. 'sr', 'en')</div>
-                            {% if form.language.errors %}
-                            <div class="invalid-feedback d-block">{{ form.language.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="id_access_type" class="form-label admin-form-label">Tip pristupa</label>
-                            {{ form.access_type }}
-                            {% if form.access_type.errors %}
-                            <div class="invalid-feedback d-block">{{ form.access_type.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_description" class="form-label admin-form-label">Opis</label>
-                        {{ form.description }}
-                        {% if form.description.errors %}
-                        <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="id_subject_area" class="form-label admin-form-label">Naučna oblast</label>
-                            {{ form.subject_area }}
-                            {% if form.subject_area.errors %}
-                            <div class="invalid-feedback d-block">{{ form.subject_area.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="id_cover_image" class="form-label admin-form-label">Naslovna slika</label>
-                            {% if form.instance.cover_image %}
-                            <div class="mb-2">
-                                <img src="{{ form.instance.cover_image.url }}" alt="Trenutna naslovna slika" class="admin-logo-thumb">
-                            </div>
-                            {% endif %}
-                            {{ form.cover_image }}
-                            <div class="form-text">Dozvoljeni formati: JPG, PNG, WebP. Max. veličina: 5MB.</div>
-                            {% if form.cover_image.errors %}
-                            <div class="invalid-feedback d-block">{{ form.cover_image.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- Dynamic Type-Specific Fields Section -->
-                    <div id="type-specific-fields">
-                        {% if form.publication_type.value == 'JOURNAL' or not form.publication_type.value %}
-                            {% include "publications/partials/_type_fields_journal.html" %}
-                        {% elif form.publication_type.value == 'CONFERENCE' %}
-                            {% include "publications/partials/_type_fields_conference.html" %}
-                        {% else %}
-                            {% include "publications/partials/_type_fields_other.html" %}
-                        {% endif %}
-                    </div>
-
-                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
-                        <a href="{% url 'publications:list' %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>Nazad
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-lg me-1"></i>{{ submit_text }}
-                        </button>
-                    </div>
-                </form>
+            {# Hand-rendered: file input with a preview of the current image #}
+            <div class="field field--file col-md-6{% if form.cover_image.errors %} has-error{% endif %}">
+              <label class="field__label" for="id_cover_image">Naslovna slika</label>
+              {% if form.instance.cover_image %}
+              <img src="{{ form.instance.cover_image.url }}" alt="Trenutna naslovna slika" class="admin-logo-thumb d-block mb-2">
+              {% endif %}
+              {{ form.cover_image }}
+              <div class="field__help" id="id_cover_image_helptext">JPG, PNG ili WebP, do 5 MB.</div>
+              {% if form.cover_image.errors %}
+              <div class="field__error invalid-feedback d-block">
+                {% for error in form.cover_image.errors %}<div>{{ error }}</div>{% endfor %}
+              </div>
+              {% endif %}
             </div>
-        </div>
+          </div>
+
+          <div class="form-actions">
+            <div class="form-actions__start">
+              <a href="{% if form.instance.pk %}{% url 'publications:detail' form.instance.slug %}{% else %}{% url 'publications:list' %}{% endif %}" class="btn btn-outline-secondary">Otkaži</a>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ submit_text }}</button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
-{% endblock %}
-
-{% block inline_javascript %}
-{{ block.super }}
-<script>
-// Debug: Log HTMX events for type fields
-document.addEventListener('DOMContentLoaded', function() {
-    var typeSelect = document.getElementById('id_publication_type');
-    if (typeSelect) {
-        console.log('HTMX: Type select found');
-
-        document.body.addEventListener('htmx:beforeRequest', function(evt) {
-            console.log('HTMX beforeRequest:', evt.detail);
-        });
-        document.body.addEventListener('htmx:afterRequest', function(evt) {
-            console.log('HTMX afterRequest:', evt.detail);
-        });
-        document.body.addEventListener('htmx:responseError', function(evt) {
-            console.error('HTMX responseError:', evt.detail);
-        });
-
-        typeSelect.addEventListener('change', function() {
-            console.log('Type changed to:', this.value);
-            setTimeout(function() {
-                var target = document.getElementById('type-specific-fields');
-                console.log('Target content length:', target ? target.innerHTML.length : 0);
-            }, 500);
-        });
-    } else {
-        console.error('HTMX: Type select NOT found!');
-    }
-});
-</script>
 {% endblock %}

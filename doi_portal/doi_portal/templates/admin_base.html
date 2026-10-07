@@ -11,6 +11,8 @@
   </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="DOI Portal - Administrativni panel" />
+  {# Back/Forward after an hx-push-url swap is a real page load; an htmx history restore would replace the body and kill the shell's listeners. #}
+  <meta name="htmx-config" content='{"historyCacheSize":0,"refreshOnHistoryMiss":true}' />
   <link rel="icon" type="image/png" href="{% static 'images/favicons/doi-favicon-final.png' %}" />
 
   {% block css %}
@@ -27,6 +29,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tom Select 2.6.2: searchable selects (initialised in js/project.js) -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.6.2/css/tom-select.bootstrap5.min.css"
+          integrity="sha512-i7u4/+Er1Te9jbqe4v2TbK1U85c+9VodwiT6AXIosft3ptP6ht8MOll05XLSrUSBLB4Ty8iGxr3FsXVhYC75gA=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer" />
+    <link href="{% static 'css/searchable-select.css' %}" rel="stylesheet" />
     <!-- Project CSS -->
     <link href="{% static 'css/project.css' %}" rel="stylesheet" />
     <!-- Admin Panel CSS -->
@@ -44,133 +53,239 @@
     <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
     <!-- Alpine.js 3.x (per project-context.md) -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.3/dist/cdn.min.js"></script>
+    <!-- Tom Select 2.6.2: searchable selects (must load before project.js) -->
+    <script defer
+            src="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.6.2/js/tom-select.base.min.js"
+            integrity="sha512-sGvtRUpqIMpecJHOTw2lw3hWjEQLKWKgxYNqO2PWr/Ri0CTSCrUEVZ2kfauKi8AiOsZllvNpWyrn14blgw5BHQ=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"></script>
     <!-- Project JS -->
     <script defer src="{% static 'js/project.js' %}"></script>
   {% endblock javascript %}
 </head>
-<body>
-  <div class="d-flex" id="wrapper">
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <a class="skip-link" href="#main-content">Preskoči na sadržaj</a>
+  <!-- Global HTMX request indicator (driven by the shell script below) -->
+  <div class="htmx-progress" id="htmxProgress" aria-hidden="true"></div>
+
+  <div id="wrapper">
+    <script>
+      /* Restore the collapsed sidebar before first paint (desktop only) so the page does not animate on load. */
+      (function () {
+        try {
+          if (window.matchMedia('(min-width: 992px)').matches &&
+              localStorage.getItem('sidebar-collapsed') === 'true') {
+            document.getElementById('wrapper').classList.add('toggled');
+          }
+        } catch (e) { /* storage unavailable: keep the default */ }
+      })();
+    </script>
+
     <!-- Sidebar -->
-    <div class="text-white" id="sidebar-wrapper">
-      <a href="{% url 'home' %}" class="sidebar-heading py-4 px-3 fs-5 fw-bold d-block text-white text-decoration-none">
-        <i class="bi bi-journal-bookmark-fill me-2"></i>DOI Portal
+    <aside id="sidebar-wrapper">
+      <a href="{% url 'dashboard' %}" class="sidebar-brand" title="Kontrolna tabla">
+        <i class="bi bi-journal-bookmark-fill" aria-hidden="true"></i><span>DOI Portal</span>
       </a>
-      <div class="list-group list-group-flush sidebar-menu">
+      <nav class="sidebar-menu" aria-label="Glavni meni">
         {% render_sidebar_menu %}
-      </div>
-    </div>
+      </nav>
+    </aside>
 
     <!-- Sidebar overlay (mobile) -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Page Content -->
-    <div id="page-content-wrapper" class="flex-grow-1 d-flex flex-column min-vh-100">
-      <!-- Top Navigation -->
-      <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
-        <div class="container-fluid">
-          <button class="sidebar-toggle me-2" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
-            <span class="toggle-bar"></span>
-            <span class="toggle-bar"></span>
-            <span class="toggle-bar"></span>
-          </button>
+    <div id="page-content-wrapper">
+      <!-- Top bar: menu toggle, breadcrumbs, public-site link, user menu -->
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" type="button"
+                aria-label="Prikaži ili sakrij glavni meni"
+                aria-controls="sidebar-wrapper"
+                aria-expanded="true">
+          <span class="toggle-bar"></span>
+          <span class="toggle-bar"></span>
+          <span class="toggle-bar"></span>
+        </button>
 
-          <!-- Mobile brand -->
-          <a class="navbar-brand d-lg-none" href="{% url 'dashboard' %}">DOI Portal</a>
+        <div class="topbar__crumbs">
+          {% if breadcrumbs %}
+            {% include "components/_breadcrumbs.html" %}
+          {% else %}
+            <a class="topbar__brand" href="{% url 'dashboard' %}">DOI Portal</a>
+          {% endif %}
+        </div>
 
+        <div class="topbar__end">
+          <a class="topbar__link" href="{% url 'home' %}" target="_blank" rel="noopener"
+             title="Otvori javni sajt u novoj kartici">
+            <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span class="topbar__link-text">Javni sajt</span>
+          </a>
           {% include "components/_user_dropdown.html" %}
         </div>
-      </nav>
-
-      <!-- Breadcrumbs -->
-      {% include "components/_breadcrumbs.html" %}
+      </header>
 
       <!-- Messages -->
-      <div class="container-fluid">
-        {% if messages %}
-          {% for message in messages %}
-            <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %} fade show mt-3"
-                 role="alert">
-              {{ message }}
-              <button type="button"
-                      class="btn-close"
-                      data-bs-dismiss="alert"
-                      aria-label="Close"></button>
-            </div>
-          {% endfor %}
-        {% endif %}
+      <div class="admin-messages" aria-live="polite">
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.level_tag == 'error' %}alert-danger{% elif message.level_tag == 'debug' %}alert-secondary{% elif message.level_tag %}alert-{{ message.level_tag }}{% else %}alert-info{% endif %}{% if message.extra_tags %} {{ message.extra_tags }}{% endif %} fade show"
+               role="{% if message.level_tag == 'error' %}alert{% else %}status{% endif %}">
+            {{ message }}
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Zatvori poruku"></button>
+          </div>
+        {% endfor %}
       </div>
 
       <!-- Main Content -->
-      <main class="container-fluid py-4 flex-grow-1">
+      <main class="admin-main" id="main-content">
         {% block content %}
         {% endblock content %}
       </main>
 
       <!-- Footer -->
-      <footer class="footer mt-auto py-3">
-        <div class="container-fluid">
-          <span class="text-muted">DOI Portal © {% now "Y" %}</span>
-        </div>
-      </footer>
+      <footer class="admin-footer">DOI Portal © {% now "Y" %}</footer>
     </div>
   </div>
 
-  {% block inline_javascript %}
+  {# Shell behaviour. Kept outside the inline_javascript block so pages that override the block without block.super keep a working sidebar. #}
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       var sidebarToggle = document.getElementById('sidebarToggle');
       var wrapper = document.getElementById('wrapper');
       var overlay = document.getElementById('sidebarOverlay');
-      var isMobile = function() { return window.innerWidth <= 768; };
+      /* Must match the 992px breakpoint in admin.css */
+      var mobileQuery = window.matchMedia('(max-width: 991.98px)');
+      var isMobile = function () { return mobileQuery.matches; };
 
+      /* ---- Sidebar ---- */
       function updateToggleState() {
-        if (isMobile()) {
-          // On mobile: toggled = sidebar visible
-          var isOpen = wrapper.classList.contains('toggled');
-          sidebarToggle.classList.toggle('is-open', isOpen);
-          overlay.classList.toggle('active', isOpen);
-        } else {
-          // On desktop: toggled = sidebar hidden
-          sidebarToggle.classList.remove('is-open');
-          overlay.classList.remove('active');
-        }
+        var toggled = wrapper.classList.contains('toggled');
+        /* Mobile: toggled = sidebar visible. Desktop: toggled = sidebar hidden. */
+        var isVisible = isMobile() ? toggled : !toggled;
+        sidebarToggle.setAttribute('aria-expanded', isVisible ? 'true' : 'false');
+        sidebarToggle.classList.toggle('is-open', isMobile() && toggled);
+        if (overlay) { overlay.classList.toggle('active', isMobile() && toggled); }
+      }
+
+      function storePreference(value) {
+        try { localStorage.setItem('sidebar-collapsed', value); } catch (e) { /* ignore */ }
       }
 
       if (sidebarToggle && wrapper) {
-        sidebarToggle.addEventListener('click', function(e) {
+        sidebarToggle.addEventListener('click', function (e) {
           e.preventDefault();
           wrapper.classList.toggle('toggled');
           updateToggleState();
-
-          // Store preference only on desktop
-          if (!isMobile()) {
-            localStorage.setItem('sidebar-collapsed', wrapper.classList.contains('toggled'));
-          }
+          /* Store preference only on desktop */
+          if (!isMobile()) { storePreference(wrapper.classList.contains('toggled')); }
         });
 
-        // Overlay click closes sidebar on mobile
         if (overlay) {
-          overlay.addEventListener('click', function() {
+          overlay.addEventListener('click', function () {
             wrapper.classList.remove('toggled');
             updateToggleState();
           });
         }
 
-        // Restore desktop preference
-        if (!isMobile() && localStorage.getItem('sidebar-collapsed') === 'true') {
-          wrapper.classList.add('toggled');
-        }
-
-        // Handle resize
-        window.addEventListener('resize', function() {
-          if (!isMobile()) {
-            overlay.classList.remove('active');
-            sidebarToggle.classList.remove('is-open');
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && isMobile() && wrapper.classList.contains('toggled')) {
+            wrapper.classList.remove('toggled');
+            updateToggleState();
+            sidebarToggle.focus();
           }
         });
+
+        /* Crossing the breakpoint: "toggled" means the opposite on each side, so reset it. */
+        var onBreakpointChange = function () {
+          var collapsed = false;
+          try { collapsed = localStorage.getItem('sidebar-collapsed') === 'true'; } catch (e) { /* ignore */ }
+          wrapper.classList.toggle('toggled', !isMobile() && collapsed);
+          updateToggleState();
+        };
+        if (mobileQuery.addEventListener) {
+          mobileQuery.addEventListener('change', onBreakpointChange);
+        } else if (mobileQuery.addListener) {
+          mobileQuery.addListener(onBreakpointChange);
+        }
+
+        updateToggleState();
+      }
+
+      /* ---- Filter bars: [data-autosubmit] forms submit when a select/checkbox/date changes ---- */
+      document.addEventListener('change', function (e) {
+        var target = e.target;
+        if (!target || !target.matches || !target.form) { return; }
+        if (!target.form.hasAttribute('data-autosubmit')) { return; }
+        if (target.matches('select, input[type="checkbox"], input[type="radio"], input[type="date"]')) {
+          if (target.form.requestSubmit) { target.form.requestSubmit(); } else { target.form.submit(); }
+        }
+      });
+
+      /* ---- Plain POST forms: <form data-confirm="Pitanje?"> asks before submitting ----
+         For HTMX buttons use hx-confirm; for a confirmation that needs input use a modal. */
+      document.addEventListener('submit', function (e) {
+        var form = e.target;
+        var message = form && form.getAttribute ? form.getAttribute('data-confirm') : null;
+        if (message && !window.confirm(message)) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+
+      /* ---- Global HTMX progress line ----
+         Shown only for requests started by a user action (click, submit, typing).
+         Polling ("every") and "load" requests carry no triggering event in htmx,
+         so the !trigger check below silences them; "revealed" and "intersect"
+         do carry one and are listed in silentTriggers. Opt out per element with
+         data-no-progress on it or any ancestor. */
+      var progress = document.getElementById('htmxProgress');
+      if (progress) {
+        var silentTriggers = { 'revealed': 1, 'intersect': 1 };
+        var tracked = typeof WeakSet === 'function' ? new WeakSet() : null;
+        var pending = 0;
+        var showTimer = null;
+
+        var isUserRequest = function (evt) {
+          var detail = evt.detail || {};
+          var elt = detail.elt;
+          if (elt && elt.closest && elt.closest('[data-no-progress]')) { return false; }
+          var trigger = detail.requestConfig && detail.requestConfig.triggeringEvent;
+          if (!trigger) { return false; }
+          return !silentTriggers[trigger.type];
+        };
+
+        document.body.addEventListener('htmx:beforeSend', function (evt) {
+          if (!tracked || !evt.detail || !evt.detail.xhr || !isUserRequest(evt)) { return; }
+          tracked.add(evt.detail.xhr);
+          pending += 1;
+          if (pending === 1 && !showTimer) {
+            /* Short delay so instant responses do not flash the line */
+            showTimer = window.setTimeout(function () {
+              showTimer = null;
+              if (pending > 0) { progress.classList.add('is-active'); }
+            }, 150);
+          }
+        });
+
+        var finish = function (evt) {
+          var xhr = evt.detail && evt.detail.xhr;
+          if (!tracked || !xhr || !tracked.has(xhr)) { return; }
+          tracked.delete(xhr);
+          pending = Math.max(0, pending - 1);
+          if (pending === 0) {
+            if (showTimer) { window.clearTimeout(showTimer); showTimer = null; }
+            progress.classList.remove('is-active');
+          }
+        };
+        /* afterRequest fires for success, HTTP errors, network errors, aborts and timeouts */
+        document.body.addEventListener('htmx:afterRequest', finish);
       }
     });
   </script>
+
+  {% block inline_javascript %}
   {% endblock inline_javascript %}
 </body>
 </html>

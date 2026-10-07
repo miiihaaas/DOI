@@ -2,7 +2,7 @@
 <div id="funding-container">
     {% for funding in fundings %}
     <div class="d-flex align-items-center gap-2 mb-2 p-2 border rounded" data-funding-id="{{ funding.pk }}">
-        <i class="bi bi-grip-vertical funding-drag-handle text-muted" style="cursor: grab;"></i>
+        <i class="bi bi-grip-vertical funding-drag-handle text-muted" title="Prevucite za promenu redosleda" aria-hidden="true"></i>
         <div class="flex-grow-1">
             <span class="fw-semibold">{{ funding.funder_name }}</span>
             {% if funding.award_number %}
@@ -16,13 +16,14 @@
                 hx-post="{% url 'articles:funding-delete' pk=funding.pk %}"
                 hx-target="#funding-section-content"
                 hx-swap="innerHTML"
-                hx-confirm="Obrisati finansijera?">
-            <i class="bi bi-trash"></i>
+                hx-confirm="Obrisati finansijera?"
+                title="Obriši finansijera" aria-label="Obriši finansijera {{ funding.funder_name }}">
+            <i class="bi bi-trash" aria-hidden="true"></i>
         </button>
     </div>
     {% empty %}
     <div class="text-muted text-center py-2">
-        Nema dodanih finansijera.
+        Nema dodatih finansijera.
     </div>
     {% endfor %}
 </div>

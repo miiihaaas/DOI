@@ -1,55 +1,47 @@
 {% extends "admin_base.html" %}
+{% load ui_tags %}
 
 {% block title %}Novi GDPR zahtev - DOI Portal{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0"><i class="bi bi-shield-lock me-2"></i>Novi GDPR zahtev</h1>
-</div>
+{% include "components/_page_header.html" with title="Novi GDPR zahtev" icon="bi-shield-lock" only %}
 
-<div class="card">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-            {% for field in form %}
-            <div class="mb-3">
-                <label for="{{ field.id_for_label }}" class="form-label">
-                    {{ field.label }}
-                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
-                </label>
-                {% if field.field.widget.input_type == "select" %}
-                    <select name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="form-select {% if field.errors %}is-invalid{% endif %}">
-                        {% for choice in field.field.choices %}
-                        <option value="{{ choice.0 }}" {% if field.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>{{ choice.1 }}</option>
-                        {% endfor %}
-                    </select>
-                {% elif field.name == "notes" %}
-                    <textarea name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="form-control {% if field.errors %}is-invalid{% endif %}" rows="3">{{ field.value|default:"" }}</textarea>
-                {% else %}
-                    <input type="{{ field.field.widget.input_type|default:'text' }}"
-                           name="{{ field.html_name }}"
-                           id="{{ field.id_for_label }}"
-                           value="{{ field.value|default:'' }}"
-                           class="form-control {% if field.errors %}is-invalid{% endif %}"
-                           {% if field.field.required %}required{% endif %}>
-                {% endif %}
-                {% if field.errors %}
-                <div class="invalid-feedback">
-                    {% for error in field.errors %}{{ error }}{% endfor %}
-                </div>
-                {% endif %}
-                {% if field.help_text %}
-                <div class="form-text">{{ field.help_text }}</div>
-                {% endif %}
+<div class="row">
+  <div class="col-xl-8">
+    <div class="card">
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+          <div class="status-strip status-strip--danger mb-3" role="alert">
+            {% for error in form.non_field_errors %}<span class="status-strip__item"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ error }}</span>{% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="row g-3">
+            {% include "components/_field.html" with field=form.requester_email class="col-md-6" only %}
+            {% include "components/_field.html" with field=form.received_date class="col-md-6" only %}
+            {% include "components/_field.html" with field=form.request_type class="col-md-6" help="Zahtev za brisanje se posle obrade izvršava uz period odlaganja od 30 dana." only %}
+            {# Hand-written: the form's default textarea is 10 rows tall; three are enough here. #}
+            <div class="field col-12{% if form.notes.errors %} has-error{% endif %}">
+              <label class="field__label" for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+              <textarea name="{{ form.notes.html_name }}" id="{{ form.notes.id_for_label }}" rows="3"
+                        class="form-control{% if form.notes.errors %} is-invalid{% endif %}"{% if form.notes.errors %} aria-invalid="true"{% endif %}>{{ form.notes.value|default:"" }}</textarea>
+              {% if form.notes.errors %}
+              <div class="field__error invalid-feedback d-block">{% for error in form.notes.errors %}<div>{{ error }}</div>{% endfor %}</div>
+              {% endif %}
             </div>
-            {% endfor %}
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-1"></i>Kreiraj zahtev
-                </button>
-                <a href="{% url 'core:gdpr-request-list' %}" class="btn btn-outline-secondary">Otkaži</a>
+          </div>
+
+          <div class="form-actions">
+            <div class="form-actions__start">
+              <a href="{% url 'core:gdpr-request-list' %}" class="btn btn-outline-secondary">Otkaži</a>
             </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Sačuvaj zahtev</button>
+          </div>
         </form>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}

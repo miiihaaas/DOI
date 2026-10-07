@@ -1,30 +1,28 @@
-{# User dropdown menu for header #}
-<ul class="navbar-nav ms-auto">
-  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle"
-       href="#"
-       id="userDropdown"
-       role="button"
-       data-bs-toggle="dropdown"
-       aria-expanded="false">
-      <i class="bi bi-person-circle me-1"></i>
-      {% if user.name %}{{ user.name }}{% else %}{{ user.email }}{% endif %}
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-      <li>
-        <a class="dropdown-item" href="{% url 'users:detail' user.pk %}">
-          <i class="bi bi-person me-2"></i>Moj profil
-        </a>
-      </li>
-      <li><hr class="dropdown-divider" /></li>
-      <li>
-        <form method="post" action="{% url 'account_logout' %}" class="d-inline">
-          {% csrf_token %}
-          <button type="submit" class="dropdown-item text-danger">
-            <i class="bi bi-box-arrow-right me-2"></i>Odjava
-          </button>
-        </form>
-      </li>
-    </ul>
-  </li>
-</ul>
+{# User menu in the top bar. Rendered once by admin_base.html. #}
+<div class="dropdown topbar-user">
+  <button class="topbar-user__toggle dropdown-toggle"
+          type="button"
+          id="userDropdown"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+          aria-label="Korisnički meni">
+    <i class="bi bi-person-circle" aria-hidden="true"></i>
+    <span class="topbar-user__name">{% if user.name %}{{ user.name }}{% else %}{{ user.email }}{% endif %}</span>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+    <li>
+      <a class="dropdown-item" href="{% url 'users:detail' user.pk %}">
+        <i class="bi bi-person me-2" aria-hidden="true"></i>Moj profil
+      </a>
+    </li>
+    <li><hr class="dropdown-divider" /></li>
+    <li>
+      <form method="post" action="{% url 'account_logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="dropdown-item topbar-user__logout">
+          <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Odjava
+        </button>
+      </form>
+    </li>
+  </ul>
+</div>

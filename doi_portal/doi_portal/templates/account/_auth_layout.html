@@ -1,0 +1,56 @@
+{% comment %}
+  Standalone layout for auth pages: login, logout, password reset and the
+  allauth "entrance" pages (allauth/layouts/entrance.html).
+  Two panels: brand (gradient) on the left, the page on the right; the panels
+  stack below 768px. Styles: static/css/auth.css.
+
+  Blocks:
+    title           <title> text
+    javascript      scripts in <head> (none by default; the login page needs none)
+    auth_messages   flash messages (empty by default)
+    content         the page: <h1>, .form-intro, form, .back-link
+    extra_body      after the content, still inside the form panel (allauth)
+    inline_javascript  end of <body>
+{% endcomment %}{% load static i18n %}
+<!DOCTYPE html>
+<html lang="sr-latn">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <title>{% block title %}DOI Portal{% endblock title %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="{% static 'images/favicons/doi-favicon-final.png' %}" />
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+        integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer" />
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="{% static 'css/auth.css' %}" rel="stylesheet" />
+  {% block javascript %}{% endblock javascript %}
+</head>
+<body>
+  <div class="login-shell">
+    <!-- Left brand panel -->
+    <div class="brand-panel">
+      <img class="brand-logo"
+           src="{% static 'images/doi-logo-negative.png' %}"
+           alt="DOI Portal" width="480" height="160" />
+      <p class="brand-tagline">Sistem za upravljanje DOI identifikatorima</p>
+      <p class="brand-sub">Registracija, deponovanje i praćenje digitalnih objekata na jednom mestu.</p>
+    </div>
+
+    <!-- Right form panel -->
+    <main class="form-panel">
+      {% block auth_messages %}{% endblock auth_messages %}
+      {% block content %}{% endblock content %}
+      {% block extra_body %}{% endblock extra_body %}
+    </main>
+  </div>
+  {% block inline_javascript %}{% endblock inline_javascript %}
+</body>
+</html>

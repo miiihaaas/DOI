@@ -1,41 +1,41 @@
 <div class="modal-dialog">
     <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title">
+            <h2 class="modal-title h5" id="approveModalLabel">
                 {% if is_ready %}
-                <i class="bi bi-check-circle me-2 text-success"></i>Potvrda odobrenja
+                <i class="bi bi-check-circle me-2 text-success" aria-hidden="true"></i>Potvrda odobrenja
                 {% else %}
-                <i class="bi bi-exclamation-triangle me-2 text-warning"></i>Nije moguće odobriti
+                <i class="bi bi-exclamation-triangle me-2 text-warning" aria-hidden="true"></i>Nije moguće odobriti
                 {% endif %}
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button>
         </div>
         <div class="modal-body">
             {% if is_ready %}
             <p>Članak <strong>{{ article.title }}</strong> će biti odobren i označen kao spreman za objavu.</p>
             <p class="text-muted mb-0">
-                <i class="bi bi-info-circle me-1"></i>
+                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
                 Nakon odobrenja, Administrator može objaviti članak.
             </p>
             {% else %}
             {% for error in errors %}
             <div class="alert alert-warning mb-2">
-                <i class="bi bi-exclamation-circle me-2"></i>{{ error }}
+                <i class="bi bi-exclamation-circle me-2" aria-hidden="true"></i>{{ error }}
             </div>
             {% endfor %}
             {% endif %}
         </div>
         <div class="modal-footer">
             {% if is_ready %}
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkaži</button>
-            <form method="post" action="{% url 'articles:article-approve' pk=article.pk %}" style="display:inline;">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Otkaži</button>
+            <form method="post" action="{% url 'articles:article-approve' pk=article.pk %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-check-circle me-1"></i>Odobri
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1" aria-hidden="true"></i>Odobri
                 </button>
             </form>
             {% else %}
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Zatvori</button>
             {% endif %}
         </div>
     </div>

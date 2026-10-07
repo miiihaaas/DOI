@@ -4,16 +4,26 @@
       hx-swap="innerHTML"
       class="mb-3">
   {% csrf_token %}
-  <div class="mb-2">
+  <label class="d-block mb-2">
+    <span class="visually-hidden">Nova napomena</span>
     {{ note_form.text }}
+  </label>
+  {% if note_form.text.errors %}
+  <div class="field__error invalid-feedback d-block mb-2">{% for error in note_form.text.errors %}<div>{{ error }}</div>{% endfor %}</div>
+  {% endif %}
+  <div class="text-end">
+    <button type="submit" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Dodaj napomenu
+    </button>
   </div>
-  <button type="submit" class="btn btn-sm btn-primary">
-    <i class="bi bi-plus-lg me-1"></i>Dodaj napomenu
-  </button>
 </form>
 
-{% for note in notes %}
+{% if notes %}
+<ul class="list-group">
+  {% for note in notes %}
   {% include "publishers/partials/_note_item.html" with note=note %}
-{% empty %}
-  <p class="text-muted">Nema napomena za ovog izdavača.</p>
-{% endfor %}
+  {% endfor %}
+</ul>
+{% else %}
+<p class="text-muted mb-0">Nema napomena za ovog izdavača.</p>
+{% endif %}

@@ -1,42 +1,62 @@
-{% if is_paginated %}
-<nav aria-label="Navigacija stranica" class="mt-4">
-  <ul class="pagination justify-content-center">
+{% comment %}
+  Pagination — the single pager for every list.
+
+  Context:
+    page_obj   Django Page (ListView provides it; function views pass their own)
+    request    needed to keep the current GET params (filters, sort, search)
+
+  Optional:
+    hx_target  CSS selector; when set, page links also carry hx-get /
+               hx-target / hx-push-url so the list swaps in place
+    hx_select  CSS selector passed as hx-select (only with hx_target)
+
+  Renders nothing when there is a single page. Every existing GET parameter is
+  preserved (multi-valued ones too); only "page" is replaced.
+
+  Example:
+    {% include "components/_pagination.html" %}
+    {% include "components/_pagination.html" with page_obj=results hx_target="#list" %}
+{% endcomment %}
+{% load ui_tags %}
+{% if page_obj.has_other_pages %}
+<nav class="list-pagination d-flex flex-wrap align-items-center justify-content-center gap-3" aria-label="Navigacija stranica">
+  <p class="list-pagination__summary text-muted small mb-0">
+    {{ page_obj.start_index }}–{{ page_obj.end_index }} od {{ page_obj.paginator.count }}
+  </p>
+  <ul class="pagination mb-0">
     {% if page_obj.has_previous %}
     <li class="page-item">
-      <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}"
-         aria-label="Prethodna">
-        <span aria-hidden="true">&laquo;</span>
-      </a>
+      <a class="page-link" rel="prev" aria-label="Prethodna strana"
+         href="{% querystring page=page_obj.previous_page_number %}"
+         {% if hx_target %}hx-get="{% querystring page=page_obj.previous_page_number %}" hx-target="{{ hx_target }}"{% if hx_select %} hx-select="{{ hx_select }}"{% endif %} hx-push-url="true"{% endif %}><span aria-hidden="true">&lsaquo;</span></a>
     </li>
     {% else %}
-    <li class="page-item disabled">
-      <span class="page-link" aria-hidden="true">&laquo;</span>
-    </li>
+    <li class="page-item disabled" aria-hidden="true"><span class="page-link">&lsaquo;</span></li>
     {% endif %}
 
-    {% for num in page_obj.paginator.page_range %}
-      {% if num == page_obj.number %}
-      <li class="page-item active" aria-current="page">
-        <span class="page-link">{{ num }}</span>
-      </li>
-      {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+    {% elided_pages page_obj as pages %}
+    {% for num in pages %}
+      {% if num is None %}
+      <li class="page-item disabled" aria-hidden="true"><span class="page-link">&hellip;</span></li>
+      {% elif num == page_obj.number %}
+      <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+      {% else %}
       <li class="page-item">
-        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+        <a class="page-link" aria-label="Strana {{ num }}"
+           href="{% querystring page=num %}"
+           {% if hx_target %}hx-get="{% querystring page=num %}" hx-target="{{ hx_target }}"{% if hx_select %} hx-select="{{ hx_select }}"{% endif %} hx-push-url="true"{% endif %}>{{ num }}</a>
       </li>
       {% endif %}
     {% endfor %}
 
     {% if page_obj.has_next %}
     <li class="page-item">
-      <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}"
-         aria-label="Sledeća">
-        <span aria-hidden="true">&raquo;</span>
-      </a>
+      <a class="page-link" rel="next" aria-label="Sledeća strana"
+         href="{% querystring page=page_obj.next_page_number %}"
+         {% if hx_target %}hx-get="{% querystring page=page_obj.next_page_number %}" hx-target="{{ hx_target }}"{% if hx_select %} hx-select="{{ hx_select }}"{% endif %} hx-push-url="true"{% endif %}><span aria-hidden="true">&rsaquo;</span></a>
     </li>
     {% else %}
-    <li class="page-item disabled">
-      <span class="page-link" aria-hidden="true">&raquo;</span>
-    </li>
+    <li class="page-item disabled" aria-hidden="true"><span class="page-link">&rsaquo;</span></li>
     {% endif %}
   </ul>
 </nav>

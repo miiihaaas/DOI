@@ -1,28 +1,33 @@
 {% load i18n %}
-<div id="relation-container">
+<div id="relation-container"
+     data-reorder-url="{% url 'monographs:relation-reorder' monograph_pk=monograph.pk %}"
+     data-reorder-target="#relation-section-content"
+     data-reorder-handle=".relation-drag-handle">
     {% for relation in relations %}
-    <div class="d-flex align-items-center gap-2 mb-2 p-2 border rounded" data-relation-id="{{ relation.pk }}">
-        <i class="bi bi-grip-vertical relation-drag-handle text-muted" style="cursor: grab;"></i>
+    <div class="d-flex align-items-center gap-2 mb-2 p-2 border rounded" data-relation-id="{{ relation.pk }}" data-reorder-id="{{ relation.pk }}">
+        <span class="relation-drag-handle monograph-drag-handle" title="Prevucite za promenu redosleda"><i class="bi bi-grip-vertical" aria-hidden="true"></i></span>
         <div class="flex-grow-1">
-            <span class="badge bg-info text-dark">{{ relation.relationship_type }}</span>
-            <span class="text-muted mx-1">&rarr;</span>
+            <span class="chip">{{ relation.relationship_type }}</span>
+            <span class="text-muted mx-1" aria-hidden="true">&rarr;</span>
             <span class="fw-semibold">{{ relation.target_identifier }}</span>
             <small class="text-muted">({{ relation.get_identifier_type_display }})</small>
             {% if relation.description %}
-            <br><small class="text-muted fst-italic">{{ relation.description }}</small>
+            <br><small class="text-muted">{{ relation.description }}</small>
             {% endif %}
         </div>
-        <button type="button" class="btn btn-sm btn-outline-danger"
+        <button type="button" class="btn-icon btn-icon--danger"
                 hx-post="{% url 'monographs:relation-delete' pk=relation.pk %}"
                 hx-target="#relation-section-content"
                 hx-swap="innerHTML"
-                hx-confirm="Obrisati relaciju?">
-            <i class="bi bi-trash"></i>
+                hx-confirm="Da li ste sigurni da želite da obrišete srodnu publikaciju?"
+                title="Obriši srodnu publikaciju"
+                aria-label="Obriši srodnu publikaciju {{ relation.relationship_type }} {{ relation.target_identifier }}">
+            <i class="bi bi-trash" aria-hidden="true"></i>
         </button>
     </div>
     {% empty %}
     <div class="text-muted text-center py-2">
-        Nema definisanih relacija.
+        Nema srodnih publikacija.
     </div>
     {% endfor %}
 </div>

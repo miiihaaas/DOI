@@ -11,6 +11,7 @@ from django.test import Client
 from django.urls import reverse
 
 from doi_portal.articles.models import Article, ArticleStatus
+from doi_portal.dashboard.services import get_bibliotekar_statistics
 from doi_portal.issues.tests.factories import IssueFactory
 from doi_portal.publications.tests.factories import (
     PublicationFactory,
@@ -221,6 +222,286 @@ class TestArticleListView:
         assert "Issue A Article" in content
         assert "Issue B Article" not in content
 
+    # ------------------------------------------------------------------
+    # Search (q) and list chrome - dashboard redesign
+    # ------------------------------------------------------------------
+
+    def test_search_by_title(self, client, admin_user, issue_a):
+        """q matches the article title, case-insensitively."""
+        ArticleFactory(issue=issue_a, title="Kvantna mehanika danas")
+        ArticleFactory(issue=issue_a, title="Istorija Balkana")
+        client.force_login(admin_user)
+        response = client.get(reverse("articles:list"), {"q": "kvantna"})
+        titles = [a.title for a in response.context["articles"]]
+        assert titles == ["Kvantna mehanika danas"]
+
+    def test_search_by_doi_suffix(self, client, admin_user, issue_a):
+        """q matches the DOI suffix."""
+        ArticleFactory(issue=issue_a, title="Prvi", doi_suffix="srch.2026.001")
+        ArticleFactory(issue=issue_a, title="Drugi", doi_suffix="other.2026.002")
+        client.force_login(admin_user)
+        response = client.get(reverse("articles:list"), {"q": "srch.2026"})
+        titles = [a.title for a in response.context["articles"]]
+        assert titles == ["Prvi"]
+
+    def test_search_by_full_doi(self, client, admin_user, issue_a, issue_b):
+        """A pasted full DOI (prefix/suffix) finds the article."""
+        ArticleFactory(issue=issue_a, title="Prvi", doi_suffix="full.001")
+        ArticleFactory(issue=issue_b, title="Drugi", doi_suffix="full.001")
+        prefix = issue_a.publication.publisher.doi_prefix
+        assert prefix != issue_b.publication.publisher.doi_prefix
+        client.force_login(admin_user)
+        response = client.get(
+            reverse("articles:list"), {"q": f"{prefix}/full.001"},
+        )
+        titles = [a.title for a in response.context["articles"]]
+        assert titles == ["Prvi"]
+
+    def test_search_by_author_surname(self, client, admin_user, issue_a):
+        """q matches an author's surname, without duplicating the article."""
+        from .factories import AuthorFactory  # noqa: PLC0415
+
+        wanted = ArticleFactory(issue=issue_a, title="Sa autorom")
+        AuthorFactory(article=wanted, given_name="Mira", surname="Petrović")
+        AuthorFactory(article=wanted, given_name="Luka", surname="Petrović")
+        other = ArticleFactory(issue=issue_a, title="Bez tog autora")
+        AuthorFactory(article=other, given_name="Ana", surname="Jovanović")
+        client.force_login(admin_user)
+        response = client.get(reverse("articles:list"), {"q": "petrović"})
+        titles = [a.title for a in response.context["articles"]]
+        assert titles == ["Sa autorom"]
+        assert response.context["result_count"] == 1
+
+    def test_search_ignores_deleted_authors(self, client, admin_user, issue_a):
+        """A soft-deleted author does not make the article match."""
+        from .factories import AuthorFactory  # noqa: PLC0415
+
+        article = ArticleFactory(issue=issue_a, title="Uklonjen autor")
+        author = AuthorFactory(article=article, surname="Nestalović")
+        author.soft_delete(user=admin_user)
+        client.force_login(admin_user)
+        response = client.get(reverse("articles:list"), {"q": "Nestalović"})
+        assert list(response.context["articles"]) == []
+
+    def test_search_keeps_publisher_scoping(
+        self, client, urednik_user, issue_a, issue_b
+    ):
+        """Search never returns another publisher's articles."""
+        ArticleFactory(issue=issue_a, title="Zajednički pojam moj")
+        ArticleFactory(issue=issue_b, title="Zajednički pojam tuđi")
+        client.force_login(urednik_user)
+        response = client.get(reverse("articles:list"), {"q": "Zajednički"})
+        titles = [a.title for a in response.context["articles"]]
+        assert titles == ["Zajednički pojam moj"]
+
+    def test_search_combines_with_status_and_issue(
+        self, client, admin_user, issue_a, issue_b
+    ):
+        """q is ANDed with the existing status and issue params."""
+        ArticleFactory(
+            issue=issue_a, title="Tema nacrt", status=ArticleStatus.DRAFT,
+        )
+        ArticleFactory(
+            issue=issue_a, title="Tema pregled", status=ArticleStatus.REVIEW,
+        )
+        ArticleFactory(
+            issue=issue_b, title="Tema pregled drugo", status=ArticleStatus.REVIEW,
+        )
+        client.force_login(admin_user)
+        response = client.get(
+            reverse("articles:list"),
+            {"q": "Tema", "status": "REVIEW", "issue": issue_a.pk},
+        )
+        titles = [a.title for a in response.context["articles"]]
+        assert titles == ["Tema pregled"]
+
+    def test_blank_search_returns_everything(self, client, admin_user, issue_a):
+        """Whitespace-only q is ignored."""
+        ArticleFactory(issue=issue_a, title="Jedan")
+        ArticleFactory(issue=issue_a, title="Dva")
+        client.force_login(admin_user)
+        response = client.get(reverse("articles:list"), {"q": "   "})
+        assert len(response.context["articles"]) == 2  # noqa: PLR2004
+        assert response.context["has_filters"] is False
+
+    def test_search_field_keeps_value_and_issue(self, client, admin_user, issue_a):
+        """The filter bar echoes q and carries the issue as a hidden input."""
+        ArticleFactory(issue=issue_a, title="Echo")
+        client.force_login(admin_user)
+        response = client.get(
+            reverse("articles:list"), {"q": "Echo", "issue": issue_a.pk},
+        )
+        content = response.content.decode("utf-8")
+        assert 'name="q" value="Echo"' in content
+        assert f'<input type="hidden" name="issue" value="{issue_a.pk}">' in content
+        assert "filter-bar__reset" in content
+
+    def test_empty_list_without_filters(self, client, admin_user):
+        """No articles at all: invite to create, no reset link."""
+        client.force_login(admin_user)
+        response = client.get(reverse("articles:list"))
+        content = response.content.decode("utf-8")
+        assert "Još nema unetih članaka." in content
+        assert "Dodaj prvi članak" in content
+        assert "Poništi filtere" not in content
+        assert "filter-bar__reset" not in content
+
+    def test_empty_list_with_filters(self, client, admin_user, issue_a):
+        """Articles exist but none match: offer to reset the filters."""
+        ArticleFactory(issue=issue_a, title="Postoji")
+        client.force_login(admin_user)
+        response = client.get(reverse("articles:list"), {"q": "nepostojeće"})
+        content = response.content.decode("utf-8")
+        assert "Nema rezultata za zadatu pretragu i filtere." in content
+        assert "Poništi filtere" in content
+        assert "Dodaj prvi članak" not in content
+
+    def test_row_edit_action_only_for_draft(self, client, admin_user, issue_a):
+        """The row edit link is rendered for DRAFT articles only."""
+        draft = ArticleFactory(issue=issue_a, status=ArticleStatus.DRAFT)
+        review = ArticleFactory(issue=issue_a, status=ArticleStatus.REVIEW)
+        client.force_login(admin_user)
+        response = client.get(reverse("articles:list"))
+        content = response.content.decode("utf-8")
+        assert reverse("articles:update", kwargs={"pk": draft.pk}) in content
+        assert reverse("articles:update", kwargs={"pk": review.pk}) not in content
+        assert 'aria-label="Izmeni: ' in content
+        assert 'aria-label="Obriši: ' in content
+
+    def test_sidebar_status_links_still_filter(self, client, admin_user, issue_a):
+        """?status=DRAFT / ?status=REVIEW (sidebar links) keep working."""
+        ArticleFactory(issue=issue_a, title="N", status=ArticleStatus.DRAFT)
+        ArticleFactory(issue=issue_a, title="P", status=ArticleStatus.REVIEW)
+        client.force_login(admin_user)
+        for status, expected in (("DRAFT", ["N"]), ("REVIEW", ["P"])):
+            response = client.get(reverse("articles:list"), {"status": status})
+            assert [a.title for a in response.context["articles"]] == expected
+            assert response.context["current_status"] == status
+
+    def test_pagination_keeps_search_params(self, client, admin_user, issue_a):
+        """Page links carry q and status."""
+        for i in range(21):
+            ArticleFactory(issue=issue_a, title=f"Serija {i}")
+        client.force_login(admin_user)
+        response = client.get(
+            reverse("articles:list"), {"q": "Serija", "status": "DRAFT"},
+        )
+        content = response.content.decode("utf-8")
+        assert response.context["result_count"] == 21  # noqa: PLR2004
+        assert "q=Serija" in content
+        assert "status=DRAFT" in content
+        assert "page=2" in content
+
+    # --- "Mine" filter (?mine=1): only articles created by the current user ---
+
+    def test_mine_filter_shows_only_own_articles(
+        self, client, bibliotekar_user, urednik_user, issue_a,
+    ):
+        ArticleFactory(issue=issue_a, title="Moj nacrt", created_by=bibliotekar_user)
+        ArticleFactory(
+            issue=issue_a,
+            title="Moj na pregledu",
+            created_by=bibliotekar_user,
+            status=ArticleStatus.REVIEW,
+        )
+        ArticleFactory(issue=issue_a, title="Tuđi nacrt", created_by=urednik_user)
+        client.force_login(bibliotekar_user)
+
+        everything = client.get(reverse("articles:list"))
+        assert len(everything.context["articles"]) == 3  # noqa: PLR2004
+        assert everything.context["mine_filter"] is False
+        assert "filter-bar__token" not in everything.content.decode("utf-8")
+
+        mine = client.get(reverse("articles:list"), {"mine": "1"})
+        titles = sorted(a.title for a in mine.context["articles"])
+        assert titles == ["Moj na pregledu", "Moj nacrt"]
+        assert mine.context["mine_filter"] is True
+        assert mine.context["result_count"] == 2  # noqa: PLR2004
+
+    def test_mine_filter_combines_with_status_and_search(
+        self, client, bibliotekar_user, urednik_user, issue_a,
+    ):
+        ArticleFactory(issue=issue_a, title="Voda A", created_by=bibliotekar_user)
+        ArticleFactory(issue=issue_a, title="Vazduh", created_by=bibliotekar_user)
+        ArticleFactory(
+            issue=issue_a,
+            title="Voda B",
+            created_by=bibliotekar_user,
+            status=ArticleStatus.REVIEW,
+        )
+        ArticleFactory(issue=issue_a, title="Voda C", created_by=urednik_user)
+        client.force_login(bibliotekar_user)
+        response = client.get(
+            reverse("articles:list"), {"mine": "1", "status": "DRAFT", "q": "voda"},
+        )
+        assert [a.title for a in response.context["articles"]] == ["Voda A"]
+
+    def test_mine_filter_matches_dashboard_counts(
+        self, client, bibliotekar_user, urednik_user, issue_a,
+    ):
+        """The list behind a dashboard tile shows exactly what the tile counts."""
+        ArticleFactory(issue=issue_a, created_by=bibliotekar_user)
+        ArticleFactory(issue=issue_a, created_by=bibliotekar_user)
+        ArticleFactory(
+            issue=issue_a, created_by=bibliotekar_user, status=ArticleStatus.REVIEW,
+        )
+        ArticleFactory(issue=issue_a, created_by=urednik_user)
+        stats = get_bibliotekar_statistics(bibliotekar_user)
+        client.force_login(bibliotekar_user)
+        url = reverse("articles:list")
+
+        drafts = client.get(url, {"mine": "1", "status": "DRAFT"})
+        submitted = client.get(url, {"mine": "1", "status": "REVIEW"})
+        total = client.get(url, {"mine": "1"})
+        assert drafts.context["result_count"] == stats["my_drafts_count"] == 2  # noqa: PLR2004
+        assert submitted.context["result_count"] == stats["my_submitted_count"] == 1
+        assert total.context["result_count"] == stats["my_total_count"] == 3  # noqa: PLR2004
+
+    def test_mine_filter_is_a_removable_active_filter(
+        self, client, bibliotekar_user, issue_a
+    ):
+        ArticleFactory(issue=issue_a, created_by=bibliotekar_user)
+        client.force_login(bibliotekar_user)
+        response = client.get(
+            reverse("articles:list"), {"mine": "1", "status": "DRAFT", "page": "1"},
+        )
+        content = response.content.decode("utf-8")
+        list_url = reverse("articles:list")
+        # kept through search / status changes
+        assert '<input type="hidden" name="mine" value="1">' in content
+        # removable on its own: the link drops mine (and page), keeps the rest
+        assert response.context["mine_remove_url"] == f"{list_url}?status=DRAFT"
+        assert f'href="{list_url}?status=DRAFT" class="filter-bar__token"' in content
+        assert "Samo moji" in content
+        # counts as an active filter, so "Poništi" is offered
+        assert response.context["filters_active"] is True
+        assert f'href="{list_url}" class="filter-bar__reset"' in content
+
+    def test_mine_filter_alone_removes_to_plain_list(
+        self, client, bibliotekar_user, issue_a
+    ):
+        client.force_login(bibliotekar_user)
+        response = client.get(reverse("articles:list"), {"mine": "1"})
+        assert response.context["mine_remove_url"] == reverse("articles:list")
+        # empty + filtered: the "no results for filters" state, not "add first"
+        assert "Poništi filtere" in response.content.decode("utf-8")
+
+    def test_mine_filter_kept_in_pagination(self, client, bibliotekar_user, issue_a):
+        for i in range(21):
+            ArticleFactory(issue=issue_a, title=f"Moj {i}", created_by=bibliotekar_user)
+        client.force_login(bibliotekar_user)
+        content = client.get(reverse("articles:list"), {"mine": "1"}).content.decode(
+            "utf-8",
+        )
+        assert 'href="?mine=1&amp;page=2"' in content
+
+    def test_mine_filter_ignores_other_values(self, client, admin_user, issue_a):
+        ArticleFactory(issue=issue_a)
+        client.force_login(admin_user)
+        response = client.get(reverse("articles:list"), {"mine": "yes"})
+        assert response.context["mine_filter"] is False
+        assert len(response.context["articles"]) == 1
+
 
 # =============================================================================
 # 7.3: Test ArticleCreateView
@@ -281,7 +562,7 @@ class TestArticleCreateView:
         assert article.status == ArticleStatus.DRAFT
 
     def test_admin_can_create_for_any_issue(
-        self, client, admin_user, issue_a, issue_b
+        self, client, admin_user, issue_a, issue_b,
     ):
         """7.3: Administrator can create article for any issue."""
         client.force_login(admin_user)
@@ -567,7 +848,7 @@ class TestArticleDetailView:
         assert "django" in content
 
     def test_detail_scoped_for_urednik(
-        self, client, urednik_user, issue_a, issue_b
+        self, client, urednik_user, issue_a, issue_b,
     ):
         """7.4: Urednik can see own, gets 404 for other publisher's article."""
         article_own = ArticleFactory(issue=issue_a)
@@ -583,7 +864,7 @@ class TestArticleDetailView:
         assert response_other.status_code == 404
 
     def test_bibliotekar_can_view_detail(
-        self, client, bibliotekar_user, issue_a
+        self, client, bibliotekar_user, issue_a,
     ):
         """7.3: Bibliotekar can view article detail (read-only)."""
         article = ArticleFactory(issue=issue_a)
@@ -603,8 +884,77 @@ class TestArticleDetailView:
             reverse("articles:detail", kwargs={"pk": article.pk})
         )
         content = response.content.decode("utf-8")
-        assert "bg-success" in content
+        # Kit status badge (components/_status_badge.html) replaced the
+        # Bootstrap "badge bg-success" markup.
+        assert "status-badge--success" in content
         assert "Objavljeno" in content
+
+    def test_detail_header_shows_full_doi(self, client, admin_user, issue_a):
+        """Page header shows the full DOI (publisher prefix + suffix)."""
+        article = ArticleFactory(issue=issue_a, doi_suffix="hdr.001")
+        client.force_login(admin_user)
+        response = client.get(
+            reverse("articles:detail", kwargs={"pk": article.pk})
+        )
+        content = response.content.decode("utf-8")
+        prefix = issue_a.publication.publisher.doi_prefix
+        assert f"DOI: {prefix}/hdr.001" in content
+
+    def test_detail_has_single_workflow_bar_and_edit_link(
+        self, client, admin_user, issue_a,
+    ):
+        """One workflow bar, one edit link, no "Brze akcije" card."""
+        article = ArticleFactory(issue=issue_a, status=ArticleStatus.DRAFT)
+        client.force_login(admin_user)
+        response = client.get(
+            reverse("articles:detail", kwargs={"pk": article.pk}),
+        )
+        content = response.content.decode("utf-8")
+        update_url = reverse("articles:update", kwargs={"pk": article.pk})
+        assert content.count('class="workflow-bar"') == 1
+        assert content.count(f'href="{update_url}"') == 1
+        assert "Brze akcije" not in content
+        # The next step is the only primary button on the page
+        assert content.count("btn btn-primary") == 1
+        assert "submit-check" in content
+
+    def test_detail_modal_shells_are_labelled(self, client, admin_user, issue_a):
+        """Modal shells keep their ids/containers and point at a title id."""
+        article = ArticleFactory(issue=issue_a)
+        client.force_login(admin_user)
+        response = client.get(
+            reverse("articles:detail", kwargs={"pk": article.pk}),
+        )
+        content = response.content.decode("utf-8")
+        for modal_id, container_id in [
+            ("submitReviewModal", "submit-modal-container"),
+            ("approveModal", "approve-modal-container"),
+            ("returnRevisionModal", "return-modal-container"),
+            ("publishModal", "publish-modal-container"),
+            ("withdrawModal", "withdraw-modal-container"),
+        ]:
+            assert f'id="{modal_id}"' in content
+            assert f'aria-labelledby="{modal_id}Label"' in content
+            assert f'id="{container_id}"' in content
+
+    def test_detail_licence_card_prints_free_access_once(
+        self, client, admin_user, issue_a,
+    ):
+        """"Slobodan pristup" row is rendered once, with or without a licence."""
+        plain = ArticleFactory(issue=issue_a, doi_suffix="lic.001")
+        licensed = ArticleFactory(
+            issue=issue_a,
+            doi_suffix="lic.002",
+            license_url="https://creativecommons.org/licenses/by/4.0/",
+            free_to_read=True,
+        )
+        client.force_login(admin_user)
+        for article in (plain, licensed):
+            response = client.get(
+                reverse("articles:detail", kwargs={"pk": article.pk}),
+            )
+            content = response.content.decode("utf-8")
+            assert content.count("<dt>Slobodan pristup</dt>") == 1
 
 
 # =============================================================================
@@ -633,7 +983,10 @@ class TestArticleDeleteView:
             reverse("articles:delete", kwargs={"pk": article.pk})
         )
         assert response.status_code == 200
-        assert "Potvrda brisanja" in response.content.decode("utf-8")
+        content = response.content.decode("utf-8")
+        # Page title and confirm button name the action ("Obriši članak")
+        assert content.count("Obriši članak") >= 2  # noqa: PLR2004
+        assert "Da li ste sigurni" in content
 
     def test_urednik_cannot_delete(self, client, urednik_user, issue_a):
         """7.3: Urednik cannot delete articles."""
@@ -645,7 +998,7 @@ class TestArticleDeleteView:
         assert response.status_code == 403
 
     def test_bibliotekar_cannot_delete(
-        self, client, bibliotekar_user, issue_a
+        self, client, bibliotekar_user, issue_a,
     ):
         """7.3: Bibliotekar cannot delete articles."""
         article = ArticleFactory(issue=issue_a)
@@ -704,7 +1057,7 @@ class TestArticleBreadcrumbs:
         article = ArticleFactory(issue=issue_a)
         client.force_login(admin_user)
         response = client.get(
-            reverse("articles:detail", kwargs={"pk": article.pk})
+            reverse("articles:detail", kwargs={"pk": article.pk}),
         )
         assert response.status_code == 200
         content = response.content.decode("utf-8")

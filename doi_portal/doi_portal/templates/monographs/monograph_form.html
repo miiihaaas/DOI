@@ -1,19 +1,33 @@
 {% extends "admin_base.html" %}
+{% load static ui_tags %}
 
 {% block title %}{{ form_title }} - DOI Portal{% endblock %}
 
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0 page-title">
-        <i class="bi bi-book me-2"></i>{{ form_title }}
-    </h1>
-</div>
+{% block css %}
+{{ block.super }}
+<link href="{% static 'css/admin-monographs.css' %}" rel="stylesheet" />
+{% endblock css %}
 
-<div class="row justify-content-center">
-    <div class="col-lg-10">
-        <div class="card admin-card section-card">
+{% block javascript %}
+{{ block.super }}
+{% if is_edit %}
+<!-- SortableJS: promena redosleda kontributora, finansijera, relacija i poglavlja -->
+<script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+{% endif %}
+{% endblock javascript %}
+
+{% block content %}
+{% pageheader title=form_title icon="bi-book" %}
+  {% if is_edit %}
+  <a href="{% url 'monographs:detail' object.pk %}" class="btn btn-outline-secondary"><i class="bi bi-eye me-1" aria-hidden="true"></i>Pregled</a>
+  {% endif %}
+{% endpageheader %}
+
+<div class="row">
+    <div class="col-xl-10">
+        <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
+                <h2 class="card-title"><i class="bi bi-info-circle me-2" aria-hidden="true"></i>Osnovne informacije</h2>
             </div>
             <div class="card-body">
                 <form method="post" enctype="multipart/form-data" novalidate id="monograph-main-form">
@@ -21,9 +35,9 @@
 
                     <!-- Form Errors Summary -->
                     {% if form.errors %}
-                    <div class="alert alert-danger mb-4">
+                    <div class="alert alert-danger mb-3" role="alert">
                         <h6 class="alert-heading mb-2">
-                            <i class="bi bi-exclamation-triangle me-2"></i>Ispravite sledeće greške:
+                            <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>Ispravite sledeće greške:
                         </h6>
                         <ul class="mb-0">
                             {% for field in form %}
@@ -40,14 +54,14 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="id_publisher" class="form-label">Izdavač <span class="text-danger">*</span></label>
+                            <label for="{{ form.publisher.id_for_label }}" class="form-label">Izdavač <span class="text-danger">*</span></label>
                             {{ form.publisher }}
                             {% if form.publisher.errors %}
                             <div class="invalid-feedback d-block">{{ form.publisher.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="id_doi_suffix" class="form-label">DOI sufiks <span class="text-danger">*</span></label>
+                            <label for="{{ form.doi_suffix.id_for_label }}" class="form-label">DOI sufiks <span class="text-danger">*</span></label>
                             {{ form.doi_suffix }}
                             {% if form.doi_suffix.errors %}
                             <div class="invalid-feedback d-block">{{ form.doi_suffix.errors.0 }}</div>
@@ -56,7 +70,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="id_title" class="form-label">Naslov <span class="text-danger">*</span></label>
+                        <label for="{{ form.title.id_for_label }}" class="form-label">Naslov <span class="text-danger">*</span></label>
                         {{ form.title }}
                         {% if form.title.errors %}
                         <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
@@ -64,7 +78,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="id_subtitle" class="form-label">Podnaslov</label>
+                        <label for="{{ form.subtitle.id_for_label }}" class="form-label">Podnaslov</label>
                         {{ form.subtitle }}
                         {% if form.subtitle.errors %}
                         <div class="invalid-feedback d-block">{{ form.subtitle.errors.0 }}</div>
@@ -73,28 +87,28 @@
 
                     <div class="row">
                         <div class="col-md-3 mb-3">
-                            <label for="id_year" class="form-label">Godina izdanja <span class="text-danger">*</span></label>
+                            <label for="{{ form.year.id_for_label }}" class="form-label">Godina izdanja <span class="text-danger">*</span></label>
                             {{ form.year }}
                             {% if form.year.errors %}
                             <div class="invalid-feedback d-block">{{ form.year.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="id_language" class="form-label">Jezik</label>
+                            <label for="{{ form.language.id_for_label }}" class="form-label">Jezik</label>
                             {{ form.language }}
                             {% if form.language.errors %}
                             <div class="invalid-feedback d-block">{{ form.language.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="id_edition_number" class="form-label">Broj izdanja</label>
+                            <label for="{{ form.edition_number.id_for_label }}" class="form-label">Broj izdanja</label>
                             {{ form.edition_number }}
                             {% if form.edition_number.errors %}
                             <div class="invalid-feedback d-block">{{ form.edition_number.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="id_publication_place" class="form-label">Mesto izdanja</label>
+                            <label for="{{ form.publication_place.id_for_label }}" class="form-label">Mesto izdanja</label>
                             {{ form.publication_place }}
                             {% if form.publication_place.errors %}
                             <div class="invalid-feedback d-block">{{ form.publication_place.errors.0 }}</div>
@@ -104,21 +118,21 @@
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="id_isbn_print" class="form-label">ISBN (štampano)</label>
+                            <label for="{{ form.isbn_print.id_for_label }}" class="form-label">ISBN (štampano)</label>
                             {{ form.isbn_print }}
                             {% if form.isbn_print.errors %}
                             <div class="invalid-feedback d-block">{{ form.isbn_print.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="id_isbn_online" class="form-label">ISBN (online)</label>
+                            <label for="{{ form.isbn_online.id_for_label }}" class="form-label">ISBN (online)</label>
                             {{ form.isbn_online }}
                             {% if form.isbn_online.errors %}
                             <div class="invalid-feedback d-block">{{ form.isbn_online.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="id_total_pages" class="form-label">Ukupan broj strana</label>
+                            <label for="{{ form.total_pages.id_for_label }}" class="form-label">Ukupan broj strana</label>
                             {{ form.total_pages }}
                             {% if form.total_pages.errors %}
                             <div class="invalid-feedback d-block">{{ form.total_pages.errors.0 }}</div>
@@ -128,7 +142,7 @@
 
                     <!-- Abstract -->
                     <div class="mb-3">
-                        <label for="id_abstract" class="form-label">Apstrakt</label>
+                        <label for="{{ form.abstract.id_for_label }}" class="form-label">Apstrakt</label>
                         {{ form.abstract }}
                         {% if form.abstract.errors %}
                         <div class="invalid-feedback d-block">{{ form.abstract.errors.0 }}</div>
@@ -140,18 +154,18 @@
                     {{ form.instance.keywords|json_script:"initial-keywords" }}
                     {% endif %}
                     <div x-data="keywordsInput()" class="mb-3">
-                        <label class="form-label">Ključne reči</label>
+                        <label for="id_keywords_input" class="form-label">Ključne reči</label>
                         <div class="d-flex flex-wrap gap-1 mb-2" x-ref="keywordsList">
                             <template x-for="(keyword, index) in keywords" :key="keyword + '-' + index">
-                                <span class="badge bg-primary d-flex align-items-center gap-1">
+                                <span class="chip">
                                     <span x-text="keyword"></span>
-                                    <button type="button" class="btn-close btn-close-white"
-                                            @click="removeKeyword(index)" style="font-size: 0.6em;"></button>
+                                    <button type="button" class="btn-close"
+                                            @click="removeKeyword(index)" :aria-label="'Ukloni ključnu reč ' + keyword"></button>
                                 </span>
                             </template>
                         </div>
                         <div class="input-group">
-                            <input type="text" class="form-control" x-model="newKeyword"
+                            <input type="text" class="form-control" id="id_keywords_input" x-model="newKeyword"
                                    @keydown.enter.prevent="addKeyword()"
                                    placeholder="Unesite ključnu reč i pritisnite Enter">
                             <button type="button" class="btn btn-outline-secondary" @click="addKeyword()">Dodaj</button>
@@ -161,37 +175,38 @@
 
                     <!-- Cover Image Section -->
                     <div class="form-section-divider"></div>
-                    <h6 class="form-section-title"><i class="bi bi-image me-2"></i>Naslovna slika</h6>
+                    <h6 class="form-section-title"><i class="bi bi-image me-2" aria-hidden="true"></i>Naslovna slika</h6>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             {% if form.instance.cover_image %}
                             <div class="mb-2">
-                                <img src="{{ form.instance.cover_image.url }}" alt="Trenutna naslovna slika" class="admin-logo-thumb" style="max-height: 200px;">
+                                <img src="{{ form.instance.cover_image.url }}" alt="Trenutna naslovna slika" class="admin-logo-thumb monograph-cover-preview">
                             </div>
                             {% endif %}
+                            <label for="{{ form.cover_image.id_for_label }}" class="visually-hidden">Naslovna slika</label>
                             {{ form.cover_image }}
                             {% if form.cover_image.errors %}
                             <div class="invalid-feedback d-block">{{ form.cover_image.errors.0 }}</div>
                             {% endif %}
-                            <div class="form-text">JPG ili PNG, preporučena veličina do 2MB</div>
+                            <div class="form-text">JPG ili PNG, do 2 MB.</div>
                         </div>
                     </div>
 
                     <!-- License Section -->
                     <div class="form-section-divider"></div>
-                    <h6 class="form-section-title"><i class="bi bi-shield-check me-2"></i>Licenca i pristup</h6>
+                    <h6 class="form-section-title"><i class="bi bi-shield-check me-2" aria-hidden="true"></i>Licenca i pristup</h6>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="id_license_url" class="form-label">URL licence</label>
+                            <label for="{{ form.license_url.id_for_label }}" class="form-label">URL licence</label>
                             {{ form.license_url }}
                             {% if form.license_url.errors %}
                             <div class="invalid-feedback d-block">{{ form.license_url.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label for="id_license_applies_to" class="form-label">Licenca se odnosi na</label>
+                            <label for="{{ form.license_applies_to.id_for_label }}" class="form-label">Licenca se odnosi na</label>
                             {{ form.license_applies_to }}
                             {% if form.license_applies_to.errors %}
                             <div class="invalid-feedback d-block">{{ form.license_applies_to.errors.0 }}</div>
@@ -200,24 +215,24 @@
                         <div class="col-md-3 mb-3 d-flex align-items-end">
                             <div class="form-check mb-3">
                                 {{ form.free_to_read }}
-                                <label class="form-check-label" for="id_free_to_read">Slobodan pristup</label>
+                                <label class="form-check-label" for="{{ form.free_to_read.id_for_label }}">Slobodan pristup</label>
                             </div>
                         </div>
                     </div>
 
                     <!-- External Resource Section -->
                     <div class="form-section-divider"></div>
-                    <h6 class="form-section-title"><i class="bi bi-link-45deg me-2"></i>Eksterna landing stranica</h6>
+                    <h6 class="form-section-title"><i class="bi bi-link-45deg me-2" aria-hidden="true"></i>Eksterna landing stranica</h6>
 
                     <div class="row">
                         <div class="col-md-3 mb-3 d-flex align-items-center">
                             <div class="form-check form-switch">
                                 {{ form.use_external_resource }}
-                                <label class="form-check-label" for="id_use_external_resource">Koristi eksterni URL</label>
+                                <label class="form-check-label" for="{{ form.use_external_resource.id_for_label }}">Koristi eksterni URL</label>
                             </div>
                         </div>
                         <div class="col-md-9 mb-3">
-                            <label for="id_external_landing_url" class="form-label">Eksterna landing stranica</label>
+                            <label for="{{ form.external_landing_url.id_for_label }}" class="form-label">Eksterna landing stranica</label>
                             {{ form.external_landing_url }}
                             {% if form.external_landing_url.errors %}
                             <div class="invalid-feedback d-block">{{ form.external_landing_url.errors.0 }}</div>
@@ -229,10 +244,10 @@
                     <div class="floating-action-bubble" aria-label="Akcije za monografiju" role="toolbar">
                       <div class="btn-group btn-group-lg shadow-lg" role="group" aria-label="Nazad i sačuvaj">
                         <a href="{% url 'monographs:list' %}" class="btn btn-outline-secondary">
-                          <i class="bi bi-arrow-left me-1"></i>Nazad
+                          <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad
                         </a>
                         <button type="submit" class="btn btn-primary">
-                          <i class="bi bi-check-lg me-1"></i>{{ submit_text }}
+                          <i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ submit_text }}
                         </button>
                       </div>
                     </div>
@@ -313,14 +328,14 @@
 
         {% if is_edit %}
         <!-- Contributors Section (HTMX) -->
-        <div class="card admin-card section-card mt-4">
+        <div class="card mt-3">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Kontributori</h5>
-                <button type="button" class="btn btn-sm btn-primary"
+                <h2 class="card-title"><i class="bi bi-people me-2" aria-hidden="true"></i>Kontributori</h2>
+                <button type="button" class="btn btn-sm btn-outline-primary"
                         hx-get="{% url 'monographs:contributor-form' monograph_pk=object.pk %}"
                         hx-target="#contributor-form-container"
                         hx-swap="innerHTML">
-                    <i class="bi bi-plus-lg me-1"></i>Dodaj kontributora
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Dodaj kontributora
                 </button>
             </div>
             <div class="card-body">
@@ -332,14 +347,14 @@
         </div>
 
         <!-- Funding Section (HTMX) -->
-        <div class="card admin-card section-card mt-4">
+        <div class="card mt-3">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-cash-stack me-2"></i>Finansiranje</h5>
-                <button type="button" class="btn btn-sm btn-primary"
+                <h2 class="card-title"><i class="bi bi-cash-stack me-2" aria-hidden="true"></i>Finansiranje</h2>
+                <button type="button" class="btn btn-sm btn-outline-primary"
                         hx-get="{% url 'monographs:funding-form' monograph_pk=object.pk %}"
                         hx-target="#funding-form-container"
                         hx-swap="innerHTML">
-                    <i class="bi bi-plus-lg me-1"></i>Dodaj finansijera
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Dodaj finansijera
                 </button>
             </div>
             <div class="card-body">
@@ -351,14 +366,14 @@
         </div>
 
         <!-- Relations Section (HTMX) -->
-        <div class="card admin-card section-card mt-4">
+        <div class="card mt-3">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Relacije</h5>
-                <button type="button" class="btn btn-sm btn-primary"
+                <h2 class="card-title"><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Srodne publikacije</h2>
+                <button type="button" class="btn btn-sm btn-outline-primary"
                         hx-get="{% url 'monographs:relation-form' monograph_pk=object.pk %}"
                         hx-target="#relation-form-container"
                         hx-swap="innerHTML">
-                    <i class="bi bi-plus-lg me-1"></i>Dodaj relaciju
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Dodaj srodnu publikaciju
                 </button>
             </div>
             <div class="card-body">
@@ -370,11 +385,9 @@
         </div>
 
         <!-- PDF Upload Section -->
-        <div class="card admin-card section-card mt-4">
+        <div class="card mt-3">
             <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-file-earmark-pdf me-2"></i>PDF fajl
-                </h5>
+                <h2 class="card-title"><i class="bi bi-file-earmark-pdf me-2" aria-hidden="true"></i>PDF fajl</h2>
             </div>
             <div class="card-body">
                 {% include "monographs/partials/_pdf_upload.html" with monograph=object %}
@@ -382,14 +395,14 @@
         </div>
 
         <!-- Chapters Section (HTMX) -->
-        <div class="card admin-card section-card mt-4">
+        <div class="card mt-3">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-list-ol me-2"></i>Poglavlja</h5>
-                <button type="button" class="btn btn-sm btn-primary"
+                <h2 class="card-title"><i class="bi bi-list-ol me-2" aria-hidden="true"></i>Poglavlja</h2>
+                <button type="button" class="btn btn-sm btn-outline-primary"
                         hx-get="{% url 'monographs:chapter-form' monograph_pk=object.pk %}"
                         hx-target="#chapter-form-container"
                         hx-swap="innerHTML">
-                    <i class="bi bi-plus-lg me-1"></i>Dodaj poglavlje
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Dodaj poglavlje
                 </button>
             </div>
             <div class="card-body">
@@ -402,4 +415,93 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block inline_javascript %}
+{% if is_edit %}
+<script>
+/*
+ * Promena redosleda prevlačenjem (SortableJS).
+ * Svaka lista nosi data-reorder-url (POST {"order": [pk, ...]}) i
+ * data-reorder-target (element u koji se upisuje odgovor). Liste se ponovo
+ * inicijalizuju posle svake HTMX zamene jer se njihov DOM tada menja.
+ * Zahtev se šalje preko fetch(): htmx.ajax() nema opciju za JSON telo zahteva.
+ */
+(function () {
+  function csrfToken() {
+    try {
+      var headers = JSON.parse(document.body.getAttribute('hx-headers') || '{}');
+      if (headers['X-CSRFToken']) { return headers['X-CSRFToken']; }
+    } catch (e) { /* fall through */ }
+    var input = document.querySelector('[name=csrfmiddlewaretoken]');
+    return input ? input.value : '';
+  }
+
+  function saveOrder(list) {
+    var order = Array.prototype.map.call(list.children, function (item) {
+      return parseInt(item.getAttribute('data-reorder-id'), 10);
+    }).filter(function (pk) { return !isNaN(pk); });
+    var target = document.querySelector(list.getAttribute('data-reorder-target'));
+    fetch(list.getAttribute('data-reorder-url'), {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken(),
+        'HX-Request': 'true'
+      },
+      body: JSON.stringify({order: order})
+    }).then(function (response) {
+      /* Istekla sesija: fetch je ispratio preusmerenje na stranicu za prijavu. */
+      if (response.redirected) { window.location.reload(); return null; }
+      if (!response.ok) { throw new Error('HTTP ' + response.status); }
+      return response.text();
+    }).then(function (html) {
+      if (html === null || !target) { return; }
+      destroySortables(target);
+      target.innerHTML = html;
+      if (window.htmx) { htmx.process(target); }
+      initSortables(target);
+    }).catch(function () {
+      window.alert('Redosled nije sačuvan. Osvežite stranicu i pokušajte ponovo.');
+    });
+  }
+
+  /* Uklanja Sortable instance sa lista koje će zamena DOM-a izbaciti. */
+  function destroySortables(root) {
+    var lists = root.querySelectorAll('[data-reorder-url]');
+    Array.prototype.forEach.call(lists, function (list) {
+      if (list._sortable) {
+        list._sortable.destroy();
+        list._sortable = null;
+      }
+    });
+  }
+
+  function initSortables(root) {
+    if (typeof Sortable === 'undefined') { return; }
+    var lists = (root || document).querySelectorAll('[data-reorder-url]');
+    Array.prototype.forEach.call(lists, function (list) {
+      if (list._sortable) { return; }
+      list._sortable = new Sortable(list, {
+        handle: list.getAttribute('data-reorder-handle'),
+        draggable: '[data-reorder-id]',
+        animation: 0,
+        ghostClass: 'monograph-sortable-ghost',
+        onEnd: function (evt) {
+          if (evt.oldIndex !== evt.newIndex) { saveOrder(list); }
+        }
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    initSortables(document);
+    document.body.addEventListener('htmx:afterSwap', function () {
+      initSortables(document);
+    });
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

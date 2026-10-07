@@ -66,13 +66,50 @@ class ComponentGroupListView(PublisherScopedMixin, ListView):
     context_object_name = "component_groups"
     paginate_by = 20
 
+    STATUS_CHOICES = [
+        ("new", "Novo"),
+        ("xml", "XML generisan"),
+        ("valid", "XML validan"),
+        ("deposited", "Deponovano"),
+    ]
+
     def get_queryset(self):
-        return self.get_scoped_queryset(
+        queryset = self.get_scoped_queryset(
             ComponentGroup.objects.select_related("publisher").all()
         )
+        self.search_query = self.request.GET.get("q", "").strip()
+        if self.search_query:
+            queryset = queryset.filter(
+                models.Q(title__icontains=self.search_query)
+                | models.Q(parent_doi__icontains=self.search_query),
+            )
+        # Status mirrors the precedence used in the list template:
+        # deposited > XSD valid > XML generated > new.
+        self.current_status = self.request.GET.get("status", "")
+        if self.current_status == "deposited":
+            queryset = queryset.filter(crossref_deposited_at__isnull=False)
+        elif self.current_status == "valid":
+            queryset = queryset.filter(
+                crossref_deposited_at__isnull=True, xsd_valid=True,
+            )
+        elif self.current_status == "xml":
+            queryset = queryset.filter(crossref_deposited_at__isnull=True).exclude(
+                xsd_valid=True,
+            ).exclude(crossref_xml="")
+        elif self.current_status == "new":
+            queryset = queryset.filter(
+                crossref_deposited_at__isnull=True, crossref_xml="",
+            ).exclude(xsd_valid=True)
+        else:
+            self.current_status = ""
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["search_query"] = self.search_query
+        context["current_status"] = self.current_status
+        context["status_choices"] = self.STATUS_CHOICES
+        context["has_filters"] = bool(self.search_query or self.current_status)
         context["breadcrumbs"] = [
             {"label": "Komponente", "url": ""},
         ]
@@ -156,9 +193,9 @@ class ComponentGroupUpdateView(PublisherScopedEditMixin, UpdateView):
         context["breadcrumbs"] = [
             {"label": "Komponente", "url": reverse("components:group-list")},
             {"label": str(self.object), "url": reverse("components:group-detail", args=[self.object.pk])},
-            {"label": "Izmena", "url": ""},
+            {"label": "Izmeni", "url": ""},
         ]
-        context["form_title"] = "Izmena grupe komponenti"
+        context["form_title"] = "Izmeni grupu komponenti"
         return context
 
 
@@ -283,9 +320,9 @@ class ComponentUpdateView(PublisherScopedEditMixin, UpdateView):
             {"label": "Komponente", "url": reverse("components:group-list")},
             {"label": str(self.object.component_group), "url": reverse("components:group-detail", args=[self.object.component_group.pk])},
             {"label": str(self.object), "url": reverse("components:component-detail", args=[self.object.component_group.pk, self.object.pk])},
-            {"label": "Izmena", "url": ""},
+            {"label": "Izmeni", "url": ""},
         ]
-        context["form_title"] = "Izmena komponente"
+        context["form_title"] = "Izmeni komponentu"
         return context
 
 

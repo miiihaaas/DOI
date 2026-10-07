@@ -1,126 +1,84 @@
 {% extends "admin_base.html" %}
+{% load ui_tags %}
 
 {% block title %}{{ component_group }} - DOI Portal{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h1 class="h3 mb-0">
-    <i class="bi bi-puzzle me-2"></i>{{ component_group.label }}
-  </h1>
-  <div>
-    <a href="{% url 'crossref:component-group-deposit' component_group.pk %}" class="btn btn-success me-2">
-      <i class="bi bi-cloud-upload me-1"></i>Crossref Deposit
-    </a>
-    <a href="{% url 'components:group-update' component_group.pk %}" class="btn btn-outline-secondary me-2">
-      <i class="bi bi-pencil me-1"></i>Izmeni
-    </a>
-    <a href="{% url 'components:group-list' %}" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left me-1"></i>Nazad
-    </a>
-  </div>
-</div>
+{# Crossref state of the group: the page's one status badge, next to the title #}
+{% with l_done=component_group.is_crossref_deposited|yesno:"Deponovano," l_valid=component_group.xsd_valid|yesno:"XML validan," l_xml=component_group.crossref_xml|yesno:"XML generisan," t_done=component_group.is_crossref_deposited|yesno:"success," t_valid=component_group.xsd_valid|yesno:"info," t_xml=component_group.crossref_xml|yesno:"pending," %}
+{% firstof l_done l_valid l_xml "Novo" as group_status %}
+{% firstof t_done t_valid t_xml "neutral" as group_tone %}
+{% pageheader title=component_group.label icon="bi-puzzle" badge=group_status badge_tone=group_tone meta=component_group.parent_doi %}
+  <a href="{% url 'components:group-update' component_group.pk %}" class="btn btn-outline-secondary"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Izmeni</a>
+  <a href="{% url 'crossref:component-group-deposit' component_group.pk %}" class="btn btn-primary"><i class="bi bi-cloud-upload me-1" aria-hidden="true"></i>Crossref deponovanje</a>
+{% endpageheader %}
+{% endwith %}
 
-<div class="row">
-  <div class="col-lg-8">
-    {# Component List #}
-    <div class="card mb-4">
+<div class="row g-3">
+  <div class="col-xl-8">
+    <section class="card mb-3">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">
-          <i class="bi bi-list me-2"></i>Komponente ({{ components|length }})
-        </h5>
-        <a href="{% url 'components:component-create' component_group.pk %}" class="btn btn-sm btn-primary">
-          <i class="bi bi-plus-circle me-1"></i>Dodaj komponentu
-        </a>
+        <h2 class="card-title"><i class="bi bi-list-ul me-2" aria-hidden="true"></i>Komponente <span class="badge bg-secondary ms-1">{{ components|length }}</span></h2>
+        <a href="{% url 'components:component-create' component_group.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Dodaj komponentu</a>
       </div>
-      <div class="card-body">
-        {% if components %}
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Naslov</th>
-                <th>DOI sufiks</th>
-                <th>MIME tip</th>
-                <th>Kontributori</th>
-                <th>Akcije</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for component in components %}
-              <tr>
-                <td>{{ component.order }}</td>
-                <td>
-                  <a href="{% url 'components:component-detail' component_group.pk component.pk %}">
-                    {{ component.title|default:"(bez naslova)" }}
-                  </a>
-                </td>
-                <td><code>{{ component.doi_suffix }}</code></td>
-                <td>
-                  {% if component.format_mime_type %}
-                  <span class="badge bg-info">{{ component.format_mime_type }}</span>
-                  {% else %}
-                  <span class="text-muted">-</span>
-                  {% endif %}
-                </td>
-                <td>{{ component.contributors.count }}</td>
-                <td>
-                  <div class="btn-group btn-group-sm">
-                    <a href="{% url 'components:component-detail' component_group.pk component.pk %}"
-                       class="btn btn-outline-primary" title="Detalji">
-                      <i class="bi bi-eye"></i>
-                    </a>
-                    <a href="{% url 'components:component-update' component_group.pk component.pk %}"
-                       class="btn btn-outline-secondary" title="Izmeni">
-                      <i class="bi bi-pencil"></i>
-                    </a>
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% else %}
-        <p class="text-muted mb-0">
-          <i class="bi bi-info-circle me-1"></i>Nema komponenti u ovoj grupi. Dodajte prvu komponentu.
-        </p>
-        {% endif %}
+      {% if components %}
+      <div class="table-responsive">
+        <table class="table table-hover table--dense">
+          <thead>
+            <tr>
+              <th class="num">#</th>
+              <th>Naslov</th>
+              <th>DOI sufiks</th>
+              <th>MIME tip</th>
+              <th class="num">Kontributori</th>
+              <th class="col-actions"><span class="visually-hidden">Akcije</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for component in components %}
+            <tr>
+              <td class="num">{{ component.order }}</td>
+              <td><a href="{% url 'components:component-detail' component_group.pk component.pk %}" class="cell-title">{{ component.title|default:"(bez naslova)" }}</a></td>
+              <td class="mono-id">{{ component.doi_suffix }}</td>
+              <td class="cell-meta">{{ component.format_mime_type|default:"—" }}</td>
+              <td class="num">{{ component.contributors.count }}</td>
+              <td class="col-actions">
+                <div class="row-actions">
+                  <a href="{% url 'components:component-update' component_group.pk component.pk %}" class="btn-icon" title="Izmeni" aria-label="Izmeni komponentu {{ component.doi_suffix }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                  <a href="{% url 'components:component-delete' component_group.pk component.pk %}" class="btn-icon btn-icon--danger" title="Obriši" aria-label="Obriši komponentu {{ component.doi_suffix }}"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-    </div>
+      {% else %}
+      {% url 'components:component-create' component_group.pk as component_create_url %}
+      {% include "components/_empty_state.html" with icon="bi-puzzle" text="Nema komponenti u ovoj grupi." action_url=component_create_url action_label="Dodaj prvu komponentu" action_icon="bi-plus-lg" compact=True only %}
+      {% endif %}
+    </section>
   </div>
 
-  {# Sidebar #}
-  <div class="col-lg-4">
-    <div class="card mb-4">
+  <div class="col-xl-4">
+    <section class="card mb-3">
       <div class="card-header">
-        <h6 class="mb-0">
-          <i class="bi bi-info-circle me-2"></i>Informacije o grupi
-        </h6>
+        <h2 class="card-title"><i class="bi bi-info-circle me-2" aria-hidden="true"></i>Informacije o grupi</h2>
       </div>
       <div class="card-body">
-        <dl class="mb-0">
-          <dt>Parent DOI</dt>
-          <dd><code>{{ component_group.parent_doi }}</code></dd>
-          <dt>Naslov</dt>
-          <dd>{{ component_group.title|default:"-" }}</dd>
-          <dt>Izdavač</dt>
-          <dd>{{ component_group.publisher.name }}</dd>
-          <dt>Komponente</dt>
-          <dd>{{ component_group.component_count }}</dd>
-          <dt>Kreirano</dt>
-          <dd>{{ component_group.created_at|date:"d.m.Y H:i" }}</dd>
+        <dl class="admin-dl admin-dl--single">
+          <div class="admin-dl-row"><dt>Nadređeni DOI</dt><dd class="mono-id">{{ component_group.parent_doi }}</dd></div>
+          {% if component_group.title %}
+          <div class="admin-dl-row"><dt>Naslov</dt><dd>{{ component_group.title }}</dd></div>
+          {% endif %}
+          <div class="admin-dl-row"><dt>Izdavač</dt><dd>{{ component_group.publisher.name }}</dd></div>
+          <div class="admin-dl-row"><dt>Kreirano</dt><dd>{{ component_group.created_at|date:"d.m.Y. H:i" }}</dd></div>
           {% if component_group.is_crossref_deposited %}
-          <dt>Deponovano</dt>
-          <dd>
-            <span class="badge bg-success">
-              {{ component_group.crossref_deposited_at|date:"d.m.Y H:i" }}
-            </span>
-          </dd>
+          <div class="admin-dl-row"><dt>Deponovano</dt><dd>{{ component_group.crossref_deposited_at|date:"d.m.Y. H:i" }}</dd></div>
           {% endif %}
         </dl>
       </div>
-    </div>
+    </section>
   </div>
 </div>
 {% endblock %}

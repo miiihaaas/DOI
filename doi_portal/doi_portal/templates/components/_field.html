@@ -1,0 +1,64 @@
+{% comment %}
+  Field — renders one Django bound field: label, control, help text, errors.
+
+  Parameters:
+    field       bound field (required), e.g. form.title
+    label       optional label override (default: field.label)
+    help        optional help text override (default: field.help_text)
+    hide_help   truthy -> no help text at all, not even the form's help_text
+                (use it when the help only repeats the label or placeholder)
+    required    True / False -> force or drop the "*" marker
+                (default: the form field's own `required`)
+    rows        height of a textarea (default: what the form sets)
+    class       optional extra classes for the wrapper, e.g. "col-md-6"
+    hide_label  truthy -> label is kept for screen readers only
+
+  Behaviour:
+    - label is linked with for=; required fields get a "*" marker
+    - the control keeps the classes set in the form and gets form-control /
+      form-select / form-check-input when it has none of them
+    - with errors: control gets .is-invalid + aria-invalid, every error is
+      listed, and aria-describedby points at help and error text
+    - single checkboxes render as a check row; radio groups and checkbox lists
+      render inside a <fieldset>; hidden fields render bare
+
+  Always pass `only`.
+
+  Example:
+    <div class="row g-3">
+      {% include "components/_field.html" with field=form.title class="col-12" only %}
+      {% include "components/_field.html" with field=form.issn_print class="col-md-6" help="Format: 1234-5678" only %}
+      {% include "components/_field.html" with field=form.is_active class="col-12" only %}
+    </div>
+{% endcomment %}
+{% load ui_tags %}
+{% field_help field help hide_help as help_text %}
+{% field_required field required as is_required %}
+{% with kind=field|field_kind field_label=label|default:field.label %}
+{% if kind == "hidden" %}
+{{ field }}
+{% else %}
+<div class="field field--{{ kind }}{% if field.errors %} has-error{% endif %}{% if class %} {{ class }}{% endif %}">
+  {% if kind == "check" %}
+  <div class="form-check">
+    {% field_control field help_text rows %}
+    <label class="form-check-label" for="{{ field.id_for_label }}">{{ field_label }}{% if is_required %}<span class="field__req" aria-hidden="true">*</span>{% endif %}</label>
+  </div>
+  {% elif kind == "choices" %}
+  <fieldset>
+    <legend class="field__label{% if hide_label %} visually-hidden{% endif %}">{{ field_label }}{% if is_required %}<span class="field__req" aria-hidden="true">*</span>{% endif %}</legend>
+    {% field_control field help_text rows %}
+  </fieldset>
+  {% else %}
+  <label class="field__label{% if hide_label %} visually-hidden{% endif %}" for="{{ field.id_for_label }}">{{ field_label }}{% if is_required %}<span class="field__req" aria-hidden="true">*</span>{% endif %}</label>
+  {% field_control field help_text rows %}
+  {% endif %}
+  {% if help_text %}<div class="field__help" id="{{ field.auto_id }}_helptext">{{ help_text|safe }}</div>{% endif %}
+  {% if field.errors %}
+  <div class="field__error invalid-feedback d-block" id="{{ field.auto_id }}_error">
+    {% for error in field.errors %}<div>{{ error }}</div>{% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endwith %}

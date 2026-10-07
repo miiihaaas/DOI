@@ -77,3 +77,19 @@ class SoftDeleteMixin(models.Model):
         self.deleted_at = None
         self.deleted_by = None
         self.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])
+
+
+def wants_htmx_partial(request) -> bool:
+    """
+    True when an HTMX request should get a partial instead of the full page.
+
+    Used by views whose URL is BOTH a full page and an HTMX partial (lists with
+    HTMX filtering/pagination that push the URL). When the browser history
+    snapshot is missing, htmx refetches the URL with HX-Request AND
+    HX-History-Restore-Request and swaps the response into <body>, so that
+    request needs the full page. Such views must also send ``Vary: HX-Request``
+    so the browser cache never serves the partial for a full navigation.
+    """
+    return bool(request.headers.get("HX-Request")) and not request.headers.get(
+        "HX-History-Restore-Request"
+    )

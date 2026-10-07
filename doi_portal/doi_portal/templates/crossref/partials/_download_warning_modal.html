@@ -1,45 +1,32 @@
-{# Story 5.6: Warning dialog for invalid XML download (AC4) #}
-<div class="modal fade" id="downloadWarningModal" tabindex="-1"
-     aria-labelledby="downloadWarningModalLabel" aria-hidden="true"
-     x-data="downloadWarningState()"
-     x-init="show()">
+{% comment %}
+  Warning before downloading XML that failed XSD validation. Appended to <body>
+  by HTMX (hx-swap="beforeend"); deposit_base.html opens it and removes it when
+  it is closed. Used for all three families (the view passes exactly one of
+  issue / monograph / component_group); _monograph_download_warning_modal.html
+  includes this file.
+{% endcomment %}
+{% if issue %}{% url 'crossref:xml-download-force' issue.pk as force_url %}{% elif monograph %}{% url 'crossref:monograph-xml-download-force' monograph.pk as force_url %}{% elif component_group %}{% url 'crossref:component-xml-download-force' component_group.pk as force_url %}{% endif %}
+<div class="modal fade crossref-modal" id="downloadWarningModal" tabindex="-1"
+     aria-labelledby="downloadWarningModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header bg-warning text-dark">
-        <h5 class="modal-title" id="downloadWarningModalLabel">
-          <i class="bi bi-exclamation-triangle me-2"></i>Upozorenje
-        </h5>
+      <div class="modal-header">
+        <h2 class="modal-title" id="downloadWarningModalLabel">
+          <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>Upozorenje
+        </h2>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button>
       </div>
       <div class="modal-body">
-        <p>XML ima <strong>{{ error_count }}</strong> {% if error_count == 1 %}grešku{% else %}greške{% endif %} validacije.</p>
+        <p>Broj grešaka XSD validacije u XML-u: <strong>{{ error_count }}</strong>.</p>
         <p>Fajl možda neće biti prihvaćen od strane Crossref portala.</p>
-        <p>Da li želite da preuzmete XML sa greškama?</p>
+        <p><strong>Da li želite da preuzmete XML sa greškama?</strong></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-circle me-1"></i>Otkaži
-        </button>
-        <a href="{% url 'crossref:xml-download-force' issue.pk %}"
-           class="btn btn-warning">
-          <i class="bi bi-download me-1"></i>Preuzmi svejedno
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Otkaži</button>
+        <a href="{{ force_url }}" class="btn btn-primary" data-crossref-download>
+          <i class="bi bi-download me-1" aria-hidden="true"></i>Preuzmi svejedno
         </a>
       </div>
     </div>
   </div>
 </div>
-
-<script>
-function downloadWarningState() {
-  return {
-    show() {
-      const modal = new bootstrap.Modal(document.getElementById('downloadWarningModal'));
-      modal.show();
-      // Remove from DOM when hidden
-      document.getElementById('downloadWarningModal').addEventListener('hidden.bs.modal', function () {
-        this.remove();
-      });
-    }
-  }
-}
-</script>

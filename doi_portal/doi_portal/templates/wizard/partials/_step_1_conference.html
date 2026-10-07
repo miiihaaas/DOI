@@ -1,95 +1,61 @@
-<div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">
-            <i class="bi bi-megaphone me-2"></i>Podaci o konferenciji
-        </h5>
-    </div>
-    <div class="card-body">
+{% comment %}
+  Step 1 – conference (Publication). For publisher-bound users the publisher
+  field is a HiddenInput; _field.html renders hidden fields bare.
+  The language field keeps the widget defined in WizardConferenceForm.
+{% endcomment %}
+<div class="row">
+  <div class="col-xl-8">
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title"><i class="bi bi-megaphone me-2" aria-hidden="true"></i>Podaci o konferenciji</h2>
+      </div>
+      <div class="card-body">
         <form method="post" {% if is_create %}action="{% url 'wizard:conference-start' %}"{% else %}action="{% url 'wizard:conference-step-1' publication.pk %}"{% endif %}>
-            {% csrf_token %}
+          {% csrf_token %}
 
-            {% if form.non_field_errors %}
-            <div class="alert alert-danger">
-                {% for error in form.non_field_errors %}
-                <p class="mb-0">{{ error }}</p>
-                {% endfor %}
-            </div>
-            {% endif %}
+          {% if form.non_field_errors %}
+          <div class="status-strip status-strip--danger" role="alert">
+            {% for error in form.non_field_errors %}<span class="status-strip__item"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ error }}</span>{% endfor %}
+          </div>
+          {% endif %}
 
-            {% if form.publisher.is_hidden %}
+          {% if form.publisher.is_hidden %}
             {{ form.publisher }}
-            {% else %}
-            <div class="mb-3">
-                <label for="id_publisher" class="form-label">Izdavač <span class="text-danger">*</span></label>
-                {{ form.publisher }}
-                {% if form.publisher.errors %}
-                <div class="invalid-feedback d-block">{{ form.publisher.errors.0 }}</div>
-                {% endif %}
+            {% if form.publisher.errors %}
+            <div class="status-strip status-strip--danger" role="alert">
+              {% for error in form.publisher.errors %}<span class="status-strip__item"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>Izdavač: {{ error }}</span>{% endfor %}
             </div>
             {% endif %}
+          {% endif %}
 
-            <div class="mb-3">
-                <label for="id_conference_name" class="form-label">Naziv konferencije <span class="text-danger">*</span></label>
-                {{ form.conference_name }}
-                {% if form.conference_name.errors %}
-                <div class="invalid-feedback d-block">{{ form.conference_name.errors.0 }}</div>
-                {% endif %}
+          <div class="row g-3">
+            {% if not form.publisher.is_hidden %}
+            {% include "components/_field.html" with field=form.publisher label="Izdavač" class="col-12" only %}
+            {% endif %}
+            {# Hand-written: the name is mandatory for a conference although the model field is optional, so the marker is set here. #}
+            <div class="field field--input col-12{% if form.conference_name.errors %} has-error{% endif %}">
+              <label class="field__label" for="{{ form.conference_name.id_for_label }}">Naziv konferencije<span class="field__req" aria-hidden="true">*</span></label>
+              {{ form.conference_name }}
+              {% if form.conference_name.errors %}
+              <div class="field__error invalid-feedback d-block">{% for error in form.conference_name.errors %}<div>{{ error }}</div>{% endfor %}</div>
+              {% endif %}
             </div>
+            {% include "components/_field.html" with field=form.conference_acronym label="Akronim" class="col-md-6" only %}
+            {% include "components/_field.html" with field=form.conference_number label="Broj konferencije" class="col-md-6" only %}
+            {% include "components/_field.html" with field=form.conference_location label="Lokacija" class="col-12" only %}
+            {% include "components/_field.html" with field=form.conference_date label="Datum početka" class="col-md-4" only %}
+            {% include "components/_field.html" with field=form.conference_date_end label="Datum završetka" class="col-md-4" hide_help=True only %}
+            {% include "components/_field.html" with field=form.language label="Jezik" class="col-md-4" hide_help=True only %}
+          </div>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="id_conference_acronym" class="form-label">Akronim</label>
-                    {{ form.conference_acronym }}
-                    {% if form.conference_acronym.errors %}
-                    <div class="invalid-feedback d-block">{{ form.conference_acronym.errors.0 }}</div>
-                    {% endif %}
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="id_conference_number" class="form-label">Broj konferencije</label>
-                    {{ form.conference_number }}
-                    {% if form.conference_number.errors %}
-                    <div class="invalid-feedback d-block">{{ form.conference_number.errors.0 }}</div>
-                    {% endif %}
-                </div>
+          <div class="form-actions">
+            <div class="form-actions__start">
+              <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Otkaži</a>
             </div>
-
-            <div class="mb-3">
-                <label for="id_conference_location" class="form-label">Lokacija</label>
-                {{ form.conference_location }}
-                {% if form.conference_location.errors %}
-                <div class="invalid-feedback d-block">{{ form.conference_location.errors.0 }}</div>
-                {% endif %}
-            </div>
-
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label for="id_conference_date" class="form-label">Datum početka</label>
-                    {{ form.conference_date }}
-                    {% if form.conference_date.errors %}
-                    <div class="invalid-feedback d-block">{{ form.conference_date.errors.0 }}</div>
-                    {% endif %}
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="id_conference_date_end" class="form-label">Datum završetka</label>
-                    {{ form.conference_date_end }}
-                    {% if form.conference_date_end.errors %}
-                    <div class="invalid-feedback d-block">{{ form.conference_date_end.errors.0 }}</div>
-                    {% endif %}
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="id_language" class="form-label">Jezik</label>
-                    {{ form.language }}
-                    {% if form.language.errors %}
-                    <div class="invalid-feedback d-block">{{ form.language.errors.0 }}</div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary">
-                    Nastavi <i class="bi bi-arrow-right ms-1"></i>
-                </button>
-            </div>
+            <button type="submit" class="btn btn-primary">Dalje<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></button>
+          </div>
         </form>
-    </div>
+      </div>
+    </section>
+  </div>
 </div>

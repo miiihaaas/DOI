@@ -1,0 +1,106 @@
+{% comment %}
+  One numbered step of the deposit stepper. Included from _deposit_page.html
+  inside the {% for step in steps %} loop.
+
+    step    dict from the view: number, title, icon, completed, active
+    state   done | current | attention | available | locked
+            "current" is the single step the user should act on now; only it
+            carries a primary button. "attention" is step 1 failing after XML
+            was already generated.
+{% endcomment %}
+<li class="deposit-step deposit-step--{{ state }}"{% if state == "current" %} aria-current="step"{% endif %}>
+  <div class="deposit-step__marker" aria-hidden="true">{% if state == "done" %}<i class="bi bi-check-lg"></i>{% else %}{{ step.number }}{% endif %}</div>
+  <div class="deposit-step__main">
+    <div class="deposit-step__head">
+      <h3 class="deposit-step__title"><i class="bi bi-{{ step.icon }}" aria-hidden="true"></i>{{ step.title }}</h3>
+      <span class="deposit-step__state">
+        {% if state == "done" %}<i class="bi bi-check-circle" aria-hidden="true"></i>Završeno
+        {% elif state == "current" %}<i class="bi bi-arrow-right-circle" aria-hidden="true"></i>{% if step.number == 1 or step.number == 3 %}Potrebna ispravka{% else %}Sledeći korak{% endif %}
+        {% elif state == "attention" %}<i class="bi bi-exclamation-triangle" aria-hidden="true"></i>Ima grešaka
+        {% elif state == "available" %}<i class="bi bi-unlock" aria-hidden="true"></i>{% if step.number == 4 %}Opciono{% else %}Dostupno{% endif %}
+        {% else %}<i class="bi bi-lock" aria-hidden="true"></i>Nedostupno{% endif %}
+      </span>
+    </div>
+
+    {% if step.number == 1 %}
+    {# Pre-validation: the panel is loaded by HTMX (crossref/partials/_validation_panel.html) #}
+    <div id="validation-step-content" class="deposit-step__body"
+         hx-get="{{ validate_url }}"
+         hx-trigger="load"
+         hx-swap="innerHTML"><div class="deposit-loading"><span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Učitavanje...</span></span>Provera podataka…</div></div>
+
+    {% elif step.number == 2 %}
+    {# Generate XML: the result partial is swapped into this element #}
+    <div id="generation-step-content" class="deposit-step__body">{% if has_xml %}
+      <p class="deposit-step__hint">XML generisan {{ obj.xml_generated_at|date:"d.m.Y H:i" }}</p>
+      {% if obj.xsd_valid %}
+      <div class="deposit-step__actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showRegenerateModal(event)">
+          <i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>Regeneriši XML
+        </button>
+      </div>
+      {% endif %}
+      {% elif state == "current" %}
+      <p class="deposit-step__hint">Podaci su ispravni. Generišite Crossref XML iz unetih podataka.</p>
+      <div class="deposit-step__actions">
+        <button type="button" class="btn btn-primary"
+                hx-post="{{ generate_url }}"
+                hx-target="#generation-step-content"
+                hx-swap="innerHTML"
+                hx-disabled-elt="this">
+          <i class="bi bi-file-code me-1" aria-hidden="true"></i>Generiši XML
+        </button>
+      </div>
+      {% else %}<p class="deposit-step__hint">Dostupno kada pre-validacija prođe bez grešaka.</p>{% endif %}</div>
+
+    {% elif step.number == 3 %}
+    {# XSD validation of the stored XML #}
+    <div id="xsd-step-content" class="deposit-step__body">{% if has_xml %}
+      {% include "crossref/partials/_xsd_validation_result.html" with xsd_valid=obj.xsd_valid xsd_errors=obj.xsd_errors xsd_validated_at=obj.xsd_validated_at %}
+      {% if state == "current" %}
+      <p class="deposit-step__hint mt-2">Ispravite podatke na koje greške ukazuju, pa ponovo generišite XML.</p>
+      <div class="deposit-step__actions">
+        <button type="button" class="btn btn-primary" onclick="showRegenerateModal(event)">
+          <i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>Regeneriši XML
+        </button>
+      </div>
+      {% endif %}
+      {% else %}<p class="deposit-step__hint">XML se proverava prema Crossref XSD šemi odmah nakon generisanja.</p>{% endif %}</div>
+
+    {% elif step.number == 4 %}
+    {# Preview: opens #xmlPreviewModal (crossref/partials/_xml_preview_modal.html) #}
+    <div class="deposit-step__body">{% if has_xml %}
+      <div class="deposit-step__actions">
+        <button type="button" id="xmlPreviewBtn" class="btn btn-sm btn-outline-secondary"
+                data-xml-preview-url="{{ preview_url }}">
+          <i class="bi bi-eye me-1" aria-hidden="true"></i>Pregled XML
+        </button>
+      </div>
+      {% else %}<p class="deposit-step__hint">Pregled generisanog XML-a sa označenim greškama.</p>{% endif %}</div>
+
+    {% elif step.number == 5 %}
+    {# Download: direct when the XML is valid, through the warning modal otherwise #}
+    <div class="deposit-step__body">{% if has_xml %}
+      {% if state == "current" %}
+      <p class="deposit-step__hint">Preuzmite fajl, pa ga otpremite na Crossref admin portal.</p>
+      {% elif not obj.xsd_valid %}
+      <p class="deposit-step__hint">XML nije prošao XSD validaciju; Crossref ga verovatno neće prihvatiti.</p>
+      {% endif %}
+      <div class="deposit-step__actions">
+        {% if obj.xsd_valid %}
+        <a href="{{ download_url }}" class="btn {% if state == "current" %}btn-primary{% else %}btn-sm btn-outline-secondary{% endif %}" download data-crossref-download>
+          <i class="bi bi-download me-1" aria-hidden="true"></i>Preuzmi XML
+        </a>
+        {% else %}
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                hx-get="{{ download_warning_url }}"
+                hx-target="body"
+                hx-swap="beforeend">
+          <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Preuzmi XML
+        </button>
+        {% endif %}
+      </div>
+      {% else %}<p class="deposit-step__hint">Fajl za otpremanje na Crossref admin portal.</p>{% endif %}</div>
+    {% endif %}
+  </div>
+</li>

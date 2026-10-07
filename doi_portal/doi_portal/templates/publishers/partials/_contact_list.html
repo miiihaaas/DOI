@@ -1,13 +1,17 @@
-<div id="contact-form-container"></div>
-{% for contact in contacts %}
+{% if contacts %}
+<ul class="list-group mb-3">
+  {% for contact in contacts %}
   {% include "publishers/partials/_contact_item.html" with contact=contact %}
-{% empty %}
-  <p class="text-muted">Nema unetih kontakt osoba.</p>
-{% endfor %}
+  {% endfor %}
+</ul>
+{% else %}
+<p class="text-muted mb-3">Nema unetih kontakt osoba.</p>
+{% endif %}
+<div id="contact-form-container"></div>
 <button type="button"
-        class="btn btn-sm btn-outline-primary mt-2"
+        class="btn btn-sm btn-outline-primary"
         hx-get="{% url 'publishers:contact-add-form' publisher_pk=publisher.pk %}"
         hx-target="#contact-form-container"
         hx-swap="innerHTML">
-  <i class="bi bi-plus-lg me-1"></i>Dodaj kontakt osobu
+  <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Dodaj kontakt osobu
 </button>

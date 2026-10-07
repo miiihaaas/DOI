@@ -1,78 +1,52 @@
-{# Story 5.2: Pre-Generation Validation & Warnings #}
-{# Validation panel template for Crossref pre-generation validation #}
-<div class="card mb-4" id="validation-panel">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">
-      <i class="bi bi-clipboard-check me-2"></i>
-      Validacija pre generisanja
-    </h5>
-    {% if is_valid %}
-      <span class="badge bg-success">
-        <i class="bi bi-check-circle me-1"></i>
-        Spremno
-      </span>
-    {% else %}
-      <span class="badge bg-danger">
-        {{ error_count }} {% if error_count == 1 %}greška{% else %}grešaka{% endif %}
-      </span>
-    {% endif %}
-  </div>
-  <div class="card-body">
-    {% if errors %}
-      <div class="alert alert-danger mb-3">
-        <h6 class="alert-heading">
-          <i class="bi bi-x-circle me-2"></i>
-          Greške (blokiraju generisanje)
-        </h6>
-        <ul class="mb-0">
-          {% for error in errors %}
-            <li>
-              {{ error.message }}
-              {% if error.fix_url %}
-                <a href="{{ error.fix_url }}" class="ms-2 text-danger">
-                  <i class="bi bi-pencil-square"></i> Ispravi
-                </a>
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endif %}
+{% comment %}
+  Pre-generation validation result, loaded by HTMX into #validation-step-content
+  (step 1). Identical for the three families; _monograph_validation_panel.html
+  and _component_validation_panel.html include this file.
 
-    {% if warnings %}
-      <div class="alert alert-warning mb-3">
-        <h6 class="alert-heading">
-          <i class="bi bi-exclamation-triangle me-2"></i>
-          Upozorenja
-        </h6>
-        <ul class="mb-0">
-          {% for warning in warnings %}
-            <li>
-              {{ warning.message }}
-              {% if warning.fix_url %}
-                <a href="{{ warning.fix_url }}" class="ms-2 link-dark">
-                  <i class="bi bi-pencil-square"></i> Ispravi
-                </a>
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endif %}
-
-    {% if is_valid %}
-      <div class="alert alert-success mb-0">
-        <i class="bi bi-check-circle me-2"></i>
-        Spremno za generisanje XML-a
-      </div>
-    {% endif %}
+    is_valid, errors, warnings, error_count, warning_count   from the view
+{% endcomment %}
+<div id="validation-panel">
+  {% if is_valid %}
+  <div class="status-strip status-strip--success" role="status">
+    <span class="status-strip__item"><i class="bi bi-check-circle-fill" aria-hidden="true"></i><strong>Spremno za generisanje XML-a</strong></span>
+    {% if warnings %}<span class="status-strip__item"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>Upozorenja: {{ warnings|length }}</span>{% endif %}
   </div>
-  {% if not is_valid %}
-    <div class="card-footer bg-light">
-      <small class="text-muted">
-        <i class="bi bi-info-circle me-1"></i>
-        Ispravite sve greške pre generisanja XML-a za Crossref.
-      </small>
-    </div>
+  {% else %}
+  <div class="status-strip status-strip--danger" role="alert">
+    <span class="status-strip__item"><i class="bi bi-x-circle-fill" aria-hidden="true"></i><strong>Greške koje blokiraju generisanje: {{ error_count }}</strong></span>
+    <span class="status-strip__item">Ispravite sve greške pre generisanja XML-a za Crossref, pa osvežite stranicu.</span>
+  </div>
+  {% endif %}
+
+  {% if errors %}
+  <div class="deposit-issues deposit-issues--danger">
+    <h4 class="deposit-issues__title">Greške (blokiraju generisanje)</h4>
+    <ul class="deposit-issues__list">
+      {% for error in errors %}
+      <li>
+        <span>{{ error.message }}</span>
+        {% if error.fix_url %}
+        <a href="{{ error.fix_url }}" class="deposit-issues__fix"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Ispravi</a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if warnings %}
+  <div class="deposit-issues">
+    <h4 class="deposit-issues__title">Upozorenja (ne blokiraju generisanje)</h4>
+    <ul class="deposit-issues__list">
+      {% for warning in warnings %}
+      <li>
+        <span>{{ warning.message }}</span>
+        {% if warning.fix_url %}
+        <a href="{{ warning.fix_url }}" class="deposit-issues__fix"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Ispravi</a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
   {% endif %}
 </div>

@@ -1,66 +1,52 @@
 {% load allauth %}
-{% load crispy_forms_tags %}
-
+{% comment %}
+  Single allauth field in the kit field layout (.field / .field__label /
+  .field__help). Used by allauth's own templates (email list radios, TOTP
+  secret, recovery codes textarea).
+{% endcomment %}
 {% if attrs.type == "textarea" %}
-  <div class="row mb-3">
-    <div class="col-sm-10">
-      <label for="{{ attrs.id }}">
-        {% slot label %}
-      {% endslot %}
-    </label>
-  </div>
+<div class="field">
+  <label class="field__label form-label" for="{{ attrs.id }}">{% slot label %}{% endslot %}</label>
   <textarea {% if attrs.required %}required{% endif %}
             {% if attrs.rows %}rows="{{ attrs.rows }}"{% endif %}
             {% if attrs.disabled %}disabled{% endif %}
             {% if attrs.readonly %}readonly{% endif %}
-            {% if attrs.checked %}checked{% endif %}
             {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
             {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
             {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
             class="form-control">{% slot value %}{% endslot %}</textarea>
+  {% if slots.help_text %}<div class="field__help form-text">{% slot help_text %}{% endslot %}</div>{% endif %}
 </div>
-{% elif attrs.type == "radio" %}
-<div class="row mb-3">
-  <div class="col-sm-10">
-    <div class="form-check">
-      <input {% if attrs.required %}required{% endif %}
-             {% if attrs.disabled %}disabled{% endif %}
-             {% if attrs.readonly %}readonly{% endif %}
-             {% if attrs.checked %}checked{% endif %}
-             {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
-             {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
-             {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
-             {% if attrs.autocomplete %}autocomplete="{{ attrs.autocomplete }}"{% endif %}
-             value="{{ attrs.value|default_if_none:"" }}"
-             type="{{ attrs.type }}" />
-      <label class="form-check-label" for="{{ attrs.id }}">
-        {% slot label %}
-      {% endslot %}
-    </label>
+{% elif attrs.type == "radio" or attrs.type == "checkbox" %}
+<div class="field field--check">
+  <div class="form-check">
+    <input {% if attrs.required %}required{% endif %}
+           {% if attrs.disabled %}disabled{% endif %}
+           {% if attrs.readonly %}readonly{% endif %}
+           {% if attrs.checked %}checked{% endif %}
+           {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+           {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+           value="{{ attrs.value|default_if_none:"" }}"
+           type="{{ attrs.type }}"
+           class="form-check-input" />
+    <label class="form-check-label" for="{{ attrs.id }}">{% slot label %}{% endslot %}</label>
   </div>
-</div>
+  {% if slots.help_text %}<div class="field__help form-text">{% slot help_text %}{% endslot %}</div>{% endif %}
 </div>
 {% else %}
-<div class="col-sm-10">
-  <label for="{{ attrs.id }}">
-    {% slot label %}
-  {% endslot %}
-</label>
-</div>
-<div class="col-sm-10">
+<div class="field">
+  <label class="field__label form-label" for="{{ attrs.id }}">{% slot label %}{% endslot %}</label>
   <input {% if attrs.required %}required{% endif %}
          {% if attrs.disabled %}disabled{% endif %}
          {% if attrs.readonly %}readonly{% endif %}
-         {% if attrs.checked %}checked{% endif %}
          {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
          {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
          {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
          {% if attrs.autocomplete %}autocomplete="{{ attrs.autocomplete }}"{% endif %}
          value="{{ attrs.value|default_if_none:"" }}"
          type="{{ attrs.type }}"
-         class="form-control" />
+         class="form-control{% if attrs.errors %} is-invalid{% endif %}" />
+  {% if attrs.errors %}<div class="field__error invalid-feedback d-block">{% for error in attrs.errors %}<div>{{ error }}</div>{% endfor %}</div>{% endif %}
+  {% if slots.help_text %}<div class="field__help form-text">{% slot help_text %}{% endslot %}</div>{% endif %}
 </div>
-{% endif %}
-{% if slots.help_text %}
-  <div class="form-text">{% slot help_text %}{% endslot %}</div>
 {% endif %}

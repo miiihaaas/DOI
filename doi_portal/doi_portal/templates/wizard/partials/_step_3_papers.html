@@ -1,29 +1,26 @@
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">
-            <i class="bi bi-file-earmark-text me-2"></i>Radovi
-        </h5>
-        <button type="button" class="btn btn-sm btn-primary"
-                hx-get="{% url 'wizard:paper-add' publication.pk %}"
-                hx-target="#paper-form-container"
-                hx-swap="innerHTML">
-            <i class="bi bi-plus-lg me-1"></i>Dodaj rad
-        </button>
-    </div>
-    <div class="card-body">
-        <div id="paper-form-container"></div>
+{% comment %}
+  Step 3 – papers. Each paper is its own card (no card-in-card); the add/edit
+  form opens in #paper-form-container above the list (#paper-list).
+{% endcomment %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h2 class="form-section-title mb-0"><i class="bi bi-file-earmark-text me-2" aria-hidden="true"></i>Radovi</h2>
+  <button type="button" class="btn btn-outline-primary"
+          hx-get="{% url 'wizard:paper-add' publication.pk %}"
+          hx-target="#paper-form-container"
+          hx-swap="innerHTML">
+    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Dodaj rad
+  </button>
+</div>
 
-        <div id="paper-list">
-            {% include "wizard/partials/_paper_list.html" %}
-        </div>
+<div id="paper-form-container"></div>
 
-        <div class="d-flex justify-content-between mt-4">
-            <a href="{% url 'wizard:conference-step-2' publication.pk %}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i> Nazad
-            </a>
-            <a href="{% url 'wizard:conference-step-4' publication.pk %}" class="btn btn-primary">
-                Nastavi na pregled <i class="bi bi-arrow-right ms-1"></i>
-            </a>
-        </div>
-    </div>
+<div id="paper-list">
+  {% include "wizard/partials/_paper_list.html" %}
+</div>
+
+<div class="form-actions">
+  <div class="form-actions__start">
+    <a href="{% url 'wizard:conference-step-2' publication.pk %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad</a>
+  </div>
+  <a href="{% url 'wizard:conference-step-4' publication.pk %}" class="btn btn-primary">Dalje<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
 </div>

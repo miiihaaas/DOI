@@ -1,0 +1,151 @@
+{% load ui_tags %}
+{% comment %}
+  Shared body of the Crossref deposit page (issue / monograph / component group).
+
+  Included from the three page templates, which resolve the family-specific
+  URLs first. Expected context (besides the view's own: steps, has_xml,
+  all_ready, is_deposited):
+
+    obj                   the issue / monograph / component group
+    object_label          one line naming it (page header meta)
+    back_url, back_label  "Nazad na ..." action
+    list_url, list_label  link to the family's list (side card);
+                          optional list_filter_name / list_filter_value add ?name=value
+    summary_title         title of the summary card
+    summary_template      template with the <dl> for the summary card
+    validate_url, generate_url, preview_url, download_url,
+    download_warning_url, history_url, mark_url
+
+  Ids used by the views' HTMX responses and by tests are fixed:
+  validation-step-content, generation-step-content, xsd-step-content,
+  xmlPreviewBtn, deposit-status, export-history-container, regenerateModal.
+{% endcomment %}
+<div id="crossref-deposit" class="crossref-deposit">
+  {% with l_done=is_deposited|yesno:"Deponovano," l_ready=all_ready|yesno:"Spremno za Crossref," l_xml=has_xml|yesno:"U pripremi," t_done=is_deposited|yesno:"success," t_ready=all_ready|yesno:"info," t_xml=has_xml|yesno:"pending," %}
+  {% firstof l_done l_ready l_xml "Nije započeto" as deposit_label %}
+  {% firstof t_done t_ready t_xml "neutral" as deposit_tone %}
+  {% pageheader title="Crossref deponovanje" icon="bi-cloud-upload" badge=deposit_label badge_tone=deposit_tone meta=object_label %}
+    <a href="{{ back_url }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>{{ back_label }}</a>
+  {% endpageheader %}
+  {% endwith %}
+
+  <div class="row g-3">
+    <div class="col-xl-8">
+      <section class="card card--primary mb-3" aria-labelledby="deposit-steps-title">
+        <div class="card-header">
+          <h2 class="card-title" id="deposit-steps-title"><i class="bi bi-list-check me-2" aria-hidden="true"></i>Koraci za deponovanje</h2>
+        </div>
+        <div class="card-body">
+          <ol class="deposit-steps">
+            {% for step in steps %}
+              {% if step.completed %}
+                {% include "crossref/partials/_deposit_step.html" with state="done" %}
+              {% elif step.number == 1 and not has_xml %}
+                {% include "crossref/partials/_deposit_step.html" with state="current" %}
+              {% elif step.number == 1 %}
+                {# XML already exists but the data no longer passes pre-validation #}
+                {% include "crossref/partials/_deposit_step.html" with state="attention" %}
+              {% elif step.number == 2 and step.active %}
+                {% include "crossref/partials/_deposit_step.html" with state="current" %}
+              {% elif step.number == 3 and step.active and not is_deposited %}
+                {% include "crossref/partials/_deposit_step.html" with state="current" %}
+              {% elif step.number == 5 and step.active and obj.xsd_valid and not is_deposited %}
+                {% include "crossref/partials/_deposit_step.html" with state="current" %}
+              {% elif step.active %}
+                {% include "crossref/partials/_deposit_step.html" with state="available" %}
+              {% else %}
+                {% include "crossref/partials/_deposit_step.html" with state="locked" %}
+              {% endif %}
+            {% endfor %}
+
+            {# Last step: upload at Crossref and confirm it here #}
+            <li class="deposit-step {% if is_deposited %}deposit-step--done{% elif all_ready %}deposit-step--current{% else %}deposit-step--locked{% endif %}"{% if all_ready and not is_deposited %} aria-current="step"{% endif %}>
+              <div class="deposit-step__marker" aria-hidden="true">{% if is_deposited %}<i class="bi bi-check-lg"></i>{% else %}{{ steps|length|add:1 }}{% endif %}</div>
+              <div class="deposit-step__main">
+                <div class="deposit-step__head">
+                  <h3 class="deposit-step__title"><i class="bi bi-cloud-check" aria-hidden="true"></i>Deponovanje na Crossref</h3>
+                  <span class="deposit-step__state">
+                    {% if is_deposited %}<i class="bi bi-check-circle" aria-hidden="true"></i>Završeno
+                    {% elif all_ready %}<i class="bi bi-arrow-right-circle" aria-hidden="true"></i>Sledeći korak
+                    {% else %}<i class="bi bi-lock" aria-hidden="true"></i>Nedostupno{% endif %}
+                  </span>
+                </div>
+                <div class="deposit-step__body" id="deposit-status">
+                  {% include "crossref/partials/_deposit_status_body.html" %}
+                </div>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      {# Export history (lazy) #}
+      {% if has_xml %}
+      <div id="export-history-container"
+           hx-get="{{ history_url }}"
+           hx-trigger="load"
+           hx-swap="innerHTML">
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-xl-4">
+      <section class="card mb-3" aria-labelledby="deposit-summary-title">
+        <div class="card-header">
+          <h2 class="card-title" id="deposit-summary-title"><i class="bi bi-info-circle me-2" aria-hidden="true"></i>{{ summary_title }}</h2>
+        </div>
+        <div class="card-body">
+          {% include summary_template %}
+        </div>
+      </section>
+
+      <section class="card mb-3" aria-labelledby="deposit-links-title">
+        <div class="card-header">
+          <h2 class="card-title" id="deposit-links-title"><i class="bi bi-lightning me-2" aria-hidden="true"></i>Brze akcije</h2>
+        </div>
+        <div class="list-group list-group-flush">
+          <a href="{{ list_url }}{% if list_filter_name %}?{{ list_filter_name }}={{ list_filter_value }}{% endif %}" class="list-group-item list-group-item-action">
+            <i class="bi bi-list me-2" aria-hidden="true"></i>{{ list_label }}
+          </a>
+          <a href="https://www.crossref.org/XSDParse/" class="list-group-item list-group-item-action" target="_blank" rel="noopener">
+            <i class="bi bi-box-arrow-up-right me-2" aria-hidden="true"></i>Crossref XSD Parser<span class="visually-hidden"> (otvara se u novoj kartici)</span>
+          </a>
+          <a href="https://doi.crossref.org/" class="list-group-item list-group-item-action" target="_blank" rel="noopener">
+            <i class="bi bi-box-arrow-up-right me-2" aria-hidden="true"></i>Crossref admin portal<span class="visually-hidden"> (otvara se u novoj kartici)</span>
+          </a>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+{# Outside #crossref-deposit so an in-place refresh of the page region never replaces an open modal #}
+<div class="modal fade crossref-modal" id="regenerateModal" tabindex="-1" aria-labelledby="regenerateModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="regenerateModalLabel">
+          <i class="bi bi-arrow-clockwise me-2" aria-hidden="true"></i>Regenerisanje XML
+        </h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button>
+      </div>
+      <div class="modal-body">
+        <p>Postojeći XML će biti zamenjen novim sadržajem. Prethodni eksporti ostaju sačuvani u istoriji eksporta.</p>
+        <p><strong>Da li želite da nastavite?</strong></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Otkaži</button>
+        <button type="button" class="btn btn-primary"
+                hx-post="{{ generate_url }}"
+                hx-target="#generation-step-content"
+                hx-swap="innerHTML"
+                onclick="bootstrap.Modal.getInstance(document.getElementById('regenerateModal')).hide()">
+          <i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>Regeneriši XML
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Feedback for "Kopiraj u clipboard" in the XML preview #}
+<div id="xmlPreviewToast" class="toast-container crossref-toasts position-fixed bottom-0 end-0 p-3"></div>

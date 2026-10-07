@@ -1,0 +1,81 @@
+{% comment %}
+  Result of "Generiši XML" / "Regeneriši XML", swapped into
+  #generation-step-content. Shared by the three families through
+  _generation_result.html / _monograph_generation_result.html /
+  _component_generation_result.html.
+
+    obj                    issue / monograph / component group (only on success)
+    preview_url, download_url, download_warning_url
+    generating | success | message | errors | timestamp | xsd_*   from the view
+
+  On success the page reloads itself (deposit_base.html listens for
+  data-generation-state="success"), so every step shows its new state.
+  The markup below is still complete on its own.
+{% endcomment %}
+{% if generating %}
+<div class="alert alert-info" id="generation-result" role="status" data-generation-state="generating">
+  <div class="d-flex align-items-center">
+    <div class="spinner-border spinner-border-sm me-2" role="status">
+      <span class="visually-hidden">Generisanje...</span>
+    </div>
+    <span>{{ message }}</span>
+  </div>
+  <small class="d-block mt-1">Osvežite stranicu za pregled statusa.</small>
+</div>
+
+{% elif success %}
+<div id="generation-result" data-generation-state="success">
+  <div class="status-strip status-strip--success" role="status">
+    <span class="status-strip__item"><i class="bi bi-check-circle-fill" aria-hidden="true"></i><strong>{{ message }}</strong></span>
+    {% if timestamp %}<span class="status-strip__item">Generisano: {{ timestamp|date:"d.m.Y H:i" }}</span>{% endif %}
+  </div>
+  <div class="mt-2">
+    {% include "crossref/partials/_xsd_validation_result.html" %}
+  </div>
+  {% if obj %}
+  <div class="deposit-step__actions">
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-xml-preview-url="{{ preview_url }}">
+      <i class="bi bi-eye me-1" aria-hidden="true"></i>Pregled XML
+    </button>
+    {% if xsd_valid %}
+    <a href="{{ download_url }}" class="btn btn-sm btn-outline-secondary" download data-crossref-download>
+      <i class="bi bi-download me-1" aria-hidden="true"></i>Preuzmi XML
+    </a>
+    {% else %}
+    <button type="button" class="btn btn-sm btn-outline-secondary"
+            hx-get="{{ download_warning_url }}"
+            hx-target="body"
+            hx-swap="beforeend">
+      <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Preuzmi XML
+    </button>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{% else %}
+<div id="generation-result" data-generation-state="failed">
+  <div class="status-strip status-strip--danger" role="alert">
+    <span class="status-strip__item"><i class="bi bi-x-circle-fill" aria-hidden="true"></i><strong>{{ message }}</strong></span>
+  </div>
+  {% if errors %}
+  <div class="deposit-issues deposit-issues--danger">
+    <ul class="deposit-issues__list">
+      {% for error in errors %}
+      <li>
+        <span>{{ error.message }}</span>
+        {% if error.fix_url %}
+        <a href="{{ error.fix_url }}" class="deposit-issues__fix"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Ispravi</a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  <div class="deposit-step__actions">
+    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.reload()">
+      <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Osveži stranicu
+    </button>
+  </div>
+</div>
+{% endif %}

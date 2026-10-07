@@ -1,12 +1,12 @@
-<div class="card border-primary mb-3">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">
-            {% if article %}Izmeni rad{% else %}Dodaj rad{% endif %}
-        </h6>
-        <button type="button" class="btn btn-sm btn-light"
-                onclick="document.getElementById('paper-form-container').innerHTML = '';">
-            <i class="bi bi-x-lg"></i>
-        </button>
+{% comment %}
+  Paper add/edit form, loaded into #paper-form-container. On success the view
+  returns the refreshed list for #paper-list and the form closes itself.
+{% endcomment %}
+<section class="card card--primary mb-3" aria-labelledby="paper-form-title">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title" id="paper-form-title">{% if article %}Izmeni rad{% else %}Dodaj rad{% endif %}</h3>
+        <button type="button" class="btn-close btn-close-white" aria-label="Zatvori"
+                onclick="document.getElementById('paper-form-container').innerHTML = '';"></button>
     </div>
     <div class="card-body">
         <form {% if article %}
@@ -15,92 +15,37 @@
                 hx-post="{% url 'wizard:paper-add' publication.pk %}"
               {% endif %}
               hx-target="#paper-list"
-              hx-swap="innerHTML">
+              hx-swap="innerHTML"
+              hx-on::after-request="if (event.detail.elt === this &amp;&amp; event.detail.successful &amp;&amp; !event.detail.xhr.getResponseHeader('HX-Retarget')) { document.getElementById('paper-form-container').innerHTML = ''; }">
             {% csrf_token %}
 
             {% if form.non_field_errors %}
-            <div class="alert alert-danger mb-2">
+            <div class="alert alert-danger mb-3" role="alert">
                 {% for error in form.non_field_errors %}
                 <p class="mb-0">{{ error }}</p>
                 {% endfor %}
             </div>
             {% endif %}
 
-            <div class="mb-3">
-                <label for="id_title" class="form-label">Naslov <span class="text-danger">*</span></label>
-                {{ form.title }}
-                {% if form.title.errors %}
-                <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
-                {% endif %}
+            <div class="row g-3">
+                {% include "components/_field.html" with field=form.title label="Naslov" class="col-12" only %}
+                {% include "components/_field.html" with field=form.subtitle label="Podnaslov" class="col-12" only %}
+                {% include "components/_field.html" with field=form.abstract label="Apstrakt" class="col-12" only %}
+                {% include "components/_field.html" with field=form.doi_suffix label="DOI sufiks" class="col-md-4" only %}
+                {% include "components/_field.html" with field=form.first_page label="Prva stranica" class="col-6 col-md-4" only %}
+                {% include "components/_field.html" with field=form.last_page label="Poslednja stranica" class="col-6 col-md-4" only %}
+                {% include "components/_field.html" with field=form.language label="Jezik" class="col-md-4" only %}
+                {% include "components/_field.html" with field=form.license_url label="URL licence" class="col-md-8" only %}
+                {% include "components/_field.html" with field=form.free_to_read label="Slobodan pristup" class="col-12" only %}
             </div>
 
-            <div class="mb-3">
-                <label for="id_subtitle" class="form-label">Podnaslov</label>
-                {{ form.subtitle }}
-                {% if form.subtitle.errors %}
-                <div class="invalid-feedback d-block">{{ form.subtitle.errors.0 }}</div>
-                {% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label for="id_abstract" class="form-label">Apstrakt</label>
-                {{ form.abstract }}
-                {% if form.abstract.errors %}
-                <div class="invalid-feedback d-block">{{ form.abstract.errors.0 }}</div>
-                {% endif %}
-            </div>
-
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label for="id_doi_suffix" class="form-label">DOI sufiks</label>
-                    {{ form.doi_suffix }}
-                    {% if form.doi_suffix.errors %}
-                    <div class="invalid-feedback d-block">{{ form.doi_suffix.errors.0 }}</div>
-                    {% endif %}
+            <div class="form-actions">
+                <div class="form-actions__start">
+                    <button type="button" class="btn btn-outline-secondary"
+                            onclick="document.getElementById('paper-form-container').innerHTML = '';">Otkaži</button>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label for="id_first_page" class="form-label">Prva stranica</label>
-                    {{ form.first_page }}
-                    {% if form.first_page.errors %}
-                    <div class="invalid-feedback d-block">{{ form.first_page.errors.0 }}</div>
-                    {% endif %}
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="id_last_page" class="form-label">Poslednja stranica</label>
-                    {{ form.last_page }}
-                    {% if form.last_page.errors %}
-                    <div class="invalid-feedback d-block">{{ form.last_page.errors.0 }}</div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="id_language" class="form-label">Jezik</label>
-                    {{ form.language }}
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="id_license_url" class="form-label">URL licence</label>
-                    {{ form.license_url }}
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <div class="form-check">
-                    {{ form.free_to_read }}
-                    <label class="form-check-label" for="id_free_to_read">Slobodan pristup</label>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary"
-                        onclick="document.getElementById('paper-form-container').innerHTML = '';">
-                    Otkaži
-                </button>
-                <button type="submit" class="btn btn-sm btn-primary">
-                    <i class="bi bi-check-lg me-1"></i>Sačuvaj
-                </button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Sačuvaj rad</button>
             </div>
         </form>
     </div>
-</div>
+</section>

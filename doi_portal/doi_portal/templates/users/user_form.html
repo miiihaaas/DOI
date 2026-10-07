@@ -1,31 +1,37 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
+{% load ui_tags %}
 
-{% load crispy_forms_tags %}
+{% block title %}Izmeni podatke - DOI Portal{% endblock title %}
 
-{% block title %}
-
-
-  {{ user.name }}
-
-
-{% endblock title %}
 {% block content %}
-  <h1>
-  
-  
-    {{ user.name }}
-  
-  
-</h1>
-<form class="form-horizontal"
-      method="post"
-      action="{% url 'users:update' %}">
-  {% csrf_token %}
-  {{ form|crispy }}
-  <div class="control-group">
-    <div class="controls">
-      <button type="submit" class="btn btn-primary">Update</button>
+{% pageheader title="Izmeni podatke" icon="bi-person-circle" meta=request.user.email %}{% endpageheader %}
+
+<div class="row">
+  <div class="col-xl-8">
+    <div class="card">
+      <div class="card-body">
+        <form method="post" action="{% url 'users:update' %}" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+          <div class="status-strip status-strip--danger mb-3" role="alert">
+            {% for error in form.non_field_errors %}<span class="status-strip__item"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ error }}</span>{% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="row g-3">
+            {% include "components/_field.html" with field=form.name class="col-md-8" label="Ime i prezime" help="Prikazuje se u gornjem desnom uglu portala." only %}
+          </div>
+
+          <div class="form-actions">
+            <div class="form-actions__start">
+              <a href="{% url 'users:detail' request.user.pk %}" class="btn btn-outline-secondary">Otkaži</a>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Sačuvaj</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</form>
+</div>
 {% endblock content %}

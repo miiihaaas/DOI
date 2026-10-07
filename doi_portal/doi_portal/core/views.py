@@ -17,7 +17,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.urls import reverse_lazy
+from django.utils.cache import patch_vary_headers
+from django.utils.text import Truncator
 from django.views.decorators.http import require_GET, require_POST
 from django.views import View
 from django.views.generic import CreateView, DetailView
@@ -27,6 +30,7 @@ from django.views.generic import TemplateView
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
 
+from doi_portal.core.mixins import wants_htmx_partial
 from doi_portal.core.menu import get_user_role
 from doi_portal.core.permissions import role_required
 from doi_portal.users.models import User
@@ -43,15 +47,15 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     Admin dashboard with role-based content.
 
     Story 1.7: Base dashboard shell.
-    Story 3.8: Full statistics, pending items, quick actions.
+    Story 3.8: Full statistics, pending items.
 
-    Displays a Bootstrap 5 admin layout with:
-    - Role-based statistic cards (AC#1, #4, #5)
-    - Pending review articles (AC#2)
-    - Ready to publish articles (AC#3)
-    - My drafts section for Bibliotekar (AC#5)
-    - Quick actions (AC#8)
-    - Empty state messages (AC#7)
+    Top to bottom:
+    - Page header: greeting, role, the role's permitted "create" actions
+      (replaces the former "Brze akcije" card, whose other links duplicated
+      the sidebar)
+    - Role-based stat tiles (AC#1, #4, #5)
+    - Work queues: pending review (AC#2), ready to publish (AC#3),
+      my drafts for Bibliotekar (AC#5), with empty states (AC#7)
     """
 
     template_name = "dashboard/dashboard.html"
@@ -104,7 +108,30 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         ]
 
         # Statistics
-        context["stats"] = get_dashboard_statistics(user, flags)
+        stats = get_dashboard_statistics(user, flags)
+        context["stats"] = stats
+
+        # Page header: greeting, role line, permitted "create" actions
+        publisher = user.publisher if flags["has_publisher"] else None
+        context["greeting"] = f"Dobrodošli, {user.name or user.email}!"
+        role_line = ""
+        if context["user_role"]:
+            role_line = f"Prijavljeni ste kao {context['user_role']}"
+            if publisher and not flags["is_admin"]:
+                role_line += f" · Izdavač: {publisher}"
+        context["role_line"] = role_line
+
+        # Mirrors ArticleCreateView.test_func and the publisher scoping of
+        # MonographForm: admins always, Urednik/Bibliotekar only with a publisher.
+        has_scoped_role = flags["is_urednik"] or flags["is_bibliotekar"]
+        can_create = flags["is_admin"] or (has_scoped_role and flags["has_publisher"])
+        context["can_create_article"] = can_create
+        context["can_create_monograph"] = can_create
+        context["missing_publisher"] = (
+            has_scoped_role and not flags["is_admin"] and not flags["has_publisher"]
+        )
+
+        context["stat_tiles"] = self._get_stat_tiles(flags, stats)
 
         # Pending items based on role
         if flags["is_admin"] or flags["is_urednik"]:
@@ -118,82 +145,90 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         if flags["is_bibliotekar"]:
             context["my_draft_articles"] = get_my_draft_articles(user)
 
-        # Quick actions
-        context["quick_actions"] = self._get_quick_actions(flags)
-
         return context
 
-    def _get_quick_actions(self, flags: dict[str, bool]) -> list[dict[str, str]]:
+    def _get_stat_tiles(
+        self, flags: dict[str, bool], stats: dict[str, int],
+    ) -> list[dict[str, Any]]:
         """
-        Return role-appropriate quick action links.
+        Return the stat tiles for the user's role, work-queue counts first.
 
-        Args:
-            flags: Role flags dict.
-
-        Returns:
-            List of action dicts with label, url_name, icon keys.
+        Each tile: label, value, icon, css (accent modifier), url.
         """
-        actions = []
+        articles_url = reverse("articles:list")
+        review = {
+            "label": "Na pregledu",
+            "value": stats.get("pending_review_count", 0),
+            "icon": "bi-hourglass-split",
+            "css": "stat-pending",
+            "url": f"{articles_url}?status=REVIEW",
+        }
+        ready = {
+            "label": "Spremno za objavu",
+            "value": stats.get("ready_to_publish_count", 0),
+            "icon": "bi-check2-circle",
+            "css": "stat-ready",
+            "url": f"{articles_url}?status=READY",
+        }
+        articles = {
+            "label": "Članci",
+            "value": stats.get("total_articles", 0),
+            "icon": "bi-file-earmark-text",
+            "css": "stat-articles",
+            "url": articles_url,
+        }
+        monographs = {
+            "label": "Monografije",
+            "value": stats.get("total_monographs", 0),
+            "icon": "bi-book",
+            "css": "stat-articles",
+            "url": reverse("monographs:list"),
+        }
+
         if flags["is_admin"]:
-            actions = [
-                {
-                    "label": "Svi članci",
-                    "url_name": "articles:list",
-                    "icon": "bi-file-earmark-text",
-                },
+            return [
+                review,
+                ready,
+                articles,
+                monographs,
                 {
                     "label": "Publikacije",
-                    "url_name": "publications:list",
+                    "value": stats.get("total_publications", 0),
                     "icon": "bi-journal-text",
-                },
-                {
-                    "label": "Izdavači",
-                    "url_name": "publishers:list",
-                    "icon": "bi-building",
-                },
-                {
-                    "label": "Registruj konferenciju",
-                    "url_name": "wizard:conference-start",
-                    "icon": "bi-megaphone",
+                    "css": "stat-publications",
+                    "url": reverse("publications:list"),
                 },
             ]
-        elif flags["is_urednik"]:
-            actions = [
-                {
-                    "label": "Članci na pregledu",
-                    "url_name": "articles:list",
-                    "icon": "bi-hourglass-split",
-                },
-                {
-                    "label": "Izdanja",
-                    "url_name": "issues:list",
-                    "icon": "bi-collection",
-                },
-                {
-                    "label": "Registruj konferenciju",
-                    "url_name": "wizard:conference-start",
-                    "icon": "bi-megaphone",
-                },
-            ]
-        elif flags["is_bibliotekar"]:
-            actions = [
-                {
-                    "label": "Novi članak",
-                    "url_name": "articles:create",
-                    "icon": "bi-plus-circle",
-                },
+        if flags["is_urednik"]:
+            return [review, ready, articles, monographs]
+        if flags["is_bibliotekar"]:
+            # These three count the user's own articles (created_by), so they
+            # link to the list with the matching "mine" filter.
+            return [
                 {
                     "label": "Moji nacrti",
-                    "url_name": "articles:list",
+                    "value": stats.get("my_drafts_count", 0),
                     "icon": "bi-pencil-square",
+                    "css": "stat-drafts",
+                    "url": f"{articles_url}?status=DRAFT&mine=1",
                 },
                 {
-                    "label": "Registruj konferenciju",
-                    "url_name": "wizard:conference-start",
-                    "icon": "bi-megaphone",
+                    "label": "Poslato na pregled",
+                    "value": stats.get("my_submitted_count", 0),
+                    "icon": "bi-send",
+                    "css": "stat-submitted",
+                    "url": f"{articles_url}?status=REVIEW&mine=1",
                 },
+                {
+                    "label": "Ukupno mojih članaka",
+                    "value": stats.get("my_total_count", 0),
+                    "icon": "bi-file-earmark-text",
+                    "css": "stat-total",
+                    "url": f"{articles_url}?mine=1",
+                },
+                monographs,
             ]
-        return actions
+        return []
 
 
 # ============================================================================
@@ -301,7 +336,7 @@ class AuditLogListView(SuperadminRequiredMixin, ListView):
         context["search_query"] = self.request.GET.get("q", "")
 
         # Dropdown options - only load for full page renders (not HTMX partials)
-        if not self.request.headers.get("HX-Request"):
+        if not wants_htmx_partial(self.request):
             context["users"] = User.objects.all().order_by("email")
             context["action_choices"] = ACTION_CHOICES
 
@@ -321,11 +356,17 @@ class AuditLogListView(SuperadminRequiredMixin, ListView):
         """Override get to support HTMX partial rendering."""
         self.object_list = self.get_queryset()
         context = self.get_context_data()
-        if request.headers.get("HX-Request"):
-            return render(
+        # A history restore (Back after a cache miss) also carries HX-Request
+        # but is swapped into <body>, so it must get the full page.
+        if wants_htmx_partial(request):
+            response = render(
                 request, "core/partials/_audit_log_table.html", context
             )
-        return render(request, self.template_name, context)
+        else:
+            response = render(request, self.template_name, context)
+        # Same URL, two representations: keep caches from mixing them up.
+        patch_vary_headers(response, ["HX-Request"])
+        return response
 
 
 class AuditLogDetailView(SuperadminRequiredMixin, DetailView):
@@ -345,11 +386,14 @@ class AuditLogDetailView(SuperadminRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         entry = self.object
 
-        # Breadcrumbs
+        # Page title and breadcrumb name the changed object, like the <h1>;
+        # an entry without object_repr falls back to its number.
+        page_title = (entry.object_repr or "").strip() or f"Zapis #{entry.pk}"
+        context["page_title"] = page_title
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": "dashboard"},
             {"label": "Revizioni log", "url": "core:audit-log-list"},
-            {"label": f"Detalj #{entry.pk}", "url": None},
+            {"label": Truncator(page_title).chars(60), "url": None},
         ]
 
         # Action labels

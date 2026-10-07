@@ -1,0 +1,475 @@
+/* Auth pages (login, logout, password reset, allauth "entrance" pages).
+   Standalone layout: templates/account/_auth_layout.html.
+   Public doi.rs look: Raleway, 305deg green -> teal gradient.
+   Sections 1-2 were moved verbatim from the inline <style> of account/login.html. */
+
+/* =============================================
+   1. Layout and login form (verbatim from login.html)
+   ============================================= */
+:root {
+  --doi-primary: #5cb46a;
+  --doi-primary-hover: #68cc6c;
+  --doi-teal: #033333;
+  --doi-gradient: linear-gradient(305deg, #5cb46a 0%, #033333 100%);
+  --doi-gradient-hover: linear-gradient(305deg, #033333 0%, #5cb46a 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2f1;
+  font-family: 'Raleway', system-ui, -apple-system, sans-serif;
+  padding: 1.5rem;
+}
+
+.login-shell {
+  width: 100%;
+  max-width: 960px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #ffffff;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 30px 80px -20px rgba(3, 51, 51, 0.35);
+}
+
+/* ===== Left brand panel ===== */
+.brand-panel {
+  position: relative;
+  background: var(--doi-gradient);
+  padding: 3rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.brand-panel::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -30%;
+  width: 90%;
+  height: 90%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.brand-panel::after {
+  content: '';
+  position: absolute;
+  bottom: -35%;
+  left: -25%;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(circle, rgba(92, 180, 106, 0.25) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.brand-logo {
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  margin-bottom: 1.75rem;
+}
+
+.brand-tagline {
+  position: relative;
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0 0 0.5rem;
+  max-width: 22rem;
+}
+
+.brand-sub {
+  position: relative;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  max-width: 22rem;
+}
+
+/* ===== Right form panel ===== */
+.form-panel {
+  padding: 3rem 2.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.form-panel h1 {
+  color: var(--doi-teal);
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+}
+
+.form-panel .form-intro {
+  color: #6b7c7c;
+  font-size: 0.9rem;
+  margin: 0 0 1.75rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--doi-teal);
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+
+.form-control {
+  border: 2px solid #e2e8f0;
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: var(--doi-primary);
+  box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.2);
+}
+
+.form-control::placeholder {
+  color: #a0aec0;
+}
+
+.input-icon-wrapper {
+  position: relative;
+}
+
+.input-icon-wrapper .form-control {
+  padding-left: 2.6rem;
+}
+
+.input-icon-wrapper .input-icon {
+  position: absolute;
+  left: 0.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
+  font-size: 1rem;
+  transition: color 0.2s ease;
+  pointer-events: none;
+}
+
+.input-icon-wrapper .form-control:focus + .input-icon,
+.input-icon-wrapper:focus-within .input-icon {
+  color: var(--doi-primary);
+}
+
+.btn-login {
+  background: var(--doi-gradient);
+  border: none;
+  color: #ffffff;
+  font-family: inherit;
+  font-weight: 700;
+  padding: 0.8rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 10px 30px -8px rgba(92, 180, 106, 0.45);
+  transition: filter 0.25s ease, background 0.25s ease, transform 0.1s ease, box-shadow 0.25s ease;
+}
+
+.btn-login:hover {
+  background: var(--doi-gradient-hover);
+  filter: brightness(120%);
+  color: #ffffff;
+  box-shadow: 0 14px 34px -8px rgba(92, 180, 106, 0.55);
+}
+
+.btn-login:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.25rem rgba(92, 180, 106, 0.35), 0 10px 30px -8px rgba(92, 180, 106, 0.45);
+}
+
+.btn-login:active {
+  transform: scale(0.98);
+}
+
+.form-check-input {
+  cursor: pointer;
+}
+
+.form-check-input:checked {
+  background-color: var(--doi-primary);
+  border-color: var(--doi-primary);
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.25);
+  border-color: var(--doi-primary);
+}
+
+.form-check-label {
+  color: var(--doi-teal);
+  cursor: pointer;
+}
+
+.login-link {
+  color: var(--doi-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.login-link:hover {
+  color: var(--doi-teal);
+  text-decoration: underline;
+}
+
+.back-link {
+  color: #6b7c7c;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.back-link:hover {
+  color: var(--doi-primary);
+}
+
+.alert-danger {
+  background-color: rgba(220, 53, 69, 0.08);
+  border: 1px solid rgba(220, 53, 69, 0.2);
+  color: #842029;
+  border-radius: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #a0aec0;
+  font-size: 0.8rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+/* ===== Responsive: stack panels ===== */
+@media (max-width: 767.98px) {
+  .login-shell {
+    grid-template-columns: 1fr;
+    max-width: 460px;
+  }
+
+  .brand-panel {
+    padding: 2.25rem 2rem;
+    text-align: center;
+    align-items: center;
+  }
+
+  .brand-logo {
+    max-width: 200px;
+    margin-bottom: 1.25rem;
+  }
+
+  .brand-sub {
+    display: none;
+  }
+
+  .form-panel {
+    padding: 2.25rem 1.75rem;
+  }
+}
+
+/* =============================================
+   2. Additions for the other auth pages
+   (logout, password reset, allauth entrance pages).
+   Only colours already used above: brand green, teal, the grey text/border
+   shades and the red tint of .alert-danger.
+   ============================================= */
+
+[x-cloak] {
+  display: none !important;
+}
+
+/* Keyboard focus for links and anchor buttons */
+.form-panel a:focus-visible {
+  outline: 2px solid var(--doi-teal);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Primary action on pages other than login: a real Bootstrap .btn-primary that
+   carries the same gradient pill (.btn-login). The variables keep Bootstrap's
+   fallback fills in the brand tone instead of the default blue. */
+.btn-primary.btn-login,
+.form-panel .btn-primary {
+  --bs-btn-color: #ffffff;
+  --bs-btn-bg: var(--doi-teal);
+  --bs-btn-border-color: var(--doi-teal);
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-hover-bg: var(--doi-teal);
+  --bs-btn-hover-border-color: var(--doi-teal);
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: var(--doi-teal);
+  --bs-btn-active-border-color: var(--doi-teal);
+  --bs-btn-disabled-color: #ffffff;
+  --bs-btn-disabled-bg: var(--doi-teal);
+  --bs-btn-disabled-border-color: var(--doi-teal);
+  --bs-btn-focus-shadow-rgb: 92, 180, 106;
+}
+
+.btn-primary.btn-login:disabled {
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Secondary action (Otkaži): quiet outlined pill */
+.btn-auth-secondary,
+.form-panel .btn-outline-secondary {
+  --bs-btn-color: var(--doi-teal);
+  --bs-btn-border-color: #e2e8f0;
+  --bs-btn-hover-color: var(--doi-teal);
+  --bs-btn-hover-bg: #eef2f1;
+  --bs-btn-hover-border-color: #a0aec0;
+  --bs-btn-active-color: var(--doi-teal);
+  --bs-btn-active-bg: #eef2f1;
+  --bs-btn-active-border-color: #a0aec0;
+  --bs-btn-focus-shadow-rgb: 92, 180, 106;
+  border-width: 2px;
+  border-radius: 50px;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.btn-auth-secondary {
+  padding: 0.7rem;
+}
+
+.auth-actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* Notice box: neutral (green tint) and danger (same red tint as .alert-danger) */
+.auth-note {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 0.9rem;
+  background-color: rgba(92, 180, 106, 0.1);
+  border: 1px solid rgba(92, 180, 106, 0.3);
+  border-radius: 0.6rem;
+  color: var(--doi-teal);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.auth-note--danger {
+  background-color: rgba(220, 53, 69, 0.08);
+  border-color: rgba(220, 53, 69, 0.2);
+  color: #842029;
+}
+
+.auth-note > :last-child {
+  margin-bottom: 0;
+}
+
+.auth-note ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.auth-hint {
+  color: #6b7c7c;
+  font-size: 0.85rem;
+  margin: 0 0 1.5rem;
+}
+
+/* Flash messages (allauth entrance pages) */
+.auth-messages .alert {
+  border-radius: 0.6rem;
+  font-size: 0.85rem;
+}
+
+/* allauth element templates rendered inside the auth layout */
+.form-panel .page-header {
+  margin: 0;
+}
+
+.form-panel h2 {
+  color: var(--doi-teal);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.form-panel .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.form-panel .form-actions > .btn {
+  flex: 1 1 auto;
+  border-radius: 50px;
+  font-family: inherit;
+  font-weight: 700;
+  padding: 0.7rem 1rem;
+}
+
+.form-panel .form-text {
+  color: #6b7c7c;
+  font-size: 0.8rem;
+}
+
+/* allauth/elements/form.html and panel.html wrap content in a kit card for the
+   dashboard; inside the auth panel the card is flattened. */
+.form-panel .card {
+  border: 0;
+  background: none;
+}
+
+.form-panel .card-header,
+.form-panel .card-body {
+  padding: 0;
+  background: none;
+  border: 0;
+}
+
+.form-panel .card-title {
+  color: var(--doi-teal);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+/* Primary button of allauth entrance forms: same gradient as .btn-login */
+.form-panel .form-actions > .btn-primary {
+  background: var(--doi-gradient);
+  border: none;
+}
+
+.form-panel .form-actions > .btn-primary:hover {
+  background: var(--doi-gradient-hover);
+}
+
+.form-panel .form-actions > .btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.25rem rgba(92, 180, 106, 0.35);
+}

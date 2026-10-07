@@ -1,38 +1,36 @@
-<div class="card mb-2" id="paper-item-{{ article.pk }}">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
+<article class="card mb-2" id="paper-item-{{ article.pk }}" aria-labelledby="paper-title-{{ article.pk }}">
+    <div class="card-header d-flex justify-content-between align-items-center gap-2">
         <div>
-            <strong>{{ article.title }}</strong>
+            <h3 class="card-title text-break" id="paper-title-{{ article.pk }}">{{ article.title }}</h3>
             {% if article.doi_suffix %}
-            <small class="text-muted ms-2"><code>{{ article.doi_suffix }}</code></small>
+            <div class="small text-break"><code class="admin-code">{{ article.doi_suffix }}</code></div>
             {% endif %}
         </div>
-        <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-outline-primary btn-sm"
+        <div class="row-actions flex-shrink-0">
+            <button type="button" class="btn-icon" title="Izmeni rad" aria-label="Izmeni rad"
                     hx-get="{% url 'wizard:paper-edit' publication.pk article.pk %}"
                     hx-target="#paper-form-container"
-                    hx-swap="innerHTML">
-                <i class="bi bi-pencil"></i>
+                    hx-swap="innerHTML show:#paper-form-container:top">
+                <i class="bi bi-pencil" aria-hidden="true"></i>
             </button>
-            <button type="button" class="btn btn-outline-danger btn-sm"
+            <button type="button" class="btn-icon btn-icon--danger" title="Obriši rad" aria-label="Obriši rad"
                     hx-post="{% url 'wizard:paper-delete' publication.pk article.pk %}"
                     hx-target="#paper-list"
                     hx-swap="innerHTML"
                     hx-confirm="Da li ste sigurni da želite da obrišete ovaj rad?">
-                <i class="bi bi-trash"></i>
+                <i class="bi bi-trash" aria-hidden="true"></i>
             </button>
         </div>
     </div>
-    <div class="card-body py-2">
-        <!-- Author section with per-article unique IDs -->
-        <div id="wizard-authors-{{ article.pk }}">
-            {% include "wizard/partials/_wizard_author_list.html" with article=article authors=article.authors.all %}
-        </div>
+    <div class="card-body">
+        {# The author list partial renders its own #wizard-authors-<pk> root (swapped with outerHTML). #}
+        {% include "wizard/partials/_wizard_author_list.html" with article=article authors=article.authors.all %}
         <div id="wizard-author-form-{{ article.pk }}"></div>
-        <button type="button" class="btn btn-sm btn-outline-secondary mt-2"
+        <button type="button" class="btn btn-sm btn-outline-primary mt-2"
                 hx-get="{% url 'wizard:author-form' article.pk %}"
                 hx-target="#wizard-author-form-{{ article.pk }}"
                 hx-swap="innerHTML">
-            <i class="bi bi-person-plus me-1"></i>Dodaj autora
+            <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Dodaj autora
         </button>
     </div>
-</div>
+</article>

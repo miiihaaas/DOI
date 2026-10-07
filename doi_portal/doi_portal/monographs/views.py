@@ -138,6 +138,18 @@ class MonographListView(LoginRequiredMixin, ListView):
         if status and status in [c[0] for c in MonographStatus.choices]:
             queryset = queryset.filter(status=status)
 
+        # Text search: title, subtitle, DOI suffix, ISBN (applied after the
+        # publisher scoping above, so it can never widen the result set).
+        search_query = self.request.GET.get("q", "").strip()
+        if search_query:
+            queryset = queryset.filter(
+                models.Q(title__icontains=search_query)
+                | models.Q(subtitle__icontains=search_query)
+                | models.Q(doi_suffix__icontains=search_query)
+                | models.Q(isbn_print__icontains=search_query)
+                | models.Q(isbn_online__icontains=search_query),
+            )
+
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -148,7 +160,12 @@ class MonographListView(LoginRequiredMixin, ListView):
             {"label": "Monografije", "url": None},
         ]
         context["status_choices"] = MonographStatus.choices
-        context["current_status"] = self.request.GET.get("status", "")
+        current_status = self.request.GET.get("status", "")
+        if current_status not in [c[0] for c in MonographStatus.choices]:
+            current_status = ""
+        context["current_status"] = current_status
+        context["search_query"] = self.request.GET.get("q", "").strip()
+        context["filters_active"] = bool(current_status or context["search_query"])
         context["can_create"] = flags["is_admin"] or flags["is_urednik"] or flags["is_bibliotekar"]
         context["can_edit"] = flags["is_admin"] or flags["is_urednik"] or flags["is_bibliotekar"]
         context["can_delete"] = flags["is_admin"]
@@ -175,7 +192,7 @@ class MonographCreateView(LoginRequiredMixin, CreateView):
             {"label": "Nova monografija", "url": None},
         ]
         context["form_title"] = "Nova monografija"
-        context["submit_text"] = "Kreiraj monografiju"
+        context["submit_text"] = "Sačuvaj monografiju"
         return context
 
     def form_valid(self, form):

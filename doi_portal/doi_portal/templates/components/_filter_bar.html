@@ -1,0 +1,54 @@
+{% comment %}
+  Filter bar — one-row toolbar above a list; replaces the tall .filter-card.
+
+  Use the block tag (its body becomes the controls):
+
+    {% load ui_tags %}
+    {% url 'articles:list' as list_url %}
+    {% filterbar reset_url=list_url active=current_status count=page_obj.paginator.count count_forms="članak,članka,članaka" autosubmit=True %}
+      <div class="filter-bar__search">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" name="q" value="{{ search_query }}" class="form-control" placeholder="Pretraži naslov…" aria-label="Pretraga">
+      </div>
+      <select name="status" class="form-select" aria-label="Status">
+        <option value="">Svi statusi</option>
+        {% for value, label in status_choices %}
+        <option value="{{ value }}"{% if current_status == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% if current_issue %}<input type="hidden" name="issue" value="{{ current_issue }}">{% endif %}
+    {% endfilterbar %}
+
+  Parameters (all optional):
+    controls     pre-rendered controls HTML (set by the block tag)
+    action       form action (default: current URL)
+    reset_url    href of "Poništi"; shown only when `active` is truthy
+    active       truthy when any filter is applied
+    count        number of results (omit to hide the counter)
+    count_forms  noun after the count in its three forms, comma-separated:
+                 "članak,članka,članaka" (1 / 2–4 / 0 and 5+)
+    count_label  fixed text after the count (only when the noun does not
+                 inflect); count_forms wins when both are given
+    form_id      id of the <form>
+    autosubmit   truthy: selects / checkboxes / date inputs submit on change
+                 (handled by admin_base.html via [data-autosubmit])
+    label        aria-label of the form (default "Filteri")
+
+  Controls need no <label> wrappers: give each one an aria-label and a
+  meaningful first option/placeholder. A visible label is possible with
+  <label class="filter-bar__field"><span>Od</span><input …></label>.
+
+  When a list needs a non-GET form or its own hx-* attributes on the <form>,
+  write the markup by hand with the same classes (see UI kit reference).
+{% endcomment %}
+{% load ui_tags %}
+<form method="get"{% if action %} action="{{ action }}"{% endif %}{% if form_id %} id="{{ form_id }}"{% endif %} class="filter-bar" role="search" aria-label="{{ label|default:'Filteri' }}"{% if autosubmit %} data-autosubmit{% endif %}>
+  <div class="filter-bar__controls">
+    {{ controls }}
+    <button type="submit" class="btn btn-outline-secondary filter-bar__submit{% if autosubmit %} visually-hidden-focusable{% endif %}">Primeni</button>
+    {% if active and reset_url %}<a href="{{ reset_url }}" class="filter-bar__reset"><i class="bi bi-x-lg" aria-hidden="true"></i>Poništi</a>{% endif %}
+  </div>
+  {% if count is not None %}
+  <p class="filter-bar__count"><strong>{{ count }}</strong>{% if count_forms %} {{ count|sr_plural:count_forms }}{% elif count_label %} {{ count_label }}{% endif %}</p>
+  {% endif %}
+</form>

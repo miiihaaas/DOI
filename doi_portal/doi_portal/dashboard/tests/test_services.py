@@ -20,6 +20,8 @@ from doi_portal.dashboard.services import (
     get_urednik_statistics,
 )
 from doi_portal.issues.tests.factories import IssueFactory
+from doi_portal.monographs.models import Monograph
+from doi_portal.monographs.tests.factories import MonographFactory
 from doi_portal.publications.tests.factories import PublicationFactory, PublisherFactory
 from doi_portal.users.tests.factories import UserFactory
 
@@ -362,3 +364,50 @@ class TestMyDraftArticles:
         user = UserFactory()
         articles = get_my_draft_articles(user)
         assert len(articles) == 0
+
+
+# ============================================================
+# Monograph counts (dashboard redesign)
+# ============================================================
+
+
+@pytest.mark.django_db
+class TestMonographCounts:
+    """total_monographs uses the same scoping as the monograph list."""
+
+    def test_admin_counts_all_and_excludes_soft_deleted(self):
+        MonographFactory()
+        deleted = MonographFactory()
+        Monograph.all_objects.filter(pk=deleted.pk).update(is_deleted=True)
+
+        assert get_admin_statistics()["total_monographs"] == 1
+
+    def test_urednik_scoped_to_publisher(self):
+        publisher = PublisherFactory()
+        MonographFactory(publisher=publisher)
+        MonographFactory(publisher=publisher)
+        MonographFactory()  # other publisher
+
+        user = UserFactory(publisher=publisher)
+        assert get_urednik_statistics(user)["total_monographs"] == 2  # noqa: PLR2004
+
+    def test_urednik_without_publisher_is_zero(self):
+        MonographFactory()
+        user = UserFactory(publisher=None)
+        assert get_urednik_statistics(user)["total_monographs"] == 0
+
+    def test_bibliotekar_scoped_to_publisher(self):
+        publisher = PublisherFactory()
+        MonographFactory(publisher=publisher)
+        MonographFactory()  # other publisher
+
+        assert (
+            get_bibliotekar_statistics(UserFactory(publisher=publisher))[
+                "total_monographs"
+            ]
+            == 1
+        )
+        assert (
+            get_bibliotekar_statistics(UserFactory(publisher=None))["total_monographs"]
+            == 0
+        )

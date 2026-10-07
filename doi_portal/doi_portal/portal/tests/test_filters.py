@@ -289,6 +289,19 @@ class TestArticleSearchViewFilters:
         )
         template_names = [t.name for t in response.templates]
         assert "portal/partials/_search_results.html" in template_names
+        assert "HX-Request" in response["Vary"]
+
+    def test_htmx_history_restore_returns_full_page(self, client):
+        """Back after an htmx history miss sends both headers and must get the full page."""
+        response = client.get(
+            reverse("article-search"),
+            {"q": "test", "type": "JOURNAL"},
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_HISTORY_RESTORE_REQUEST="true",
+        )
+        template_names = [t.name for t in response.templates]
+        assert "portal/search_results.html" in template_names
+        assert "HX-Request" in response["Vary"]
 
     def test_clear_filters_preserves_query(self, client):
         """6.17: Clear all filters link preserves q param."""

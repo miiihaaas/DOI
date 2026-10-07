@@ -1,0 +1,9 @@
+{% load ui_tags %}
+{# Summary card body on the issue deposit page #}
+<dl class="admin-dl admin-dl--single">
+  <div class="admin-dl-row"><dt>Publikacija</dt><dd><a href="{% url 'publications:detail' issue.publication.slug %}">{{ issue.publication.title }}</a></dd></div>
+  <div class="admin-dl-row"><dt>Izdavač</dt><dd><a href="{% url 'publishers:detail' issue.publication.publisher.pk %}">{{ issue.publication.publisher.name }}</a></dd></div>
+  <div class="admin-dl-row"><dt>Izdanje</dt><dd>Vol. {{ issue.volume }}, No. {{ issue.issue_number }} ({{ issue.year }})</dd></div>
+  <div class="admin-dl-row"><dt>Status</dt><dd>{% include "components/_status_badge.html" with label=issue.get_status_display tone=issue.status|status_tone only %}</dd></div>
+  <div class="admin-dl-row"><dt>Članci</dt><dd>{{ issue.article_count }}</dd></div>
+</dl>

@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from django.db.models import Count, Q
 
 from doi_portal.articles.models import Article, ArticleStatus
+from doi_portal.monographs.models import Monograph
 from doi_portal.publications.models import Publication
 
 if TYPE_CHECKING:
@@ -58,8 +59,9 @@ def get_admin_statistics() -> dict:
     Uses aggregate() with Count + filter for a single SQL query (NFR3).
 
     Returns:
-        Dict with total_publications, total_articles, pending_review_count,
-        ready_to_publish_count, published_count, draft_count.
+        Dict with total_publications, total_monographs, total_articles,
+        pending_review_count, ready_to_publish_count, published_count,
+        draft_count.
     """
     article_counts = Article.objects.aggregate(
         total=Count("id"),
@@ -70,6 +72,7 @@ def get_admin_statistics() -> dict:
     )
     return {
         "total_publications": Publication.objects.count(),
+        "total_monographs": Monograph.objects.count(),
         "total_articles": article_counts["total"],
         "pending_review_count": article_counts["pending_review"],
         "ready_to_publish_count": article_counts["ready_to_publish"],
@@ -86,13 +89,14 @@ def get_urednik_statistics(user: User) -> dict:
         user: Urednik user with publisher assignment
 
     Returns:
-        Dict with total_articles, pending_review_count, ready_to_publish_count
-        scoped to user's publisher.
+        Dict with total_articles, total_monographs, pending_review_count,
+        ready_to_publish_count scoped to user's publisher.
     """
     publisher = user.publisher
     if not publisher:
         return {
             "total_articles": 0,
+            "total_monographs": 0,
             "pending_review_count": 0,
             "ready_to_publish_count": 0,
         }
@@ -105,6 +109,7 @@ def get_urednik_statistics(user: User) -> dict:
     )
     return {
         "total_articles": article_counts["total"],
+        "total_monographs": Monograph.objects.filter(publisher=publisher).count(),
         "pending_review_count": article_counts["pending_review"],
         "ready_to_publish_count": article_counts["ready_to_publish"],
     }
@@ -118,8 +123,11 @@ def get_bibliotekar_statistics(user: User) -> dict:
         user: Bibliotekar user
 
     Returns:
-        Dict with my_total_count, my_drafts_count, my_submitted_count.
+        Dict with my_total_count, my_drafts_count, my_submitted_count
+        (own articles) and total_monographs (the publisher's monographs,
+        i.e. exactly what the monograph list shows this user).
     """
+    publisher = getattr(user, "publisher", None)
     my_articles = Article.objects.filter(created_by=user)
     article_counts = my_articles.aggregate(
         total=Count("id"),
@@ -130,6 +138,9 @@ def get_bibliotekar_statistics(user: User) -> dict:
         "my_total_count": article_counts["total"],
         "my_drafts_count": article_counts["drafts"],
         "my_submitted_count": article_counts["submitted"],
+        "total_monographs": (
+            Monograph.objects.filter(publisher=publisher).count() if publisher else 0
+        ),
     }
 
 

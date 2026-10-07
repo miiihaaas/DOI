@@ -11,7 +11,7 @@ from django.test import RequestFactory
 from django.urls import reverse
 
 from doi_portal.articles.forms import ArticleRelationForm
-from doi_portal.articles.models import ArticleRelation, RelationScope
+from doi_portal.articles.models import ArticleFunding, ArticleRelation, RelationScope
 from doi_portal.articles.tests.factories import (
     ArticleFactory,
     ArticleRelationFactory,
@@ -214,6 +214,29 @@ class TestRelationViews:
         r2.refresh_from_db()
         assert r2.order == 0
         assert r1.order == 1
+
+    def test_funding_reorder(self, client):
+        """POST JSON to funding-reorder updates order (0-indexed)."""
+        client.force_login(self.user)
+        f1 = ArticleFunding.objects.create(
+            article=self.article, funder_name="Fond A", order=0,
+        )
+        f2 = ArticleFunding.objects.create(
+            article=self.article, funder_name="Fond B", order=1,
+        )
+        url = reverse("articles:funding-reorder", kwargs={"article_pk": self.article.pk})
+        response = client.post(
+            url,
+            json.dumps({"order": [f2.pk, f1.pk]}),
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        f1.refresh_from_db()
+        f2.refresh_from_db()
+        assert f2.order == 0
+        assert f1.order == 1
+        content = response.content.decode()
+        assert content.index("Fond B") < content.index("Fond A")
 
     def test_relation_form_view(self, client):
         """GET to relation-form returns empty form."""

@@ -1,0 +1,19 @@
+{% load ui_tags %}
+{# Summary card body on the monograph deposit page #}
+<dl class="admin-dl admin-dl--single">
+  <div class="admin-dl-row"><dt>Naslov</dt><dd>{{ monograph.title }}</dd></div>
+  {% if monograph.subtitle %}
+  <div class="admin-dl-row"><dt>Podnaslov</dt><dd>{{ monograph.subtitle }}</dd></div>
+  {% endif %}
+  <div class="admin-dl-row"><dt>DOI</dt><dd class="mono-id">{{ monograph.full_doi }}</dd></div>
+  <div class="admin-dl-row"><dt>Izdavač</dt><dd><a href="{% url 'publishers:detail' monograph.publisher.pk %}">{{ monograph.publisher.name }}</a></dd></div>
+  <div class="admin-dl-row"><dt>Godina</dt><dd>{{ monograph.year }}</dd></div>
+  <div class="admin-dl-row"><dt>Status</dt><dd>{% include "components/_status_badge.html" with label=monograph.get_status_display tone=monograph.status|status_tone only %}</dd></div>
+  {% if monograph.isbn_print %}
+  <div class="admin-dl-row"><dt>ISBN (štampano)</dt><dd class="mono-id">{{ monograph.isbn_print }}</dd></div>
+  {% endif %}
+  {% if monograph.isbn_online %}
+  <div class="admin-dl-row"><dt>ISBN (online)</dt><dd class="mono-id">{{ monograph.isbn_online }}</dd></div>
+  {% endif %}
+  <div class="admin-dl-row"><dt>Poglavlja</dt><dd>{{ monograph.chapters.count }}</dd></div>
+</dl>

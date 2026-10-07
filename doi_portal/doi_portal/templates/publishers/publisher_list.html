@@ -1,75 +1,67 @@
 {% extends "admin_base.html" %}
+{% load ui_tags %}
 
 {% block title %}Izdavači - DOI Portal{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0 page-title">
-        <i class="bi bi-building me-2"></i>Izdavači
-    </h1>
-    <a href="{% url 'publishers:create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>Novi izdavač
-    </a>
-</div>
+{% pageheader title="Izdavači" icon="bi-building" %}
+  <a href="{% url 'publishers:create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Novi izdavač</a>
+{% endpageheader %}
 
-<div class="card admin-card">
-    <div class="card-body p-0">
-        {% if publishers %}
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Naziv</th>
-                        <th>DOI prefiks</th>
-                        <th>Publikacija</th>
-                        <th>Kreirano</th>
-                        <th class="text-end">Akcije</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for publisher in publishers %}
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                {% if publisher.logo %}
-                                <img src="{{ publisher.logo.url }}" alt="" class="admin-table-logo me-2">
-                                {% else %}
-                                <span class="admin-table-icon me-2">
-                                    <i class="bi bi-building"></i>
-                                </span>
-                                {% endif %}
-                                <a href="{% url 'publishers:detail' publisher.pk %}" class="fw-semibold">{{ publisher.name }}</a>
-                            </div>
-                        </td>
-                        <td><code class="admin-code">{{ publisher.doi_prefix }}</code></td>
-                        <td>
-                            <span class="badge bg-doi-teal">{{ publisher.publication_count }}</span>
-                        </td>
-                        <td class="text-muted">{{ publisher.created_at|date:"d.m.Y." }}</td>
-                        <td class="text-end">
-                            <div class="admin-actions">
-                                <a href="{% url 'publishers:update' publisher.pk %}" class="btn btn-sm btn-outline-primary" title="Izmeni">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="{% url 'publishers:delete' publisher.pk %}" class="btn btn-sm btn-outline-danger" title="Obriši">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="text-center py-5">
-            <i class="bi bi-building admin-empty-icon d-block mb-3"></i>
-            <p class="text-muted mb-3">Nema izdavača.</p>
-            <a href="{% url 'publishers:create' %}" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i>Dodaj prvog izdavača
-            </a>
-        </div>
-        {% endif %}
-    </div>
+{% url 'publishers:list' as list_url %}
+{% filterbar reset_url=list_url active=search_query count=page_obj.paginator.count count_forms="izdavač,izdavača,izdavača" %}
+  <div class="filter-bar__search">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <input type="search" name="q" value="{{ search_query }}" class="form-control" placeholder="Pretraži naziv ili DOI prefiks…" aria-label="Pretraga izdavača">
+  </div>
+{% endfilterbar %}
+
+<div class="card">
+  {% if publishers %}
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Naziv</th>
+          <th>DOI prefiks</th>
+          <th class="num">Publikacije</th>
+          <th>Kreirano</th>
+          <th class="col-actions"><span class="visually-hidden">Akcije</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for publisher in publishers %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center">
+              {% if publisher.logo %}
+              <img src="{{ publisher.logo.url }}" alt="" class="admin-table-logo me-2">
+              {% else %}
+              <span class="admin-table-icon me-2"><i class="bi bi-building" aria-hidden="true"></i></span>
+              {% endif %}
+              <a href="{% url 'publishers:detail' publisher.pk %}" class="cell-title">{{ publisher.name }}</a>
+            </div>
+          </td>
+          <td class="mono-id">{{ publisher.doi_prefix }}</td>
+          <td class="num">{{ publisher.publication_count }}</td>
+          <td class="cell-meta">{{ publisher.created_at|date:"d.m.Y." }}</td>
+          <td class="col-actions">
+            <div class="row-actions">
+              <a href="{% url 'publishers:update' publisher.pk %}" class="btn-icon" title="Izmeni" aria-label="Izmeni izdavača {{ publisher.name }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+              <a href="{% url 'publishers:delete' publisher.pk %}" class="btn-icon btn-icon--danger" title="Obriši" aria-label="Obriši izdavača {{ publisher.name }}"><i class="bi bi-trash" aria-hidden="true"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "components/_pagination.html" %}
+  {% elif search_query %}
+  {% include "components/_empty_state.html" with icon="bi-funnel" text="Nema izdavača koji odgovaraju pretrazi." action_url=list_url action_label="Poništi pretragu" only %}
+  {% else %}
+  {% url 'publishers:create' as create_url %}
+  {% include "components/_empty_state.html" with icon="bi-building" text="Nema izdavača." action_url=create_url action_label="Dodaj prvog izdavača" action_icon="bi-plus-lg" action_primary=True only %}
+  {% endif %}
 </div>
 {% endblock %}

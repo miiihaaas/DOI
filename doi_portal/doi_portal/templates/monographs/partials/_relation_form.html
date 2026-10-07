@@ -1,13 +1,13 @@
 {% load i18n %}
-<div class="card border-primary mb-3">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">Dodaj relaciju</h6>
-        <button type="button" class="btn btn-sm btn-light"
+<div class="inline-form">
+    <div class="inline-form__header">
+        <h3 class="inline-form__title">Dodaj srodnu publikaciju</h3>
+        <button type="button" class="btn-icon" title="Zatvori" aria-label="Zatvori formu"
                 onclick="document.getElementById('relation-form-container').innerHTML = '';">
-            <i class="bi bi-x-lg"></i>
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
         </button>
     </div>
-    <div class="card-body">
+    <div class="inline-form__body">
         <form hx-post="{% url 'monographs:relation-add' monograph_pk=monograph.pk %}"
               hx-target="#relation-section-content"
               hx-swap="innerHTML">
@@ -15,8 +15,8 @@
 
             <div class="row">
                 <div class="col-md-4 mb-2">
-                    <label for="id_relationship_type" class="form-label">
-                        {{ relation_form.relationship_type.label }} <span class="text-danger">*</span>
+                    <label for="{{ relation_form.relationship_type.id_for_label }}" class="form-label">
+                        {{ relation_form.relationship_type.label }} <span class="text-danger" aria-hidden="true">*</span>
                     </label>
                     {{ relation_form.relationship_type }}
                     {% if relation_form.relationship_type.errors %}
@@ -24,14 +24,14 @@
                     {% endif %}
                 </div>
                 <div class="col-md-2 mb-2">
-                    <label for="id_identifier_type" class="form-label">
+                    <label for="{{ relation_form.identifier_type.id_for_label }}" class="form-label">
                         {{ relation_form.identifier_type.label }}
                     </label>
                     {{ relation_form.identifier_type }}
                 </div>
                 <div class="col-md-3 mb-2">
-                    <label for="id_target_identifier" class="form-label">
-                        {{ relation_form.target_identifier.label }} <span class="text-danger">*</span>
+                    <label for="{{ relation_form.target_identifier.id_for_label }}" class="form-label">
+                        {{ relation_form.target_identifier.label }} <span class="text-danger" aria-hidden="true">*</span>
                     </label>
                     {{ relation_form.target_identifier }}
                     {% if relation_form.target_identifier.errors %}
@@ -39,7 +39,7 @@
                     {% endif %}
                 </div>
                 <div class="col-md-3 mb-2">
-                    <label for="id_description" class="form-label">
+                    <label for="{{ relation_form.description.id_for_label }}" class="form-label">
                         {{ relation_form.description.label }}
                     </label>
                     {{ relation_form.description }}
@@ -52,7 +52,7 @@
                     Otkaži
                 </button>
                 <button type="submit" class="btn btn-sm btn-primary">
-                    <i class="bi bi-check-lg me-1"></i>Dodaj relaciju
+                    <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Sačuvaj srodnu publikaciju
                 </button>
             </div>
         </form>

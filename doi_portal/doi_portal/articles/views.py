@@ -24,6 +24,7 @@ from django.db import models
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
+from django.utils.http import urlencode  # noqa: E402
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.generic import (
     CreateView,
@@ -174,11 +175,24 @@ class ArticleListView(PublisherScopedMixin, ListView):
             )
         return queryset.none()
 
+    def get_search_query(self):
+        """Return the trimmed free-text search term (``q`` GET param)."""
+        return self.request.GET.get("q", "").strip()
+
+    def is_mine_filter(self):
+        """
+        True for ``?mine=1``: only articles the current user created.
+
+        Same ownership rule as the Bibliotekar dashboard counts
+        (``created_by`` in ``dashboard.services``).
+        """
+        return self.request.GET.get("mine") == "1"
+
     def get_queryset(self):
-        """Filter articles by issue, status; apply scoping."""
+        """Filter articles by issue, status and search term; apply scoping."""
         queryset = super().get_queryset().select_related(
             "issue", "issue__publication", "issue__publication__publisher", "created_by"
-        )
+        ).prefetch_related("authors")
 
         # Scope by publisher
         queryset = self.get_scoped_queryset(queryset)
@@ -188,10 +202,36 @@ class ArticleListView(PublisherScopedMixin, ListView):
         if issue_id:
             queryset = queryset.filter(issue_id=issue_id)
 
+        # "Mine" filter: narrows the publisher-wide list to the user's own articles
+        if self.is_mine_filter():
+            queryset = queryset.filter(created_by=self.request.user)
+
         # Filter by status
         status = self.request.GET.get("status")
         if status and status in [choice[0] for choice in ArticleStatus.choices]:
             queryset = queryset.filter(status=status)
+
+        # Free-text search: title, DOI suffix (or full DOI), author surname
+        search_query = self.get_search_query()
+        if search_query:
+            # Subquery instead of a join so articles with several matching
+            # authors are not duplicated. Author.objects skips deleted authors.
+            author_matches = Author.objects.filter(
+                surname__icontains=search_query,
+            ).values("article_id")
+            condition = (
+                models.Q(title__icontains=search_query)
+                | models.Q(doi_suffix__icontains=search_query)
+                | models.Q(pk__in=author_matches)
+            )
+            # A pasted full DOI ("10.1234/suffix") matches prefix + suffix
+            full_doi = re.match(r"^(10\.\d+)/(.+)$", search_query)
+            if full_doi:
+                condition |= models.Q(
+                    issue__publication__publisher__doi_prefix=full_doi.group(1),
+                    doi_suffix__icontains=full_doi.group(2),
+                )
+            queryset = queryset.filter(condition)
 
         return queryset
 
@@ -214,6 +254,52 @@ class ArticleListView(PublisherScopedMixin, ListView):
         context["status_choices"] = ArticleStatus.choices
         context["current_status"] = self.request.GET.get("status", "")
         context["current_issue"] = self.request.GET.get("issue", "")
+        context["search_query"] = self.get_search_query()
+        context["mine_filter"] = self.is_mine_filter()
+        if context["mine_filter"]:
+            # Link that drops only the "mine" filter (and the page number)
+            params = self.request.GET.copy()
+            params.pop("mine", None)
+            params.pop("page", None)
+            remove_url = reverse("articles:list")
+            if params:
+                remove_url += "?" + params.urlencode()
+            context["mine_remove_url"] = remove_url
+        # Status/search/mine narrow the list; the issue param only scopes it.
+        context["has_filters"] = bool(
+            context["current_status"]
+            or context["search_query"]
+            or context["mine_filter"],
+        )
+        context["filters_active"] = bool(
+            context["has_filters"] or context["current_issue"],
+        )
+
+        # "Novi članak" keeps the issue the list is scoped to
+        create_url = reverse("articles:create")
+        if context["current_issue"]:
+            create_url += "?" + urlencode({"issue": context["current_issue"]})
+        context["create_url"] = create_url
+
+        # Empty list without status/search filters: nothing has been entered yet
+        genitive = get_term("article_genitive", pub_type)
+        if context["current_issue"]:
+            context["empty_text"] = f"U ovom izdanju još nema unetih {genitive}."
+        else:
+            context["empty_text"] = f"Još nema unetih {genitive}."
+
+        paginator = context.get("paginator")
+        result_count = paginator.count if paginator else len(context["articles"])
+        context["result_count"] = result_count
+        # Noun forms for {% filterbar count_forms= %} (picked by sr_plural)
+        context["result_count_forms"] = ",".join(
+            get_term(key, pub_type)
+            for key in (
+                "article_accusative",
+                "article_genitive_paucal",
+                "article_genitive",
+            )
+        )
 
         # Role-based action visibility
         flags = self._get_user_role_flags()

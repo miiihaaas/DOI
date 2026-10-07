@@ -1,146 +1,94 @@
 {% extends "admin_base.html" %}
-{% load markup_tags terminology %}
+{% load markup_tags terminology ui_tags %}
 
 {% block title %}{{ "article_plural"|term:pub_type }} - DOI Portal{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0 page-title">
-        <i class="bi bi-file-earmark-text me-2"></i>{{ "article_plural"|term:pub_type }}
-    </h1>
+{% url 'articles:list' as list_url %}
+
+{% with page_title="article_plural"|term:pub_type %}
+{% pageheader title=page_title icon="bi-file-earmark-text" %}
     {% if can_create %}
-    <a href="{% url 'articles:create' %}{% if current_issue %}?issue={{ current_issue }}{% endif %}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>{{ "new_article"|term:pub_type }}
+    <a href="{{ create_url }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ "new_article"|term:pub_type }}
     </a>
     {% endif %}
-</div>
+{% endpageheader %}
+{% endwith %}
 
-<!-- Filters -->
-<div class="card admin-card mb-4 filter-card">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <label for="status" class="form-label admin-form-label">Status</label>
-                <select name="status" id="status" class="form-select">
-                    <option value="">Svi statusi</option>
-                    {% for value, label in status_choices %}
-                    <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
-                        {{ label }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            {% if current_issue %}
-            <input type="hidden" name="issue" value="{{ current_issue }}">
-            {% endif %}
-            <div class="col-md-8 d-flex align-items-end gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-search me-1"></i>Filtriraj
-                </button>
-                <a href="{% url 'articles:list' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-lg me-1"></i>Poništi
-                </a>
-            </div>
-        </form>
+{% filterbar reset_url=list_url active=filters_active count=result_count count_forms=result_count_forms autosubmit=True %}
+    <div class="filter-bar__search">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" name="q" value="{{ search_query }}" class="form-control" placeholder="Naslov, DOI ili prezime autora…" aria-label="Pretraga po naslovu, DOI-ju ili prezimenu autora">
     </div>
-</div>
+    <select name="status" class="form-select" aria-label="Status">
+        <option value="">Svi statusi</option>
+        {% for value, label in status_choices %}
+        <option value="{{ value }}"{% if current_status == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    {% if current_issue %}<input type="hidden" name="issue" value="{{ current_issue }}">{% endif %}
+    {% if mine_filter %}
+    <input type="hidden" name="mine" value="1">
+    <a href="{{ mine_remove_url }}" class="filter-bar__token" title="Ukloni filter „Samo moji”">Samo moji<i class="bi bi-x-lg" aria-hidden="true"></i><span class="visually-hidden"> – ukloni filter</span></a>
+    {% endif %}
+{% endfilterbar %}
 
-<div class="card admin-card">
-    <div class="card-body p-0">
-        {% if articles %}
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Naslov</th>
-                        <th>Izdanje</th>
-                        <th>Status</th>
-                        <th>Datum kreiranja</th>
-                        <th class="text-end">Akcije</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for article in articles %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'articles:detail' article.pk %}" class="fw-semibold">
-                                {{ article.title|render_markup }}
+<div class="card">
+    {% if articles %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Naslov</th>
+                    <th>Izdanje</th>
+                    <th>Status</th>
+                    <th>DOI</th>
+                    <th>Kreirano</th>
+                    <th class="col-actions"><span class="visually-hidden">Akcije</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in articles %}
+                <tr>
+                    <td>
+                        <a href="{% url 'articles:detail' article.pk %}" class="cell-title">{{ article.title|render_markup }}</a>
+                        {% with authors_line=article.authors_display %}
+                        {% if authors_line %}<div class="cell-meta">{{ authors_line }}</div>{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="cell-meta">{{ article.issue }}</td>
+                    <td>{% include "components/_status_badge.html" with label=article.get_status_display tone=article.status|status_tone only %}</td>
+                    <td class="mono-id">{{ article.issue.publication.publisher.doi_prefix }}/{{ article.doi_suffix }}</td>
+                    <td class="cell-meta">{{ article.created_at|date:"d.m.Y." }}</td>
+                    <td class="col-actions">
+                        <div class="row-actions">
+                            {% if can_edit and article.status == "DRAFT" %}
+                            <a href="{% url 'articles:update' article.pk %}" class="btn-icon" title="Izmeni" aria-label="Izmeni: {{ article.title|strip_markup }}">
+                                <i class="bi bi-pencil" aria-hidden="true"></i>
                             </a>
-                        </td>
-                        <td class="text-muted">
-                            {{ article.issue }}
-                        </td>
-                        <td>
-                            <span class="badge {{ article.status_badge_class }}">
-                                {{ article.get_status_display }}
-                            </span>
-                        </td>
-                        <td class="text-muted">{{ article.created_at|date:"d.m.Y. H:i" }}</td>
-                        <td class="text-end">
-                            <div class="admin-actions">
-                                <a href="{% url 'articles:detail' article.pk %}" class="btn btn-sm btn-outline-primary" title="Detalji">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                {% if can_edit and article.status == "DRAFT" %}
-                                <a href="{% url 'articles:update' article.pk %}" class="btn btn-sm btn-outline-primary" title="Izmeni">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                {% endif %}
-                                {% if can_delete %}
-                                <a href="{% url 'articles:delete' article.pk %}" class="btn btn-sm btn-outline-danger" title="Obriši">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        {% if is_paginated %}
-        <nav aria-label="Navigacija stranica" class="mt-4 px-3 pb-3">
-            <ul class="pagination justify-content-center mb-0">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_issue %}&issue={{ current_issue }}{% endif %}">
-                        Prethodna
-                    </a>
-                </li>
-                {% endif %}
-                <li class="page-item disabled">
-                    <span class="page-link">Stranica {{ page_obj.number }} od {{ page_obj.paginator.num_pages }}</span>
-                </li>
-                {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_issue %}&issue={{ current_issue }}{% endif %}">
-                        Sledeća
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
-
-        {% else %}
-        <div class="text-center py-5">
-            <i class="bi bi-file-earmark-text admin-empty-icon d-block mb-3"></i>
-            {% if current_status %}
-            <p class="text-muted mb-3">Nema članaka koji odgovaraju filterima.</p>
-            <a href="{% url 'articles:list' %}" class="btn btn-outline-secondary me-2">
-                <i class="bi bi-x-lg me-1"></i>Poništi filtere
-            </a>
-            {% else %}
-            <p class="text-muted mb-3">Nema članaka za prikaz.</p>
-            {% endif %}
-            {% if can_create %}
-            <a href="{% url 'articles:create' %}" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i>{{ "add_first_article"|term:pub_type }}
-            </a>
-            {% endif %}
-        </div>
-        {% endif %}
+                            {% endif %}
+                            {% if can_delete %}
+                            <a href="{% url 'articles:delete' article.pk %}" class="btn-icon btn-icon--danger" title="Obriši" aria-label="Obriši: {{ article.title|strip_markup }}">
+                                <i class="bi bi-trash" aria-hidden="true"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+    {% include "components/_pagination.html" %}
+    {% elif has_filters %}
+    {% include "components/_empty_state.html" with icon="bi-funnel" text="Nema rezultata za zadatu pretragu i filtere." action_url=list_url action_label="Poništi filtere" action_icon="bi-x-lg" only %}
+    {% elif can_create %}
+    {% with first_label="add_first_article"|term:pub_type %}
+    {% include "components/_empty_state.html" with icon="bi-file-earmark-text" text=empty_text action_url=create_url action_label=first_label action_icon="bi-plus-lg" action_primary=True only %}
+    {% endwith %}
+    {% else %}
+    {% include "components/_empty_state.html" with icon="bi-file-earmark-text" text=empty_text only %}
+    {% endif %}
 </div>
 {% endblock %}

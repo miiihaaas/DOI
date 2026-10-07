@@ -1,53 +1,38 @@
-{% load i18n %}
-<tr id="user-{{ user.pk }}" class="{% if not user.is_active %}table-secondary{% endif %}">
-  <td>{{ user.email }}</td>
-  <td>{{ user.name|default:"-" }}</td>
+{# One row of the user list. Also returned alone by users:toggle-active (HTMX outerHTML swap of #user-<pk>). #}
+<tr id="user-{{ user.pk }}">
+  <td><a href="{% url 'users:edit' user.pk %}" class="cell-title">{{ user.email }}</a></td>
+  <td>{% if user.name %}{{ user.name }}{% else %}<span class="cell-meta">—</span>{% endif %}</td>
   <td>
-    {% for group in user.groups.all %}
-      <span class="badge bg-{% if group.name == 'Superadmin' %}danger{% elif group.name == 'Administrator' %}primary{% elif group.name == 'Urednik' %}success{% else %}secondary{% endif %}">
-        {{ group.name }}
-      </span>
-    {% empty %}
-      <span class="badge bg-light text-dark">{% trans "Bez uloge" %}</span>
-    {% endfor %}
+    {% for group in user.groups.all %}{{ group.name }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="cell-meta">Bez uloge</span>{% endfor %}
   </td>
-  <td>{{ user.publisher.name|default:"-" }}</td>
+  <td class="cell-meta">{{ user.publisher.name|default:"—" }}</td>
   <td>
     {% if user.is_active %}
-      <span class="badge bg-success">{% trans "Aktivan" %}</span>
+      {% include "components/_status_badge.html" with label="Aktivan" tone="success" only %}
     {% else %}
-      <span class="badge bg-danger">{% trans "Neaktivan" %}</span>
+      {% include "components/_status_badge.html" with label="Neaktivan" tone="neutral" only %}
     {% endif %}
   </td>
-  <td>{{ user.last_activity|date:"d.m.Y H:i"|default:"-" }}</td>
-  <td class="text-end">
-    <div class="btn-group btn-group-sm" role="group">
-      <a href="{% url 'users:edit' user.pk %}"
-         class="btn btn-outline-primary"
-         title="{% trans 'Izmeni' %}">
-        <i class="bi bi-pencil"></i>
-        <span class="visually-hidden">{% trans "Izmeni" %}</span>
-      </a>
+  <td class="cell-meta">{{ user.last_activity|date:"d.m.Y. H:i"|default:"—" }}</td>
+  <td class="col-actions">
+    <div class="row-actions">
+      <a href="{% url 'users:edit' user.pk %}" class="btn-icon" title="Izmeni" aria-label="Izmeni korisnika {{ user.email }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
       {% if user.pk == current_user_pk %}
         {# Current user cannot deactivate themselves #}
         <button type="button"
-                class="btn btn-outline-secondary"
+                class="btn-icon"
                 disabled
-                title="{% trans 'Ne možete deaktivirati sopstveni nalog' %}">
-          <i class="bi bi-person-lock"></i>
-          <span class="visually-hidden">{% trans "Zaključano" %}</span>
-        </button>
+                title="Ne možete deaktivirati sopstveni nalog"
+                aria-label="Ne možete deaktivirati sopstveni nalog"><i class="bi bi-person-lock" aria-hidden="true"></i></button>
       {% else %}
         <button type="button"
-                class="btn btn-outline-{% if user.is_active %}warning{% else %}success{% endif %}"
+                class="btn-icon"
                 hx-post="{% url 'users:toggle-active' user.pk %}"
                 hx-target="#user-{{ user.pk }}"
                 hx-swap="outerHTML"
-                hx-confirm="{% if user.is_active %}{% trans 'Da li ste sigurni da želite da deaktivirate ovog korisnika?' %}{% else %}{% trans 'Da li ste sigurni da želite da aktivirate ovog korisnika?' %}{% endif %}"
-                title="{% if user.is_active %}{% trans 'Deaktiviraj' %}{% else %}{% trans 'Aktiviraj' %}{% endif %}">
-          <i class="bi bi-{% if user.is_active %}person-x{% else %}person-check{% endif %}"></i>
-          <span class="visually-hidden">{% if user.is_active %}{% trans "Deaktiviraj" %}{% else %}{% trans "Aktiviraj" %}{% endif %}</span>
-        </button>
+                hx-confirm="{% if user.is_active %}Da li ste sigurni da želite da deaktivirate ovog korisnika? Sve njegove aktivne sesije biće prekinute.{% else %}Da li ste sigurni da želite da aktivirate ovog korisnika?{% endif %}"
+                title="{% if user.is_active %}Deaktiviraj{% else %}Aktiviraj{% endif %}"
+                aria-label="{% if user.is_active %}Deaktiviraj{% else %}Aktiviraj{% endif %} korisnika {{ user.email }}"><i class="bi bi-{% if user.is_active %}person-x{% else %}person-check{% endif %}" aria-hidden="true"></i></button>
       {% endif %}
     </div>
   </td>

@@ -21,27 +21,46 @@ __all__ = [
 ]
 
 # Menu items configuration, grouped by logical sections.
-# url_name: None means the feature is not yet implemented (will show as disabled)
+#
+# Keys per item:
+#   label, icon, roles, section  - as before
+#   url_name    - URL name to reverse; None means the feature is not implemented
+#                 yet (rendered as a visibly unavailable, non-clickable entry)
+#   query       - optional dict of GET params appended to the URL. An item with
+#                 ``query`` is only "active" when the request path equals its URL
+#                 *and* every listed param matches the request's query string.
+#   exact       - optional bool; when True the item is active only on an exact
+#                 path match (no prefix matching for nested pages)
+#   requires_publisher - optional bool; when True the item is hidden from
+#                 non-admin roles that have no publisher assigned
+#
+# Active-state resolution lives in ``core/templatetags/menu_tags.py``: among all
+# matching items only the single most specific one is highlighted.
 MENU_ITEMS: dict[str, dict] = {
     # --- Pregled ---
     "dashboard": {
         "label": "Kontrolna tabla",
         "icon": "bi-house-door",
         "url_name": "dashboard",
+        "exact": True,
         "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
         "section": "Pregled",
     },
     "my_drafts": {
         "label": "Moji nacrti",
         "icon": "bi-pencil-square",
-        "url_name": "articles:list",  # Story 3.8 - filter via query param
+        "url_name": "articles:list",
+        # mine=1 -> ArticleListView shows only articles created by the user,
+        # the same set the dashboard "Moji nacrti" count is based on.
+        "query": {"status": "DRAFT", "mine": "1"},
         "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
         "section": "Pregled",
     },
     "pending_review": {
-        "label": "Na čekanju",
+        "label": "Na pregledu",
         "icon": "bi-hourglass-split",
-        "url_name": "articles:list",  # Story 3.8 - filter via query param
+        "url_name": "articles:list",
+        "query": {"status": "REVIEW"},
         "roles": ["Superadmin", "Administrator", "Urednik"],
         "section": "Pregled",
     },
@@ -78,6 +97,15 @@ MENU_ITEMS: dict[str, dict] = {
         "label": "Komponente",
         "icon": "bi-puzzle",
         "url_name": "components:group-list",
+        "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
+        "section": "Sadržaj",
+    },
+    "conference_wizard": {
+        "label": "Registracija konferencije",
+        "icon": "bi-megaphone",
+        "url_name": "wizard:conference-start",
+        # Mirrors the permission check in wizard.views.wizard_start
+        "requires_publisher": True,
         "roles": ["Superadmin", "Administrator", "Urednik", "Bibliotekar"],
         "section": "Sadržaj",
     },
@@ -118,10 +146,10 @@ MENU_ITEMS: dict[str, dict] = {
         "roles": ["Superadmin"],
         "section": "Sistem",
     },
-    "system_settings": {
-        "label": "Podešavanja sistema",
-        "icon": "bi-gear",
-        "url_name": None,  # Not implemented yet
+    "sentry_test": {
+        "label": "Sentry test",
+        "icon": "bi-bug",
+        "url_name": "core:sentry-test",
         "roles": ["Superadmin"],
         "section": "Sistem",
     },
@@ -132,10 +160,10 @@ MENU_ITEMS: dict[str, dict] = {
         "roles": ["Superadmin"],
         "section": "Sistem",
     },
-    "sentry_test": {
-        "label": "Sentry test",
-        "icon": "bi-bug",
-        "url_name": "core:sentry-test",
+    "system_settings": {
+        "label": "Podešavanja sistema",
+        "icon": "bi-gear",
+        "url_name": None,  # Not implemented yet
         "roles": ["Superadmin"],
         "section": "Sistem",
     },
@@ -143,6 +171,9 @@ MENU_ITEMS: dict[str, dict] = {
 
 # Role hierarchy for determining user's effective role
 ROLE_HIERARCHY = ["Superadmin", "Administrator", "Urednik", "Bibliotekar"]
+
+# Roles that are not tied to a single publisher
+ADMIN_ROLES = frozenset({"Superadmin", "Administrator"})
 
 
 def get_user_role(user: User) -> str | None:
@@ -187,6 +218,9 @@ def get_menu_for_user(user: User) -> Sequence[dict]:
     if not user_role:
         return []
 
+    is_admin = user_role in ADMIN_ROLES
+    has_publisher = bool(getattr(user, "publisher", None))
+
     return [
         {
             "key": key,
@@ -195,7 +229,10 @@ def get_menu_for_user(user: User) -> Sequence[dict]:
             "url_name": item["url_name"],
             "roles": item["roles"],
             "section": item.get("section", ""),
+            "query": item.get("query") or {},
+            "exact": bool(item.get("exact", False)),
         }
         for key, item in MENU_ITEMS.items()
         if user_role in item["roles"]
+        and (not item.get("requires_publisher") or is_admin or has_publisher)
     ]

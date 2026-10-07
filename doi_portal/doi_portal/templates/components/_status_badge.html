@@ -1,0 +1,17 @@
+{% comment %}
+  Status badge — the only badge for object/workflow state.
+
+  Parameters:
+    label   text to show (required), e.g. article.get_status_display
+    tone    neutral | pending | success | danger | info   (default: neutral)
+            For model status codes use the filter:  tone=obj.status|status_tone
+    icon    optional Bootstrap Icons class replacing the leading dot
+
+  Always pass `only` so page variables named "label"/"icon" cannot leak in.
+
+  Example:
+    {% load ui_tags %}
+    {% include "components/_status_badge.html" with label=article.get_status_display tone=article.status|status_tone only %}
+    {% include "components/_status_badge.html" with label="Deponovano" tone="success" icon="bi-check2" only %}
+{% endcomment %}
+<span class="status-badge status-badge--{{ tone|default:'neutral' }}">{% if icon %}<i class="bi {{ icon }}" aria-hidden="true"></i>{% else %}<span class="status-badge__dot" aria-hidden="true"></span>{% endif %}{{ label }}</span>

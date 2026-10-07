@@ -1,23 +1,28 @@
 {% load i18n %}
-<div id="chapter-{{ chapter.pk }}-funding-container">
+<div id="chapter-{{ chapter.pk }}-funding-container"
+     data-reorder-url="{% url 'monographs:chapter-funding-reorder' chapter_pk=chapter.pk %}"
+     data-reorder-target="#chapter-{{ chapter.pk }}-funding"
+     data-reorder-handle=".chapter-funding-drag-handle">
     {% for funding in fundings %}
-    <div class="d-flex align-items-center gap-2 mb-2 p-2 border rounded" data-funding-id="{{ funding.pk }}">
-        <i class="bi bi-grip-vertical text-muted" style="cursor: grab;"></i>
+    <div class="d-flex align-items-center gap-2 mb-2 p-2 border rounded" data-funding-id="{{ funding.pk }}" data-reorder-id="{{ funding.pk }}">
+        <span class="chapter-funding-drag-handle monograph-drag-handle" title="Prevucite za promenu redosleda"><i class="bi bi-grip-vertical" aria-hidden="true"></i></span>
         <div class="flex-grow-1">
             <span class="fw-semibold">{{ funding.funder_name }}</span>
             {% if funding.award_number %}
             <span class="text-muted">— Projekat br. {{ funding.award_number }}</span>
             {% endif %}
             {% if funding.funder_doi %}
-            <br><small class="text-muted">DOI: {{ funding.funder_doi }}</small>
+            <br><small class="text-muted">DOI: <span class="mono-id">{{ funding.funder_doi }}</span></small>
             {% endif %}
         </div>
-        <button type="button" class="btn btn-sm btn-outline-danger"
+        <button type="button" class="btn-icon btn-icon--danger"
                 hx-post="{% url 'monographs:chapter-funding-delete' pk=funding.pk %}"
                 hx-target="#chapter-{{ chapter.pk }}-funding"
                 hx-swap="innerHTML"
-                hx-confirm="Obrisati finansijera?">
-            <i class="bi bi-trash"></i>
+                hx-confirm="Da li ste sigurni da želite da obrišete finansijera?"
+                title="Obriši finansijera"
+                aria-label="Obriši finansijera {{ funding.funder_name }}">
+            <i class="bi bi-trash" aria-hidden="true"></i>
         </button>
     </div>
     {% empty %}

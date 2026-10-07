@@ -786,3 +786,179 @@ class TestIssueDetailView:
         client.force_login(bibliotekar_user)
         response = client.get(reverse("issues:detail", kwargs={"pk": issue.pk}))
         assert response.status_code == 200
+
+
+# =============================================================================
+# Dashboard redesign: list search, filter bar, Crossref entry point
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestIssueListSearch:
+    """Text search (?q=) on the issue list."""
+
+    def _titles(self, response):
+        return [issue.title for issue in response.context["issues"]]
+
+    def test_search_by_issue_title(self, client, admin_user, publication_a):
+        IssueFactory(
+            publication=publication_a,
+            volume="1",
+            issue_number="1",
+            title="Jesenji broj",
+        )
+        IssueFactory(
+            publication=publication_a,
+            volume="1",
+            issue_number="2",
+            title="Zimski broj",
+        )
+        client.force_login(admin_user)
+        response = client.get(reverse("issues:list"), {"q": "jesenji"})
+        assert self._titles(response) == ["Jesenji broj"]
+        assert response.context["search_query"] == "jesenji"
+        assert response.context["filters_active"] is True
+
+    def test_search_by_volume_and_number(self, client, admin_user, publication_a):
+        IssueFactory(
+            publication=publication_a, volume="Special", issue_number="1", title="A",
+        )
+        IssueFactory(
+            publication=publication_a, volume="7", issue_number="Supplement", title="B",
+        )
+        IssueFactory(publication=publication_a, volume="8", issue_number="2", title="C")
+        client.force_login(admin_user)
+        response = client.get(reverse("issues:list"), {"q": "special"})
+        assert self._titles(response) == ["A"]
+        response = client.get(reverse("issues:list"), {"q": "supplement"})
+        assert self._titles(response) == ["B"]
+
+    def test_search_by_publication_title(self, client, admin_user, publisher_a):
+        pub_x = PublicationFactory(publisher=publisher_a, title="Glasnik hemičara")
+        pub_y = PublicationFactory(publisher=publisher_a, title="Zbornik fizike")
+        IssueFactory(publication=pub_x, volume="1", issue_number="1", title="X")
+        IssueFactory(publication=pub_y, volume="1", issue_number="1", title="Y")
+        client.force_login(admin_user)
+        response = client.get(reverse("issues:list"), {"q": "hemičara"})
+        assert self._titles(response) == ["X"]
+
+    def test_numeric_search_matches_year(self, client, admin_user, publication_a):
+        IssueFactory(
+            publication=publication_a,
+            volume="1",
+            issue_number="1",
+            year=2019,
+            title="Staro",
+        )
+        IssueFactory(
+            publication=publication_a,
+            volume="2",
+            issue_number="1",
+            year=2024,
+            title="Novo",
+        )
+        client.force_login(admin_user)
+        response = client.get(reverse("issues:list"), {"q": "2019"})
+        assert self._titles(response) == ["Staro"]
+
+    def test_search_combines_with_status_and_publication(
+        self, client, admin_user, publication_a, publication_b,
+    ):
+        IssueFactory(
+            publication=publication_a, volume="1", issue_number="1",
+            title="Tematski A", status=IssueStatus.PUBLISHED,
+        )
+        IssueFactory(
+            publication=publication_a, volume="1", issue_number="2",
+            title="Tematski B", status=IssueStatus.DRAFT,
+        )
+        IssueFactory(
+            publication=publication_b, volume="1", issue_number="1",
+            title="Tematski C", status=IssueStatus.PUBLISHED,
+        )
+        client.force_login(admin_user)
+        response = client.get(
+            reverse("issues:list"),
+            {"q": "tematski", "status": "PUBLISHED", "publication": publication_a.pk},
+        )
+        assert self._titles(response) == ["Tematski A"]
+        # "Poništi" keeps the publication scope
+        assert response.context["filter_reset_url"] == (
+            f"{reverse('issues:list')}?publication={publication_a.pk}"
+        )
+
+    def test_search_respects_publisher_scope(
+        self, client, urednik_user, publication_a, publication_b,
+    ):
+        IssueFactory(
+            publication=publication_a,
+            volume="1",
+            issue_number="1",
+            title="Zajednički moj",
+        )
+        IssueFactory(
+            publication=publication_b,
+            volume="1",
+            issue_number="1",
+            title="Zajednički tuđ",
+        )
+        client.force_login(urednik_user)
+        response = client.get(reverse("issues:list"), {"q": "zajednički"})
+        assert self._titles(response) == ["Zajednički moj"]
+
+    def test_no_filters_means_inactive(self, client, admin_user, publication_a):
+        IssueFactory(publication=publication_a, volume="1", issue_number="1")
+        client.force_login(admin_user)
+        response = client.get(reverse("issues:list"))
+        assert response.context["filters_active"] is False
+        assert response.context["filter_reset_url"] == reverse("issues:list")
+        assert 'name="q"' in response.content.decode("utf-8")
+
+    def test_sort_links_keep_search_and_filters(
+        self, client, admin_user, publication_a,
+    ):
+        IssueFactory(
+            publication=publication_a, volume="1", issue_number="1", title="Tematski",
+        )
+        client.force_login(admin_user)
+        response = client.get(
+            reverse("issues:list"), {"q": "tematski", "status": "DRAFT"},
+        )
+        content = response.content.decode("utf-8")
+        assert "?q=tematski&amp;status=DRAFT&amp;sort=volume&amp;order=asc" in content
+
+    def test_cover_column_header_is_serbian(self, client, admin_user, publication_a):
+        IssueFactory(publication=publication_a, volume="1", issue_number="1")
+        client.force_login(admin_user)
+        content = client.get(reverse("issues:list")).content.decode("utf-8")
+        assert ">Naslovna<" in content
+        assert ">Cover<" not in content
+
+
+@pytest.mark.django_db
+class TestIssueDetailCrossrefEntry:
+    """Crossref deposit is offered directly under the page header."""
+
+    def test_crossref_deposit_link_in_workflow_bar(
+        self, client, admin_user, publication_a,
+    ):
+        issue = IssueFactory(publication=publication_a, volume="1", issue_number="1")
+        client.force_login(admin_user)
+        content = client.get(
+            reverse("issues:detail", kwargs={"pk": issue.pk}),
+        ).content.decode("utf-8")
+        deposit_url = reverse("crossref:issue-deposit", kwargs={"pk": issue.pk})
+        bar_start = content.index('class="workflow-bar"')
+        first_card = content.index('class="card')
+        assert bar_start < content.index(f'href="{deposit_url}"') < first_card
+        assert "XML nije generisan" in content
+
+    def test_conference_empty_articles_message(self, client, admin_user, publisher_a):
+        conference = ConferenceFactory(publisher=publisher_a)
+        issue = IssueFactory(publication=conference, volume="1", issue_number="1")
+        client.force_login(admin_user)
+        content = client.get(
+            reverse("issues:detail", kwargs={"pk": issue.pk}),
+        ).content.decode("utf-8")
+        assert "Radovi (0)" in content
+        assert "Nema radova u ovom zborniku" in content

@@ -1,172 +1,52 @@
 {% extends "admin_base.html" %}
-{% load i18n crispy_forms_tags %}
+{% load ui_tags %}
 
-{% block title %}{% trans "Dodaj korisnika" %} - DOI Portal{% endblock title %}
+{% block title %}Novi korisnik - DOI Portal{% endblock title %}
 
 {% block content %}
-<div class="container-fluid">
-  <!-- Breadcrumbs -->
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Kontrolna tabla" %}</a></li>
-      <li class="breadcrumb-item"><a href="{% url 'users:manage-list' %}">{% trans "Upravljanje korisnicima" %}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{% trans "Dodaj korisnika" %}</li>
-    </ol>
-  </nav>
+{% pageheader title="Novi korisnik" icon="bi-person-plus" %}{% endpageheader %}
 
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <div class="card admin-card section-card">
-        <div class="card-header">
-          <h4 class="mb-0">
-            <i class="bi bi-person-plus me-2"></i>{% trans "Dodaj novog korisnika" %}
-          </h4>
-        </div>
-        <div class="card-body">
-          <form method="post" novalidate>
-            {% csrf_token %}
+<div class="row">
+  <div class="col-xl-8">
+    <div class="card">
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
 
-            {% if form.non_field_errors %}
-            <div class="alert alert-danger">
-              {% for error in form.non_field_errors %}
-                <p class="mb-0">{{ error }}</p>
-              {% endfor %}
+          {% if form.non_field_errors %}
+          <div class="status-strip status-strip--danger mb-3" role="alert">
+            {% for error in form.non_field_errors %}<span class="status-strip__item"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ error }}</span>{% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="row g-3">
+            {% include "components/_field.html" with field=form.email class="col-md-6" only %}
+            {% include "components/_field.html" with field=form.name class="col-md-6" only %}
+            {% include "components/_field.html" with field=form.role class="col-md-6" help="Uloga određuje šta korisnik sme da vidi i menja." only %}
+            {% include "users/_publisher_field.html" with field=form.publisher class="col-md-6" help="Opciono. Korisnik dobija pristup sadržaju izabranog izdavača." only %}
+          </div>
+
+          <hr class="form-section-divider">
+          <h2 class="form-section-title"><i class="bi bi-key me-2" aria-hidden="true"></i>Lozinka</h2>
+
+          <div class="row g-3">
+            {% include "components/_field.html" with field=form.send_invitation class="col-12" label="Kreiraj nalog bez lozinke" help="Portal trenutno ne šalje pozivnicu niti bilo kakav email novom korisniku. Nalog se kreira bez lozinke, pa korisnik ne može da se prijavi dok je sam ne postavi preko opcije „Zaboravili ste lozinku?“ na strani za prijavu – a to će biti moguće tek kada slanje email poruka bude omogućeno. Ako korisnik treba odmah da se prijavi, ostavite ovo polje neoznačeno i unesite lozinku." only %}
+          </div>
+
+          <div id="password-fields" class="mt-3">
+            <div class="row g-3">
+              {% include "components/_field.html" with field=form.password1 class="col-md-6" help="Lozinku saopštite korisniku lično – portal je ne šalje emailom." only %}
+              {% include "components/_field.html" with field=form.password2 class="col-md-6" only %}
             </div>
-            {% endif %}
+          </div>
 
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="{{ form.email.id_for_label }}" class="form-label admin-form-label">
-                  {{ form.email.label }} <span class="text-danger">*</span>
-                </label>
-                <input type="email"
-                       class="form-control {% if form.email.errors %}is-invalid{% endif %}"
-                       id="{{ form.email.id_for_label }}"
-                       name="{{ form.email.name }}"
-                       value="{{ form.email.value|default:'' }}"
-                       required>
-                {% if form.email.errors %}
-                <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
-                {% endif %}
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label for="{{ form.name.id_for_label }}" class="form-label admin-form-label">
-                  {{ form.name.label }}
-                </label>
-                <input type="text"
-                       class="form-control {% if form.name.errors %}is-invalid{% endif %}"
-                       id="{{ form.name.id_for_label }}"
-                       name="{{ form.name.name }}"
-                       value="{{ form.name.value|default:'' }}">
-                {% if form.name.errors %}
-                <div class="invalid-feedback">{{ form.name.errors.0 }}</div>
-                {% endif %}
-              </div>
+          <div class="form-actions">
+            <div class="form-actions__start">
+              <a href="{% url 'users:manage-list' %}" class="btn btn-outline-secondary">Otkaži</a>
             </div>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="{{ form.role.id_for_label }}" class="form-label admin-form-label">
-                  {{ form.role.label }} <span class="text-danger">*</span>
-                </label>
-                <select class="form-select {% if form.role.errors %}is-invalid{% endif %}"
-                        id="{{ form.role.id_for_label }}"
-                        name="{{ form.role.name }}"
-                        required>
-                  {% for value, label in form.role.field.choices %}
-                  <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
-                  {% endfor %}
-                </select>
-                {% if form.role.help_text %}
-                <div class="form-text">{{ form.role.help_text }}</div>
-                {% endif %}
-                {% if form.role.errors %}
-                <div class="invalid-feedback">{{ form.role.errors.0 }}</div>
-                {% endif %}
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label for="{{ form.publisher.id_for_label }}" class="form-label admin-form-label">
-                  {{ form.publisher.label }}
-                </label>
-                <select class="form-select {% if form.publisher.errors %}is-invalid{% endif %}"
-                        id="{{ form.publisher.id_for_label }}"
-                        name="{{ form.publisher.name }}">
-                  <option value="">{% trans "--- Bez dodele izdavaca ---" %}</option>
-                  {% for publisher in form.publisher.field.queryset %}
-                  <option value="{{ publisher.pk }}" {% if form.publisher.value == publisher.pk|stringformat:"s" %}selected{% endif %}>{{ publisher.name }}</option>
-                  {% endfor %}
-                </select>
-                {% if form.publisher.errors %}
-                <div class="invalid-feedback">{{ form.publisher.errors.0 }}</div>
-                {% endif %}
-              </div>
-            </div>
-
-            <div class="form-section-divider"></div>
-            <h6 class="form-section-title"><i class="bi bi-envelope me-2"></i>{% trans "Pozivnica i lozinka" %}</h6>
-
-            <div class="mb-3 form-check">
-              <input type="checkbox"
-                     class="form-check-input"
-                     id="{{ form.send_invitation.id_for_label }}"
-                     name="{{ form.send_invitation.name }}"
-                     {% if form.send_invitation.value %}checked{% endif %}
-                     onchange="togglePasswordFields(this)">
-              <label class="form-check-label" for="{{ form.send_invitation.id_for_label }}">
-                {{ form.send_invitation.label }}
-              </label>
-              {% if form.send_invitation.help_text %}
-              <div class="form-text">{{ form.send_invitation.help_text }}</div>
-              {% endif %}
-            </div>
-
-            <div id="password-fields">
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="{{ form.password1.id_for_label }}" class="form-label admin-form-label">
-                    {{ form.password1.label }}
-                  </label>
-                  <input type="password"
-                         class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
-                         id="{{ form.password1.id_for_label }}"
-                         name="{{ form.password1.name }}"
-                         autocomplete="new-password">
-                  {% if form.password1.help_text %}
-                  <div class="form-text">{{ form.password1.help_text }}</div>
-                  {% endif %}
-                  {% if form.password1.errors %}
-                  <div class="invalid-feedback">{{ form.password1.errors.0 }}</div>
-                  {% endif %}
-                </div>
-
-                <div class="col-md-6 mb-3">
-                  <label for="{{ form.password2.id_for_label }}" class="form-label admin-form-label">
-                    {{ form.password2.label }}
-                  </label>
-                  <input type="password"
-                         class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
-                         id="{{ form.password2.id_for_label }}"
-                         name="{{ form.password2.name }}"
-                         autocomplete="new-password">
-                  {% if form.password2.errors %}
-                  <div class="invalid-feedback">{{ form.password2.errors.0 }}</div>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-
-            <div class="d-flex justify-content-between mt-4 pt-3 border-top">
-              <a href="{% url 'users:manage-list' %}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>{% trans "Nazad" %}
-              </a>
-              <button type="submit" class="btn btn-primary">
-                <i class="bi bi-check-lg me-1"></i>{% trans "Kreiraj korisnika" %}
-              </button>
-            </div>
-          </form>
-        </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Sačuvaj korisnika</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -175,20 +55,14 @@
 
 {% block inline_javascript %}
 <script>
-  function togglePasswordFields(checkbox) {
-    const passwordFields = document.getElementById('password-fields');
-    if (checkbox.checked) {
-      passwordFields.style.display = 'none';
-    } else {
-      passwordFields.style.display = 'block';
-    }
-  }
-  // Initialize on page load
-  document.addEventListener('DOMContentLoaded', function() {
-    const checkbox = document.getElementById('{{ form.send_invitation.id_for_label }}');
-    if (checkbox) {
-      togglePasswordFields(checkbox);
-    }
+  /* Password fields are only needed when the account is created with a password. */
+  document.addEventListener('DOMContentLoaded', function () {
+    var checkbox = document.getElementById('{{ form.send_invitation.id_for_label }}');
+    var passwordFields = document.getElementById('password-fields');
+    if (!checkbox || !passwordFields) { return; }
+    var sync = function () { passwordFields.hidden = checkbox.checked; };
+    checkbox.addEventListener('change', sync);
+    sync();
   });
 </script>
 {% endblock inline_javascript %}

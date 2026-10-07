@@ -1,0 +1,209 @@
+/* ==========================================================================
+   Searchable selects (Tom Select) — skin
+   Loaded after tom-select.bootstrap5.css by admin_base.html and base.html.
+   Initialised centrally by initSearchableSelects() in js/project.js.
+
+   Tom Select copies the classes of the original <select> onto its wrapper, so
+   the wrapper IS a `.form-select` (and `.form-select-sm`, `.is-invalid`): it
+   inherits height, border, radius, caret, font size and layout rules (filter
+   bar widths, grid columns) from Bootstrap and from the dashboard kit.
+   This file only corrects what the stock Bootstrap 5 theme gets wrong for us.
+
+   --doi-* tokens exist only in the dashboard (admin.css). Every use has a
+   Bootstrap fallback so the public pages get standard Bootstrap looks.
+   ========================================================================== */
+
+/* ---- Control ---- */
+.ts-wrapper.form-select {
+  /* the wrapper is a block-level flex box; do not let a long value widen it */
+  min-width: 0;
+  cursor: pointer;
+}
+
+.ts-wrapper.form-select .ts-control {
+  min-height: 0;
+  flex-wrap: nowrap;
+  /* the wrapper draws the border; keep the inner height = wrapper min-height */
+  padding-top: calc(0.375rem - var(--bs-border-width, 1px));
+  padding-bottom: calc(0.375rem - var(--bs-border-width, 1px));
+  border-radius: inherit;
+  color: var(--doi-text, var(--bs-body-color));
+  font-size: inherit;
+  line-height: 1.5;
+}
+
+/* Dashboard: same left padding as the kit's .form-select */
+#wrapper .ts-wrapper.form-select .ts-control {
+  padding-left: 0.625rem;
+}
+
+.ts-wrapper.form-select .ts-control,
+.ts-wrapper.form-select .ts-control input {
+  color: var(--doi-text, var(--bs-body-color));
+  font-size: inherit;
+}
+
+/* Selected value: one line, ellipsis like a native select */
+.ts-wrapper.single .ts-control > .item {
+  display: block;
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ts-wrapper.single .ts-control > input {
+  min-width: 2rem;
+}
+
+/* While typing, only the query is visible */
+.ts-wrapper.single.is-typing .ts-control > .item {
+  display: none;
+}
+
+.ts-wrapper.single.is-typing .ts-control > input {
+  margin-left: 0 !important;
+}
+
+/* Small size */
+.ts-wrapper.form-select-sm .ts-control {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+  padding-left: 0.5rem;
+  font-size: inherit;
+}
+
+.ts-wrapper.form-select-sm.has-items .ts-control {
+  font-size: inherit;
+}
+
+/* ---- Focus: the kit's ring on the wrapper, not Bootstrap blue on the inner box ---- */
+.ts-wrapper.form-select.focus .ts-control,
+.ts-wrapper.form-select.is-invalid.focus .ts-control,
+.ts-wrapper.form-select.is-valid.focus .ts-control {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.ts-wrapper.form-select.focus {
+  border-color: var(--doi-teal-light, #86b7fe);
+  box-shadow: 0 0 0 0.2rem var(--doi-primary-ring, rgba(13, 110, 253, 0.25));
+  outline: 0;
+}
+
+/* ---- Invalid (class carried over from the select, or native `invalid` event) ---- */
+.ts-wrapper.form-select.is-invalid,
+.ts-wrapper.form-select.invalid {
+  border-color: var(--doi-danger, var(--bs-form-invalid-border-color, #dc3545));
+}
+
+.ts-wrapper.form-select.is-invalid.focus,
+.ts-wrapper.form-select.invalid.focus {
+  border-color: var(--doi-danger, var(--bs-form-invalid-border-color, #dc3545));
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-danger-rgb, 220, 53, 69), 0.25);
+}
+
+/* Bootstrap shows feedback with `.is-invalid ~ .invalid-feedback`; the select is
+   still there and still carries the class, so nothing else is needed. */
+
+/* ---- Disabled / read-only ---- */
+.ts-wrapper.form-select.disabled,
+.ts-wrapper.form-select.readonly {
+  background-color: var(--bs-secondary-bg, #e9ecef);
+  cursor: default;
+  opacity: 1;
+}
+
+.ts-wrapper.form-select.disabled .ts-control,
+.ts-wrapper.form-select.readonly .ts-control {
+  background: transparent !important;
+}
+
+.ts-wrapper.form-select.disabled .ts-control,
+.ts-wrapper.form-select.disabled .ts-control input {
+  color: var(--doi-text-secondary, var(--bs-secondary-color, #6c757d));
+}
+
+/* ---- Dropdown (appended to <body>) ---- */
+.ts-dropdown.searchable-select-dropdown {
+  /* above Bootstrap modals (1055), popovers/tooltips (1070/1080) and the
+     dashboard's sticky bars and skip link (max 1200) */
+  z-index: 2000;
+  min-width: 12rem;
+  margin-top: 2px;
+  border: 1px solid var(--doi-border, var(--bs-border-color, #dee2e6));
+  border-radius: var(--radius-sm, var(--bs-border-radius, 0.375rem));
+  background: var(--doi-surface, var(--bs-body-bg, #fff));
+  box-shadow: 0 6px 16px rgba(3, 51, 51, 0.12);
+  color: var(--doi-text, var(--bs-body-color));
+  /* font-size is copied from the control when the dropdown opens (project.js) */
+}
+
+.ts-dropdown.searchable-select-dropdown .ts-dropdown-content {
+  max-height: min(18rem, 45vh);
+  padding: 4px 0;
+  /* smooth scrolling makes arrow-key navigation lag */
+  scroll-behavior: auto;
+}
+
+.ts-dropdown.searchable-select-dropdown .option,
+.ts-dropdown.searchable-select-dropdown .no-results,
+.ts-dropdown.searchable-select-dropdown .optgroup-header {
+  padding: 0.3125rem 0.625rem;
+  line-height: 1.35;
+}
+
+.ts-dropdown.searchable-select-dropdown .option {
+  color: var(--doi-text, var(--bs-body-color));
+  overflow-wrap: anywhere;
+}
+
+/* keyboard / hover highlight */
+.ts-dropdown.searchable-select-dropdown .option.active {
+  background-color: var(--doi-primary-light, var(--bs-tertiary-bg, #f8f9fa));
+  color: var(--doi-teal, var(--bs-body-color));
+}
+
+/* the current value */
+.ts-dropdown.searchable-select-dropdown .option.selected {
+  font-weight: 600;
+  color: var(--doi-teal, var(--bs-body-color));
+}
+
+/* matched part of the label: weight instead of the stock yellow marker */
+.ts-dropdown.searchable-select-dropdown [data-selectable] .highlight {
+  background: none;
+  border-radius: 0;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ts-dropdown.searchable-select-dropdown .optgroup-header {
+  background: transparent;
+  color: var(--doi-teal, var(--bs-secondary-color, #6c757d));
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.ts-dropdown.searchable-select-dropdown .optgroup .option {
+  padding-left: 1.25rem;
+}
+
+.ts-dropdown.searchable-select-dropdown .optgroup::before {
+  margin: 4px 0;
+  border-top-color: var(--doi-border, var(--bs-border-color-translucent));
+}
+
+.ts-dropdown.searchable-select-dropdown .no-results {
+  color: var(--doi-text-secondary, var(--bs-secondary-color, #6c757d));
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-wrapper.form-select,
+  .ts-wrapper.form-select .ts-control {
+    transition: none;
+  }
+}

@@ -1152,3 +1152,124 @@ class TestFormDynamicBehavior:
         # Journal fields should be visible by default
         assert "issn_print" in content
         assert "abbreviation" in content
+
+
+# =============================================================================
+# Dashboard redesign: form layout, list filter bar
+# =============================================================================
+
+
+@pytest.mark.django_db
+class TestPublicationFormLayout:
+    """Field order and cleanup of the publication form."""
+
+    def test_type_specific_fields_follow_type_row(self, client, admin_user, publisher):
+        """Type-specific section follows the type row, before description/cover."""
+        client.force_login(admin_user)
+        content = client.get(reverse("publications:create")).content.decode("utf-8")
+        positions = [
+            content.index('id="id_title"'),
+            content.index('id="id_publisher"'),
+            content.index('id="id_publication_type"'),
+            content.index('id="id_language"'),
+            content.index('id="id_access_type"'),
+            content.index('id="type-specific-fields"'),
+            content.index('id="id_issn_print"'),
+            content.index('id="id_subject_area"'),
+            content.index('id="id_description"'),
+            content.index('id="id_cover_image"'),
+        ]
+        assert positions == sorted(positions)
+
+    def test_type_select_keeps_htmx_wiring(self, client, admin_user):
+        client.force_login(admin_user)
+        content = client.get(reverse("publications:create")).content.decode("utf-8")
+        start = content.index('<select name="publication_type"')
+        tag = content[start:content.index(">", start)]
+        assert 'id="id_publication_type"' in tag
+        assert "form-select" in tag
+        assert f'hx-get="{reverse("publications:htmx-type-fields")}"' in tag
+        assert 'hx-target="#type-specific-fields"' in tag
+        assert 'hx-trigger="change"' in tag
+
+    def test_no_debug_logging_in_form(self, client, admin_user):
+        client.force_login(admin_user)
+        content = client.get(reverse("publications:create")).content.decode("utf-8")
+        assert "console.log" not in content
+        assert "console.error" not in content
+
+    def test_invalid_post_shows_inline_errors(self, client, admin_user, publisher):
+        """Invalid ISSN re-renders the form with the error next to the field."""
+        client.force_login(admin_user)
+        response = client.post(
+            reverse("publications:create"),
+            {
+                "title": "Test",
+                "publisher": publisher.pk,
+                "publication_type": "JOURNAL",
+                "language": "sr",
+                "access_type": "OPEN",
+                "issn_print": "bad",
+            },
+        )
+        assert response.status_code == 200  # noqa: PLR2004
+        content = response.content.decode("utf-8")
+        assert 'id="id_issn_print_error"' in content
+        assert "status-strip--danger" in content
+
+    def test_conference_dates_rerender_as_iso(self, client, admin_user, publisher):
+        """Date inputs keep the submitted value (Y-m-d) when the form is re-rendered."""
+        client.force_login(admin_user)
+        response = client.post(
+            reverse("publications:create"),
+            {
+                "title": "",
+                "publisher": publisher.pk,
+                "publication_type": "CONFERENCE",
+                "language": "sr",
+                "access_type": "OPEN",
+                "conference_date": "2026-06-01",
+            },
+        )
+        assert response.status_code == 200  # noqa: PLR2004
+        content = response.content.decode("utf-8")
+        start = content.index('id="id_conference_date"')
+        assert 'value="2026-06-01"' in content[start:start + 300]
+
+
+@pytest.mark.django_db
+class TestPublicationListFilterBar:
+    """Kit filter bar and table on the publication list."""
+
+    def test_sort_links_keep_filters(self, client, admin_user, publisher_a):
+        PublicationFactory(title="Medicina danas", publisher=publisher_a)
+        client.force_login(admin_user)
+        response = client.get(
+            reverse("publications:list"),
+            {"search": "medicina", "type": "JOURNAL", "publisher": publisher_a.pk},
+        )
+        content = response.content.decode("utf-8")
+        assert (
+            f"?search=medicina&amp;type=JOURNAL&amp;publisher={publisher_a.pk}"
+            "&amp;sort=title&amp;order=desc"
+        ) in content
+        # hidden publisher filter survives a filter-bar submit
+        assert (
+            f'<input type="hidden" name="publisher" value="{publisher_a.pk}">'
+            in content
+        )
+
+    def test_result_count_and_actions(self, client, admin_user, publisher_a):
+        publication = PublicationFactory(title="Jedina", publisher=publisher_a)
+        client.force_login(admin_user)
+        content = client.get(reverse("publications:list")).content.decode("utf-8")
+        assert "<strong>1</strong> publikacija<" in content
+        assert "Registruj konferenciju" in content
+        # secondary action first, primary last
+        assert content.index("Registruj konferenciju") < content.index(
+            "Nova publikacija</a>",
+        )
+        detail_url = reverse("publications:detail", kwargs={"slug": publication.slug})
+        # The title is the link to the detail page; no separate eye button
+        assert f'href="{detail_url}" class="cell-title"' in content
+        assert f'href="{detail_url}" class="btn-icon"' not in content

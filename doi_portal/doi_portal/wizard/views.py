@@ -258,11 +258,16 @@ def wizard_paper_add(request, pub_pk):
     else:
         form = WizardPaperForm(issue=issue, user=request.user)
 
-    return render(request, "wizard/partials/_paper_form.html", {
+    response = render(request, "wizard/partials/_paper_form.html", {
         "form": form,
         "publication": publication,
         "issue": issue,
     })
+    if request.method == "POST":
+        # Invalid form: keep it in its own container instead of #paper-list.
+        response["HX-Retarget"] = "#paper-form-container"
+        response["HX-Reswap"] = "innerHTML"
+    return response
 
 
 @login_required
@@ -291,12 +296,17 @@ def wizard_paper_edit(request, pub_pk, article_pk):
     else:
         form = WizardPaperForm(instance=article, issue=issue, user=request.user)
 
-    return render(request, "wizard/partials/_paper_form.html", {
+    response = render(request, "wizard/partials/_paper_form.html", {
         "form": form,
         "publication": publication,
         "issue": issue,
         "article": article,
     })
+    if request.method == "POST":
+        # Invalid form: keep it in its own container instead of #paper-list.
+        response["HX-Retarget"] = "#paper-form-container"
+        response["HX-Reswap"] = "innerHTML"
+    return response
 
 
 @login_required

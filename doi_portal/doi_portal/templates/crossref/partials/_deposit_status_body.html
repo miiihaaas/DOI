@@ -1,0 +1,39 @@
+{% comment %}
+  Deposit status, shared by the three families. Rendered inside #deposit-status
+  (last step of the stepper) and returned by the mark-deposited views through
+  _deposit_status.html / _monograph_deposit_status.html / _component_deposit_status.html.
+
+    obj        issue / monograph / component group
+    mark_url   POST url that marks obj as deposited
+    is_deposited, all_ready   from the view
+{% endcomment %}
+{% if is_deposited %}
+<div class="status-strip status-strip--success" role="status" data-deposit-state="deposited">
+  <span class="status-strip__item"><i class="bi bi-check-circle-fill" aria-hidden="true"></i><strong>Deponovano</strong></span>
+  {% if obj.crossref_deposited_at %}
+  <span class="status-strip__item"><i class="bi bi-calendar-check" aria-hidden="true"></i>{{ obj.crossref_deposited_at|date:"d.m.Y H:i" }}</span>
+  {% endif %}
+  {% if obj.crossref_deposited_by %}
+  <span class="status-strip__item"><i class="bi bi-person" aria-hidden="true"></i>{{ obj.crossref_deposited_by.name|default:obj.crossref_deposited_by.email }}</span>
+  {% endif %}
+</div>
+{% elif all_ready %}
+<p class="deposit-step__hint" data-deposit-state="ready">
+  <strong>Spremno za Crossref.</strong>
+  Otpremite preuzeti XML fajl na
+  <a href="https://doi.crossref.org/" target="_blank" rel="noopener">Crossref admin portal<i class="bi bi-box-arrow-up-right ms-1" aria-hidden="true"></i><span class="visually-hidden"> (otvara se u novoj kartici)</span></a>,
+  pa potvrdite ovde.
+</p>
+<div class="deposit-step__actions">
+  <button type="button"
+          class="btn btn-primary"
+          hx-post="{{ mark_url }}"
+          hx-target="#deposit-status"
+          hx-swap="innerHTML"
+          hx-confirm="Da li ste sigurni da želite da označite kao deponovano?">
+    <i class="bi bi-check2-square me-1" aria-hidden="true"></i>Označi kao deponovano
+  </button>
+</div>
+{% else %}
+<p class="deposit-step__hint" data-deposit-state="pending">Završite prethodne korake da biste omogućili deponovanje.</p>
+{% endif %}

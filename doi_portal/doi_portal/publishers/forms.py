@@ -156,7 +156,7 @@ class PublisherForm(forms.ModelForm):
                 qs = qs.exclude(pk=self.instance.pk)
             if qs.exists():
                 raise ValidationError(
-                    _("DOI prefiks '%(value)s' vec postoji."),
+                    _("DOI prefiks '%(value)s' već postoji."),
                     params={"value": doi_prefix},
                 )
 

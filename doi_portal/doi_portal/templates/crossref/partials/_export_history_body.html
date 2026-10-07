@@ -1,0 +1,55 @@
+{% comment %}
+  Export history card, shared by the three families. Loaded lazily into
+  #export-history-container through _export_history.html /
+  _monograph_export_history.html / _component_export_history.html.
+
+    exports              CrossrefExport rows (latest 10)
+    redownload_url_name  URL name of the family's re-download view (takes export.pk)
+{% endcomment %}
+<section class="card mb-3" aria-labelledby="export-history-title">
+  <div class="card-header">
+    <h2 class="card-title" id="export-history-title"><i class="bi bi-clock-history me-2" aria-hidden="true"></i>Istorija eksporta</h2>
+  </div>
+  {% if exports %}
+  <div class="table-responsive">
+    <table class="table table-hover table--dense">
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th>Fajl</th>
+          <th>Korisnik</th>
+          <th>XSD status</th>
+          <th class="col-actions"><span class="visually-hidden">Akcije</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for export in exports %}
+        <tr>
+          <td class="cell-meta">{{ export.exported_at|date:"d.m.Y H:i" }}</td>
+          <td class="mono-id">{{ export.filename }}</td>
+          <td class="cell-meta">{{ export.exported_by.name|default:export.exported_by.email }}</td>
+          <td>
+            {% if export.xsd_valid_at_export %}
+            {% include "components/_status_badge.html" with label="Validan" tone="success" only %}
+            {% elif export.xsd_valid_at_export is False %}
+            {% include "components/_status_badge.html" with label="Nevažeći" tone="danger" only %}
+            {% else %}
+            {% include "components/_status_badge.html" with label="Nepoznato" tone="neutral" only %}
+            {% endif %}
+          </td>
+          <td class="col-actions">
+            <div class="row-actions">
+              <a href="{% url redownload_url_name export.pk %}" class="btn-icon" title="Preuzmi ponovo" aria-label="Preuzmi ponovo {{ export.filename }}">
+                <i class="bi bi-download" aria-hidden="true"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  {% include "components/_empty_state.html" with icon="bi-clock-history" text="Nema prethodnih eksporta" compact=True only %}
+  {% endif %}
+</section>

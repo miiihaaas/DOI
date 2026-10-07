@@ -1,114 +1,138 @@
 /* Admin Panel Styles for DOI Portal
-   Design System: doi.rs brand */
+   Design system: doi.rs brand (teal + green on a cool off-white).
+
+   Contents
+     1.  Tokens & Bootstrap variable overrides
+     2.  Base: typography, links, focus, motion
+     3.  Buttons
+     4.  Shell: layout, sidebar, top bar, breadcrumbs, messages, footer, progress
+     5.  Cards, dense list row
+     6.  Tables, row actions
+     7.  Badges, chips
+     8.  Forms: controls, field, form sections, form actions, inline sub-form
+     9.  Page header
+     10. Filter bar, section tabs
+     11. Pagination
+     12. Workflow bar, status strip
+     13. Definition grid, inline code, media helpers
+     14. Empty state
+     15. Dashboard home
+     16. Wizard stepper
+     17. Misc (drag handles, double-space warning)
+
+   Rules of the palette
+     - Teal carries text: headings, labels, links (incl. links inside tables).
+     - Green is for the primary action and the "done / published" state only.
+       Green text on white is ~2.6:1, so green is never used as a text colour.
+     - No colour outside the tokens below. */
 
 /* =============================================
-   1. CSS Variables & Bootstrap Overrides
+   1. Tokens & Bootstrap variable overrides
    ============================================= */
 :root {
+  /* Brand */
   --doi-primary: #5CB46A;
   --doi-primary-hover: #68cc6c;
+  --doi-primary-strong: #4a9a57;   /* fill of primary buttons: better contrast with white */
   --doi-primary-light: rgba(92, 180, 106, 0.1);
+  --doi-primary-ring: rgba(92, 180, 106, 0.35);
   --doi-teal: #033333;
   --doi-teal-darker: #062727;
+  --doi-teal-mid: #0a4a4a;
   --doi-teal-light: #065656;
   --doi-light: #F9F9FF;
+  --doi-surface: #fff;
   --doi-accent-orange: #FFA726;
   --doi-accent-teal: #26A69A;
+  --doi-accent-teal-hover: #1e8c82;
+  --doi-accent-teal-active: #1a7a71;
+  --doi-slate: #78909C;
+  --doi-danger: #dc3545;           /* Bootstrap danger */
+  --doi-danger-text: #58151c;      /* Bootstrap danger-text-emphasis */
   --doi-text: #212121;
-  --doi-text-secondary: #728383;
+  --doi-text-secondary: #728383;   /* incidental text only (4.0:1 on white) */
   --doi-border: #e2e8f0;
   --doi-border-subtle: #ededed;
+
+  /* Tone tints (badges, status strip): bg / dot per tone */
+  --tone-neutral-bg: var(--doi-border);
+  --tone-neutral-dot: var(--doi-slate);
+  --tone-pending-bg: rgba(255, 167, 38, 0.2);
+  --tone-pending-dot: var(--doi-accent-orange);
+  --tone-success-bg: rgba(92, 180, 106, 0.2);
+  --tone-success-dot: var(--doi-primary-strong);
+  --tone-info-bg: rgba(38, 166, 154, 0.16);
+  --tone-info-dot: var(--doi-accent-teal);
+  --tone-danger-bg: rgba(220, 53, 69, 0.12);
+  --tone-danger-dot: var(--doi-danger);
+
+  /* Warning (double-space notice) */
+  --warning-text: #856404;
+  --warning-bg: #fff3cd;
+  --warning-border: #ffc107;
+
+  /* Spacing rhythm: 4 / 8 / 12 / 16 / 24 */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+
+  /* Shape & layout */
+  --radius: 8px;
+  --radius-sm: 6px;
+  --sidebar-w: 232px;
+  --topbar-h: 48px;
+  --control-h: 2.1875rem;    /* 35px: inputs, selects, default buttons */
+  --control-h-sm: 1.75rem;   /* 28px: row actions, .btn-sm */
+  --focus-ring: 0 0 0 2px var(--doi-surface), 0 0 0 4px var(--doi-teal-light);
 
   /* Bootstrap overrides */
   --bs-primary: #5CB46A;
   --bs-primary-rgb: 92, 180, 106;
   --bs-info: #26A69A;
   --bs-info-rgb: 38, 166, 154;
-  --bs-link-color: #5CB46A;
-  --bs-link-hover-color: #68cc6c;
+  --bs-link-color: #065656;
+  --bs-link-color-rgb: 6, 86, 86;
+  --bs-link-hover-color: #033333;
+  --bs-link-hover-color-rgb: 3, 51, 51;
   --bs-body-bg: #f9f9ff;
+  --bs-body-color: #212121;
+  --bs-body-font-size: 0.875rem;
+  --bs-body-line-height: 1.5;
+  --bs-border-color: #e2e8f0;
+  --bs-border-radius: 8px;
 }
 
 /* =============================================
-   1b. Typography
+   2. Base
    ============================================= */
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 0.875rem;
+  line-height: 1.5;
   color: var(--doi-text);
 }
 
-/* =============================================
-   1c. Bootstrap Button Overrides
-   ============================================= */
-.btn-primary {
-  --bs-btn-bg: var(--doi-primary);
-  --bs-btn-border-color: var(--doi-primary);
-  --bs-btn-hover-bg: var(--doi-primary-hover);
-  --bs-btn-hover-border-color: var(--doi-primary-hover);
-  --bs-btn-active-bg: #4a9a57;
-  --bs-btn-active-border-color: #4a9a57;
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  letter-spacing: -0.01em;
+}
+
+/* Section headings inside a plain card body */
+.card-body > h5,
+.card-body > h6 {
+  color: var(--doi-teal);
+  font-size: 0.9375rem;
   font-weight: 600;
 }
 
-.btn-outline-primary {
-  --bs-btn-color: var(--doi-primary);
-  --bs-btn-border-color: var(--doi-primary);
-  --bs-btn-hover-bg: var(--doi-primary);
-  --bs-btn-hover-border-color: var(--doi-primary);
-  --bs-btn-active-bg: var(--doi-primary-hover);
-  --bs-btn-active-border-color: var(--doi-primary-hover);
-}
-
-.btn-info {
-  --bs-btn-bg: var(--doi-accent-teal);
-  --bs-btn-border-color: var(--doi-accent-teal);
-  --bs-btn-hover-bg: #1e8c82;
-  --bs-btn-hover-border-color: #1e8c82;
-  --bs-btn-active-bg: #1a7a71;
-  --bs-btn-active-border-color: #1a7a71;
-  --bs-btn-color: #fff;
-}
-
-.btn-outline-info {
-  --bs-btn-color: var(--doi-accent-teal);
-  --bs-btn-border-color: var(--doi-accent-teal);
-  --bs-btn-hover-bg: var(--doi-accent-teal);
-  --bs-btn-hover-border-color: var(--doi-accent-teal);
-  --bs-btn-hover-color: #fff;
-  --bs-btn-active-bg: #1e8c82;
-  --bs-btn-active-border-color: #1e8c82;
-}
-
-.badge.bg-info {
-  background-color: var(--doi-accent-teal) !important;
-  color: white !important;
-}
-
-.text-info {
-  color: var(--doi-accent-teal) !important;
-}
-
-.border-info {
-  border-color: var(--doi-accent-teal) !important;
-}
-
-.alert-info {
-  background-color: rgba(38, 166, 154, 0.1);
-  border-color: rgba(38, 166, 154, 0.3);
-  color: #065656;
-}
-
 a {
-  color: var(--doi-primary);
-}
-a:hover {
-  color: var(--doi-primary-hover);
+  color: var(--doi-teal-light);
 }
 
-.badge.bg-primary {
-  background-color: var(--doi-primary) !important;
+a:hover {
+  color: var(--doi-teal);
 }
 
 .text-primary {
@@ -119,639 +143,889 @@ a:hover {
   border-color: var(--doi-primary) !important;
 }
 
-/* =============================================
-   2. Wrapper and Layout
-   ============================================= */
-#wrapper {
-  overflow-x: hidden;
-  transition: margin-left 0.25s ease-out;
+.text-info {
+  color: var(--doi-accent-teal) !important;
+}
+
+.border-info {
+  border-color: var(--doi-accent-teal) !important;
+}
+
+/* Numbers that are compared down a column or read as identifiers */
+.table,
+.num,
+.mono-id,
+.admin-code,
+.filter-bar__count,
+.list-pagination,
+.dashboard-stat-card .display-6 {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Keyboard focus: always visible */
+:focus-visible {
+  outline: 2px solid var(--doi-teal-light);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-2);
+  top: -3rem;
+  z-index: 1200;
+  padding: var(--space-2) var(--space-3);
+  background: var(--doi-teal);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: var(--space-2);
+  color: #fff;
 }
 
 /* =============================================
-   3. Sidebar
+   3. Buttons
+   Primary   .btn-primary            one per view: the main action
+   Secondary .btn-outline-secondary  everything else next to it
+   Tertiary  .btn-outline-primary    positive secondary (e.g. "Dodaj autora")
+   Danger    .btn-outline-danger     destructive; .btn-danger only to confirm
+   Row       .btn-icon               icon-only actions inside table rows
    ============================================= */
+.btn {
+  --bs-btn-font-size: 0.875rem;
+  --bs-btn-padding-y: 0.375rem;
+  --bs-btn-padding-x: 0.75rem;
+  --bs-btn-border-radius: var(--radius-sm);
+  --bs-btn-font-weight: 500;
+  --bs-btn-focus-box-shadow: var(--focus-ring);
+}
+
+.btn-close {
+  --bs-btn-close-focus-shadow: var(--focus-ring);
+}
+
+.btn-sm {
+  --bs-btn-font-size: 0.8125rem;
+  --bs-btn-padding-y: 0.1875rem;
+  --bs-btn-padding-x: 0.5rem;
+  --bs-btn-border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+  --bs-btn-font-size: 0.9375rem;
+  --bs-btn-padding-y: 0.5rem;
+  --bs-btn-padding-x: 1rem;
+  --bs-btn-border-radius: var(--radius);
+}
+
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--doi-primary-strong);
+  --bs-btn-border-color: var(--doi-primary-strong);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--doi-primary-strong);
+  --bs-btn-hover-border-color: var(--doi-teal-light);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--doi-primary-strong);
+  --bs-btn-active-border-color: var(--doi-teal-light);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: var(--doi-primary-strong);
+  --bs-btn-disabled-border-color: var(--doi-primary-strong);
+  --bs-btn-font-weight: 600;
+}
+
+/* Hover/active shade is derived from two existing tokens, not a new colour */
+@supports (background: color-mix(in srgb, red 50%, blue)) {
+  .btn-primary {
+    --bs-btn-hover-bg: color-mix(in srgb, var(--doi-primary-strong) 85%, var(--doi-teal));
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--doi-primary-strong) 85%, var(--doi-teal));
+    --bs-btn-active-bg: color-mix(in srgb, var(--doi-primary-strong) 75%, var(--doi-teal));
+    --bs-btn-active-border-color: color-mix(in srgb, var(--doi-primary-strong) 75%, var(--doi-teal));
+  }
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--doi-teal);
+  --bs-btn-border-color: var(--doi-primary);
+  --bs-btn-hover-color: var(--doi-teal);
+  --bs-btn-hover-bg: var(--doi-primary-light);
+  --bs-btn-hover-border-color: var(--doi-primary-strong);
+  --bs-btn-active-color: var(--doi-teal);
+  --bs-btn-active-bg: var(--tone-success-bg);
+  --bs-btn-active-border-color: var(--doi-primary-strong);
+  --bs-btn-disabled-color: var(--doi-text-secondary);
+  --bs-btn-disabled-border-color: var(--doi-border);
+}
+
+.btn-secondary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--doi-teal-light);
+  --bs-btn-border-color: var(--doi-teal-light);
+  --bs-btn-hover-bg: var(--doi-teal);
+  --bs-btn-hover-border-color: var(--doi-teal);
+  --bs-btn-active-bg: var(--doi-teal);
+  --bs-btn-active-border-color: var(--doi-teal);
+  --bs-btn-disabled-bg: var(--doi-slate);
+  --bs-btn-disabled-border-color: var(--doi-slate);
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--doi-teal);
+  --bs-btn-bg: var(--doi-surface);
+  --bs-btn-border-color: var(--doi-border);
+  --bs-btn-hover-color: var(--doi-teal);
+  --bs-btn-hover-bg: var(--doi-light);
+  --bs-btn-hover-border-color: var(--doi-slate);
+  --bs-btn-active-color: var(--doi-teal);
+  --bs-btn-active-bg: var(--doi-border);
+  --bs-btn-active-border-color: var(--doi-slate);
+  --bs-btn-disabled-color: var(--doi-text-secondary);
+  --bs-btn-disabled-border-color: var(--doi-border);
+}
+
+.btn-info {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--doi-accent-teal-active);
+  --bs-btn-border-color: var(--doi-accent-teal-active);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--doi-teal-light);
+  --bs-btn-hover-border-color: var(--doi-teal-light);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--doi-teal-light);
+  --bs-btn-active-border-color: var(--doi-teal-light);
+}
+
+.btn-outline-info {
+  --bs-btn-color: var(--doi-teal-light);
+  --bs-btn-border-color: var(--doi-accent-teal);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--doi-accent-teal-active);
+  --bs-btn-hover-border-color: var(--doi-accent-teal-active);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--doi-accent-teal-active);
+  --bs-btn-active-border-color: var(--doi-accent-teal-active);
+}
+
+/* Icon-only button: row actions, card header tools */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  padding: 0;
+  flex: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--doi-teal-light);
+  font-size: 0.9375rem;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.btn-icon:hover,
+.btn-icon:focus-visible {
+  background: var(--doi-primary-light);
+  border-color: var(--doi-border);
+  color: var(--doi-teal);
+  text-decoration: none;
+}
+
+.btn-icon--danger:hover,
+.btn-icon--danger:focus-visible {
+  background: var(--tone-danger-bg);
+  border-color: transparent;
+  color: var(--doi-danger-text);
+}
+
+.btn-icon:disabled,
+.btn-icon.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* =============================================
+   4. Shell
+   ============================================= */
+#wrapper {
+  /* clip (not hidden) so position: sticky keeps working inside */
+  overflow-x: clip;
+}
+
+/* ---- Sidebar ---- */
 #sidebar-wrapper {
   position: fixed;
   left: 0;
   top: 0;
-  width: 250px;
+  width: var(--sidebar-w);
   height: 100vh;
-  z-index: 1000;
-  transition: transform 0.25s ease-out;
+  height: 100dvh;
+  z-index: 1030;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
+  color: #fff;
   background: linear-gradient(180deg, var(--doi-teal-darker) 0%, var(--doi-teal) 100%);
+  transition: transform 0.2s ease-out;
 }
 
-.sidebar-heading {
-  background: rgba(0, 0, 0, 0.15);
-  border-bottom: 1px solid rgba(92, 180, 106, 0.25) !important;
-  padding-right: 3.5rem !important;
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  height: var(--topbar-h);
+  padding: 0 var(--space-4);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
   letter-spacing: -0.01em;
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(92, 180, 106, 0.25);
 }
 
-.sidebar-heading i {
+.sidebar-brand:hover {
+  color: #fff;
+}
+
+.sidebar-brand i {
   color: var(--doi-primary);
 }
 
-/* Sidebar menu */
-.sidebar-menu .list-group-item {
-  background-color: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  padding: 0.7rem 1.25rem;
-  transition: all 0.2s ease;
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) 0 var(--space-4);
+}
+
+.sidebar-section {
+  padding: var(--space-3) var(--space-4) var(--space-1);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sidebar-section:not(:first-child) {
+  margin-top: var(--space-2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.125rem;
+  padding: 0.3125rem var(--space-4) 0.3125rem calc(var(--space-4) - 3px);
   border-left: 3px solid transparent;
-  font-size: 0.9rem;
-  font-weight: 400;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.875rem;
+  line-height: 1.3;
+  text-decoration: none;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 
-.sidebar-menu .list-group-item:hover:not(.disabled) {
+.sidebar-link i {
+  flex: none;
+  width: 1.125rem;
+  text-align: center;
+  font-size: 1rem;
+  opacity: 0.85;
+}
+
+.sidebar-link__label {
+  flex: 1;
+  min-width: 0;
+}
+
+a.sidebar-link:hover {
   background-color: rgba(92, 180, 106, 0.12);
-  color: white;
-  border-left-color: var(--doi-primary);
+  color: #fff;
 }
 
-.sidebar-menu .list-group-item.active {
+.sidebar-link.active {
   background-color: rgba(92, 180, 106, 0.18);
-  color: white;
   border-left-color: var(--doi-primary);
+  color: #fff;
   font-weight: 600;
 }
 
-.sidebar-menu .list-group-item.disabled {
-  color: rgba(255, 255, 255, 0.25);
-  pointer-events: none;
-  cursor: not-allowed;
-}
-
-.sidebar-menu .list-group-item i {
-  width: 1.25rem;
-  text-align: center;
-  opacity: 0.8;
-}
-
-.sidebar-menu .list-group-item.active i,
-.sidebar-menu .list-group-item:hover:not(.disabled) i {
+.sidebar-link.active i,
+a.sidebar-link:hover i {
   opacity: 1;
 }
 
-/* Page Content */
-#page-content-wrapper {
-  margin-left: 250px;
-  min-width: 0;
-  width: calc(100% - 250px);
-  transition: margin-left 0.25s ease-out, width 0.25s ease-out;
-  background-color: var(--doi-light);
+.sidebar-link:focus-visible,
+.sidebar-brand:focus-visible {
+  outline: 2px solid var(--doi-primary-hover);
+  outline-offset: -2px;
 }
 
-/* Sidebar collapsed */
+/* Not implemented yet: visibly unavailable, not a link */
+.sidebar-link.is-unavailable {
+  color: rgba(255, 255, 255, 0.45);
+  cursor: default;
+}
+
+.sidebar-link__soon {
+  flex: none;
+  padding: 0 0.375rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+}
+
+/* ---- Content column ---- */
+#page-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: var(--sidebar-w);
+  background-color: var(--doi-light);
+  transition: margin-left 0.2s ease-out;
+}
+
+/* Desktop: toggled = sidebar hidden */
 #wrapper.toggled #sidebar-wrapper {
-  transform: translateX(-250px);
+  transform: translateX(-100%);
 }
 
 #wrapper.toggled #page-content-wrapper {
   margin-left: 0;
-  width: 100%;
 }
 
-/* Mobile */
-@media (max-width: 768px) {
+/* Below 992px the sidebar is an off-canvas drawer: toggled = visible.
+   The same breakpoint is used by the shell script in admin_base.html. */
+@media (max-width: 991.98px) {
   #sidebar-wrapper {
-    transform: translateX(-250px);
+    transform: translateX(-100%);
   }
 
   #page-content-wrapper {
     margin-left: 0;
-    width: 100%;
   }
 
   #wrapper.toggled #sidebar-wrapper {
     transform: translateX(0);
+    box-shadow: 0 0 32px rgba(3, 51, 51, 0.35);
   }
-}
 
-/* =============================================
-   4. Top Navbar
-   ============================================= */
-.navbar {
-  border-top: 3px solid var(--doi-primary) !important;
-  background-color: #fff !important;
+  .sidebar-brand {
+    padding-right: 3.25rem; /* room for the close button */
+  }
+
+  /* A sticky bar is a stacking context and would trap the close button
+     under the drawer; while the drawer is open the bar is not sticky. */
+  #wrapper.toggled .topbar {
+    position: static;
+  }
 }
 
 .sidebar-overlay {
   display: none;
   position: fixed;
   inset: 0;
+  z-index: 1025;
   background: rgba(3, 51, 51, 0.5);
-  z-index: 999;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  backdrop-filter: blur(2px);
 }
 
 .sidebar-overlay.active {
   display: block;
-  opacity: 1;
 }
 
-/* Hamburger toggle */
-.sidebar-toggle {
-  width: 40px;
-  height: 40px;
-  padding: 8px;
+/* ---- Top bar ---- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: none;
+  height: var(--topbar-h);
+  padding: 0 var(--space-4);
+  background: var(--doi-surface);
+  border-bottom: 1px solid var(--doi-border);
+}
+
+.topbar__crumbs {
+  flex: 1;
+  min-width: 0;
+}
+
+.topbar__brand {
+  color: var(--doi-teal);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.topbar__end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+}
+
+.topbar__link,
+.topbar-user__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2rem;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
   background: transparent;
-  border: 2px solid var(--doi-primary);
-  border-radius: 8px;
-  cursor: pointer;
+  color: var(--doi-teal);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.12s ease;
+}
+
+.topbar__link:hover,
+.topbar-user__toggle:hover,
+.topbar-user__toggle[aria-expanded="true"] {
+  background: var(--doi-primary-light);
+  color: var(--doi-teal);
+}
+
+.topbar-user__name {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-user .dropdown-menu {
+  min-width: 13rem;
+  padding: var(--space-1) 0;
+  box-shadow: 0 6px 20px rgba(3, 51, 51, 0.12);
+}
+
+.topbar-user .topbar-user__logout {
+  color: var(--doi-danger-text);
+}
+
+/* Menu toggle */
+.sidebar-toggle {
+  position: relative;
+  z-index: 1035;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 5px;
-  transition: border-color 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
-  position: relative;
-  z-index: 1001;
+  gap: 4px;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--doi-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 
-@media (max-width: 768px) {
+.sidebar-toggle:hover {
+  background-color: var(--doi-primary-light);
+  border-color: var(--doi-primary);
+}
+
+.toggle-bar {
+  display: block;
+  width: 16px;
+  height: 2px;
+  background-color: var(--doi-teal);
+  border-radius: 2px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  transform-origin: center;
+}
+
+/* Open drawer (mobile only): the toggle becomes the close button inside the sidebar */
+@media (max-width: 991.98px) {
   .sidebar-toggle.is-open {
     position: fixed;
-    top: 12px;
-    left: 198px;
+    top: calc((var(--topbar-h) - 2rem) / 2);
+    left: calc(var(--sidebar-w) - 2rem - var(--space-3));
     border-color: rgba(255, 255, 255, 0.4);
     background: rgba(255, 255, 255, 0.1);
-  }
-
-  .sidebar-toggle.is-open .toggle-bar {
-    background-color: white;
   }
 
   .sidebar-toggle.is-open:hover {
     background: rgba(255, 255, 255, 0.25);
     border-color: rgba(255, 255, 255, 0.6);
   }
+
+  .sidebar-toggle.is-open:focus-visible {
+    outline-color: var(--doi-primary-hover);
+  }
+
+  .sidebar-toggle.is-open .toggle-bar {
+    background-color: #fff;
+  }
+
+  .sidebar-toggle.is-open .toggle-bar:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .sidebar-toggle.is-open .toggle-bar:nth-child(2) {
+    opacity: 0;
+  }
+
+  .sidebar-toggle.is-open .toggle-bar:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
 }
 
-.sidebar-toggle:hover {
-  background-color: var(--doi-primary);
-}
-
-.sidebar-toggle:hover .toggle-bar {
-  background-color: white;
-}
-
-.sidebar-toggle:focus {
-  outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.4);
-}
-
-.toggle-bar {
-  display: block;
-  width: 20px;
-  height: 2px;
-  background-color: var(--doi-primary);
-  border-radius: 2px;
-  transition: all 0.35s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-  transform-origin: center;
-}
-
-.sidebar-toggle.is-open {
-  background-color: var(--doi-primary);
-  border-color: var(--doi-primary);
-}
-
-.sidebar-toggle.is-open .toggle-bar {
-  background-color: white;
-}
-
-.sidebar-toggle.is-open .toggle-bar:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-
-.sidebar-toggle.is-open .toggle-bar:nth-child(2) {
-  opacity: 0;
-  transform: scaleX(0);
-}
-
-.sidebar-toggle.is-open .toggle-bar:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
-}
-
-.navbar .nav-link {
-  color: var(--doi-teal);
-  font-weight: 500;
-  font-size: 0.9rem;
-}
-
-.navbar .nav-link:hover {
-  color: var(--doi-primary);
-}
-
-.navbar .dropdown-menu {
-  min-width: 200px;
-  border-top: 2px solid var(--doi-primary);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-}
-
-/* =============================================
-   5. Breadcrumbs
-   ============================================= */
+/* ---- Breadcrumbs (inside the top bar) ---- */
 .breadcrumb {
-  background-color: transparent;
+  --bs-breadcrumb-divider-color: var(--doi-slate);
+  --bs-breadcrumb-item-padding-x: 0.375rem;
+  margin: 0;
   padding: 0;
-  margin-bottom: 0;
-  font-size: 0.85rem;
+  background-color: transparent;
+  font-size: 0.8125rem;
 }
 
-.breadcrumb a {
-  color: var(--doi-primary);
+/* In the top bar the trail stays on one line and the current page truncates */
+.topbar-crumbs .breadcrumb {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.topbar-crumbs .breadcrumb-item {
+  flex: none;
+}
+
+.breadcrumb-item a {
+  color: var(--doi-teal-light);
   text-decoration: none;
 }
 
-.breadcrumb a:hover {
-  color: var(--doi-primary-hover);
+.breadcrumb-item a:hover {
+  color: var(--doi-teal);
   text-decoration: underline;
 }
 
 .breadcrumb-item.active {
-  color: var(--doi-text-secondary);
-}
-
-/* =============================================
-   6. Welcome Card
-   ============================================= */
-.welcome-card {
-  background: linear-gradient(135deg, var(--doi-teal) 0%, #0a4a4a 60%, var(--doi-primary) 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  overflow: hidden;
-  position: relative;
-}
-
-.welcome-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(92, 180, 106, 0.12) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.welcome-card .card-body {
-  position: relative;
-  z-index: 1;
-  padding: 1.75rem;
-}
-
-.welcome-card .card-title {
-  color: white;
-  font-weight: 700;
-  font-size: 1.35rem;
-}
-
-.welcome-card .card-text {
-  color: rgba(255, 255, 255, 0.75) !important;
-  font-size: 0.95rem;
-}
-
-.welcome-card strong {
-  color: white;
-}
-
-/* =============================================
-   7. Dashboard Statistics Cards
-   ============================================= */
-.dashboard-stat-card {
-  border-left: 4px solid;
-  border-radius: 10px;
-  transition: all 0.2s ease;
-  border-top: none;
-  border-right: 1px solid var(--doi-border);
-  border-bottom: 1px solid var(--doi-border);
-}
-
-.dashboard-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
-}
-
-.dashboard-stat-card .card-body {
-  padding: 1.5rem;
-}
-
-.dashboard-stat-card .card-body i {
-  font-size: 2rem;
-  opacity: 0.8;
-}
-
-.dashboard-stat-card .display-6 {
   color: var(--doi-teal);
-  font-weight: 700;
-  font-size: 2rem;
+  font-weight: 600;
 }
 
-.dashboard-stat-card p {
-  color: var(--doi-text-secondary) !important;
-  font-size: 0.875rem;
-  font-weight: 500;
+.topbar-crumbs .breadcrumb-item.active {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Card color variants */
-.dashboard-stat-card.stat-publications {
-  border-left-color: var(--doi-primary);
-}
-.dashboard-stat-card.stat-publications i {
-  color: var(--doi-primary) !important;
+.topbar-crumbs {
+  min-width: 0;
+  overflow: hidden;
 }
 
-.dashboard-stat-card.stat-articles {
-  border-left-color: var(--doi-teal);
-}
-.dashboard-stat-card.stat-articles i {
-  color: var(--doi-teal) !important;
+/* Narrow screens: show only the parent and the current page */
+@media (max-width: 767.98px) {
+  .topbar-crumbs .breadcrumb-item:not(:nth-last-child(-n + 2)) {
+    display: none;
+  }
+
+  .topbar-crumbs .breadcrumb-item:nth-last-child(2) {
+    padding-left: 0;
+    flex: 0 1 auto;
+    min-width: 2.5rem;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topbar-crumbs .breadcrumb-item:nth-last-child(2)::before {
+    display: none;
+  }
+
+  .topbar__link-text {
+    display: none;
+  }
 }
 
-.dashboard-stat-card.stat-pending {
-  border-left-color: var(--doi-accent-orange);
-}
-.dashboard-stat-card.stat-pending i {
-  color: var(--doi-accent-orange) !important;
+@media (max-width: 575.98px) {
+  .topbar {
+    gap: var(--space-2);
+    padding: 0 var(--space-3);
+  }
+
+  .topbar-user__name {
+    display: none;
+  }
 }
 
-.dashboard-stat-card.stat-ready {
-  border-left-color: var(--doi-accent-teal);
-}
-.dashboard-stat-card.stat-ready i {
-  color: var(--doi-accent-teal) !important;
-}
-
-.dashboard-stat-card.stat-drafts {
-  border-left-color: #78909C;
-}
-.dashboard-stat-card.stat-drafts i {
-  color: #78909C !important;
-}
-
-.dashboard-stat-card.stat-submitted {
-  border-left-color: var(--doi-accent-teal);
-}
-.dashboard-stat-card.stat-submitted i {
-  color: var(--doi-accent-teal) !important;
+/* Dropdown menus (user menu, row "more" menus) */
+.dropdown-menu {
+  --bs-dropdown-font-size: 0.875rem;
+  --bs-dropdown-border-color: var(--doi-border);
+  --bs-dropdown-border-radius: var(--radius);
+  --bs-dropdown-link-color: var(--doi-teal);
+  --bs-dropdown-link-hover-color: var(--doi-teal);
+  --bs-dropdown-link-hover-bg: var(--doi-primary-light);
+  --bs-dropdown-link-active-color: var(--doi-teal);
+  --bs-dropdown-link-active-bg: var(--tone-success-bg);
+  --bs-dropdown-header-color: var(--doi-teal-light);
 }
 
-.dashboard-stat-card.stat-total {
-  border-left-color: var(--doi-primary);
+/* ---- Flash messages ---- */
+.admin-messages {
+  padding: 0 var(--space-4);
 }
-.dashboard-stat-card.stat-total i {
-  color: var(--doi-primary) !important;
+
+.admin-messages .alert {
+  margin: var(--space-3) 0 0;
+}
+
+.alert {
+  --bs-alert-padding-y: 0.625rem;
+  --bs-alert-padding-x: 0.875rem;
+  --bs-alert-margin-bottom: var(--space-3);
+  --bs-alert-border-radius: var(--radius);
+}
+
+.alert-dismissible .btn-close {
+  padding: 0.8125rem 0.875rem;
+}
+
+.alert-info {
+  background-color: rgba(38, 166, 154, 0.1);
+  border-color: rgba(38, 166, 154, 0.3);
+  color: var(--doi-teal-light);
+}
+
+/* ---- Main & footer ---- */
+.admin-main {
+  flex: 1 0 auto;
+  width: 100%;
+  padding: var(--space-4) var(--space-4) var(--space-5);
+}
+
+@media (min-width: 1200px) {
+  .admin-main {
+    padding-left: var(--space-5);
+    padding-right: var(--space-5);
+  }
+
+  .admin-messages {
+    padding-left: var(--space-5);
+    padding-right: var(--space-5);
+  }
+
+  .topbar {
+    padding-right: var(--space-5);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .admin-main {
+    padding: var(--space-3) var(--space-3) var(--space-4);
+  }
+
+  .admin-messages {
+    padding: 0 var(--space-3);
+  }
+}
+
+.admin-footer {
+  flex: none;
+  padding: var(--space-2) var(--space-4);
+  color: var(--doi-text-secondary);
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+/* ---- Global HTMX progress line ---- */
+.htmx-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.htmx-progress::before {
+  content: '';
+  display: block;
+  width: 35%;
+  height: 100%;
+  background: var(--doi-primary);
+  border-radius: 0 2px 2px 0;
+}
+
+.htmx-progress.is-active {
+  opacity: 1;
+}
+
+.htmx-progress.is-active::before {
+  animation: htmx-progress-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes htmx-progress-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(290%); }
 }
 
 /* =============================================
-   8. Section Cards (Pending, Ready, Drafts)
+   5. Cards
+   Default card is quiet: white header, hairline rule, teal title.
+   .card--primary is the one loud card allowed per page: solid teal header.
+   .section-card (article form) keeps working as a plain card.
    ============================================= */
+.card {
+  --bs-card-border-color: var(--doi-border);
+  --bs-card-border-radius: var(--radius);
+  --bs-card-inner-border-radius: calc(var(--radius) - 1px);
+  --bs-card-spacer-y: 0.875rem;
+  --bs-card-spacer-x: 1rem;
+  --bs-card-cap-padding-y: 0.5625rem;
+  --bs-card-cap-padding-x: 1rem;
+  --bs-card-cap-bg: var(--doi-surface);
+  --bs-card-bg: var(--doi-surface);
+}
+
+.card.shadow-sm,
+.card.shadow {
+  box-shadow: 0 1px 2px rgba(3, 51, 51, 0.05) !important;
+}
+
 .section-card {
-  border-radius: 10px;
-  overflow: hidden;
   border: 1px solid var(--doi-border);
+  border-radius: var(--radius);
+  box-shadow: none;
 }
 
-.section-card .card-header {
+.card-header {
+  border-bottom-color: var(--doi-border);
+}
+
+.card-header h2,
+.card-header h3,
+.card-header h4,
+.card-header h5,
+.card-header h6,
+.card-header .card-title {
+  margin-bottom: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+/* Quiet header: only when the template did not pick a bg-* utility */
+.card-header:not([class*="bg-"]) {
+  color: var(--doi-teal);
+}
+
+.card-header:not([class*="bg-"]) h5 > i,
+.card-header:not([class*="bg-"]) h6 > i,
+.card-header:not([class*="bg-"]) .card-title > i {
+  color: var(--doi-primary-strong);
+}
+
+/* Legacy: header buttons written as bare class="btn btn-sm" (no variant) */
+.card-header .btn[class="btn btn-sm"],
+.card-header .btn[class="btn"] {
+  border-color: var(--doi-border);
+  color: var(--doi-teal);
+}
+
+.card-header .btn[class="btn btn-sm"]:hover,
+.card-header .btn[class="btn"]:hover {
+  background: var(--doi-light);
+  border-color: var(--doi-slate);
+}
+
+/* Legacy: count pill in a card header, written as bare "badge" */
+.section-card .card-header .badge:not([class*="bg-"]) {
+  background: var(--tone-neutral-bg);
+  color: var(--doi-teal);
+}
+
+/* Opt-in loud card */
+.card--primary > .card-header {
   background: var(--doi-teal);
-  color: white;
-  border-bottom: none;
-  padding: 1rem 1.25rem;
+  border-bottom-color: var(--doi-teal);
+  color: #fff;
 }
 
-.section-card .card-header h5 {
-  color: white;
-  font-size: 0.95rem;
-  font-weight: 600;
+.card--primary > .card-header h5,
+.card--primary > .card-header h6,
+.card--primary > .card-header .card-title {
+  color: #fff;
 }
 
-.section-card .card-header i {
-  color: rgba(255, 255, 255, 0.75) !important;
+.card--primary > .card-header i {
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
-.section-card .card-header .badge {
-  background-color: var(--doi-primary) !important;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
+.card--primary > .card-header .btn {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: rgba(255, 255, 255, 0.35);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: rgba(255, 255, 255, 0.15);
+  --bs-btn-hover-border-color: rgba(255, 255, 255, 0.6);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: rgba(255, 255, 255, 0.25);
+  --bs-btn-active-border-color: rgba(255, 255, 255, 0.6);
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
 }
 
-.section-card .card-header .btn {
-  color: rgba(255, 255, 255, 0.8);
-  border-color: rgba(255, 255, 255, 0.3);
-  font-size: 0.8rem;
-  font-weight: 500;
+.card--primary > .card-header .badge:not([class*="bg-"]) {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
 }
 
-.section-card .card-header .btn:hover {
-  color: white;
-  background-color: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.section-card .list-group-item {
+/* List groups inside cards */
+.card .list-group-item {
+  padding: 0.5625rem 1rem;
   border-color: var(--doi-border-subtle);
-  padding: 0.85rem 1.25rem;
 }
 
-.section-card .list-group-item-action:hover {
+.card .list-group-item-action:hover,
+.card .list-group-item-action:focus {
   background-color: var(--doi-primary-light);
 }
 
 .section-card .list-group-item h6 {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: var(--doi-teal);
 }
 
-/* =============================================
-   9. Quick Actions
-   ============================================= */
-.quick-actions {
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid var(--doi-border);
-}
-
-.quick-actions .card-header {
-  background: var(--doi-light);
-  border-bottom: 2px solid var(--doi-primary);
-  padding: 1rem 1.25rem;
-}
-
-.quick-actions .card-header h5 {
-  color: var(--doi-teal);
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.quick-actions .card-header i {
-  color: var(--doi-primary);
-}
-
-.quick-actions .list-group-item-action {
-  border-left: 3px solid transparent;
-  transition: all 0.15s ease;
-  font-size: 0.9rem;
-  padding: 0.75rem 1.25rem;
-}
-
-.quick-actions .list-group-item-action:hover {
-  border-left-color: var(--doi-primary);
-  background-color: var(--doi-primary-light);
-}
-
-.quick-actions .list-group-item-action i {
-  color: var(--doi-primary);
-}
-
-/* =============================================
-   10. Footer
-   ============================================= */
-.footer {
-  background-color: var(--doi-teal) !important;
-  border-top: 2px solid var(--doi-primary) !important;
-}
-
-.footer .text-muted {
-  color: rgba(255, 255, 255, 0.6) !important;
-  font-size: 0.85rem;
-}
-
-/* =============================================
-   11. General UI
-   ============================================= */
-
-/* Cards */
-.card {
-  transition: box-shadow 0.2s ease;
-  border-color: var(--doi-border);
-}
-
-/* Alerts */
-.alert {
-  border-radius: 8px;
-}
-
-/* Tables */
-.table th {
-  font-weight: 600;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  background-color: var(--doi-light);
-  color: var(--doi-teal);
-  border-bottom: 2px solid var(--doi-primary);
-}
-
-.table td {
-  font-size: 0.9rem;
-  vertical-align: middle;
-}
-
-.table-hover tbody tr:hover {
-  background-color: var(--doi-primary-light);
-}
-
-.table a {
-  text-decoration: none;
-}
-
-.table a:hover {
-  text-decoration: underline;
-}
-
-/* Badges */
-.badge {
-  font-weight: 500;
-  font-size: 0.75rem;
-}
-
-.badge.bg-doi-teal {
-  background-color: var(--doi-teal) !important;
-  color: white;
-}
-
-/* Page titles */
-.page-title {
-  color: var(--doi-teal);
-  font-weight: 700;
-}
-
-.page-title i {
-  color: var(--doi-primary);
-}
-
-/* Filter cards */
-.filter-card {
-  border-top: 3px solid var(--doi-primary);
-  border-radius: 10px;
-}
-
-/* Pagination */
-.page-link {
-  color: var(--doi-primary);
-  border-color: var(--doi-border);
-}
-
-.page-link:hover {
-  color: var(--doi-primary-hover);
-  background-color: var(--doi-primary-light);
-}
-
-.page-item.active .page-link {
-  background-color: var(--doi-primary);
-  border-color: var(--doi-primary);
-}
-
-/* Form sections */
-.form-section-divider {
-  border-top: 2px solid var(--doi-primary);
-  margin: 1.5rem 0;
-  opacity: 0.3;
-}
-
-.form-section-title {
-  color: var(--doi-teal);
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.form-section-title i {
-  color: var(--doi-primary);
-}
-
-/* Definition lists */
-.section-card dt {
-  color: var(--doi-teal);
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-.section-card dd {
-  color: var(--doi-text-secondary);
-}
-
-.section-card dd code {
-  background-color: var(--doi-light);
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  color: var(--doi-teal);
-  font-size: 0.85rem;
+/* Legacy vertical rhythm: Bootstrap's mb-4 on cards and header rows is 24px;
+   the kit rhythm between page blocks is 16px. */
+.admin-main .card.mb-4,
+.admin-main > .d-flex.mb-4,
+.admin-main > .row.mb-4 {
+  margin-bottom: var(--space-4) !important;
 }
 
 /* HTMX inline cards */
 #contacts-section .card,
 #notes-section .card {
   border-left: 3px solid var(--doi-primary);
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 
 #contacts-section .card:hover,
@@ -759,84 +1033,205 @@ a:hover {
   background-color: var(--doi-primary-light);
 }
 
-/* Form focus states */
-.form-control:focus,
-.form-select:focus {
-  border-color: var(--doi-primary);
-  box-shadow: 0 0 0 0.2rem rgba(92, 180, 106, 0.2);
+/* Dense two-line list row: title + aside on the first line, meta below.
+   <div class="list-group list-group-flush">
+     <a href="…" class="list-group-item list-group-item-action list-row">
+       <span class="list-row__main">
+         <span class="list-row__title">Naslov</span>
+         <span class="list-row__aside">12.03.2026.</span>
+       </span>
+       <span class="list-row__meta">Publikacija · Ime Prezime</span>
+     </a>
+   </div>
+   Works on <a>, <li> and <div>; long titles and meta are cut with an ellipsis. */
+.list-row {
+  display: block;
+  min-width: 0;
 }
 
-.form-control,
-.form-select {
-  border-color: var(--doi-border);
-  border-radius: 8px;
-  font-size: 0.9rem;
+.list-row__main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.list-row__title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--doi-teal);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-row__aside {
+  flex: none;
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.list-row__meta {
+  display: block;
+  overflow: hidden;
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* =============================================
-   12. Admin Cards & Data Display
+   6. Tables
+   Every .table in the dashboard is compact (row ~38px text / ~45px with
+   row actions). Sentence-case headers. Links are teal.
+     .num          right-aligned numeric column (th and td)
+     .mono-id      DOI / ISSN / ISBN / ORCID: tabular digits, no wrapping
+     .col-actions  the actions column: shrinks to content, right-aligned
+     .cell-title   main cell of a row (object title)
+     .cell-meta    secondary line / muted cell
+     .table--dense tighter rows for nested tables inside detail cards
    ============================================= */
-
-.admin-card {
-  border: 1px solid var(--doi-border);
-  border-radius: 10px;
-  box-shadow: none;
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--doi-border-subtle);
+  --bs-table-hover-bg: var(--doi-primary-light);
+  --bs-table-striped-bg: var(--doi-light);
+  margin-bottom: var(--space-4);
 }
 
-/* Admin definition list */
-.admin-dl {
-  display: flex;
-  flex-direction: column;
+.table > :not(caption) > * > * {
+  padding: 0.5rem 0.75rem;
 }
 
-.admin-dl-row {
-  display: flex;
-  padding: 0.6rem 0;
-  border-bottom: 1px solid var(--doi-border-subtle);
-}
-
-.admin-dl-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.admin-dl-row:first-child {
-  padding-top: 0;
-}
-
-.admin-dl-row dt {
-  font-weight: 600;
-  color: var(--doi-teal);
-  min-width: 160px;
-  flex-shrink: 0;
-  font-size: 0.875rem;
-}
-
-.admin-dl-row dd {
-  color: var(--doi-text-secondary);
-  margin-bottom: 0;
-  font-size: 0.875rem;
-  word-break: break-word;
-}
-
-.admin-dl-row dd a {
-  color: var(--doi-primary);
-}
-
-.admin-dl-row dd a:hover {
-  color: var(--doi-primary-hover);
-}
-
-/* Admin code inline */
-.admin-code {
+.table th {
   background-color: var(--doi-light);
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  color: var(--doi-teal);
-  font-size: 0.85rem;
+  border-bottom: 1px solid var(--doi-border);
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
-/* Admin table helpers */
+.table td {
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.table > tbody > tr:last-child > * {
+  border-bottom-width: 0;
+}
+
+.table a:not(.btn):not(.btn-icon) {
+  color: var(--doi-teal);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.table a:not(.btn):not(.btn-icon):hover {
+  color: var(--doi-teal-light);
+  text-decoration: underline;
+}
+
+/* Table as the body of a card: flush, aligned with the card header */
+.card > .table-responsive > .table,
+.card > .table,
+.card-body.p-0 > .table-responsive > .table,
+.card-body.p-0 > .table {
+  margin-bottom: 0;
+}
+
+.card > .table-responsive > .table > * > tr > :first-child,
+.card > .table > * > tr > :first-child,
+.card-body.p-0 > .table-responsive > .table > * > tr > :first-child,
+.card-body.p-0 > .table > * > tr > :first-child {
+  padding-left: 1rem;
+}
+
+.card > .table-responsive > .table > * > tr > :last-child,
+.card > .table > * > tr > :last-child,
+.card-body.p-0 > .table-responsive > .table > * > tr > :last-child,
+.card-body.p-0 > .table > * > tr > :last-child {
+  padding-right: 1rem;
+}
+
+.card > .table-responsive:first-child > .table > thead > tr > th:first-child,
+.card-body.p-0:first-child > .table-responsive:first-child > .table > thead > tr > th:first-child {
+  border-top-left-radius: calc(var(--radius) - 1px);
+}
+
+.card > .table-responsive:first-child > .table > thead > tr > th:last-child,
+.card-body.p-0:first-child > .table-responsive:first-child > .table > thead > tr > th:last-child {
+  border-top-right-radius: calc(var(--radius) - 1px);
+}
+
+/* Keep row hover inside the card's rounded bottom corners */
+.card > .table-responsive:last-child,
+.card-body.p-0:last-child > .table-responsive:last-child {
+  border-bottom-left-radius: calc(var(--radius) - 1px);
+  border-bottom-right-radius: calc(var(--radius) - 1px);
+}
+
+.table--dense > :not(caption) > * > *,
+.table-sm > :not(caption) > * > * {
+  padding: 0.3125rem 0.625rem;
+}
+
+.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.mono-id {
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.cell-title {
+  color: var(--doi-teal);
+  font-weight: 600;
+}
+
+.cell-meta {
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+}
+
+.col-actions {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Row actions: fixed 28px targets so every row has the same height */
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  flex-wrap: nowrap;
+  vertical-align: middle;
+}
+
+.row-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  padding: 0 0.375rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .admin-table-logo {
   height: 28px;
   width: auto;
@@ -846,118 +1241,945 @@ a:hover {
 .admin-table-icon {
   width: 28px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--doi-primary-light);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--doi-primary);
+  color: var(--doi-primary-strong);
   font-size: 0.8rem;
 }
 
-.admin-actions {
-  display: flex;
-  gap: 0.375rem;
-  justify-content: flex-end;
-}
-
-.admin-actions .btn {
-  border-radius: 6px;
-}
-
-/* Admin empty state */
-.admin-empty-icon {
-  font-size: 3rem;
-  color: var(--doi-text-secondary);
-  opacity: 0.3;
-}
-
-/* Admin logo previews */
-.admin-logo-preview {
-  max-height: 200px;
-  border-radius: 8px;
-}
-
 .admin-table-cover {
-  max-height: 40px;
-  max-width: 40px;
+  max-height: 32px;
+  max-width: 32px;
   border-radius: 4px;
   border: 1px solid var(--doi-border);
 }
 
-.admin-logo-thumb {
-  max-height: 80px;
-  border-radius: 6px;
-  border: 1px solid var(--doi-border);
-  padding: 0.25rem;
+/* =============================================
+   7. Badges
+   .status-badge is the kit badge (components/_status_badge.html).
+   Legacy Bootstrap .badge.bg-* are re-toned to the same soft style so they
+   pass contrast (white on #5CB46A does not).
+   Tones: neutral / pending / success / danger / info
+   ============================================= */
+.status-badge,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
-/* Admin form labels */
-.admin-form-label {
+.status-badge {
+  background: var(--tone-neutral-bg);
+  color: var(--doi-teal);
+}
+
+.status-badge__dot {
+  flex: none;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--tone-neutral-dot);
+}
+
+.status-badge > .bi {
+  font-size: 0.8125rem;
+  color: var(--tone-neutral-dot);
+}
+
+.status-badge--pending { background: var(--tone-pending-bg); }
+.status-badge--pending .status-badge__dot { background: var(--tone-pending-dot); }
+.status-badge--pending > .bi { color: var(--doi-teal); }
+
+.status-badge--success { background: var(--tone-success-bg); }
+.status-badge--success .status-badge__dot { background: var(--tone-success-dot); }
+.status-badge--success > .bi { color: var(--doi-teal); }
+
+.status-badge--info { background: var(--tone-info-bg); }
+.status-badge--info .status-badge__dot { background: var(--tone-info-dot); }
+.status-badge--info > .bi { color: var(--doi-teal-light); }
+
+.status-badge--danger { background: var(--tone-danger-bg); color: var(--doi-danger-text); }
+.status-badge--danger .status-badge__dot { background: var(--tone-danger-dot); }
+.status-badge--danger > .bi { color: var(--doi-danger-text); }
+
+/* Legacy Bootstrap badges */
+.badge.bg-secondary,
+.badge.bg-light,
+.badge.text-bg-secondary,
+.badge.text-bg-light {
+  background-color: var(--tone-neutral-bg) !important;
+  color: var(--doi-teal) !important;
+}
+
+.badge.bg-primary,
+.badge.bg-success,
+.badge.text-bg-primary,
+.badge.text-bg-success {
+  background-color: var(--tone-success-bg) !important;
+  color: var(--doi-teal) !important;
+}
+
+.badge.bg-info,
+.badge.text-bg-info {
+  background-color: var(--tone-info-bg) !important;
+  color: var(--doi-teal) !important;
+}
+
+.badge.bg-warning,
+.badge.text-bg-warning {
+  background-color: var(--tone-pending-bg) !important;
+  color: var(--doi-teal) !important;
+}
+
+.badge.bg-danger,
+.badge.text-bg-danger {
+  background-color: var(--tone-danger-bg) !important;
+  color: var(--doi-danger-text) !important;
+}
+
+.badge.bg-dark,
+.badge.text-bg-dark {
+  background-color: var(--doi-teal) !important;
+  color: #fff !important;
+}
+
+/* Chip: a plain label for descriptive values that are not a state
+   (keywords, contributor role, sequence, relation type, language code).
+   State stays a .status-badge. Square corners and a hairline keep the two apart.
+   <ul class="chip-list" aria-label="Ključne reči"><li class="chip">DOI</li></ul>
+   <span class="chip">Autor</span> <span class="chip chip--accent">Korespondentan</span> */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: 0.0625rem 0.4375rem;
+  background: var(--doi-light);
+  border: 1px solid var(--doi-border);
+  border-radius: var(--radius-sm);
+  color: var(--doi-teal);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+  vertical-align: middle;
+}
+
+.chip--accent {
+  background: var(--tone-info-bg);
+  border-color: transparent;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Remove button inside an editable chip (keyword inputs) */
+.chip .btn-close {
+  width: 0.5rem;
+  height: 0.5rem;
+  padding: 0.125rem;
+  background-size: 0.5rem;
+}
+
+/* =============================================
+   8. Forms
+   ============================================= */
+.form-control,
+.form-select {
+  min-height: var(--control-h);
+  border-color: var(--doi-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+}
+
+.form-control {
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+}
+
+.form-select {
+  padding-left: 0.625rem;
+}
+
+.form-control-sm,
+.form-select-sm {
+  min-height: var(--control-h-sm);
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+  font-size: 0.8125rem;
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: var(--doi-teal-light);
+  box-shadow: 0 0 0 0.2rem var(--doi-primary-ring);
+}
+
+.form-check-input:checked {
+  background-color: var(--doi-primary-strong);
+  border-color: var(--doi-primary-strong);
+}
+
+.form-label,
+.field__label {
+  display: inline-block;
+  margin-bottom: var(--space-1);
+  color: var(--doi-teal);
+  font-size: 0.8125rem;
   font-weight: 600;
+}
+
+legend.field__label {
+  float: none;
+  width: auto;
+}
+
+.form-text,
+.field__help {
+  margin-top: var(--space-1);
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+}
+
+.invalid-feedback,
+.field__error {
+  margin-top: var(--space-1);
+  font-size: 0.8125rem;
+}
+
+/* components/_field.html */
+.field {
+  min-width: 0;
+}
+
+.field:not([class*="col"]) {
+  margin-bottom: var(--space-3);
+}
+
+.field__req {
+  margin-left: 0.125rem;
+  color: var(--doi-danger);
+}
+
+.field fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.field--check .form-check {
+  margin-bottom: 0;
+}
+
+.field--check .form-check-label {
+  color: var(--doi-teal);
+  font-weight: 500;
+}
+
+.progress {
+  --bs-progress-bar-bg: var(--doi-primary-strong);
+  --bs-progress-bg: var(--doi-border);
+  --bs-progress-height: 0.5rem;
+}
+
+/* Form sections */
+.form-section-divider {
+  margin: var(--space-4) 0;
+  border-top: 1px solid var(--doi-border);
+  opacity: 1;
+}
+
+.form-section-title {
+  margin-bottom: var(--space-3);
+  color: var(--doi-teal);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.form-section-title i {
+  color: var(--doi-primary-strong);
+}
+
+/* Form footer: secondary actions left (.form-actions__start), primary right.
+   .form-actions--sticky keeps it in view on long forms. */
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--doi-border);
+}
+
+.form-actions__start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-right: auto;
+}
+
+.form-actions--sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  margin-left: calc(var(--bs-card-spacer-x, 1rem) * -1);
+  margin-right: calc(var(--bs-card-spacer-x, 1rem) * -1);
+  margin-bottom: calc(var(--bs-card-spacer-y, 0.875rem) * -1);
+  padding: var(--space-3) var(--bs-card-spacer-x, 1rem);
+  background: var(--doi-surface);
+  border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);
+  box-shadow: 0 -4px 12px rgba(3, 51, 51, 0.06);
+}
+
+/* Inline sub-form: an HTMX add/edit form that opens inside a card
+   (author, contributor, contact, funding, relation, chapter).
+   Not a card: a tinted panel, so it never reads as a card in a card.
+   <section class="inline-form" aria-labelledby="x-title">
+     <div class="inline-form__header">
+       <h3 class="inline-form__title" id="x-title">Dodaj autora</h3>
+       <button type="button" class="btn-icon" title="Zatvori" aria-label="Zatvori">…</button>
+     </div>
+     <form hx-post="…"> … <div class="form-actions">…</div></form>
+   </section> */
+.inline-form {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--doi-light);
+  border: 1px solid var(--doi-border);
+  border-left: 3px solid var(--doi-primary-strong);
+  border-radius: var(--radius-sm);
+}
+
+.inline-form__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.inline-form__title {
+  margin: 0;
+  color: var(--doi-teal);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.inline-form__title i {
+  color: var(--doi-primary-strong);
+}
+
+.inline-form .form-actions {
+  margin-top: var(--space-3);
+}
+
+.inline-form > :last-child,
+.inline-form form > :last-child {
+  margin-bottom: 0;
+}
+
+/* =============================================
+   9. Page header (components/_page_header.html, {% pageheader %})
+   ============================================= */
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.page-header__main {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.page-header__titlerow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  min-height: var(--control-h);
+}
+
+.page-header__title,
+.admin-main h1.h3 {
+  margin: 0;
+  color: var(--doi-teal);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+.page-header__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.page-header__title > i {
+  flex: none;
+  color: var(--doi-primary-strong);
+  font-size: 1.125rem;
+}
+
+.page-header__meta {
+  margin: 0.125rem 0 0;
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 1 auto;
+}
+
+/* =============================================
+   10. Filter bar (components/_filter_bar.html, {% filterbar %})
+   ============================================= */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.filter-bar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.filter-bar .form-control,
+.filter-bar .form-select {
+  width: auto;
+  min-width: 9rem;
+  max-width: 16rem;
+  flex: 0 1 auto;
+  background-color: var(--doi-surface);
+}
+
+.filter-bar__search {
+  position: relative;
+  flex: 1 1 14rem;
+  max-width: 22rem;
+  min-width: 10rem;
+}
+
+.filter-bar__search > .bi {
+  position: absolute;
+  left: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--doi-slate);
+  pointer-events: none;
+}
+
+.filter-bar .filter-bar__search > .form-control {
+  width: 100%;
+  max-width: none;
+  padding-left: 2rem;
+}
+
+.filter-bar__field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.filter-bar__reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 var(--space-1);
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.filter-bar__reset:hover {
+  color: var(--doi-teal);
+  text-decoration: underline;
+}
+
+/* Active filter that has no control of its own (e.g. "Samo moji" set by a
+   link): a removable token. Pair it with a hidden input so the filter
+   survives search and select changes.
+   <a href="…without the param…" class="filter-bar__token">Samo moji<i class="bi bi-x-lg"></i></a> */
+.filter-bar__token {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: var(--control-h-sm);
+  padding: 0 var(--space-2);
+  background: var(--tone-info-bg);
+  border-radius: var(--radius-sm);
+  color: var(--doi-teal);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.filter-bar__token > .bi {
+  font-size: 0.6875rem;
+}
+
+.filter-bar__token:hover {
+  background: var(--tone-neutral-bg);
+  color: var(--doi-teal);
+}
+
+.filter-bar__count {
+  flex: none;
+  margin: 0;
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.filter-bar__count strong {
+  color: var(--doi-teal);
+}
+
+@media (max-width: 575.98px) {
+  .filter-bar .form-control,
+  .filter-bar .form-select,
+  .filter-bar__search {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+}
+
+/* Section tabs: switch between views of the same list or page.
+   Links, not a JS tab widget: the current one carries aria-current="page".
+   <nav aria-label="…"><ul class="section-tabs">
+     <li><a class="section-tabs__link" aria-current="page" href="…">Sve</a></li>
+     <li><a class="section-tabs__link" href="…">Članci <span class="badge bg-secondary">3</span></a></li>
+   </ul></nav>
+   Scrolls sideways on narrow screens instead of wrapping. */
+.section-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  box-shadow: inset 0 -1px 0 var(--doi-border);
+}
+
+.section-tabs > li {
+  flex: none;
+}
+
+.section-tabs__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid transparent;
+  color: var(--doi-teal-light);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.section-tabs__link:hover {
+  color: var(--doi-teal);
+  border-bottom-color: var(--doi-slate);
+}
+
+.section-tabs__link:focus-visible {
+  outline-offset: -2px;
+}
+
+.section-tabs__link[aria-current="page"] {
+  color: var(--doi-teal);
+  font-weight: 600;
+  border-bottom-color: var(--doi-primary-strong);
+}
+
+/* =============================================
+   11. Pagination (components/_pagination.html)
+   ============================================= */
+.list-pagination {
+  justify-content: space-between !important;
+  gap: var(--space-2) var(--space-4) !important;
+  margin-top: var(--space-3);
+}
+
+.card > .list-pagination,
+.card-body.p-0 > .list-pagination {
+  margin-top: 0;
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--doi-border);
+}
+
+.list-pagination__summary {
+  color: var(--doi-teal-light) !important;
+  font-size: 0.8125rem;
+}
+
+.pagination {
+  --bs-pagination-padding-x: 0.5rem;
+  --bs-pagination-padding-y: 0.1875rem;
+  --bs-pagination-font-size: 0.8125rem;
+  --bs-pagination-color: var(--doi-teal);
+  --bs-pagination-bg: var(--doi-surface);
+  --bs-pagination-border-color: var(--doi-border);
+  --bs-pagination-border-radius: var(--radius-sm);
+  --bs-pagination-hover-color: var(--doi-teal);
+  --bs-pagination-hover-bg: var(--doi-primary-light);
+  --bs-pagination-hover-border-color: var(--doi-border);
+  --bs-pagination-focus-color: var(--doi-teal);
+  --bs-pagination-focus-bg: var(--doi-primary-light);
+  --bs-pagination-focus-box-shadow: var(--focus-ring);
+  --bs-pagination-active-color: #fff;
+  --bs-pagination-active-bg: var(--doi-teal);
+  --bs-pagination-active-border-color: var(--doi-teal);
+  --bs-pagination-disabled-color: var(--doi-slate);
+  --bs-pagination-disabled-bg: var(--doi-surface);
+  --bs-pagination-disabled-border-color: var(--doi-border);
+}
+
+.page-link {
+  min-width: var(--control-h-sm);
+  text-align: center;
+  font-weight: 500;
+}
+
+.page-link:focus {
+  z-index: 3;
+}
+
+/* =============================================
+   12. Workflow bar & status strip
+   ============================================= */
+
+/* Strip under the page header: where the object is in its workflow (left)
+   and what to do next (right; one primary + secondary actions). */
+.workflow-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+  background: var(--doi-surface);
+  border: 1px solid var(--doi-border);
+  border-radius: var(--radius);
+}
+
+.workflow-bar__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  flex: 1 1 14rem;
+  min-width: 0;
   color: var(--doi-teal);
   font-size: 0.875rem;
 }
 
-/* Content area */
-main.container-fluid {
-  min-height: 60vh;
-}
-
-/* Responsive tables */
-@media (max-width: 768px) {
-  .table-responsive-stack tr {
-    display: flex;
-    flex-direction: column;
-    border-bottom: 1px solid #dee2e6;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-  }
-
-  .table-responsive-stack td {
-    border: none;
-    padding: 0.25rem 0;
-  }
-
-  .table-responsive-stack td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    margin-right: 0.5rem;
-  }
-}
-
-/* Double-space warning */
-.double-space-warning {
-  color: var(--warning-text, #856404);
-  background-color: var(--warning-bg, #fff3cd);
-  border: 1px solid var(--warning-border, #ffc107);
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
-  margin-top: 0.25rem;
-  font-size: 0.875rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.double-space-warning button {
-  background: none;
-  border: 1px solid var(--warning-border, #ffc107);
-  border-radius: 4px;
-  padding: 0.125rem 0.5rem;
-  cursor: pointer;
+.workflow-bar__hint {
+  color: var(--doi-teal-light);
   font-size: 0.8125rem;
+}
+
+.workflow-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 1 auto;
+}
+
+.workflow-bar__actions form {
+  display: contents;
+}
+
+/* One compact notice instead of a stack of alerts.
+   Tones: (default) neutral, --info, --success, --pending, --danger */
+.status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--tone-neutral-bg);
+  border-radius: var(--radius-sm);
+  color: var(--doi-teal);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.status-strip__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.status-strip__item > .bi {
+  flex: none;
+  align-self: center;
+}
+
+.status-strip__action {
+  margin-left: auto;
   color: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-strip a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.status-strip--info { background: var(--tone-info-bg); }
+.status-strip--success { background: var(--tone-success-bg); }
+.status-strip--pending { background: var(--tone-pending-bg); }
+.status-strip--danger { background: var(--tone-danger-bg); color: var(--doi-danger-text); }
+
+/* =============================================
+   13. Definition grid, inline code, media helpers
+   ============================================= */
+
+/* <dl class="admin-dl"> of <div class="admin-dl-row"><dt><dd></div>.
+   One column in narrow containers, two when the container is wide enough
+   (>= ~46rem). .admin-dl--single forces one column; a row with
+   .admin-dl-row--wide spans the full width. */
+.admin-dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+  column-gap: var(--space-5);
+  margin: 0;
+  overflow: hidden;
+}
+
+.admin-dl--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-dl-row {
+  display: flex;
+  gap: var(--space-3);
+  min-width: 0;
+  /* the top rule of the first row in each column is clipped by the grid */
+  margin-top: -1px;
+  padding: 0.4375rem 0;
+  border-top: 1px solid var(--doi-border-subtle);
+}
+
+.admin-dl-row--wide {
+  grid-column: 1 / -1;
+}
+
+.admin-dl-row dt {
+  flex: 0 0 9.5rem;
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.admin-dl-row dd {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+  color: var(--doi-text);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 479.98px) {
+  .admin-dl-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .admin-dl-row dt {
+    flex: none;
+  }
+}
+
+/* Legacy Bootstrap <dl class="row"> inside cards */
+.section-card dt {
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.section-card dd {
+  color: var(--doi-text);
+}
+
+.admin-code,
+.section-card dd code {
+  padding: 0.0625rem 0.375rem;
+  border-radius: 4px;
+  background-color: var(--doi-light);
+  border: 1px solid var(--doi-border-subtle);
+  color: var(--doi-teal);
+  font-size: 0.8125rem;
+}
+
+.admin-logo-preview {
+  max-height: 200px;
+  border-radius: var(--radius);
+}
+
+.admin-logo-thumb {
+  max-height: 80px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--doi-border);
+  padding: 0.25rem;
 }
 
 /* =============================================
-   Wizard Stepper
+   14. Empty state (components/_empty_state.html)
+   ============================================= */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+}
+
+.empty-state--compact {
+  padding: var(--space-4);
+}
+
+.empty-state__icon {
+  color: var(--doi-slate);
+  font-size: 2rem;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.empty-state__text {
+  max-width: 32rem;
+  margin: 0;
+  color: var(--doi-teal-light);
+}
+
+/* =============================================
+   15. Dashboard home
+   ============================================= */
+
+/* Stat tiles: icon left, number + label right */
+.dashboard-stat-card {
+  border: 1px solid var(--doi-border);
+  border-left: 3px solid var(--stat-accent, var(--doi-primary));
+  border-radius: var(--radius);
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+a:hover > .dashboard-stat-card,
+a:focus-visible > .dashboard-stat-card {
+  border-color: var(--doi-slate);
+  border-left-color: var(--stat-accent, var(--doi-primary));
+  background-color: var(--doi-light);
+}
+
+.dashboard-stat-card .card-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: 0.75rem 1rem;
+  text-align: left !important;
+}
+
+.dashboard-stat-card .card-body i {
+  grid-row: span 2;
+  margin: 0 !important;
+  color: var(--stat-accent, var(--doi-primary)) !important;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.dashboard-stat-card .display-6 {
+  margin: 0;
+  color: var(--doi-teal);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.dashboard-stat-card p {
+  margin: 0;
+  color: var(--doi-teal-light) !important;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.dashboard-stat-card.stat-publications,
+.dashboard-stat-card.stat-total { --stat-accent: var(--doi-primary-strong); }
+.dashboard-stat-card.stat-articles { --stat-accent: var(--doi-teal); }
+.dashboard-stat-card.stat-pending { --stat-accent: var(--doi-accent-orange); }
+.dashboard-stat-card.stat-ready,
+.dashboard-stat-card.stat-submitted { --stat-accent: var(--doi-accent-teal); }
+.dashboard-stat-card.stat-drafts { --stat-accent: var(--doi-slate); }
+
+/* =============================================
+   16. Wizard stepper
    ============================================= */
 .wizard-stepper {
   display: flex;
   justify-content: center;
   gap: 0;
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-5);
 }
+
 .wizard-step {
   display: flex;
   flex-direction: column;
@@ -965,55 +2187,123 @@ main.container-fluid {
   position: relative;
   flex: 1;
 }
+
 .wizard-step a {
   display: flex;
   flex-direction: column;
   align-items: center;
   color: inherit;
+  text-decoration: none;
 }
+
 .wizard-step-icon {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
-  border: 2px solid var(--doi-border, #dee2e6);
-  background: white;
-  color: var(--doi-text-secondary, #728383);
+  font-size: 1.125rem;
+  border: 2px solid var(--doi-border);
+  background: var(--doi-surface);
+  color: var(--doi-slate);
   z-index: 1;
 }
+
 .wizard-step.completed .wizard-step-icon {
-  background: var(--doi-primary, #5CB46A);
-  border-color: var(--doi-primary, #5CB46A);
-  color: white;
+  background: var(--doi-primary-strong);
+  border-color: var(--doi-primary-strong);
+  color: #fff;
 }
+
 .wizard-step.active .wizard-step-icon {
-  border-color: var(--doi-primary, #5CB46A);
-  color: var(--doi-primary, #5CB46A);
-  box-shadow: 0 0 0 4px rgba(92, 180, 106, 0.15);
+  border-color: var(--doi-primary-strong);
+  color: var(--doi-teal);
+  box-shadow: 0 0 0 4px var(--doi-primary-light);
 }
+
 .wizard-step.disabled .wizard-step-icon {
   opacity: 0.5;
 }
+
 .wizard-step-label {
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
+  margin-top: var(--space-1);
+  color: var(--doi-teal);
+  font-size: 0.8125rem;
   font-weight: 500;
+  text-align: center;
 }
+
 .wizard-step-connector {
   position: absolute;
-  top: 24px;
+  top: 20px;
   left: 50%;
   width: 100%;
   height: 2px;
-  background: var(--doi-border, #dee2e6);
+  background: var(--doi-border);
   z-index: 0;
 }
+
 .wizard-step.completed .wizard-step-connector {
-  background: var(--doi-primary, #5CB46A);
+  background: var(--doi-primary-strong);
 }
+
 .wizard-step:last-child .wizard-step-connector {
   display: none;
+}
+
+/* =============================================
+   17. Misc
+   ============================================= */
+
+/* Drag handles of sortable lists (.drag-handle, .funding-drag-handle,
+   .relation-drag-handle, .keyword-drag-handle on the edit pages) */
+[class*="drag-handle"] {
+  cursor: grab;
+}
+
+[class*="drag-handle"]:active {
+  cursor: grabbing;
+}
+
+/* Double-space warning (inserted by project.js) */
+.double-space-warning {
+  color: var(--warning-text);
+  background-color: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+  padding: 0.375rem 0.625rem;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.double-space-warning button {
+  background: none;
+  border: 1px solid var(--warning-border);
+  border-radius: 4px;
+  padding: 0.125rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: inherit;
+}
+
+/* Motion only as feedback, and not at all when the user asked for less */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .htmx-progress.is-active::before {
+    width: 100%;
+    animation: none;
+    transform: none;
+  }
 }

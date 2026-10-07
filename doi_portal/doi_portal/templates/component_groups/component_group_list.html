@@ -1,65 +1,65 @@
 {% extends "admin_base.html" %}
+{% load ui_tags %}
 
 {% block title %}Komponente - DOI Portal{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h1 class="h3 mb-0">
-    <i class="bi bi-puzzle me-2"></i>Grupe komponenti
-  </h1>
-  <a href="{% url 'components:group-create' %}" class="btn btn-primary">
-    <i class="bi bi-plus-circle me-1"></i>Nova grupa
-  </a>
-</div>
+{% pageheader title="Grupe komponenti" icon="bi-puzzle" %}
+  <a href="{% url 'components:group-create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova grupa</a>
+{% endpageheader %}
 
-{% if component_groups %}
+{% url 'components:group-list' as list_url %}
+{% filterbar reset_url=list_url active=has_filters count=page_obj.paginator.count count_forms="grupa,grupe,grupa" autosubmit=True %}
+  <div class="filter-bar__search">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <input type="search" name="q" value="{{ search_query }}" class="form-control" placeholder="Pretraži naslov ili nadređeni DOI…" aria-label="Pretraga grupa komponenti">
+  </div>
+  <select name="status" class="form-select" aria-label="Status">
+    <option value="">Svi statusi</option>
+    {% for value, label in status_choices %}
+    <option value="{{ value }}"{% if current_status == value %} selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+{% endfilterbar %}
+
 <div class="card">
+  {% if component_groups %}
   <div class="table-responsive">
-    <table class="table table-hover mb-0">
+    <table class="table table-hover">
       <thead>
         <tr>
-          <th>Parent DOI</th>
+          <th>Nadređeni DOI</th>
           <th>Naslov</th>
-          <th>Komponente</th>
           <th>Izdavač</th>
-          <th>Kreirano</th>
+          <th class="num">Komponente</th>
           <th>Status</th>
-          <th>Akcije</th>
+          <th>Kreirano</th>
+          <th class="col-actions"><span class="visually-hidden">Akcije</span></th>
         </tr>
       </thead>
       <tbody>
         {% for group in component_groups %}
         <tr>
-          <td>
-            <a href="{% url 'components:group-detail' group.pk %}">
-              <code>{{ group.parent_doi }}</code>
-            </a>
-          </td>
-          <td>{{ group.title|default:"-" }}</td>
-          <td><span class="badge bg-secondary">{{ group.component_count }}</span></td>
-          <td>{{ group.publisher.name }}</td>
-          <td>{{ group.created_at|date:"d.m.Y" }}</td>
+          <td><a href="{% url 'components:group-detail' group.pk %}" class="cell-title mono-id">{{ group.parent_doi }}</a></td>
+          <td>{{ group.title|default:"—" }}</td>
+          <td class="cell-meta">{{ group.publisher.name }}</td>
+          <td class="num">{{ group.component_count }}</td>
           <td>
             {% if group.is_crossref_deposited %}
-            <span class="badge bg-success">Deponovano</span>
+            {% include "components/_status_badge.html" with label="Deponovano" tone="success" only %}
             {% elif group.xsd_valid %}
-            <span class="badge bg-info">XML validan</span>
+            {% include "components/_status_badge.html" with label="XML validan" tone="info" only %}
             {% elif group.crossref_xml %}
-            <span class="badge bg-warning">XML generisan</span>
+            {% include "components/_status_badge.html" with label="XML generisan" tone="pending" only %}
             {% else %}
-            <span class="badge bg-secondary">Novo</span>
+            {% include "components/_status_badge.html" with label="Novo" tone="neutral" only %}
             {% endif %}
           </td>
-          <td>
-            <div class="btn-group btn-group-sm">
-              <a href="{% url 'components:group-detail' group.pk %}"
-                 class="btn btn-outline-primary" title="Detalji">
-                <i class="bi bi-eye"></i>
-              </a>
-              <a href="{% url 'crossref:component-group-deposit' group.pk %}"
-                 class="btn btn-outline-success" title="Crossref Deposit">
-                <i class="bi bi-cloud-upload"></i>
-              </a>
+          <td class="cell-meta">{{ group.created_at|date:"d.m.Y." }}</td>
+          <td class="col-actions">
+            <div class="row-actions">
+              <a href="{% url 'components:group-update' group.pk %}" class="btn-icon" title="Izmeni" aria-label="Izmeni grupu {{ group.parent_doi }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+              <a href="{% url 'crossref:component-group-deposit' group.pk %}" class="btn-icon" title="Crossref deponovanje" aria-label="Crossref deponovanje grupe {{ group.parent_doi }}"><i class="bi bi-cloud-upload" aria-hidden="true"></i></a>
             </div>
           </td>
         </tr>
@@ -67,38 +67,12 @@
       </tbody>
     </table>
   </div>
+  {% include "components/_pagination.html" %}
+  {% elif has_filters %}
+  {% include "components/_empty_state.html" with icon="bi-funnel" text="Nema grupa komponenti koje odgovaraju filterima." action_url=list_url action_label="Poništi filtere" only %}
+  {% else %}
+  {% url 'components:group-create' as create_url %}
+  {% include "components/_empty_state.html" with icon="bi-puzzle" text="Nema grupa komponenti. Grupa služi za registraciju DOI-jeva dodatnih materijala." action_url=create_url action_label="Dodaj prvu grupu" action_icon="bi-plus-lg" action_primary=True only %}
+  {% endif %}
 </div>
-
-{% if is_paginated %}
-<nav class="mt-4">
-  <ul class="pagination justify-content-center">
-    {% if page_obj.has_previous %}
-    <li class="page-item">
-      <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Prethodna</a>
-    </li>
-    {% endif %}
-    <li class="page-item active">
-      <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-    </li>
-    {% if page_obj.has_next %}
-    <li class="page-item">
-      <a class="page-link" href="?page={{ page_obj.next_page_number }}">Sledeća</a>
-    </li>
-    {% endif %}
-  </ul>
-</nav>
-{% endif %}
-
-{% else %}
-<div class="card">
-  <div class="card-body text-center py-5">
-    <i class="bi bi-puzzle display-4 text-muted"></i>
-    <h5 class="mt-3">Nema grupa komponenti</h5>
-    <p class="text-muted">Kreirajte prvu grupu komponenti za registraciju DOI-jeva za supplementary materijale.</p>
-    <a href="{% url 'components:group-create' %}" class="btn btn-primary">
-      <i class="bi bi-plus-circle me-1"></i>Kreiraj grupu
-    </a>
-  </div>
-</div>
-{% endif %}
 {% endblock %}

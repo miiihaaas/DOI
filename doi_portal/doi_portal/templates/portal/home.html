@@ -40,31 +40,31 @@
     <span class="gradient-accent-bar d-block mt-2"></span>
   </div>
   <div class="type-blocks">
-    <a href="{% url 'portal-publications:publication-list' %}?type=JOURNAL" class="type-block" data-reveal>
-      <div class="type-block-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></div>
-      <span class="type-block-count" data-counter data-count-to="{{ type_counts.journals }}">{{ type_counts.journals }}</span>
-      <p class="type-block-name">Časopisi</p>
-    </a>
-    <a href="{% url 'portal-publications:publication-list' %}?type=CONFERENCE" class="type-block" data-reveal data-reveal-delay="1">
-      <div class="type-block-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
-      <span class="type-block-count" data-counter data-count-to="{{ type_counts.conferences }}">{{ type_counts.conferences }}</span>
-      <p class="type-block-name">Zbornici</p>
-    </a>
-    <a href="{% url 'portal-monographs:monograph-list' %}" class="type-block" data-reveal data-reveal-delay="2">
-      <div class="type-block-icon"><i class="bi bi-book" aria-hidden="true"></i></div>
-      <span class="type-block-count" data-counter data-count-to="{{ type_counts.monographs }}">{{ type_counts.monographs }}</span>
-      <p class="type-block-name">Monografije</p>
-    </a>
-    <a href="{% url 'portal-publications:publication-list' %}?type=OTHER" class="type-block" data-reveal data-reveal-delay="3">
-      <div class="type-block-icon"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></div>
-      <span class="type-block-count" data-counter data-count-to="{{ type_counts.other }}">{{ type_counts.other }}</span>
-      <p class="type-block-name">Ostalo</p>
-    </a>
-    <div class="type-block" data-reveal data-reveal-delay="4">
+    <div class="type-block" data-reveal>
       <div class="type-block-icon"><i class="bi bi-file-earmark-richtext" aria-hidden="true"></i></div>
       <span class="type-block-count" data-counter data-count-to="{{ type_counts.articles }}">{{ type_counts.articles }}</span>
       <p class="type-block-name">Članci</p>
     </div>
+    <a href="{% url 'portal-publications:publication-list' %}?type=JOURNAL" class="type-block" data-reveal data-reveal-delay="1">
+      <div class="type-block-icon"><i class="bi bi-journal-text" aria-hidden="true"></i></div>
+      <span class="type-block-count" data-counter data-count-to="{{ type_counts.journals }}">{{ type_counts.journals }}</span>
+      <p class="type-block-name">Časopisi</p>
+    </a>
+    <a href="{% url 'portal-publications:publication-list' %}?type=CONFERENCE" class="type-block" data-reveal data-reveal-delay="2">
+      <div class="type-block-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
+      <span class="type-block-count" data-counter data-count-to="{{ type_counts.conferences }}">{{ type_counts.conferences }}</span>
+      <p class="type-block-name">Zbornici</p>
+    </a>
+    <a href="{% url 'portal-monographs:monograph-list' %}" class="type-block" data-reveal data-reveal-delay="3">
+      <div class="type-block-icon"><i class="bi bi-book" aria-hidden="true"></i></div>
+      <span class="type-block-count" data-counter data-count-to="{{ type_counts.monographs }}">{{ type_counts.monographs }}</span>
+      <p class="type-block-name">Monografije</p>
+    </a>
+    <a href="{% url 'portal-publications:publication-list' %}?type=OTHER" class="type-block" data-reveal data-reveal-delay="4">
+      <div class="type-block-icon"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></div>
+      <span class="type-block-count" data-counter data-count-to="{{ type_counts.other }}">{{ type_counts.other }}</span>
+      <p class="type-block-name">Ostalo</p>
+    </a>
   </div>
 </section>
 

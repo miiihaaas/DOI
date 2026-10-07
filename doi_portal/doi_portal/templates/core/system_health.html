@@ -1,186 +1,110 @@
 {% extends "admin_base.html" %}
+{% load ui_tags %}
 
 {% block title %}Zdravlje sistema - DOI Portal{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0 page-title">
-        <i class="bi bi-heart-pulse me-2"></i>Zdravlje sistema
-    </h1>
-</div>
+{% with checked=health_data.checked_at|date:"d.m.Y. H:i:s" %}
+{% with header_meta="Poslednja provera: "|add:checked %}
+{% pageheader title="Zdravlje sistema" icon="bi-heart-pulse" meta=header_meta %}
+  <a href="{% url 'core:system-health' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>Osveži</a>
+{% endpageheader %}
+{% endwith %}
+{% endwith %}
 
-{# Content Statistics Section #}
-<h5 class="mb-3 form-section-title"><i class="bi bi-bar-chart me-2"></i>Sadržaj sistema</h5>
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card admin-card h-100 dashboard-stat-card stat-publications">
-            <div class="card-body text-center">
-                <h6 class="card-subtitle mb-2 text-body-secondary">Korisnici</h6>
-                <p class="card-text fs-5 mb-0">
-                    {{ health_data.statistics.active_users }} aktivnih / {{ health_data.statistics.inactive_users }} neaktivnih
-                </p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card admin-card h-100 dashboard-stat-card stat-articles">
-            <div class="card-body text-center">
-                <h6 class="card-subtitle mb-2 text-body-secondary">Izdavači</h6>
-                <p class="card-text fs-4 mb-0">{{ health_data.statistics.publisher_count }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card admin-card h-100 dashboard-stat-card stat-pending">
-            <div class="card-body text-center">
-                <h6 class="card-subtitle mb-2 text-body-secondary">Publikacije</h6>
-                <p class="card-text fs-4 mb-0">{{ health_data.statistics.publication_count }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card admin-card h-100 dashboard-stat-card stat-ready">
-            <div class="card-body text-center">
-                <h6 class="card-subtitle mb-2 text-body-secondary">Izdanja</h6>
-                <p class="card-text fs-4 mb-0">{{ health_data.statistics.issue_count }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card admin-card h-100 dashboard-stat-card stat-total">
-            <div class="card-body text-center">
-                <h6 class="card-subtitle mb-2 text-body-secondary">Članci</h6>
-                <p class="card-text fs-4 mb-0">{{ health_data.statistics.article_counts.total }}</p>
-            </div>
-        </div>
-    </div>
-</div>
+{# Integrations first: this is what the page is opened for. #}
+<section class="card mb-3">
+  <div class="card-header">
+    <h2 class="card-title"><i class="bi bi-plug me-2" aria-hidden="true"></i>Status integracija</h2>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Servis</th>
+          <th>Status</th>
+          <th>Poruka</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-nowrap"><i class="bi bi-database me-2" aria-hidden="true"></i>Baza podataka</td>
+          {% if health_data.integrations.database.status == "ok" %}
+          <td>{% include "components/_status_badge.html" with label="OK" tone="success" icon="bi-check-circle" only %}</td>
+          <td class="cell-meta">{{ health_data.integrations.database.message }}</td>
+          {% else %}
+          <td>{% include "components/_status_badge.html" with label="Greška" tone="danger" icon="bi-x-circle" only %}</td>
+          <td>{{ health_data.integrations.database.message }}<div class="cell-meta">Proverite PostgreSQL servis i parametre konekcije.</div></td>
+          {% endif %}
+        </tr>
+        <tr>
+          <td class="text-nowrap"><i class="bi bi-hdd-network me-2" aria-hidden="true"></i>Redis</td>
+          {% if health_data.integrations.redis.status == "ok" %}
+          <td>{% include "components/_status_badge.html" with label="OK" tone="success" icon="bi-check-circle" only %}</td>
+          <td class="cell-meta">{{ health_data.integrations.redis.message }}</td>
+          {% else %}
+          <td>{% include "components/_status_badge.html" with label="Greška" tone="danger" icon="bi-x-circle" only %}</td>
+          <td>{{ health_data.integrations.redis.message }}<div class="cell-meta">Proverite Redis servis na konfigurisanom hostu.</div></td>
+          {% endif %}
+        </tr>
+        <tr>
+          <td class="text-nowrap"><i class="bi bi-gear-wide-connected me-2" aria-hidden="true"></i>Celery</td>
+          {% if health_data.integrations.celery.status == "ok" %}
+          <td>{% include "components/_status_badge.html" with label="Pokrenut" tone="success" icon="bi-check-circle" only %}</td>
+          <td class="cell-meta">{{ health_data.integrations.celery.message }}</td>
+          {% else %}
+          <td>{% include "components/_status_badge.html" with label="Zaustavljen" tone="danger" icon="bi-x-circle" only %}</td>
+          <td>{{ health_data.integrations.celery.message }}<div class="cell-meta">Proverite da li su Celery worker procesi pokrenuti.</div></td>
+          {% endif %}
+        </tr>
+        <tr>
+          <td class="text-nowrap"><i class="bi bi-cloud me-2" aria-hidden="true"></i>S3 skladište</td>
+          {% if health_data.integrations.storage.status == "ok" %}
+          <td>{% include "components/_status_badge.html" with label="Dostupno" tone="success" icon="bi-check-circle" only %}</td>
+          <td class="cell-meta">{{ health_data.integrations.storage.message }}</td>
+          {% else %}
+          <td>{% include "components/_status_badge.html" with label="Greška" tone="danger" icon="bi-x-circle" only %}</td>
+          <td>{{ health_data.integrations.storage.message }}<div class="cell-meta">Proverite AWS kredencijale i konfiguraciju S3 bucket-a.</div></td>
+          {% endif %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
-{# Articles by Status Section #}
-<div class="card admin-card mb-4 section-card">
-    <div class="card-header">
-        <h5 class="card-title mb-0"><i class="bi bi-pie-chart me-2"></i>Članci po statusu</h5>
-    </div>
-    <div class="card-body">
-        <div class="d-flex flex-wrap gap-3">
-            <div>
-                <span class="badge bg-secondary">Nacrt</span>
-                <span class="ms-1 fw-bold">{{ health_data.statistics.article_counts.draft }}</span>
-            </div>
-            <div>
-                <span class="badge bg-warning text-dark">Na pregledu</span>
-                <span class="ms-1 fw-bold">{{ health_data.statistics.article_counts.review }}</span>
-            </div>
-            <div>
-                <span class="badge bg-info">Spreman</span>
-                <span class="ms-1 fw-bold">{{ health_data.statistics.article_counts.ready }}</span>
-            </div>
-            <div>
-                <span class="badge bg-success">Objavljen</span>
-                <span class="ms-1 fw-bold">{{ health_data.statistics.article_counts.published }}</span>
-            </div>
-            <div>
-                <span class="badge bg-danger">Povučen</span>
-                <span class="ms-1 fw-bold">{{ health_data.statistics.article_counts.withdrawn }}</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-{# Recent Activity Section #}
-<div class="card admin-card mb-4 section-card">
-    <div class="card-header">
-        <h5 class="card-title mb-0"><i class="bi bi-clock-history me-2"></i>Nedavna aktivnost</h5>
-    </div>
-    <div class="card-body">
-        <p class="mb-0">
-            <i class="bi bi-clock-history me-2 text-primary"></i>
-            <strong>{{ health_data.statistics.recent_audit_count }}</strong> audit log zapisa u poslednjih 24h
-        </p>
-    </div>
-</div>
-
-{# Integration Status Section #}
-<h5 class="mb-3 form-section-title"><i class="bi bi-plug me-2"></i>Status integracija</h5>
-<div class="row g-3 mb-4">
-    {# Database #}
-    <div class="col-md-3">
-        <div class="card admin-card h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-body-secondary">
-                    <i class="bi bi-database me-1"></i>Database
-                </h6>
-                {% if health_data.integrations.database.status == "ok" %}
-                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>OK</span>
-                    <p class="text-success small mt-2 mb-0">{{ health_data.integrations.database.message }}</p>
-                {% else %}
-                    <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Greška</span>
-                    <p class="text-danger small mt-2 mb-0">{{ health_data.integrations.database.message }}</p>
-                    <p class="text-danger small mt-1 mb-0"><em>Proverite PostgreSQL servis i konekcione parametre</em></p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {# Redis #}
-    <div class="col-md-3">
-        <div class="card admin-card h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-body-secondary">
-                    <i class="bi bi-hdd-network me-1"></i>Redis
-                </h6>
-                {% if health_data.integrations.redis.status == "ok" %}
-                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>OK</span>
-                    <p class="text-success small mt-2 mb-0">{{ health_data.integrations.redis.message }}</p>
-                {% else %}
-                    <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Greška</span>
-                    <p class="text-danger small mt-2 mb-0">{{ health_data.integrations.redis.message }}</p>
-                    <p class="text-danger small mt-1 mb-0"><em>Proverite Redis servis na konfigurisanom host-u</em></p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {# Celery #}
-    <div class="col-md-3">
-        <div class="card admin-card h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-body-secondary">
-                    <i class="bi bi-gear-wide-connected me-1"></i>Celery
-                </h6>
-                {% if health_data.integrations.celery.status == "ok" %}
-                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Pokrenut</span>
-                    <p class="text-success small mt-2 mb-0">{{ health_data.integrations.celery.message }}</p>
-                {% else %}
-                    <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Zaustavljen</span>
-                    <p class="text-danger small mt-2 mb-0">{{ health_data.integrations.celery.message }}</p>
-                    <p class="text-danger small mt-1 mb-0"><em>Proverite da li su Celery worker-i pokrenuti</em></p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {# S3 Storage #}
-    <div class="col-md-3">
-        <div class="card admin-card h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-body-secondary">
-                    <i class="bi bi-cloud me-1"></i>S3 skladište
-                </h6>
-                {% if health_data.integrations.storage.status == "ok" %}
-                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Dostupno</span>
-                    <p class="text-success small mt-2 mb-0">{{ health_data.integrations.storage.message }}</p>
-                {% else %}
-                    <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Greška</span>
-                    <p class="text-danger small mt-2 mb-0">{{ health_data.integrations.storage.message }}</p>
-                    <p class="text-danger small mt-1 mb-0"><em>Proverite AWS kredencijale i S3 bucket konfiguraciju</em></p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-{# Last Updated Footer #}
-<div class="text-body-secondary text-end">
-    <small>
-        Poslednje ažuriranje: {{ health_data.checked_at|date:"d.m.Y H:i:s" }}
-    </small>
+<div class="row g-3">
+  <div class="col-xl-6">
+    <section class="card h-100">
+      <div class="card-header">
+        <h2 class="card-title"><i class="bi bi-bar-chart me-2" aria-hidden="true"></i>Sadržaj sistema</h2>
+      </div>
+      <div class="card-body">
+        <dl class="admin-dl admin-dl--single">
+          <div class="admin-dl-row"><dt>Korisnici</dt><dd><span class="mono-id">{{ health_data.statistics.active_users }}</span> aktivnih · <span class="mono-id">{{ health_data.statistics.inactive_users }}</span> neaktivnih</dd></div>
+          <div class="admin-dl-row"><dt>Izdavači</dt><dd class="mono-id">{{ health_data.statistics.publisher_count }}</dd></div>
+          <div class="admin-dl-row"><dt>Publikacije</dt><dd class="mono-id">{{ health_data.statistics.publication_count }}</dd></div>
+          <div class="admin-dl-row"><dt>Izdanja</dt><dd class="mono-id">{{ health_data.statistics.issue_count }}</dd></div>
+          <div class="admin-dl-row"><dt>Članci</dt><dd class="mono-id">{{ health_data.statistics.article_counts.total }}</dd></div>
+          <div class="admin-dl-row"><dt>Revizioni log</dt><dd><span class="mono-id">{{ health_data.statistics.recent_audit_count }}</span> zapisa u poslednja 24 sata</dd></div>
+        </dl>
+      </div>
+    </section>
+  </div>
+  <div class="col-xl-6">
+    <section class="card h-100">
+      <div class="card-header">
+        <h2 class="card-title"><i class="bi bi-pie-chart me-2" aria-hidden="true"></i>Članci po statusu</h2>
+      </div>
+      <div class="card-body">
+        <dl class="admin-dl admin-dl--single">
+          <div class="admin-dl-row"><dt>{% include "components/_status_badge.html" with label="Nacrt" tone="neutral" only %}</dt><dd class="mono-id">{{ health_data.statistics.article_counts.draft }}</dd></div>
+          <div class="admin-dl-row"><dt>{% include "components/_status_badge.html" with label="Na pregledu" tone="pending" only %}</dt><dd class="mono-id">{{ health_data.statistics.article_counts.review }}</dd></div>
+          <div class="admin-dl-row"><dt>{% include "components/_status_badge.html" with label="Spreman" tone="info" only %}</dt><dd class="mono-id">{{ health_data.statistics.article_counts.ready }}</dd></div>
+          <div class="admin-dl-row"><dt>{% include "components/_status_badge.html" with label="Objavljen" tone="success" only %}</dt><dd class="mono-id">{{ health_data.statistics.article_counts.published }}</dd></div>
+          <div class="admin-dl-row"><dt>{% include "components/_status_badge.html" with label="Povučen" tone="danger" only %}</dt><dd class="mono-id">{{ health_data.statistics.article_counts.withdrawn }}</dd></div>
+        </dl>
+      </div>
+    </section>
+  </div>
 </div>
 {% endblock %}

@@ -1,59 +1,11 @@
-<!-- Journal-specific fields partial -->
+{# Journal-specific fields. Rendered inside #type-specific-fields (initial render and HTMX swap). #}
 <div class="type-fields-section">
-    <div class="form-section-divider"></div>
-    <h6 class="form-section-title">
-        <i class="bi bi-journal-text me-2"></i>Polja za časopis
-    </h6>
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label for="id_issn_print" class="form-label">ISSN (štampano)</label>
-            <input type="text" name="issn_print" id="id_issn_print"
-                   class="form-control {% if form.issn_print.errors %}is-invalid{% endif %}"
-                   placeholder="####-####"
-                   pattern="\d{4}-\d{3}[\dX]"
-                   value="{% if form.issn_print.value %}{{ form.issn_print.value }}{% endif %}">
-            {% if form.issn_print.errors %}
-            <div class="invalid-feedback">{{ form.issn_print.errors.0 }}</div>
-            {% else %}
-            <div class="form-text">Format: 1234-5678</div>
-            {% endif %}
-        </div>
-        <div class="col-md-6 mb-3">
-            <label for="id_issn_online" class="form-label">ISSN (online)</label>
-            <input type="text" name="issn_online" id="id_issn_online"
-                   class="form-control {% if form.issn_online.errors %}is-invalid{% endif %}"
-                   placeholder="####-####"
-                   pattern="\d{4}-\d{3}[\dX]"
-                   value="{% if form.issn_online.value %}{{ form.issn_online.value }}{% endif %}">
-            {% if form.issn_online.errors %}
-            <div class="invalid-feedback">{{ form.issn_online.errors.0 }}</div>
-            {% else %}
-            <div class="form-text">Format: 1234-5678</div>
-            {% endif %}
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label for="id_abbreviation" class="form-label">Skraćenica</label>
-            <input type="text" name="abbreviation" id="id_abbreviation"
-                   class="form-control {% if form.abbreviation.errors %}is-invalid{% endif %}"
-                   placeholder="npr. J. Sci. Res."
-                   value="{% if form.abbreviation.value %}{{ form.abbreviation.value }}{% endif %}">
-            {% if form.abbreviation.errors %}
-            <div class="invalid-feedback">{{ form.abbreviation.errors.0 }}</div>
-            {% else %}
-            <div class="form-text">ISO skraćenica časopisa</div>
-            {% endif %}
-        </div>
-        <div class="col-md-6 mb-3">
-            <label for="id_frequency" class="form-label">Učestalost izlaženja</label>
-            <input type="text" name="frequency" id="id_frequency"
-                   class="form-control {% if form.frequency.errors %}is-invalid{% endif %}"
-                   placeholder="npr. Kvartalno"
-                   value="{% if form.frequency.value %}{{ form.frequency.value }}{% endif %}">
-            {% if form.frequency.errors %}
-            <div class="invalid-feedback">{{ form.frequency.errors.0 }}</div>
-            {% endif %}
-        </div>
-    </div>
+  <hr class="form-section-divider">
+  <h2 class="form-section-title"><i class="bi bi-journal-text me-2" aria-hidden="true"></i>Podaci o časopisu</h2>
+  <div class="row g-3">
+    {% include "components/_field.html" with field=form.issn_print label="ISSN (štampano)" help="Format: 1234-5678" class="col-md-6" only %}
+    {% include "components/_field.html" with field=form.issn_online label="ISSN (online)" help="Format: 1234-5678" class="col-md-6" only %}
+    {% include "components/_field.html" with field=form.abbreviation label="Skraćenica" help="ISO skraćenica časopisa" class="col-md-6" only %}
+    {% include "components/_field.html" with field=form.frequency label="Učestalost izlaženja" class="col-md-6" hide_help=True only %}
+  </div>
 </div>

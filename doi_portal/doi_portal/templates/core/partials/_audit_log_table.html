@@ -1,4 +1,11 @@
-<div id="audit-log-table" hx-boost="true" hx-target="#audit-log-table" hx-select="#audit-log-table" hx-swap="outerHTML">
+{% comment %}
+  Audit log table. Rendered inside the list page and returned on its own for
+  HTMX requests (live search, filters, pagination). The root keeps
+  id="audit-log-table"; hx-swap="outerHTML" is inherited by the pagination
+  links so a swap replaces this element instead of nesting a copy inside it.
+{% endcomment %}
+{% load ui_tags %}
+<div id="audit-log-table" hx-swap="outerHTML">
   {% if entries %}
   <div class="table-responsive">
     <table class="table table-hover">
@@ -14,41 +21,42 @@
       <tbody>
         {% for entry in entries %}
         <tr>
-          <td>
-            <a href="{% url 'core:audit-log-detail' entry.pk %}">
-              {{ entry.timestamp|date:"d.m.Y. H:i:s" }}
-            </a>
+          <td class="text-nowrap">
+            <a href="{% url 'core:audit-log-detail' entry.pk %}" class="cell-title">{{ entry.timestamp|date:"d.m.Y. H:i:s" }}</a>
           </td>
           <td>
-            {% if entry.actor %}
-              {{ entry.actor.email }}
-            {% else %}
-              <span class="text-muted">Sistem</span>
-            {% endif %}
+            {% if entry.actor %}{{ entry.actor.email }}{% else %}<span class="cell-meta">Sistem</span>{% endif %}
           </td>
           <td>
             {% if entry.action == 0 %}
-              <span class="badge bg-success">Kreiranje</span>
+              {% include "components/_status_badge.html" with label="Kreiranje" tone="success" only %}
             {% elif entry.action == 1 %}
-              <span class="badge bg-warning text-dark">Izmena</span>
+              {% include "components/_status_badge.html" with label="Izmena" tone="pending" only %}
             {% elif entry.action == 2 %}
-              <span class="badge bg-danger">Brisanje</span>
+              {% include "components/_status_badge.html" with label="Brisanje" tone="danger" only %}
+            {% else %}
+              {% include "components/_status_badge.html" with label=entry.get_action_display tone="neutral" only %}
             {% endif %}
           </td>
-          <td>{{ entry.content_type }}</td>
+          <td class="cell-meta">{{ entry.content_type.name|capfirst }}</td>
           <td>{{ entry.object_repr|truncatechars:80 }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-
-  {% include "components/_pagination.html" %}
-
+  {% include "components/_pagination.html" with hx_target="#audit-log-table" hx_select="#audit-log-table" %}
   {% else %}
-  <div class="text-center py-5 text-muted">
-    <i class="bi bi-clock-history display-4 mb-3 d-block"></i>
-    <p class="mb-0">Nema pronađenih log unosa.</p>
-  </div>
+    {% if request.GET.q or request.GET.actor or request.GET.action or request.GET.model or request.GET.object_id or request.GET.date_from or request.GET.date_to %}
+      {% url 'core:audit-log-list' as reset_url %}
+      {% include "components/_empty_state.html" with icon="bi-funnel" text="Nema log unosa koji odgovaraju filterima." action_url=reset_url action_label="Poništi filtere" only %}
+    {% else %}
+      {% include "components/_empty_state.html" with icon="bi-clock-history" text="Nema pronađenih log unosa." only %}
+    {% endif %}
   {% endif %}
 </div>
+{% if request.headers.hx_request %}
+{# Out-of-band: keep the counter and the reset link of the filter bar in sync. #}
+<p class="filter-bar__count" id="audit-log-count" hx-swap-oob="true"><strong>{{ page_obj.paginator.count }}</strong> {{ page_obj.paginator.count|sr_plural:"zapis,zapisa,zapisa" }}</p>
+<span id="audit-log-reset" hx-swap-oob="true">{% if request.GET.q or request.GET.actor or request.GET.action or request.GET.model or request.GET.object_id or request.GET.date_from or request.GET.date_to %}<a href="{% url 'core:audit-log-list' %}" class="filter-bar__reset"><i class="bi bi-x-lg" aria-hidden="true"></i>Poništi</a>{% endif %}</span>
+{% endif %}

@@ -1,19 +1,25 @@
 {% extends "admin_base.html" %}
+{% load ui_tags %}
 
 {% block title %}{{ form_title }} - DOI Portal{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0 page-title">
-        <i class="bi bi-file-earmark-text me-2"></i>{{ form_title }}
-    </h1>
+{% include "components/_page_header.html" with title=form_title icon="bi-file-earmark-text" only %}
+
+{% if not is_edit %}
+<div class="status-strip status-strip--info" role="status">
+    <span class="status-strip__item">
+        <i class="bi bi-info-circle" aria-hidden="true"></i>
+        Autori, finansiranje, srodne publikacije i PDF fajl dodaju se nakon prvog čuvanja članka.
+    </span>
 </div>
+{% endif %}
 
 <div class="row justify-content-center">
     <div class="col-lg-10">
-        <div class="card admin-card section-card">
+        <div class="card section-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i>Osnovne informacije</h5>
+                <h2 class="card-title mb-0"><i class="bi bi-info-circle me-2" aria-hidden="true"></i>Osnovne informacije</h2>
                 {% if is_edit %}
                 <div id="save-indicator">
                     <!-- Auto-save indicator will be injected here by HTMX -->
@@ -35,7 +41,7 @@
 
                     <!-- Form Errors Summary -->
                     {% if form.errors %}
-                    <div class="alert alert-danger mb-4">
+                    <div class="alert alert-danger mb-3" role="alert">
                         <h6 class="alert-heading mb-2">
                             <i class="bi bi-exclamation-triangle me-2"></i>Ispravite sledeće greške:
                         </h6>
@@ -123,7 +129,7 @@
                                   placeholder="Unesite apstrakt članka"
                                   x-on:input="charCount = $el.value.length"
                                   x-init="charCount = $el.value.length">{{ form.abstract.value|default:'' }}</textarea>
-                        <small class="text-muted"><span x-text="charCount"></span> karaktera</small>
+                        <div class="form-text"><span x-text="charCount"></span> karaktera</div>
                         {% if form.abstract.errors %}
                         <div class="invalid-feedback d-block">{{ form.abstract.errors.0 }}</div>
                         {% endif %}
@@ -134,19 +140,20 @@
                     {{ form.instance.keywords|json_script:"initial-keywords" }}
                     {% endif %}
                     <div x-data="keywordsInput()" class="mb-3">
-                        <label class="form-label">Ključne reči</label>
+                        <label for="id_keyword_input" class="form-label">Ključne reči</label>
                         <div class="d-flex flex-wrap gap-1 mb-2" x-ref="keywordsList">
                             <template x-for="(keyword, index) in keywords" :key="keyword + '-' + index">
-                                <span class="badge bg-primary d-flex align-items-center gap-1" :data-index="index">
-                                    <i class="bi bi-grip-vertical keyword-drag-handle"></i>
+                                <span class="chip" :data-index="index">
+                                    <i class="bi bi-grip-vertical keyword-drag-handle" aria-hidden="true"></i>
                                     <span x-text="keyword"></span>
-                                    <button type="button" class="btn-close btn-close-white"
-                                            @click="removeKeyword(index)" style="font-size: 0.6em;"></button>
+                                    <button type="button" class="btn-close"
+                                            @click="removeKeyword(index)"
+                                            :aria-label="'Ukloni ključnu reč: ' + keyword"></button>
                                 </span>
                             </template>
                         </div>
                         <div class="input-group">
-                            <input type="text" class="form-control" x-model="newKeyword"
+                            <input type="text" id="id_keyword_input" class="form-control" x-model="newKeyword"
                                    @keydown.enter.prevent="addKeyword()"
                                    placeholder="Unesite ključnu reč i pritisnite Enter">
                             <button type="button" class="btn btn-outline-secondary" @click="addKeyword()">Dodaj</button>
@@ -156,8 +163,8 @@
 
                     <!-- Markup Help Section -->
                     <div class="mb-3">
-                      <a class="text-decoration-none" data-bs-toggle="collapse" href="#markupHelp" role="button" aria-expanded="false">
-                        <i class="bi bi-question-circle me-1"></i>Pomoć za formatiranje teksta
+                      <a class="text-decoration-none" data-bs-toggle="collapse" href="#markupHelp" role="button" aria-expanded="false" aria-controls="markupHelp">
+                        <i class="bi bi-question-circle me-1" aria-hidden="true"></i>Pomoć za formatiranje teksta
                       </a>
                       <div class="collapse" id="markupHelp">
                         <div class="card card-body mt-2" x-data="markupHelp()">
@@ -203,7 +210,7 @@
 
                     <!-- Page/Article Number Fields -->
                     <div class="form-section-divider"></div>
-                    <h6 class="form-section-title"><i class="bi bi-bookmark me-2"></i>Stranice i identifikacija</h6>
+                    <h6 class="form-section-title"><i class="bi bi-bookmark me-2" aria-hidden="true"></i>Stranice i identifikacija</h6>
 
                     <div class="row" x-data="paginationToggle()">
                         <div class="col-md-3 mb-3">
@@ -260,7 +267,7 @@
 
                     <!-- Content Type and License Section -->
                     <div class="form-section-divider"></div>
-                    <h6 class="form-section-title"><i class="bi bi-shield-check me-2"></i>Tip sadržaja i licenca</h6>
+                    <h6 class="form-section-title"><i class="bi bi-shield-check me-2" aria-hidden="true"></i>Tip sadržaja i licenca</h6>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -306,10 +313,10 @@
                     <div class="floating-action-bubble" aria-label="Akcije za članak" role="toolbar">
                       <div class="btn-group btn-group-lg shadow-lg" role="group" aria-label="Nazad i sačuvaj">
                         <a href="{% url 'articles:list' %}" class="btn btn-outline-secondary">
-                          <i class="bi bi-arrow-left me-1"></i>Nazad
+                          <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Nazad
                         </a>
                         <button type="submit" class="btn btn-primary" hx-disinherit="*">
-                          <i class="bi bi-check-lg me-1"></i>{{ submit_text }}
+                          <i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ submit_text }}
                         </button>
                       </div>
                     </div>
@@ -361,6 +368,38 @@
                     }
                 </style>
                 <script>
+// Markup help Alpine.js component
+function markupHelp() {
+    return {
+        copyChars: [
+            { value: '\u201E', display: '\u201E', label: 'Otvoreni navodnik' },
+            { value: '\u201C', display: '\u201C', label: 'Zatvoreni navodnik' },
+            { value: '_', display: '_..._', label: 'Italic' },
+            { value: '**', display: '**...**', label: 'Bold' },
+            { value: '~', display: '~...~', label: 'Subscript' },
+            { value: '^', display: '^...^', label: 'Superscript' },
+        ],
+        previewInput: '',
+        get previewOutput() {
+            let t = this.previewInput;
+            if (!t) return '<span class="text-muted">Ovde \u0107e se prikazati rezultat...</span>';
+            t = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            t = t.replace(/(?<!\w)_([^_]+)_(?!\w)/g, '<em>$1</em>');
+            t = t.replace(/\^([^^]+)\^/g, '<sup>$1</sup>');
+            t = t.replace(/~([^~]+)~/g, '<sub>$1</sub>');
+            return t;
+        },
+        copyStatus: {},
+        copyToClipboard(text, charLabel) {
+            navigator.clipboard.writeText(text).then(() => {
+                this.copyStatus[charLabel] = true;
+                setTimeout(() => { this.copyStatus[charLabel] = false; }, 1500);
+            });
+        }
+    }
+}
+
                     function paginationToggle() {
                         return {
                             hasPages: false,
@@ -475,16 +514,16 @@
 
         <!-- Author Section (Edit Mode Only) - Story 3.2 -->
         {% if is_edit %}
-        <div class="card shadow-sm mt-4 section-card" x-data="authorList()">
+        <div class="card mt-3 section-card" x-data="authorList()">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-people me-2"></i>Autori
-                </h5>
+                <h2 class="card-title mb-0">
+                    <i class="bi bi-people me-2" aria-hidden="true"></i>Autori
+                </h2>
                 <button type="button" class="btn btn-sm btn-outline-primary"
                         hx-get="{% url 'articles:author-form' article_pk=object.pk %}"
                         hx-target="#author-form-container"
                         hx-swap="innerHTML">
-                    <i class="bi bi-plus-lg me-1"></i>Dodaj autora
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Dodaj autora
                 </button>
             </div>
             <div class="card-body">
@@ -496,16 +535,16 @@
         </div>
 
         <!-- Funding Section -->
-        <div class="card shadow-sm mt-4 section-card" x-data="fundingList()">
+        <div class="card mt-3 section-card" x-data="fundingList()">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-cash-stack me-2"></i>Finansiranje
-                </h5>
+                <h2 class="card-title mb-0">
+                    <i class="bi bi-cash-stack me-2" aria-hidden="true"></i>Finansiranje
+                </h2>
                 <button type="button" class="btn btn-sm btn-outline-primary"
                         hx-get="{% url 'articles:funding-form' article_pk=object.pk %}"
                         hx-target="#funding-form-container"
                         hx-swap="innerHTML">
-                    <i class="bi bi-plus-lg me-1"></i>Dodaj finansijera
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Dodaj finansijera
                 </button>
             </div>
             <div class="card-body">
@@ -517,14 +556,14 @@
         </div>
 
         <!-- Relations Section -->
-        <div class="card shadow-sm mt-4 section-card" x-data="relationList()">
+        <div class="card mt-3 section-card" x-data="relationList()">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Srodne publikacije</h5>
+                <h2 class="card-title mb-0"><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Srodne publikacije</h2>
                 <button type="button" class="btn btn-sm btn-outline-primary"
                         hx-get="{% url 'articles:relation-form' article_pk=object.pk %}"
                         hx-target="#relation-form-container"
                         hx-swap="innerHTML">
-                    <i class="bi bi-plus-lg me-1"></i>Dodaj
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Dodaj srodnu publikaciju
                 </button>
             </div>
             <div class="card-body">
@@ -536,11 +575,11 @@
         </div>
 
         <!-- PDF Upload Section (Story 3.3) -->
-        <div class="card shadow-sm mt-4 section-card">
+        <div class="card mt-3 section-card">
             <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-file-earmark-pdf me-2"></i>PDF fajl
-                </h5>
+                <h2 class="card-title mb-0">
+                    <i class="bi bi-file-earmark-pdf me-2" aria-hidden="true"></i>PDF fajl
+                </h2>
             </div>
             <div class="card-body">
                 {% include "articles/partials/_pdf_upload.html" with article=object %}
@@ -550,12 +589,11 @@
         {% endif %}
 
         <!-- External Resource Section (Story 3-1a) -->
-        <div class="card shadow-sm mt-4 section-card" x-data="{ useExternal: {% if form.use_external_resource.value %}true{% else %}false{% endif %} }">
+        <div class="card mt-3 section-card" x-data="{ useExternal: {% if form.use_external_resource.value %}true{% else %}false{% endif %} }">
             <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-box-arrow-up-right me-2"></i>Eksterni resursi
-
-                </h5>
+                <h2 class="card-title mb-0">
+                    <i class="bi bi-box-arrow-up-right me-2" aria-hidden="true"></i>Eksterni resursi
+                </h2>
             </div>
             <div class="card-body">
                 <div class="form-check form-switch mb-3">
@@ -617,8 +655,7 @@
 
 {% block javascript %}
 {{ block.super }}
-<!-- Alpine.js for tag input and character count -->
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.3/dist/cdn.min.js"></script>
+{# Alpine.js comes from admin_base.html (same 3.15.3 build, deferred); loading it twice double-initialised every x-data component. #}
 {% if is_edit %}
 <!-- SortableJS for drag & drop author reordering -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
@@ -763,38 +800,6 @@ function pdfUpload() {
     }
 }
 
-// Markup help Alpine.js component
-function markupHelp() {
-    return {
-        copyChars: [
-            { value: '\u201E', display: '\u201E', label: 'Otvoreni navodnik' },
-            { value: '\u201C', display: '\u201C', label: 'Zatvoreni navodnik' },
-            { value: '_', display: '_..._', label: 'Italic' },
-            { value: '**', display: '**...**', label: 'Bold' },
-            { value: '~', display: '~...~', label: 'Subscript' },
-            { value: '^', display: '^...^', label: 'Superscript' },
-        ],
-        previewInput: '',
-        get previewOutput() {
-            let t = this.previewInput;
-            if (!t) return '<span class="text-muted">Ovde \u0107e se prikazati rezultat...</span>';
-            t = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-            t = t.replace(/(?<!\w)_([^_]+)_(?!\w)/g, '<em>$1</em>');
-            t = t.replace(/\^([^^]+)\^/g, '<sup>$1</sup>');
-            t = t.replace(/~([^~]+)~/g, '<sub>$1</sub>');
-            return t;
-        },
-        copyStatus: {},
-        copyToClipboard(text, charLabel) {
-            navigator.clipboard.writeText(text).then(() => {
-                this.copyStatus[charLabel] = true;
-                setTimeout(() => { this.copyStatus[charLabel] = false; }, 1500);
-            });
-        }
-    }
-}
-
 // Generic autocomplete search component (reusable for ROR and Funder)
 function autocompleteSearch(endpoint, options = {}) {
     return {
@@ -838,6 +843,45 @@ function autocompleteSearch(endpoint, options = {}) {
     }
 }
 
+// Save a drag & drop order: POST {"order": [pk, ...]} as JSON and write the
+// returned list into the target. fetch() is used because htmx.ajax() has no
+// option for a JSON request body. A manual swap does not fire htmx:afterSwap,
+// so the caller re-creates its Sortable in onSwapped.
+function saveReorder(url, targetSelector, order, onSwapped) {
+    let csrfToken = '';
+    try {
+        csrfToken = JSON.parse(document.body.getAttribute('hx-headers') || '{}')['X-CSRFToken'] || '';
+    } catch (e) { /* fall through to the form input */ }
+    if (!csrfToken) {
+        const input = document.querySelector('[name=csrfmiddlewaretoken]');
+        csrfToken = input ? input.value : '';
+    }
+    fetch(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'HX-Request': 'true',
+        },
+        body: JSON.stringify({order: order}),
+    }).then((response) => {
+        // Expired session: fetch followed the redirect to the login page.
+        if (response.redirected) { window.location.reload(); return null; }
+        if (!response.ok) { throw new Error('HTTP ' + response.status); }
+        return response.text();
+    }).then((html) => {
+        if (html === null) { return; }
+        const target = document.querySelector(targetSelector);
+        if (!target) { return; }
+        target.innerHTML = html;
+        if (window.htmx) { htmx.process(target); }
+        onSwapped();
+    }).catch(() => {
+        window.alert('Redosled nije sačuvan. Osvežite stranicu i pokušajte ponovo.');
+    });
+}
+
 // Funding list with SortableJS
 function fundingList() {
     return {
@@ -870,15 +914,8 @@ function fundingList() {
                         const order = Array.from(items).map(item =>
                             parseInt(item.dataset.fundingId)
                         );
-                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                        htmx.ajax('POST', '{% url "articles:funding-reorder" article_pk=object.pk %}', {
-                            target: '#funding-section-content',
-                            swap: 'innerHTML',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': csrfToken,
-                            },
-                            body: JSON.stringify({order: order}),
+                        saveReorder('{% url "articles:funding-reorder" article_pk=object.pk %}', '#funding-section-content', order, () => {
+                            this.$nextTick(() => { this.initSortable(); });
                         });
                     }
                 });
@@ -918,15 +955,8 @@ function relationList() {
                         const order = Array.from(items).map(item =>
                             parseInt(item.dataset.relationId)
                         );
-                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                        htmx.ajax('POST', '{% url "articles:relation-reorder" article_pk=object.pk %}', {
-                            target: '#relation-section-content',
-                            swap: 'innerHTML',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': csrfToken,
-                            },
-                            body: JSON.stringify({order: order}),
+                        saveReorder('{% url "articles:relation-reorder" article_pk=object.pk %}', '#relation-section-content', order, () => {
+                            this.$nextTick(() => { this.initSortable(); });
                         });
                     }
                 });
@@ -967,15 +997,8 @@ function authorList() {
                         const order = Array.from(items).map(item =>
                             parseInt(item.dataset.authorId)
                         );
-                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                        htmx.ajax('POST', '{% url "articles:author-reorder" article_pk=object.pk %}', {
-                            target: '#authors-section-content',
-                            swap: 'innerHTML',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': csrfToken,
-                            },
-                            body: JSON.stringify({order: order}),
+                        saveReorder('{% url "articles:author-reorder" article_pk=object.pk %}', '#authors-section-content', order, () => {
+                            this.$nextTick(() => { this.initSortable(); });
                         });
                     }
                 });

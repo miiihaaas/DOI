@@ -31,6 +31,7 @@ from django.db.models.functions import Cast
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.cache import patch_vary_headers
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
@@ -41,6 +42,7 @@ from django.views.generic import View
 
 from doi_portal.articles.models import Article, ArticleStatus, PdfStatus
 from doi_portal.core.markup import strip_markup
+from doi_portal.core.mixins import wants_htmx_partial
 from doi_portal.portal.services import generate_chapter_citation
 from doi_portal.portal.services import generate_citation
 from doi_portal.portal.services import generate_monograph_citation
@@ -345,9 +347,15 @@ class PublicationPublicListView(ListView):
 
     def get_template_names(self):
         """Return partial template for HTMX requests."""
-        if self.request.headers.get("HX-Request"):
+        if wants_htmx_partial(self.request):
             return ["portal/publications/partials/_publication_grid.html"]
         return [self.template_name]
+
+    def render_to_response(self, context, **response_kwargs):
+        """Same URL serves the page and the partial: vary the cache on HX-Request."""
+        response = super().render_to_response(context, **response_kwargs)
+        patch_vary_headers(response, ["HX-Request"])
+        return response
 
     def get_context_data(self, **kwargs):
         """Add breadcrumbs, filter choices, and active filter values to context."""
@@ -654,9 +662,15 @@ class ArticleSearchView(ListView):
 
     def get_template_names(self):
         """Return partial template for HTMX requests."""
-        if self.request.headers.get("HX-Request"):
+        if wants_htmx_partial(self.request):
             return ["portal/partials/_search_results.html"]
         return [self.template_name]
+
+    def render_to_response(self, context, **response_kwargs):
+        """Same URL serves the page and the partial: vary the cache on HX-Request."""
+        response = super().render_to_response(context, **response_kwargs)
+        patch_vary_headers(response, ["HX-Request"])
+        return response
 
     def get_context_data(self, **kwargs):
         """Add search-specific context with filter choices and active state."""

@@ -1,0 +1,363 @@
+/* =============================================
+   Crossref deposit pages (issue / monograph / component group)
+   Loaded by templates/crossref/deposit_base.html after admin.css.
+   Uses only the tokens defined in admin.css :root.
+   ============================================= */
+
+/* ---- Stepper: done = green, current = teal, the rest = neutral ---- */
+.deposit-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deposit-step {
+  --step-pad-y: 0.625rem;
+  --step-pad-x: var(--space-3);
+  --step-marker: 1.75rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--step-marker) minmax(0, 1fr);
+  column-gap: var(--space-3);
+  padding: var(--step-pad-y) var(--step-pad-x);
+  border-radius: var(--radius-sm);
+}
+
+/* connector from this marker down to the next one */
+.deposit-step::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--step-pad-y) + var(--step-marker));
+  bottom: calc(var(--step-pad-y) * -1);
+  left: calc(var(--step-pad-x) + var(--step-marker) / 2 - 1px);
+  width: 2px;
+  background: var(--doi-border);
+}
+
+.deposit-step:last-child::before {
+  content: none;
+}
+
+.deposit-step__marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--step-marker);
+  height: var(--step-marker);
+  border: 2px solid var(--doi-border);
+  border-radius: 50%;
+  background: var(--doi-surface);
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.deposit-step__main {
+  min-width: 0;
+}
+
+.deposit-step__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 var(--space-3);
+  min-height: var(--step-marker);
+  padding-top: 0.1875rem;
+}
+
+.deposit-step__title {
+  margin: 0;
+  color: var(--doi-teal);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.deposit-step__title > .bi {
+  margin-right: 0.375rem;
+  color: var(--doi-teal-light);
+}
+
+.deposit-step__state {
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.deposit-step__state > .bi {
+  margin-right: 0.25rem;
+}
+
+.deposit-step__hint {
+  margin: 0;
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+}
+
+.deposit-step__body {
+  margin-top: var(--space-2);
+}
+
+.deposit-step__body:empty {
+  display: none;
+}
+
+.deposit-step__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.deposit-step__actions:first-child {
+  margin-top: 0;
+}
+
+/* done */
+.deposit-step--done .deposit-step__marker {
+  border-color: var(--doi-primary-strong);
+  background: var(--doi-primary-strong);
+  color: var(--doi-surface);
+}
+
+.deposit-step--done::before {
+  background: var(--doi-primary-strong);
+}
+
+/* current: the one step the user should act on now */
+.deposit-step--current {
+  background: var(--tone-info-bg);
+}
+
+.deposit-step--current .deposit-step__marker {
+  border-color: var(--doi-teal);
+  background: var(--doi-teal);
+  color: var(--doi-surface);
+}
+
+.deposit-step--current .deposit-step__state {
+  color: var(--doi-teal);
+  font-weight: 600;
+}
+
+/* available: unlocked, optional or not the next thing to do */
+.deposit-step--available .deposit-step__marker {
+  border-color: var(--doi-teal-light);
+}
+
+/* attention: pre-validation fails although XML was generated earlier */
+.deposit-step--attention .deposit-step__marker {
+  border-color: var(--doi-danger);
+  color: var(--doi-danger-text);
+}
+
+.deposit-step--attention .deposit-step__state {
+  color: var(--doi-danger-text);
+  font-weight: 600;
+}
+
+/* locked */
+.deposit-step--locked .deposit-step__title {
+  color: var(--doi-teal-light);
+  font-weight: 500;
+}
+
+/* ---- Lists of validation errors / warnings inside a step ---- */
+.deposit-issues {
+  margin: var(--space-2) 0 0;
+}
+
+.deposit-issues__title {
+  margin: 0 0 var(--space-1);
+  color: var(--doi-teal);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.deposit-issues--danger .deposit-issues__title {
+  color: var(--doi-danger-text);
+}
+
+.deposit-issues__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--doi-border-subtle);
+}
+
+.deposit-issues__list > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 var(--space-3);
+  padding: 0.375rem 0;
+  border-top: 1px solid var(--doi-border-subtle);
+  color: var(--doi-text);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.deposit-issues__fix {
+  flex: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.deposit-issues__line {
+  color: var(--doi-teal-light);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Notices: keep Bootstrap's .alert markup, kit tones and compact size ---- */
+.crossref-deposit .status-strip,
+.crossref-modal .status-strip {
+  margin-bottom: 0;
+}
+
+.crossref-deposit .deposit-step .alert,
+.crossref-modal .alert {
+  margin-bottom: 0;
+  padding: var(--space-2) var(--space-3);
+  border-color: transparent;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+}
+
+.crossref-deposit .alert-success,
+.crossref-modal .alert-success {
+  background: var(--tone-success-bg);
+  color: var(--doi-teal);
+}
+
+.crossref-deposit .alert-danger,
+.crossref-modal .alert-danger {
+  background: var(--tone-danger-bg);
+  color: var(--doi-danger-text);
+}
+
+.crossref-deposit .alert-warning,
+.crossref-modal .alert-warning {
+  background: var(--tone-pending-bg);
+  color: var(--doi-teal);
+}
+
+.crossref-deposit .alert-secondary,
+.crossref-modal .alert-secondary {
+  background: var(--tone-neutral-bg);
+  color: var(--doi-teal);
+}
+
+.crossref-deposit .alert-info,
+.crossref-modal .alert-info {
+  border-color: transparent;
+}
+
+.deposit-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+}
+
+/* ---- Modals ---- */
+.crossref-modal .modal-title {
+  color: var(--doi-teal);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.crossref-modal .modal-body > p:last-child {
+  margin-bottom: 0;
+}
+
+.crossref-modal .modal-footer {
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.crossref-modal .modal-footer > * {
+  margin: 0;
+}
+
+.xml-preview-notices {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.xml-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--doi-border);
+  background: var(--doi-light);
+}
+
+.xml-section-nav__label {
+  color: var(--doi-teal-light);
+  font-size: 0.8125rem;
+}
+
+.xml-section-nav .btn {
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.xml-section-nav__error {
+  margin-left: auto;
+}
+
+.xml-preview-container {
+  max-height: 65vh;
+  overflow: auto;
+}
+
+.xml-preview-container pre {
+  margin: 0;
+  border-radius: 0;
+}
+
+.xml-preview-container code {
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* lines with XSD errors (Prism line-highlight plugin) */
+.xml-preview-container .line-highlight {
+  background: var(--tone-danger-bg);
+}
+
+/* ---- Toast (copy to clipboard feedback); above the Bootstrap modal ---- */
+.crossref-toasts {
+  z-index: 1090;
+}
+
+.crossref-toast {
+  border: 0;
+  background: var(--doi-teal);
+  color: var(--doi-surface);
+  font-size: 0.8125rem;
+}
+
+.crossref-toast--danger {
+  background: var(--doi-danger);
+}
+
+@media (max-width: 479.98px) {
+  .deposit-step {
+    --step-pad-x: var(--space-2);
+    column-gap: var(--space-2);
+  }
+
+  .xml-section-nav__error {
+    margin-left: 0;
+  }
+}

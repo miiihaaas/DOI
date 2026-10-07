@@ -1,9 +1,11 @@
-{# Story 5.4: XSD Validation - Validation result template #}
-{# Displays XSD validation status for generated Crossref XML #}
+{% comment %}
+  XSD validation status of the generated Crossref XML (step 3 and the
+  generation result).
 
+    xsd_validating | xsd_valid (True / False / None) | xsd_errors | xsd_validated_at
+{% endcomment %}
 {% if xsd_validating %}
-{# Validating state: spinner with Serbian text (AC5) #}
-<div class="alert alert-info" id="xsd-validation-result">
+<div class="alert alert-info" id="xsd-validation-result" role="status">
   <div class="d-flex align-items-center">
     <div class="spinner-border spinner-border-sm me-2" role="status">
       <span class="visually-hidden">Validacija...</span>
@@ -13,55 +15,30 @@
 </div>
 
 {% elif xsd_valid is True %}
-{# Valid state: green checkmark and success message (AC2) #}
-<div class="alert alert-success mb-0" id="xsd-validation-result">
-  <div class="d-flex align-items-center">
-    <i class="bi bi-check-circle-fill text-success me-2"></i>
-    <div>
-      <strong>XML je validan</strong>
-      {% if xsd_validated_at %}
-      <small class="d-block text-muted mt-1">
-        Validirano: {{ xsd_validated_at|date:"d.m.Y H:i" }}
-      </small>
-      {% endif %}
-    </div>
-  </div>
+<div class="alert alert-success" id="xsd-validation-result" role="status">
+  <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i><strong>XML je validan</strong>{% if xsd_validated_at %}<span class="ms-2">Validirano: {{ xsd_validated_at|date:"d.m.Y H:i" }}</span>{% endif %}
 </div>
 
 {% elif xsd_valid is False %}
-{# Invalid state: error list with line numbers (AC3) #}
-<div class="alert alert-danger mb-0" id="xsd-validation-result">
-  <div class="d-flex align-items-start">
-    <i class="bi bi-x-circle-fill text-danger me-2 mt-1"></i>
-    <div>
-      <strong>Nevažeći XML - ne može se poslati na Crossref</strong>
-      {% if xsd_errors %}
-      <ul class="mb-0 mt-2 small ps-3">
-        {% for error in xsd_errors %}
-        <li>
-          {% if error.line %}
-          <span class="text-muted">Linija {{ error.line }}:</span>
-          {% endif %}
-          {{ error.message }}
-        </li>
-        {% endfor %}
-      </ul>
-      {% endif %}
-      {% if xsd_validated_at %}
-      <small class="d-block text-muted mt-2">
-        Validirano: {{ xsd_validated_at|date:"d.m.Y H:i" }}
-      </small>
-      {% endif %}
-    </div>
+<div id="xsd-validation-result">
+  <div class="alert alert-danger" role="alert">
+    <i class="bi bi-x-circle-fill me-1" aria-hidden="true"></i><strong>Nevažeći XML - ne može se poslati na Crossref</strong>{% if xsd_validated_at %}<span class="ms-2">Validirano: {{ xsd_validated_at|date:"d.m.Y H:i" }}</span>{% endif %}
   </div>
+  {% if xsd_errors %}
+  <div class="deposit-issues deposit-issues--danger">
+    <ul class="deposit-issues__list">
+      {% for error in xsd_errors %}
+      <li>
+        <span>{% if error.line %}<span class="deposit-issues__line">Linija {{ error.line }}:</span> {% endif %}{{ error.message }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
 </div>
 
 {% else %}
-{# Not yet validated state #}
-<div class="alert alert-secondary mb-0" id="xsd-validation-result">
-  <div class="d-flex align-items-center">
-    <i class="bi bi-question-circle me-2"></i>
-    <span>XSD validacija nije izvršena</span>
-  </div>
+<div class="alert alert-secondary" id="xsd-validation-result" role="status">
+  <i class="bi bi-question-circle me-1" aria-hidden="true"></i>XSD validacija nije izvršena
 </div>
 {% endif %}

@@ -1,0 +1,31 @@
+{% load allauth %}
+{% comment %}
+  Kit form: one card holding the fields and a single .form-actions row.
+  Inside the auth layout the card is flattened by auth.css. Forms without
+  visible fields (e.g. the hidden WebAuthn form) render bare.
+{% endcomment %}
+{% if attrs.no_visible_fields %}
+<form method="{{ attrs.method }}"
+      {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+      {% if attrs.action %}action="{{ attrs.action }}"{% endif %}>
+  {% slot body %}
+  {% endslot %}
+</form>
+{% else %}
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="{{ attrs.method }}"
+          {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+          {% if attrs.action %}action="{{ attrs.action }}"{% endif %}>
+      {% slot body %}
+      {% endslot %}
+      {% if slots.actions %}
+      <div class="form-actions">
+        {% slot actions %}
+        {% endslot %}
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+{% endif %}

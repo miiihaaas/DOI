@@ -150,7 +150,7 @@ class PublicationCreateView(AdministratorRequiredMixin, CreateView):
             {"label": "Nova publikacija", "url": None},
         ]
         context["form_title"] = "Nova publikacija"
-        context["submit_text"] = "Kreiraj publikaciju"
+        context["submit_text"] = "Sačuvaj publikaciju"
         context["publication_types"] = PublicationType.choices
         return context
 

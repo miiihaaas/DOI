@@ -1,0 +1,33 @@
+{% comment %}
+  Page header — title row at the top of every dashboard page.
+
+  Preferred use is the block tag (its body becomes the actions area):
+
+    {% load ui_tags %}
+    {% pageheader title=publication.title icon="bi-journal-text" badge=publication.get_status_display badge_tone=publication.status|status_tone meta=publication.issn %}
+      <a href="{% url 'publications:update' publication.pk %}" class="btn btn-outline-secondary"><i class="bi bi-pencil me-1"></i>Izmeni</a>
+      <a href="{% url 'issues:create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Novo izdanje</a>
+    {% endpageheader %}
+
+  Without actions it can also be included directly (always pass `only`):
+
+    {% include "components/_page_header.html" with title="Revizioni log" icon="bi-clock-history" only %}
+
+  Parameters:
+    title       page title, rendered as the page's single <h1> (required)
+    icon        Bootstrap Icons class
+    badge       status label next to the title
+    badge_tone  neutral | pending | success | danger | info
+    meta        one short line under the title (DOI, ISSN, parent object ...)
+    actions     pre-rendered HTML for the actions area (set by the block tag)
+{% endcomment %}
+<header class="page-header">
+  <div class="page-header__main">
+    <div class="page-header__titlerow">
+      <h1 class="page-header__title">{% if icon %}<i class="bi {{ icon }}" aria-hidden="true"></i>{% endif %}<span>{{ title }}</span></h1>
+      {% if badge %}{% include "components/_status_badge.html" with label=badge tone=badge_tone only %}{% endif %}
+    </div>
+    {% if meta %}<p class="page-header__meta">{{ meta }}</p>{% endif %}
+  </div>
+  {% if actions %}<div class="page-header__actions">{{ actions }}</div>{% endif %}
+</header>

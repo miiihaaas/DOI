@@ -1,0 +1,51 @@
+/*
+ * Monograph back-office pages (templates/monographs/**).
+ * Section-specific helpers only; colours and sizes come from admin.css tokens.
+ */
+
+/* Drag handles of the sortable lists on the edit page */
+.monograph-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1);
+  color: var(--doi-text-secondary);
+  cursor: grab;
+  touch-action: none;
+}
+
+.monograph-drag-handle:active {
+  cursor: grabbing;
+}
+
+.monograph-sortable-ghost {
+  background: var(--doi-light);
+  opacity: 0.6;
+}
+
+/* Small inline buttons next to an affiliation line */
+.monograph-inline-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  vertical-align: middle;
+}
+
+/* PDF drop zone (idle state; set through Alpine :class in the upload partials) */
+.border-dashed {
+  border-style: dashed !important;
+}
+
+.monograph-pdf-icon {
+  font-size: 1.5rem;
+  color: var(--doi-teal);
+}
+
+.monograph-dropzone-icon {
+  font-size: 2rem;
+  color: var(--doi-text-secondary);
+}
+
+/* Cover preview on the main form (keyword chips use the kit .chip) */
+.monograph-cover-preview {
+  max-height: 200px;
+}

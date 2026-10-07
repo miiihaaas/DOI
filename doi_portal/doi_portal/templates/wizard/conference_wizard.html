@@ -1,51 +1,43 @@
 {% extends "admin_base.html" %}
+{% load ui_tags %}
 
 {% block title %}Registracija konferencije - DOI Portal{% endblock %}
 
 {% block content %}
-<!-- Breadcrumbs -->
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-        {% for crumb in breadcrumbs %}
-        <li class="breadcrumb-item {% if forloop.last %}active{% endif %}">
-            {% if crumb.url and not forloop.last %}
-                <a href="{% url crumb.url %}">{{ crumb.label }}</a>
-            {% else %}
-                {{ crumb.label }}
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ol>
-</nav>
+{# Breadcrumb comes from the shell (context "breadcrumbs"). #}
+{% with step_no=current_step|stringformat:"d" %}
+{% with step_meta="Korak "|add:step_no|add:" od 4" %}
+  {% if publication.conference_name %}
+    {% with header_meta=step_meta|add:" · "|add:publication.conference_name %}
+      {% include "components/_page_header.html" with title="Registracija konferencije" icon="bi-megaphone" meta=header_meta only %}
+    {% endwith %}
+  {% else %}
+    {% include "components/_page_header.html" with title="Registracija konferencije" icon="bi-megaphone" meta=step_meta only %}
+  {% endif %}
+{% endwith %}
+{% endwith %}
 
-<h1 class="h3 mb-4">
-    <i class="bi bi-megaphone me-2"></i>Registracija konferencije
-</h1>
-
-<!-- Wizard Stepper -->
-<div class="wizard-stepper mb-4">
+{# Wizard stepper: finished steps before the current one are links. #}
+<nav aria-label="Koraci registracije">
+  <ol class="wizard-stepper list-unstyled">
     {% for step in steps %}
-    <div class="wizard-step {% if step.number < current_step %}completed{% elif step.number == current_step %}active{% elif step.number <= max_completed_step %}completed{% else %}disabled{% endif %}">
-        {% if step.number < current_step and publication %}
-        <a href="{% if step.number == 1 %}{% url 'wizard:conference-step-1' publication.pk %}{% elif step.number == 2 %}{% url 'wizard:conference-step-2' publication.pk %}{% elif step.number == 3 %}{% url 'wizard:conference-step-3' publication.pk %}{% endif %}"
-           class="text-decoration-none">
-            <div class="wizard-step-icon">
-                <i class="bi {{ step.icon }}"></i>
-            </div>
-            <div class="wizard-step-label">{{ step.label }}</div>
-        </a>
-        {% else %}
-        <div class="wizard-step-icon">
-            <i class="bi {{ step.icon }}"></i>
-        </div>
-        <div class="wizard-step-label">{{ step.label }}</div>
-        {% endif %}
-        {% if not forloop.last %}
-        <div class="wizard-step-connector"></div>
-        {% endif %}
-    </div>
+    <li class="wizard-step {% if step.number < current_step %}completed{% elif step.number == current_step %}active{% elif step.number <= max_completed_step %}completed{% else %}disabled{% endif %}"{% if step.number == current_step %} aria-current="step"{% endif %}>
+      {% if step.number < current_step and publication %}
+      <a href="{% if step.number == 1 %}{% url 'wizard:conference-step-1' publication.pk %}{% elif step.number == 2 %}{% url 'wizard:conference-step-2' publication.pk %}{% elif step.number == 3 %}{% url 'wizard:conference-step-3' publication.pk %}{% endif %}">
+        <span class="wizard-step-icon"><i class="bi {{ step.icon }}" aria-hidden="true"></i></span>
+        <span class="wizard-step-label"><span class="visually-hidden">Korak {{ step.number }}: </span>{{ step.label }}<span class="visually-hidden"> (završen)</span></span>
+      </a>
+      {% else %}
+      <span class="wizard-step-icon"><i class="bi {{ step.icon }}" aria-hidden="true"></i></span>
+      <span class="wizard-step-label"><span class="visually-hidden">Korak {{ step.number }}: </span>{{ step.label }}</span>
+      {% endif %}
+      {% if not forloop.last %}
+      <span class="wizard-step-connector" aria-hidden="true"></span>
+      {% endif %}
+    </li>
     {% endfor %}
-</div>
+  </ol>
+</nav>
 
 <!-- Step Content -->
 <div class="wizard-content">

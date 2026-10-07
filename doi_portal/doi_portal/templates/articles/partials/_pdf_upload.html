@@ -3,8 +3,8 @@
 </style>
 <div id="pdf-section">
     {% if error %}
-    <div class="alert alert-danger mb-3">
-        <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+    <div class="alert alert-danger mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>{{ error }}
     </div>
     {% endif %}
 
@@ -24,18 +24,18 @@
     {% if article.pdf_status == "clean" %}
     <div class="d-flex align-items-center justify-content-between mb-3">
         <div>
-            <i class="bi bi-file-earmark-pdf text-success me-2" style="font-size: 1.5rem;"></i>
+            <i class="bi bi-file-earmark-pdf fs-4 me-2" aria-hidden="true"></i>
             <span class="fw-bold">{{ article.pdf_original_filename }}</span>
             <span class="badge bg-success ms-2">
-                <i class="bi bi-shield-check me-1"></i>Čist
+                <i class="bi bi-shield-check me-1" aria-hidden="true"></i>Čist
             </span>
         </div>
         <button type="button" class="btn btn-sm btn-outline-danger"
                 hx-post="{% url 'articles:pdf-delete' article_pk=article.pk %}"
                 hx-target="#pdf-section"
                 hx-swap="outerHTML"
-                hx-confirm="Da li ste sigurni da želite ukloniti PDF?">
-            <i class="bi bi-trash me-1"></i>Ukloni
+                hx-confirm="Da li ste sigurni da želite da obrišete PDF?">
+            <i class="bi bi-trash me-1" aria-hidden="true"></i>Obriši PDF
         </button>
     </div>
     {% endif %}
@@ -69,10 +69,10 @@
              @dragleave.prevent="isDragging = false"
              @drop.prevent="handleDrop($event)"
              :class="isDragging ? 'border-primary bg-light' : 'border-dashed'">
-            <i class="bi bi-cloud-upload" style="font-size: 2rem;"></i>
+            <i class="bi bi-cloud-upload fs-2" aria-hidden="true"></i>
             <p class="mb-2">Prevucite PDF fajl ovde ili</p>
             <label class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-folder2-open me-1"></i>Izaberite fajl
+                <i class="bi bi-folder2-open me-1" aria-hidden="true"></i>Izaberite fajl
                 <input type="file" name="pdf_file" accept=".pdf,application/pdf"
                        class="d-none" @change="fileSelected($event)">
             </label>
@@ -81,8 +81,7 @@
         <!-- Progress indicator (hidden until upload starts) -->
         <div x-show="uploading" class="mt-2">
             <div class="progress">
-                <div class="progress-bar progress-bar-striped progress-bar-animated"
-                     style="width: 100%">Otpremanje...</div>
+                <div class="progress-bar progress-bar-striped progress-bar-animated w-100">Otpremanje...</div>
             </div>
         </div>
     </form>

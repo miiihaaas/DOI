@@ -572,7 +572,7 @@ class CrossrefDepositView(LoginRequiredMixin, View):
                 "url": reverse("issues:detail", args=[issue.pk]),
             },
             {
-                "label": "Crossref Deposit",
+                "label": "Crossref deponovanje",
                 "url": "",
             },
         ]
@@ -930,7 +930,7 @@ class ComponentGroupDepositView(LoginRequiredMixin, View):
         breadcrumbs = [
             {"label": "Komponente", "url": reverse("components:group-list")},
             {"label": str(cg), "url": reverse("components:group-detail", args=[cg.pk])},
-            {"label": "Crossref Deposit", "url": ""},
+            {"label": "Crossref deponovanje", "url": ""},
         ]
 
         return TemplateResponse(
@@ -1256,7 +1256,7 @@ class MonographDepositView(LoginRequiredMixin, View):
         breadcrumbs = [
             {"label": "Monografije", "url": reverse("monographs:list")},
             {"label": str(monograph), "url": reverse("monographs:detail", args=[monograph.pk])},
-            {"label": "Crossref Deposit", "url": ""},
+            {"label": "Crossref deponovanje", "url": ""},
         ]
 
         return TemplateResponse(

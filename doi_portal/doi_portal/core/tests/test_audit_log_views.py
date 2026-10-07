@@ -339,6 +339,29 @@ class TestAuditLogListView:
         assert "users" not in response.context
         assert "content_types" not in response.context
 
+    def test_history_restore_request_returns_full_page(self, authenticated_client, sample_log_entries):
+        """Back after an htmx history miss sends both headers and must get the full page."""
+        url = reverse("core:audit-log-list")
+        response = authenticated_client.get(
+            url,
+            HTTP_HX_REQUEST="true",
+            HTTP_HX_HISTORY_RESTORE_REQUEST="true",
+        )
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "<!DOCTYPE html>" in content
+        assert 'id="filter-form"' in content
+        # Full page needs the filter dropdown data again
+        assert "users" in response.context
+        assert "content_types" in response.context
+
+    def test_response_varies_on_hx_request(self, authenticated_client, sample_log_entries):
+        """Page and partial share a URL, so both must send Vary: HX-Request."""
+        url = reverse("core:audit-log-list")
+        for extra in ({}, {"HTTP_HX_REQUEST": "true"}):
+            response = authenticated_client.get(url, **extra)
+            assert "HX-Request" in response["Vary"]
+
 
 # ============================================================================
 # Task 10: Detail view tests (AC#4)

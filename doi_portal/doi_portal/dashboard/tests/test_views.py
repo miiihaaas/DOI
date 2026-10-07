@@ -118,15 +118,39 @@ class TestAdminDashboard:
         assert "ready_to_publish_articles" in response.context
         assert len(response.context["ready_to_publish_articles"]) == 1
 
-    def test_admin_quick_actions(self, client, admin_user):
-        """AC#8: Admin sees admin-specific quick actions."""
+    def test_admin_header_actions(self, client, admin_user):
+        """Admin gets the create actions in the page header.
+
+        The former "Brze akcije" card (AC#8) was removed in the dashboard
+        redesign: its links duplicated the sidebar.
+        """
         client.force_login(admin_user)
         response = client.get(reverse("dashboard"))
         content = response.content.decode()
 
-        assert "Svi članci" in content
-        assert "Publikacije" in content
-        assert "Izdavači" in content
+        assert "Brze akcije" not in content
+        assert "quick_actions" not in response.context
+        assert f'href="{reverse("articles:create")}"' in content
+        assert "Novi članak" in content
+        assert f'href="{reverse("monographs:create")}"' in content
+        assert "Nova monografija" in content
+
+    def test_admin_sees_monographs_tile(self, client, admin_user):
+        """Admin sees the Monografije tile linking to the monograph list."""
+        client.force_login(admin_user)
+        response = client.get(reverse("dashboard"))
+        content = response.content.decode()
+
+        labels = [tile["label"] for tile in response.context["stat_tiles"]]
+        assert labels == [
+            "Na pregledu",
+            "Spremno za objavu",
+            "Članci",
+            "Monografije",
+            "Publikacije",
+        ]
+        assert response.context["stats"]["total_monographs"] == 0
+        assert f'href="{reverse("monographs:list")}"' in content
 
     def test_admin_pending_max_10(self, client, admin_user):
         """AC#2: Pending review shows max 10 articles."""
@@ -181,14 +205,31 @@ class TestUrednikDashboard:
         # Urednik is NOT admin so no ready_to_publish_articles in context
         assert "ready_to_publish_articles" not in response.context
 
-    def test_urednik_quick_actions(self, client, urednik_user):
-        """AC#8: Urednik sees urednik-specific quick actions."""
+    def test_urednik_header_actions(self, client, urednik_user):
+        """Urednik with a publisher gets the create actions in the header."""
         client.force_login(urednik_user)
         response = client.get(reverse("dashboard"))
         content = response.content.decode()
 
-        assert "Članci na pregledu" in content
-        assert "Izdanja" in content
+        assert "Brze akcije" not in content
+        assert f'href="{reverse("articles:create")}"' in content
+        assert f'href="{reverse("monographs:create")}"' in content
+        assert f"Izdavač: {urednik_user.publisher.name}" in content
+        assert 'href="/dashboard/articles/?status=REVIEW"' in content
+
+    def test_urednik_without_publisher_has_no_create_actions(self, client):
+        """Urednik without a publisher cannot create, so no action is offered."""
+        group, _ = Group.objects.get_or_create(name="Urednik")
+        user = UserFactory()
+        user.groups.add(group)
+
+        client.force_login(user)
+        response = client.get(reverse("dashboard"))
+        content = response.content.decode()
+
+        assert response.context["can_create_article"] is False
+        assert f'href="{reverse("articles:create")}"' not in content
+        assert "nije dodeljen izdavač" in content
 
     def test_urednik_does_not_see_bibliotekar_section(self, client, urednik_user):
         """Urednik does NOT see 'Moji nacrti' section."""
@@ -236,13 +277,32 @@ class TestBibliotekarDashboard:
         response = client.get(reverse("dashboard"))
         assert "pending_review_articles" not in response.context
 
-    def test_bibliotekar_quick_actions(self, client, bibliotekar_user):
-        """AC#8: Bibliotekar sees bibliotekar-specific quick actions."""
+    def test_bibliotekar_header_actions(self, client):
+        """Bibliotekar with a publisher gets "Novi članak" as primary action."""
+        group, _ = Group.objects.get_or_create(name="Bibliotekar")
+        user = UserFactory(publisher=PublisherFactory())
+        user.groups.add(group)
+
+        client.force_login(user)
+        response = client.get(reverse("dashboard"))
+        content = response.content.decode()
+
+        assert "Brze akcije" not in content
+        assert f'href="{reverse("articles:create")}"' in content
+        assert "Novi članak" in content
+        assert "Moji nacrti" in content
+
+    def test_bibliotekar_without_publisher_has_no_create_actions(
+        self, client, bibliotekar_user,
+    ):
+        """ArticleCreateView rejects a Bibliotekar without publisher (403),
+        so the dashboard must not offer the action."""
         client.force_login(bibliotekar_user)
         response = client.get(reverse("dashboard"))
         content = response.content.decode()
 
-        assert "Novi članak" in content
+        assert f'href="{reverse("articles:create")}"' not in content
+        assert "nije dodeljen izdavač" in content
         assert "Moji nacrti" in content
 
 
@@ -255,7 +315,7 @@ class TestEmptyStateDashboard:
         client.force_login(admin_user)
         response = client.get(reverse("dashboard"))
         content = response.content.decode()
-        assert "Nema članaka na čekanju za pregled" in content
+        assert "Nema članaka na pregledu" in content
 
     def test_empty_ready_shows_message(self, client, admin_user):
         """AC#7: Empty ready to publish shows 'Nema clanaka' message."""
@@ -340,5 +400,9 @@ class TestStatisticsCardsClickable:
         response = client.get(reverse("dashboard"))
         content = response.content.decode()
 
-        # Drafts card links to articles:list?status=DRAFT
-        assert "?status=DRAFT" in content
+        # The tiles count the user's own articles, so they link to the
+        # article list with the "mine" filter.
+        list_url = reverse("articles:list")
+        assert f'href="{list_url}?status=DRAFT&amp;mine=1"' in content
+        assert f'href="{list_url}?status=REVIEW&amp;mine=1"' in content
+        assert f'href="{list_url}?mine=1"' in content

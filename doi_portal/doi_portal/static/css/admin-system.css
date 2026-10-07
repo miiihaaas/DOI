@@ -1,0 +1,36 @@
+/* =============================================
+   System pages (superadmin): section CSS on top of admin.css.
+   Only kit tokens are used here — no new colours.
+
+   Audit diff (audit log detail: old → new values).
+   Section tabs moved to the kit (admin.css, section 10).
+   ============================================= */
+
+/* Audit diff ------------------------------------------------------------
+   <table class="table table--dense audit-diff"> with
+   <del class="audit-diff__old"> / <ins class="audit-diff__new"> in cells. */
+.audit-diff td {
+  min-width: 8rem;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.audit-diff__old,
+.audit-diff__new {
+  padding: 0.0625rem 0.25rem;
+  border-radius: 3px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.audit-diff__old {
+  background: var(--tone-danger-bg);
+  color: var(--doi-danger-text);
+  text-decoration: line-through;
+}
+
+.audit-diff__new {
+  background: var(--tone-success-bg);
+  color: var(--doi-text);
+  text-decoration: none;
+}

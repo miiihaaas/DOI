@@ -35,7 +35,7 @@ class TestGetTerm:
         assert get_term("new_article", PublicationType.JOURNAL) == "Novi članak"
 
     def test_journal_create_article(self):
-        assert get_term("create_article", PublicationType.JOURNAL) == "Kreiraj članak"
+        assert get_term("create_article", PublicationType.JOURNAL) == "Sačuvaj članak"
 
     def test_conference_article(self):
         assert get_term("article", PublicationType.CONFERENCE) == "Rad"
@@ -56,7 +56,7 @@ class TestGetTerm:
         assert get_term("new_issue", PublicationType.CONFERENCE) == "Novi zbornik radova"
 
     def test_conference_create_issue(self):
-        assert get_term("create_issue", PublicationType.CONFERENCE) == "Kreiraj zbornik"
+        assert get_term("create_issue", PublicationType.CONFERENCE) == "Sačuvaj zbornik"
 
     def test_conference_edit_issue(self):
         assert get_term("edit_issue", PublicationType.CONFERENCE) == "Izmeni zbornik"

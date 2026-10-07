@@ -13,6 +13,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from doi_portal.articles.models import LicenseAppliesTo
 from doi_portal.core.constants import LANGUAGE_CHOICES
 from doi_portal.publishers.models import Publisher
 
@@ -28,6 +29,29 @@ from .models import (
     MonographFunding,
     MonographRelation,
 )
+
+
+def _setup_license_applies_to(form):
+    """
+    Give ``license_applies_to`` the same options as ``ArticleForm``.
+
+    The monograph/chapter model fields are plain CharFields without choices,
+    so a bare ``forms.Select`` rendered an empty dropdown. The choices are
+    applied at form level only (no migration): an empty option (the field is
+    optional) plus ``LicenseAppliesTo``. A value already stored on the
+    instance that is not one of those options is kept as an extra option, so
+    editing such a record neither fails validation nor silently drops it.
+    """
+    choices = [("", "---------"), *LicenseAppliesTo.choices]
+    current = getattr(form.instance, "license_applies_to", "") or ""
+    if current and current not in {value for value, _label in choices}:
+        choices.append((current, current))
+    form.fields["license_applies_to"] = forms.ChoiceField(
+        label=_("Licenca se odnosi na"),
+        required=False,
+        choices=choices,
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
 
 
 class MonographForm(forms.ModelForm):
@@ -208,6 +232,7 @@ class MonographForm(forms.ModelForm):
             user: Current user for publisher queryset filtering
         """
         super().__init__(*args, **kwargs)
+        _setup_license_applies_to(self)
         if user:
             if user.is_superuser or user.groups.filter(
                 name__in=["Administrator", "Superadmin"]
@@ -385,6 +410,15 @@ class MonographChapterForm(forms.ModelForm):
         help_texts = {
             "language": "Jezik poglavlja (ISO 639 kod).",
         }
+
+    def __init__(self, *args, **kwargs):
+        # The chapter form is swapped into the monograph edit page, next to the
+        # main MonographForm. With the default auto_id both would render
+        # id_title, id_language, id_license_applies_to ... and a chapter label
+        # would focus the monograph field. Field names (POST keys) are unchanged.
+        kwargs.setdefault("auto_id", "id_chapter_%s")
+        super().__init__(*args, **kwargs)
+        _setup_license_applies_to(self)
 
 
 class MonographContributorForm(forms.ModelForm):

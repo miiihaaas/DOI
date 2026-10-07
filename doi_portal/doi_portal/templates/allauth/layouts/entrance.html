@@ -1,31 +1,36 @@
-{% extends "base.html" %}
+{% extends "account/_auth_layout.html" %}
+{% comment %}
+  allauth "entrance" pages that have no project template of their own
+  (reauthenticate, MFA code prompt, signup closed, account inactive, ...).
+  They render through allauth/elements/* inside the shared auth layout.
+{% endcomment %}
 {% load i18n %}
-{% block bodyclass %}bg-light{% endblock bodyclass %}
 
-{% block css %}{{ block.super }}{% endblock css %}
-{% block title %}
-  {% block head_title %}
-    {% trans "Sign In" %}
-  {% endblock head_title %}
-{% endblock title %}
-{% block body %}
-  <div class="d-flex justify-content-center h-100 py-4">
-    <div class="col-md-4 py-4 my-4 px-4">
-      {% if messages %}
-        {% for message in messages %}
-          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-            {{ message }}
-            <button type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-      {% block content %}
-      {% endblock content %}
-      {% block extra_body %}
-      {% endblock extra_body %}
+{% block title %}{% block head_title %}{% trans "Sign In" %}{% endblock head_title %} - DOI Portal{% endblock title %}
+
+{% block javascript %}
+  {# Needed for dismissible flash messages #}
+  <script defer
+          src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
+          integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"></script>
+{% endblock javascript %}
+
+{% block auth_messages %}
+  {% if messages %}
+  <div class="auth-messages" aria-live="polite">
+    {% for message in messages %}
+    <div class="alert alert-dismissible {% if message.level_tag == 'error' %}alert-danger{% else %}auth-note{% endif %}"
+         role="{% if message.level_tag == 'error' %}alert{% else %}status{% endif %}">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zatvori poruku"></button>
     </div>
+    {% endfor %}
   </div>
-{% endblock body %}
+  {% endif %}
+{% endblock auth_messages %}
+
+{% block content %}{% endblock content %}
+
+{% block extra_body %}{% endblock extra_body %}

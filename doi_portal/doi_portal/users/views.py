@@ -36,6 +36,22 @@ class UserDetailView(LoginRequiredMixin, DetailView):
     model = User
     slug_field = "id"
     slug_url_kwarg = "id"
+    # Not "user": that name would shadow the logged-in user that the
+    # dashboard shell (top bar, sidebar) reads from the template context.
+    context_object_name = "profile_user"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        is_own_profile = self.object == self.request.user
+        context["is_own_profile"] = is_own_profile
+        context["breadcrumbs"] = [
+            {"label": "Kontrolna tabla", "url": reverse("dashboard")},
+            {
+                "label": "Moj profil" if is_own_profile else "Profil korisnika",
+                "url": None,
+            },
+        ]
+        return context
 
 
 user_detail_view = UserDetailView.as_view()
@@ -44,7 +60,18 @@ user_detail_view = UserDetailView.as_view()
 class UserUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = User
     fields = ["name"]
-    success_message = _("Information successfully updated")
+    # See UserDetailView: keep the shell's "user" (logged-in user) intact.
+    context_object_name = "profile_user"
+    success_message = _("Podaci su sačuvani.")
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Kontrolna tabla", "url": reverse("dashboard")},
+            {"label": "Moj profil", "url": self.get_success_url()},
+            {"label": "Izmeni podatke", "url": None},
+        ]
+        return context
 
     def get_success_url(self) -> str:
         assert self.request.user.is_authenticated  # type guard
@@ -124,6 +151,15 @@ class UserListAdminView(SuperadminRequiredMixin, ListView):
         context["current_role"] = self.request.GET.get("role", "")
         context["current_status"] = self.request.GET.get("status", "")
         context["current_search"] = self.request.GET.get("search", "")
+        context["has_filters"] = bool(
+            context["current_role"]
+            or context["current_status"]
+            or context["current_search"],
+        )
+        context["breadcrumbs"] = [
+            {"label": "Kontrolna tabla", "url": reverse("dashboard")},
+            {"label": "Korisnici", "url": None},
+        ]
         return context
 
 
@@ -139,7 +175,16 @@ class UserCreateAdminView(SuperadminRequiredMixin, SuccessMessageMixin, CreateVi
     form_class = UserCreateForm
     template_name = "users/user_create.html"
     success_url = reverse_lazy("users:manage-list")
-    success_message = _("Korisnik uspesno kreiran.")
+    success_message = _("Korisnik je uspešno kreiran.")
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Kontrolna tabla", "url": reverse("dashboard")},
+            {"label": "Korisnici", "url": reverse("users:manage-list")},
+            {"label": "Novi korisnik", "url": None},
+        ]
+        return context
 
 
 class UserUpdateAdminView(SuperadminRequiredMixin, SuccessMessageMixin, UpdateView):
@@ -154,7 +199,19 @@ class UserUpdateAdminView(SuperadminRequiredMixin, SuccessMessageMixin, UpdateVi
     form_class = UserUpdateForm
     template_name = "users/user_edit.html"
     success_url = reverse_lazy("users:manage-list")
-    success_message = _("Korisnik uspesno azuriran.")
+    success_message = _("Korisnik je uspešno ažuriran.")
+    # Not "user": that name would shadow the logged-in user that the
+    # dashboard shell (top bar, sidebar) reads from the template context.
+    context_object_name = "managed_user"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["breadcrumbs"] = [
+            {"label": "Kontrolna tabla", "url": reverse("dashboard")},
+            {"label": "Korisnici", "url": reverse("users:manage-list")},
+            {"label": "Izmeni korisnika", "url": None},
+        ]
+        return context
 
 
 @login_required

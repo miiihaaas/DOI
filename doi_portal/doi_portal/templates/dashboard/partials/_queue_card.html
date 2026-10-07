@@ -1,0 +1,43 @@
+{% comment %}
+  One work-queue card on the dashboard home.
+
+  Parameters (always pass `only`):
+    title       card title
+    icon        Bootstrap Icons class
+    articles    queryset/list of Article (already limited by the service)
+    total       total number of articles in the queue (may exceed the list)
+    all_url     link to the full, filtered article list
+    empty_text  sentence shown when the queue is empty
+    kind        "review" | "ready" | "drafts" - picks the date and the person shown
+{% endcomment %}
+{% load markup_tags %}
+<section class="card h-100">
+  <div class="card-header d-flex justify-content-between align-items-center gap-2">
+    <h2 class="card-title">
+      <i class="bi {{ icon }} me-2" aria-hidden="true"></i>{{ title }}
+      {% if total %}<span class="badge bg-secondary ms-1">{{ total }}</span>{% endif %}
+    </h2>
+    <a href="{{ all_url }}" class="btn btn-sm btn-outline-secondary flex-shrink-0">Prikaži sve</a>
+  </div>
+  {% if articles %}
+  <div class="list-group list-group-flush">
+    {% for article in articles %}
+    <a href="{% url 'articles:detail' pk=article.pk %}" class="list-group-item list-group-item-action list-row">
+      <span class="list-row__main">
+        <span class="list-row__title">{{ article.title|render_markup }}</span>
+        <span class="list-row__aside">
+          {% if kind == "review" %}{{ article.submitted_at|date:"d.m.Y." }}{% elif kind == "ready" %}{{ article.reviewed_at|date:"d.m.Y." }}{% else %}{{ article.updated_at|date:"d.m.Y." }}{% endif %}
+        </span>
+      </span>
+      <span class="list-row__meta">
+        {{ article.issue.publication.title }}
+        {% if kind == "review" and article.submitted_by %} &middot; {% firstof article.submitted_by.name article.submitted_by.email %}{% endif %}
+        {% if kind == "ready" and article.reviewed_by %} &middot; Odobrio: {% firstof article.reviewed_by.name article.reviewed_by.email %}{% endif %}
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  {% include "components/_empty_state.html" with icon="bi-check-circle" text=empty_text compact=True only %}
+  {% endif %}
+</section>

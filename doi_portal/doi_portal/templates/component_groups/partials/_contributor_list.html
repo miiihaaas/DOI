@@ -1,55 +1,55 @@
 {# Contributor list partial for HTMX updates #}
 {% if contributors %}
-<div class="table-responsive">
-  <table class="table table-sm table-hover mb-0">
+<div class="table-responsive mb-3">
+  <table class="table table-hover table--dense">
     <thead>
       <tr>
-        <th>#</th>
-        <th>Ime</th>
-        <th>Prezime</th>
+        <th class="num">#</th>
+        <th>Ime i prezime</th>
         <th>Uloga</th>
         <th>Redosled</th>
         <th>ORCID</th>
-        <th>Akcije</th>
+        <th class="col-actions"><span class="visually-hidden">Akcije</span></th>
       </tr>
     </thead>
     <tbody>
       {% for contributor in contributors %}
       <tr>
-        <td>{{ contributor.order }}</td>
-        <td>{{ contributor.given_name|default:"-" }}</td>
-        <td>{{ contributor.surname }}</td>
-        <td>{{ contributor.get_contributor_role_display }}</td>
-        <td>{{ contributor.get_sequence_display }}</td>
+        <td class="num">{{ contributor.order }}</td>
+        <td>{% if contributor.given_name %}{{ contributor.given_name }} {% endif %}{{ contributor.surname }}{% if contributor.suffix %}, {{ contributor.suffix }}{% endif %}</td>
+        <td class="cell-meta">{{ contributor.get_contributor_role_display }}</td>
+        <td class="cell-meta">{{ contributor.get_sequence_display }}</td>
         <td>
           {% if contributor.orcid %}
-          <code>{{ contributor.orcid }}</code>
+          <span class="mono-id">{{ contributor.orcid }}</span>
           {% if contributor.orcid_authenticated %}
-          <i class="bi bi-check-circle-fill text-success" title="Autentifikovan"></i>
+          <i class="bi bi-check-circle-fill text-success" title="Autentifikovan" aria-hidden="true"></i><span class="visually-hidden">Autentifikovan</span>
           {% endif %}
           {% else %}
-          -
+          <span class="cell-meta">—</span>
           {% endif %}
         </td>
-        <td>
-          <div class="btn-group btn-group-sm">
+        <td class="col-actions">
+          <div class="row-actions">
             <button type="button"
-                    class="btn btn-outline-secondary"
+                    class="btn-icon"
                     hx-get="{% url 'components:contributor-edit-form' contributor.pk %}"
                     hx-target="#contributor-form-container"
                     hx-swap="innerHTML"
-                    title="Izmeni">
-              <i class="bi bi-pencil"></i>
+                    title="Izmeni"
+                    aria-label="Izmeni kontributora {{ contributor.surname }}">
+              <i class="bi bi-pencil" aria-hidden="true"></i>
             </button>
             <button type="button"
-                    class="btn btn-outline-danger"
+                    class="btn-icon btn-icon--danger"
                     hx-post="{% url 'components:contributor-delete' contributor.pk %}"
                     hx-target="#contributor-list"
                     hx-swap="innerHTML"
                     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-                    hx-confirm="Da li ste sigurni?"
-                    title="Obriši">
-              <i class="bi bi-trash"></i>
+                    hx-confirm="Obrisati kontributora?"
+                    title="Obriši"
+                    aria-label="Obriši kontributora {{ contributor.surname }}">
+              <i class="bi bi-trash" aria-hidden="true"></i>
             </button>
           </div>
         </td>
@@ -59,11 +59,9 @@
   </table>
 </div>
 {% else %}
-<p class="text-muted mb-0">
-  <i class="bi bi-info-circle me-1"></i>Nema kontributora. Dodajte prvog kontributora.
-</p>
+<p class="text-muted mb-3">Nema kontributora. Dodajte prvog pomoću forme ispod.</p>
 {% endif %}
 
-<div id="contributor-form-container" class="mt-3">
+<div id="contributor-form-container">
   {% include "component_groups/partials/_contributor_form.html" %}
 </div>

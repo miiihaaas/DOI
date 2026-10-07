@@ -1,38 +1,32 @@
-<div class="card mb-2" id="contact-{{ contact.pk }}">
-  <div class="card-body py-2 d-flex align-items-center">
-    <div class="flex-grow-1">
-      <strong>{{ contact.first_name }} {{ contact.last_name }}</strong>
-      {% if contact.role %}
-        <span class="text-muted ms-2">- {{ contact.role }}</span>
-      {% endif %}
-      <div class="small text-muted">
-        {% if contact.email %}
-          <i class="bi bi-envelope me-1"></i>{{ contact.email }}
-        {% endif %}
-        {% if contact.phone %}
-          <i class="bi bi-telephone ms-2 me-1"></i>{{ contact.phone }}
-        {% endif %}
-      </div>
+<li class="list-group-item d-flex align-items-start gap-2" id="contact-{{ contact.pk }}">
+  <div class="flex-grow-1">
+    <span class="fw-semibold">{{ contact.first_name }} {{ contact.last_name }}</span>{% if contact.role %}<span class="text-muted"> · {{ contact.role }}</span>{% endif %}
+    {% if contact.email or contact.phone %}
+    <div class="small text-muted d-flex flex-wrap column-gap-3">
+      {% if contact.email %}<span><i class="bi bi-envelope me-1" aria-hidden="true"></i><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></span>{% endif %}
+      {% if contact.phone %}<span><i class="bi bi-telephone me-1" aria-hidden="true"></i>{{ contact.phone }}</span>{% endif %}
     </div>
-    <div class="ms-2 d-flex gap-1">
-      <button type="button"
-              class="btn btn-sm btn-outline-primary"
-              hx-get="{% url 'publishers:contact-edit-form' pk=contact.pk %}"
-              hx-target="#contact-form-container"
-              hx-swap="innerHTML">
-        <i class="bi bi-pencil"></i>
-      </button>
-      <form method="post"
-            class="d-inline"
+    {% endif %}
+  </div>
+  <div class="row-actions">
+    <button type="button"
+            class="btn-icon"
+            title="Izmeni"
+            aria-label="Izmeni kontakt {{ contact.first_name }} {{ contact.last_name }}"
+            hx-get="{% url 'publishers:contact-edit-form' pk=contact.pk %}"
+            hx-target="#contact-form-container"
+            hx-swap="innerHTML">
+      <i class="bi bi-pencil" aria-hidden="true"></i>
+    </button>
+    <button type="button"
+            class="btn-icon btn-icon--danger"
+            title="Obriši"
+            aria-label="Obriši kontakt {{ contact.first_name }} {{ contact.last_name }}"
             hx-post="{% url 'publishers:contact-delete' pk=contact.pk %}"
             hx-target="#contacts-section"
             hx-swap="innerHTML"
             hx-confirm="Obrisati kontakt osobu?">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-sm btn-outline-danger">
-          <i class="bi bi-trash"></i>
-        </button>
-      </form>
-    </div>
+      <i class="bi bi-trash" aria-hidden="true"></i>
+    </button>
   </div>
-</div>
+</li>

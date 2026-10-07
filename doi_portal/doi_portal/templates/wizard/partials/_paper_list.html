@@ -1,7 +1,7 @@
 {% for article in articles %}
     {% include "wizard/partials/_paper_item.html" with article=article %}
 {% empty %}
-    <div class="text-muted text-center py-4">
-        Nema dodanih radova. Kliknite "Dodaj rad" za početak.
+    <div class="card">
+        {% include "components/_empty_state.html" with icon="bi-file-earmark-text" text='Nema dodatih radova. Kliknite „Dodaj rad“ za početak.' compact=True only %}
     </div>
 {% endfor %}

@@ -1,0 +1,9 @@
+{# Summary card body on the component group deposit page #}
+<dl class="admin-dl admin-dl--single">
+  <div class="admin-dl-row"><dt>Parent DOI</dt><dd class="mono-id">{{ component_group.parent_doi }}</dd></div>
+  {% if component_group.title %}
+  <div class="admin-dl-row"><dt>Naslov</dt><dd>{{ component_group.title }}</dd></div>
+  {% endif %}
+  <div class="admin-dl-row"><dt>Izdavač</dt><dd><a href="{% url 'publishers:detail' component_group.publisher.pk %}">{{ component_group.publisher.name }}</a></dd></div>
+  <div class="admin-dl-row"><dt>Komponente</dt><dd>{{ component_group.component_count }}</dd></div>
+</dl>

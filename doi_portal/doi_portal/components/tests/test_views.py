@@ -73,6 +73,67 @@ class TestComponentGroupListView:
         assert own.parent_doi in content
         assert other.parent_doi not in content
 
+    def test_list_search_title_and_parent_doi(self, client, admin_user):
+        """Search matches title or parent DOI."""
+        client.force_login(admin_user)
+        by_title = ComponentGroupFactory(
+            title="Zvučni zapisi", parent_doi="10.5555/aaa.1",
+        )
+        by_doi = ComponentGroupFactory(title="Drugo", parent_doi="10.5555/bbb.2")
+        url = reverse("components:group-list")
+
+        response = client.get(url, {"q": "zvučni"})
+        assert list(response.context["component_groups"]) == [by_title]
+
+        response = client.get(url, {"q": "bbb.2"})
+        assert list(response.context["component_groups"]) == [by_doi]
+
+    def test_list_search_keeps_publisher_scope(self, client, publisher_user):
+        """Search never leaks groups of other publishers."""
+        user, publisher = publisher_user
+        client.force_login(user)
+        own = ComponentGroupFactory(publisher=publisher, title="Zajednicki naslov")
+        ComponentGroupFactory(title="Zajednicki naslov")
+
+        response = client.get(reverse("components:group-list"), {"q": "Zajednicki"})
+        assert list(response.context["component_groups"]) == [own]
+
+    def test_list_status_filter_matches_badges(self, client, admin_user):
+        """Status filter uses the same precedence as the status badge."""
+        from django.utils import timezone  # noqa: PLC0415
+
+        client.force_login(admin_user)
+        new = ComponentGroupFactory()
+        generated = ComponentGroupFactory(crossref_xml="<xml/>", xsd_valid=False)
+        valid = ComponentGroupFactory(crossref_xml="<xml/>", xsd_valid=True)
+        deposited = ComponentGroupFactory(
+            crossref_xml="<xml/>", xsd_valid=True, crossref_deposited_at=timezone.now(),
+        )
+        url = reverse("components:group-list")
+
+        expected = {
+            "new": new,
+            "xml": generated,
+            "valid": valid,
+            "deposited": deposited,
+        }
+        for status, group in expected.items():
+            response = client.get(url, {"status": status})
+            assert list(response.context["component_groups"]) == [group], status
+
+        response = client.get(url, {"status": "bogus"})
+        assert len(response.context["component_groups"]) == 4  # noqa: PLR2004
+        assert response.context["current_status"] == ""
+
+    def test_list_keeps_deposit_action_and_status_labels(self, client, admin_user):
+        """Each row links to the Crossref deposit page and shows its status."""
+        client.force_login(admin_user)
+        group = ComponentGroupFactory()
+        response = client.get(reverse("components:group-list"))
+        content = response.content.decode()
+        assert reverse("crossref:component-group-deposit", args=[group.pk]) in content
+        assert "Novo" in content
+
 
 @pytest.mark.django_db
 class TestComponentGroupCreateView:

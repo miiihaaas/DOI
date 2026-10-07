@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
@@ -55,10 +56,23 @@ class PublisherListView(LoginRequiredMixin, AdministratorRequiredMixin, ListView
     model = Publisher
     template_name = "publishers/publisher_list.html"
     context_object_name = "publishers"
+    paginate_by = 20
+
+    def get_queryset(self):
+        """Filter by search query (name or DOI prefix)."""
+        queryset = super().get_queryset()
+        self.search_query = self.request.GET.get("q", "").strip()
+        if self.search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=self.search_query)
+                | Q(doi_prefix__icontains=self.search_query),
+            )
+        return queryset
 
     def get_context_data(self, **kwargs):
-        """Add breadcrumbs to context."""
+        """Add breadcrumbs and search state to context."""
         context = super().get_context_data(**kwargs)
+        context["search_query"] = self.search_query
         context["breadcrumbs"] = [
             {"label": "Kontrolna tabla", "url": reverse_lazy("dashboard")},
             {"label": "Izdavači", "url": None},
@@ -89,7 +103,7 @@ class PublisherCreateView(
             {"label": "Novi izdavač", "url": None},
         ]
         context["form_title"] = "Novi izdavač"
-        context["submit_text"] = "Kreiraj izdavača"
+        context["submit_text"] = "Sačuvaj izdavača"
         return context
 
     def form_valid(self, form):

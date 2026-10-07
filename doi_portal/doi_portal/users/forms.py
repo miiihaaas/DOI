@@ -72,6 +72,7 @@ class UserCreateForm(forms.ModelForm):
     - publisher: Optional publisher assignment for row-level permissions
     - password1/password2: Password fields (optional if send_invitation is True)
     - send_invitation: If True, user is created without password
+      (shown as "Kreiraj nalog bez lozinke"; no invitation email is sent)
     """
 
     role = forms.ChoiceField(
@@ -84,7 +85,7 @@ class UserCreateForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
         label=_("Lozinka"),
         required=False,
-        help_text=_("Ostavite prazno ako saljete email pozivnicu"),
+        help_text=_("Ostavite prazno ako kreirate nalog bez lozinke."),
     )
 
     password2 = forms.CharField(
@@ -95,8 +96,12 @@ class UserCreateForm(forms.ModelForm):
 
     send_invitation = forms.BooleanField(
         required=False,
-        label=_("Posalji email pozivnicu"),
-        help_text=_("Korisnik ce postaviti lozinku putem email linka"),
+        # The field name is historical: the portal does not send invitations.
+        # Checked = the account is created without a password.
+        label=_("Kreiraj nalog bez lozinke"),
+        help_text=_(
+            "Korisnik neće moći da se prijavi dok mu lozinka ne bude postavljena.",
+        ),
     )
 
     class Meta:
@@ -112,7 +117,7 @@ class UserCreateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Make publisher optional with empty choice
         self.fields["publisher"].required = False
-        self.fields["publisher"].empty_label = _("--- Bez dodele izdavaca ---")
+        self.fields["publisher"].empty_label = _("--- Bez dodele izdavača ---")
         # Set email as required
         self.fields["email"].required = True
 
@@ -126,7 +131,10 @@ class UserCreateForm(forms.ModelForm):
             # Password is required if not sending invitation
             if not password1 or not password2:
                 raise forms.ValidationError(
-                    _("Lozinka je obavezna ako ne saljete email pozivnicu."),
+                    _(
+                        "Unesite lozinku i potvrdu lozinke ili označite "
+                        "„Kreiraj nalog bez lozinke”.",
+                    ),
                 )
             if password1 != password2:
                 raise forms.ValidationError(_("Lozinke se ne poklapaju."))
@@ -175,7 +183,7 @@ class UserUpdateForm(forms.ModelForm):
     role = forms.ChoiceField(
         choices=ROLE_CHOICES,
         label=_("Uloga"),
-        help_text=_("Promena uloge uklanja prethodne grupne clanstvo"),
+        help_text=_("Nova uloga zamenjuje prethodnu ulogu korisnika."),
     )
 
     class Meta:
@@ -191,7 +199,7 @@ class UserUpdateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Make publisher optional with empty choice
         self.fields["publisher"].required = False
-        self.fields["publisher"].empty_label = _("--- Bez dodele izdavaca ---")
+        self.fields["publisher"].empty_label = _("--- Bez dodele izdavača ---")
 
         # Set initial role from user's current groups
         if self.instance and self.instance.pk:
